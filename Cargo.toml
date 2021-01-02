@@ -1,0 +1,16 @@
+[package]
+name = "eq_wld"
+version = "0.1.0"
+authors = ["Chad Jablonski <chad@jablonski.xyz>"]
+edition = "2018"
+description = "An Everquest .wld file loader"
+repository = "https://github.com/cjab/eq_wld"
+readme = "README.md"
+keywords = ["everquest", "eq", "wld", "loader"]
+categories = ["game-development", "graphics", "parsing", "rendering::data-formats"]
+license = "GPL-3.0-only"
+
+[dependencies]
+log = "0.4.11"
+env_logger = "0.7"
+nom = "5.1.1"
