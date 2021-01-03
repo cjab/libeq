@@ -54,11 +54,6 @@ impl<'a> WldDoc<'a> {
         ))
     }
 
-    /// Get a fragment at a specific index in the wld file.
-    pub fn at<T: Fragment<T = T> + Debug>(&self, idx: i32) -> Option<(Option<&str>, T)> {
-        self.get(&FragmentRef::<T>::new(idx))
-    }
-
     /// Get a fragment given a fragment reference.
     pub fn get<T: Fragment<T = T> + Debug>(
         &self,
