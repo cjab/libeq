@@ -41,7 +41,7 @@
 mod parser;
 
 pub use parser::Error;
-use parser::{MaterialFragment, MeshFragment, TextureFragment, WldDoc};
+use parser::{MaterialFragment, MeshFragment, MeshFragmentPolygonEntry, TextureFragment, WldDoc};
 
 pub struct Wld<'a>(WldDoc<'a>);
 
@@ -143,6 +143,101 @@ impl<'a> Mesh<'a> {
                 .into_iter()
             })
             .collect()
+    }
+
+    /// A list of materials used by this mesh.
+    pub fn materials(&self) -> Vec<Material> {
+        let (_, material_list) = self
+            .doc
+            .get(&self.fragment.material_list_ref)
+            .expect("Invalid material list reference");
+        material_list
+            .fragments
+            .iter()
+            .map(|fragment_ref| {
+                self.doc
+                    .get(&fragment_ref)
+                    .expect("Invalid material reference")
+            })
+            .map(|(name, fragment)| Material {
+                doc: &self.doc,
+                name,
+                fragment,
+            })
+            .collect()
+    }
+
+    /// Primitives belonging to this mesh.
+    pub fn primitives(&self) -> Vec<Primitive> {
+        let mut pos = 0;
+        self.fragment
+            .polygon_materials
+            .iter()
+            .enumerate()
+            .map(|(index, (poly_count, ref material_idx))| {
+                let count = *poly_count as usize;
+                let next_pos = pos + count;
+                let batch = pos..next_pos;
+                pos = next_pos;
+                Primitive {
+                    mesh: self,
+                    index,
+                    fragments: &self
+                        .fragment
+                        .polygons
+                        .get(batch)
+                        .expect("Primitive fragments out of range"),
+                    material_idx: *material_idx as usize,
+                }
+            })
+            .collect()
+    }
+}
+
+#[derive(Debug)]
+pub struct Primitive<'a> {
+    mesh: &'a Mesh<'a>,
+    index: usize,
+    fragments: &'a [MeshFragmentPolygonEntry],
+    material_idx: usize,
+}
+
+impl<'a> Primitive<'a> {
+    /// Indices of the positions making up this primitive. These refer to positions on the parent
+    /// mesh.
+    pub fn indices(&self) -> Vec<u32> {
+        self.fragments
+            .iter()
+            .flat_map(|v| {
+                vec![
+                    v.vertex_indexes.0 as u32,
+                    v.vertex_indexes.1 as u32,
+                    v.vertex_indexes.2 as u32,
+                ]
+            })
+            .collect()
+    }
+
+    pub fn positions(&self) -> Vec<[f32; 3]> {
+        self.mesh.positions()
+    }
+
+    pub fn normals(&self) -> Vec<[f32; 3]> {
+        self.mesh.normals()
+    }
+
+    pub fn texture_coordinates(&self) -> Vec<[f32; 2]> {
+        self.mesh.texture_coordinates()
+    }
+
+    /// The material that this primitive uses.
+    pub fn material(&self) -> Material {
+        self.mesh.materials().remove(self.material_idx)
+    }
+
+    /// The index of this primitive in its parent mesh.
+    pub fn index(&self) -> usize {
+        self.index
     }
 }
 
