@@ -11,7 +11,10 @@ use nom::number::complete::{le_i32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-pub use fragments::{Fragment, FragmentRef, MaterialFragment, MeshFragment, TextureFragment};
+pub use fragments::{
+    Fragment, FragmentRef, MaterialFragment, MeshFragment, MeshFragmentPolygonEntry,
+    TextureFragment,
+};
 pub use strings::{decode_string, StringHash};
 
 pub const MESH_FRAGMENT_ID: u32 = 0x36;

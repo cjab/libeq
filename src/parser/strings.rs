@@ -25,12 +25,15 @@ impl StringHash {
         let indices = decoded_string.match_indices("\0");
 
         let mut reference_idx = 0;
-        let mut hash = HashMap::new();
-        for (string, (end_idx, _)) in strings.zip(indices) {
-            hash.insert(reference_idx, string.to_string());
-            reference_idx = end_idx + 1;
-        }
-        StringHash(hash)
+        StringHash(
+            strings
+                .zip(indices)
+                .fold(HashMap::new(), |mut hash, (string, (end_idx, _))| {
+                    hash.insert(reference_idx, string.to_string());
+                    reference_idx = end_idx + 1;
+                    hash
+                }),
+        )
     }
 
     pub fn get(&self, name_reference: i32) -> Option<&str> {

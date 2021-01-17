@@ -72,7 +72,7 @@ pub struct BspTreeFragmentEntry {
     /// refers to (with the lowest index being 1). Otherwise this will contain 0.
     pub region: FragmentRef<BspRegionFragment>,
 
-    /// If this is not a leaf node these are references to [BspTreeFragmentEntry] on either size of the
+    /// If this is not a leaf node these are references to [BspTreeFragmentEntry] on either side of the
     /// splitting plane.
     pub nodes: (
         FragmentRef<BspTreeFragmentEntry>,
