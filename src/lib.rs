@@ -18,6 +18,7 @@
 //!     let normals = mesh.normals();
 //!     let texture_coordinates = mesh.texture_coordinates();
 //!     let indices = mesh.indices();
+//!     let center = mesh.center();
 //!     ...
 //! }
 //!
@@ -87,20 +88,18 @@ impl<'a> Mesh<'a> {
         self.name
     }
 
+    pub fn center(&self) -> (f32, f32, f32) {
+        let (x, z, y) = self.fragment.center;
+        (x, y, z)
+    }
+
     /// The positions of the vertices that make up this mesh.
     pub fn positions(&self) -> Vec<[f32; 3]> {
-        let center = self.fragment.center;
-        let scale = self.fragment.scale;
+        let scale = 1.0 / (1 << self.fragment.scale) as f32;
         self.fragment
             .positions
             .iter()
-            .map(|v| {
-                [
-                    (v.0 as f32 - center.0) as f32 / ((1 << scale) as f32),
-                    (v.1 as f32 - center.1) as f32 / ((1 << scale) as f32),
-                    (v.2 as f32 - center.2) as f32 / ((1 << scale) as f32),
-                ]
-            })
+            .map(|v| [v.0 as f32 * scale, v.2 as f32 * scale, v.1 as f32 * scale])
             .collect()
     }
 
@@ -112,8 +111,8 @@ impl<'a> Mesh<'a> {
             .map(|v| {
                 [
                     (v.0 as f32) / 127.0,
-                    (v.1 as f32) / 127.0,
                     (v.2 as f32) / 127.0,
+                    (v.1 as f32) / 127.0,
                 ]
             })
             .collect()
