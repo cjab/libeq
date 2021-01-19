@@ -23,6 +23,7 @@ for mesh in wld.meshes() {
     let normals = mesh.normals();
     let texture_coordinates = mesh.texture_coordinates();
     let indices = mesh.indices();
+    let center = mesh.center();
     ...
 }
 

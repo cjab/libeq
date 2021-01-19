@@ -1,6 +1,6 @@
 [package]
 name = "eq_wld"
-version = "0.1.1"
+version = "0.2.1"
 authors = ["Chad Jablonski <chad@jablonski.xyz>"]
 edition = "2018"
 description = "An Everquest .wld file loader"
