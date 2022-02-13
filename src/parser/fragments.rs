@@ -6,33 +6,32 @@ use nom::number::complete::{le_f32, le_i16, le_i32, le_i8, le_u16, le_u32, le_u8
 use nom::sequence::tuple;
 use nom::IResult;
 
-use super::decode_string;
+use super::{decode_string, StringReference};
 
 #[derive(Debug, Clone, Copy)]
-pub struct FragmentRef<T>(pub i32, PhantomData<T>);
+pub enum FragmentRef<T> {
+    Name(StringReference, PhantomData<T>),
+    Index(u32, PhantomData<T>),
+}
 
 impl<T> FragmentRef<T> {
     pub fn new(idx: i32) -> FragmentRef<T> {
-        FragmentRef(idx, PhantomData)
-    }
-
-    pub fn is_name_ref(&self) -> bool {
-        self.0 <= 0
-    }
-
-    pub fn is_index_ref(&self) -> bool {
-        self.0 > 0
+        match StringReference::new(idx) {
+            Some(name_ref) => FragmentRef::Name(name_ref, PhantomData),
+            None => FragmentRef::Index(idx as u32, PhantomData),
+        }
     }
 }
 
 pub trait Fragment {
     type T;
+    const TYPE_ID: u32;
     fn parse(input: &[u8]) -> IResult<&[u8], Self::T>;
 }
 
 fn fragment_ref<T>(input: &[u8]) -> IResult<&[u8], FragmentRef<T>> {
     let (remaining, frag_ref_idx) = le_i32(input)?;
-    Ok((remaining, FragmentRef(frag_ref_idx, PhantomData)))
+    Ok((remaining, FragmentRef::new(frag_ref_idx)))
 }
 
 #[derive(Debug)]
@@ -49,6 +48,8 @@ pub struct BspTreeFragment {
 
 impl Fragment for BspTreeFragment {
     type T = Self;
+
+    const TYPE_ID: u32 = 0x21;
 
     fn parse(input: &[u8]) -> IResult<&[u8], BspTreeFragment> {
         let (i, size1) = le_u32(input)?;
@@ -82,6 +83,8 @@ pub struct BspTreeFragmentEntry {
 
 impl Fragment for BspTreeFragmentEntry {
     type T = Self;
+
+    const TYPE_ID: u32 = 0x00;
 
     fn parse(input: &[u8]) -> IResult<&[u8], BspTreeFragmentEntry> {
         let (remaining, (normal, split_distance, region, nodes)) = tuple((
@@ -180,6 +183,8 @@ pub struct BspRegionFragment {
 impl Fragment for BspRegionFragment {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x22;
+
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragment> {
         let (i, (flags, fragment1, size1, size2, params1, size3, size4, params2, size5, size6)) =
             tuple((
@@ -262,6 +267,8 @@ pub struct BspRegionFragmentData3Entry {
 impl Fragment for BspRegionFragmentData3Entry {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x00;
+
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentData3Entry> {
         let (i, (flags, size1)) = tuple((le_u32, le_u32))(input)?;
         let (i, data1) = count(le_u32, size1 as usize)(i)?;
@@ -321,6 +328,8 @@ pub struct BspRegionFragmentData4Entry {
 impl Fragment for BspRegionFragmentData4Entry {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x00;
+
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentData4Entry> {
         let (i, (flags, params1, type_field)) = tuple((le_u32, le_u32, le_u32))(input)?;
 
@@ -376,6 +385,8 @@ pub struct BspRegionFragmentData5Entry {
 
 impl Fragment for BspRegionFragmentData5Entry {
     type T = Self;
+
+    const TYPE_ID: u32 = 0x00;
 
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentData5Entry> {
         let (remaining, (params1, params2, params3, params4, params5)) = tuple((
@@ -446,6 +457,8 @@ pub struct BspRegionFragmentData6Entry {
 
 impl Fragment for BspRegionFragmentData6Entry {
     type T = Self;
+
+    const TYPE_ID: u32 = 0x00;
 
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentData6Entry> {
         let (i, size1) = le_u16(input)?;
@@ -630,6 +643,8 @@ pub struct MeshFragment {
 impl Fragment for MeshFragment {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x36;
+
     fn parse(input: &[u8]) -> IResult<&[u8], MeshFragment> {
         let (
             i,
@@ -755,6 +770,8 @@ pub struct MeshFragmentPolygonEntry {
 impl Fragment for MeshFragmentPolygonEntry {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x00;
+
     fn parse(input: &[u8]) -> IResult<&[u8], MeshFragmentPolygonEntry> {
         let (remaining, (flags, vertex_indexes)) =
             tuple((le_u16, tuple((le_u16, le_u16, le_u16))))(input)?;
@@ -795,6 +812,8 @@ struct MeshFragmentData9Entry {
 impl Fragment for MeshFragmentData9Entry {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x00;
+
     fn parse(input: &[u8]) -> IResult<&[u8], MeshFragmentData9Entry> {
         let (remaining, (index1, index2, offset, param1, type_field)) = tuple((
             map(le_u16, Some),
@@ -832,6 +851,8 @@ pub struct MaterialListFragment {
 
 impl Fragment for MaterialListFragment {
     type T = Self;
+
+    const TYPE_ID: u32 = 0x31;
 
     fn parse(input: &[u8]) -> IResult<&[u8], MaterialListFragment> {
         let (i, (flags, size1)) = tuple((le_u32, le_u32))(input)?;
@@ -881,6 +902,8 @@ pub struct MaterialFragment {
 impl Fragment for MaterialFragment {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x30;
+
     fn parse(input: &[u8]) -> IResult<&[u8], MaterialFragment> {
         let (i, (flags, params1, params2, params3, reference)) = tuple((
             le_u32,
@@ -925,6 +948,8 @@ pub struct TextureReferenceFragment {
 impl Fragment for TextureReferenceFragment {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x05;
+
     fn parse(input: &[u8]) -> IResult<&[u8], TextureReferenceFragment> {
         let (remaining, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
         Ok((remaining, TextureReferenceFragment { reference, flags }))
@@ -962,6 +987,8 @@ pub struct TextureFragment {
 
 impl Fragment for TextureFragment {
     type T = Self;
+
+    const TYPE_ID: u32 = 0x04;
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureFragment> {
         let (i, (flags, size)) = tuple((le_u32, le_u32))(input)?;
@@ -1001,6 +1028,8 @@ pub struct TextureImagesFragment {
 impl Fragment for TextureImagesFragment {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x03;
+
     fn parse(input: &[u8]) -> IResult<&[u8], TextureImagesFragment> {
         let (i, size1) = le_u32(input)?;
         // TODO: This is hardcoded to one entry, is this all we need?
@@ -1029,6 +1058,8 @@ pub struct TextureImagesFragmentEntry {
 
 impl Fragment for TextureImagesFragmentEntry {
     type T = Self;
+
+    const TYPE_ID: u32 = 0x0;
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureImagesFragmentEntry> {
         let (i, name_length) = le_u16(input)?;

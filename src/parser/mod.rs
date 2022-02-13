@@ -3,7 +3,6 @@ mod strings;
 
 use core::fmt::Debug;
 
-use log::error;
 use nom::bytes::complete::take;
 use nom::error::ErrorKind;
 use nom::multi::count;
@@ -15,10 +14,7 @@ pub use fragments::{
     Fragment, FragmentRef, MaterialFragment, MeshFragment, MeshFragmentPolygonEntry,
     TextureFragment,
 };
-pub use strings::{decode_string, StringHash};
-
-pub const MESH_FRAGMENT_ID: u32 = 0x36;
-pub const MATERIAL_FRAGMENT_ID: u32 = 0x30;
+pub use strings::{decode_string, StringHash, StringReference};
 
 #[derive(Debug)]
 pub enum Error {
@@ -62,13 +58,9 @@ impl<'a> WldDoc<'a> {
         &self,
         fragment_ref: &FragmentRef<T>,
     ) -> Option<(Option<&str>, T)> {
-        if fragment_ref.is_name_ref() {
-            self.get_by_name_ref(fragment_ref)
-        } else if fragment_ref.is_index_ref() && fragment_ref.0 < self.fragments.len() as i32 {
-            self.get_by_index_ref(fragment_ref)
-        } else {
-            error!("Fragment reference [{:?}] out of bounds!", fragment_ref);
-            None
+        match fragment_ref {
+            FragmentRef::Name(_, _) => self.get_by_name_ref(fragment_ref),
+            FragmentRef::Index(_, _) => self.get_by_index_ref(fragment_ref),
         }
     }
 
@@ -76,27 +68,34 @@ impl<'a> WldDoc<'a> {
         &self,
         fragment_ref: &FragmentRef<T>,
     ) -> Option<(Option<&str>, T)> {
-        let idx = (fragment_ref.0 - 1) as usize;
-        let fragment = self
-            .fragments
-            .get(idx)
-            .expect(&format!("Could not find fragment at {}", idx));
-        let name = self.strings.get(fragment.name_reference);
-        T::parse(fragment.field_data).map(|r| (name, r.1)).ok()
+        let idx = if let FragmentRef::Index(idx, _) = fragment_ref {
+            idx
+        } else {
+            return None;
+        };
+
+        let fragment = self.fragments.get((idx - 1) as usize)?;
+        let name = fragment.name_reference.and_then(|r| self.strings.get(r));
+        T::parse(&fragment.field_data).map(|r| (name, r.1)).ok()
     }
 
     fn get_by_name_ref<T: Fragment<T = T> + Debug>(
         &self,
         fragment_ref: &FragmentRef<T>,
     ) -> Option<(Option<&str>, T)> {
-        let string_ref = -fragment_ref.0 - 1;
-        if let Some(target_name) = self.strings.get(string_ref) {
+        let name_ref = if let FragmentRef::Name(name_ref, _) = fragment_ref {
+            *name_ref
+        } else {
+            return None;
+        };
+
+        if let Some(target_name) = self.strings.get(name_ref) {
             self.fragments
                 .iter()
                 .find(|f| f.name(self).map_or(false, |name| name == target_name))
                 .and_then(|f| {
-                    let name = self.strings.get(f.name_reference);
-                    T::parse(f.field_data).map(|r| (name, r.1)).ok()
+                    let name = f.name_reference.and_then(|r| self.strings.get(r));
+                    T::parse(&f.field_data).map(|r| (name, r.1)).ok()
                 })
         } else {
             None
@@ -105,22 +104,21 @@ impl<'a> WldDoc<'a> {
 
     /// Iterate over all mesh fragments in the wld file.
     pub(super) fn meshes(&self) -> impl Iterator<Item = (Option<&str>, MeshFragment)> + '_ {
-        self.fragment_iter::<MeshFragment>(MESH_FRAGMENT_ID)
+        self.fragment_iter::<MeshFragment>()
     }
 
     /// Iterate over all material fragments in the wld file.
     pub(super) fn materials(&self) -> impl Iterator<Item = (Option<&str>, MaterialFragment)> + '_ {
-        self.fragment_iter::<MaterialFragment>(MATERIAL_FRAGMENT_ID)
+        self.fragment_iter::<MaterialFragment>()
     }
 
-    fn fragment_iter<T: Fragment<T = T> + Debug>(
+    pub fn fragment_iter<T: Fragment<T = T> + Debug>(
         &self,
-        fragment_type: u32,
     ) -> impl Iterator<Item = (Option<&str>, T)> + '_ {
         self.fragments
             .iter()
             .enumerate()
-            .filter(move |(_, f)| f.fragment_type == fragment_type)
+            .filter(move |(_, f)| f.fragment_type == T::TYPE_ID)
             .map(|(i, _)| FragmentRef::new((i + 1) as i32))
             .filter_map(move |r| self.get(&r))
     }
@@ -204,13 +202,13 @@ pub struct FragmentHeader<'a> {
     ///
     /// All fragments without a name will have a `name_reference` of 0.
     /// The one exception being the 0x35 fragment which will always reference 0xFF000000.
-    pub name_reference: i32,
+    pub name_reference: Option<StringReference>,
 
     pub field_data: &'a [u8],
 }
 
 impl<'a> FragmentHeader<'a> {
-    pub fn parse(input: &'a [u8]) -> IResult<&[u8], FragmentHeader> {
+    pub fn parse(input: &[u8]) -> IResult<&[u8], FragmentHeader> {
         let (i, (size, fragment_type, name_reference)) = tuple((le_u32, le_u32, le_i32))(input)?;
 
         let (remaining, field_data) = if fragment_type != 0x35 {
@@ -223,7 +221,7 @@ impl<'a> FragmentHeader<'a> {
             remaining,
             FragmentHeader {
                 size,
-                name_reference,
+                name_reference: StringReference::new(name_reference),
                 fragment_type,
                 field_data,
             },
@@ -231,6 +229,6 @@ impl<'a> FragmentHeader<'a> {
     }
 
     pub fn name(&self, doc: &'a WldDoc) -> Option<&'a str> {
-        doc.strings.get(self.name_reference)
+        self.name_reference.and_then(|r| doc.strings.get(r))
     }
 }
