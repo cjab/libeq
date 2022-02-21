@@ -2182,8 +2182,8 @@ impl Fragment for BspTreeFragmentEntry {
 pub struct BspRegionFragment {
     /// Most flags are _unknown_. Usually contains 0x181 for regions that contain polygons and 0x81
     /// for regions that are empty.
-    /// * bit 5 - If set then `data6` contains u32 entries.
-    /// * bit 7 - If set then `data6` contains u8 entries (more common).
+    /// * bit 5 - If set then `pvs` contains u32 entries.
+    /// * bit 7 - If set then `pvs` contains u8 entries (more common).
     flags: u32,
 
     /// _Unknown_ - Some sort of fragment reference. Usually nothing is referenced.
@@ -2210,8 +2210,8 @@ pub struct BspRegionFragment {
     /// The number of `data5` entries. Usually 1.
     size5: u32,
 
-    /// The number of `data6` entries. Usually 1.
-    size6: u32,
+    /// The number of `pvs` entries. Usually 1.
+    pvs_count: u32,
 
     /// According to the ZoneConverter source there are 12 * `size1` bytes here. Their format is
     /// _unknown_ for lack of sample data to figure it out.
@@ -2230,8 +2230,8 @@ pub struct BspRegionFragment {
     /// _Unknown_ data entries
     data5: Vec<BspRegionFragmentData5Entry>,
 
-    /// _Unknown_ data entries
-    data6: Vec<BspRegionFragmentPVS>,
+    /// A potentially visible set (PVS) of regions
+    pvs: Vec<BspRegionFragmentPVS>,
 
     /// The number of bytes in the `name7` field.
     size7: u32,
@@ -2246,7 +2246,7 @@ pub struct BspRegionFragment {
     /// that contains only those polygons. That [MeshFragment] must contain all geometry information
     /// contained within the volume that this region represents and nothing that lies outside of
     /// that volume.
-    pub fragment3: Option<FragmentRef<MeshFragment>>,
+    pub mesh_reference: Option<FragmentRef<MeshFragment>>,
 }
 
 impl Fragment for BspRegionFragment {
@@ -2255,7 +2255,7 @@ impl Fragment for BspRegionFragment {
     const TYPE_ID: u32 = 0x22;
 
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragment> {
-        let (i, (flags, fragment1, size1, size2, params1, size3, size4, params2, size5, size6)) =
+        let (i, (flags, fragment1, size1, size2, params1, size3, size4, params2, size5, pvs_count)) =
             tuple((
                 le_u32,
                 fragment_ref,
@@ -2268,18 +2268,18 @@ impl Fragment for BspRegionFragment {
                 le_u32,
                 le_u32,
             ))(input)?;
-        let (i, (data1, data2, data3, data4, data5, data6, size7)) = tuple((
+        let (i, (data1, data2, data3, data4, data5, pvs, size7)) = tuple((
             count(le_u8, size1 as usize),
             count(le_u8, size2 as usize),
             count(BspRegionFragmentData3Entry::parse, size3 as usize),
             count(BspRegionFragmentData4Entry::parse, size4 as usize),
             count(BspRegionFragmentData5Entry::parse, size5 as usize),
-            count(BspRegionFragmentPVS::parse, size6 as usize),
+            count(BspRegionFragmentPVS::parse, pvs_count as usize),
             le_u32,
         ))(i)?;
         let (i, (name7, fragment2)) = tuple((count(le_u8, 12), fragment_ref))(i)?;
 
-        let (remaining, fragment3) = if (flags & 0x100) == 0x100 {
+        let (remaining, mesh_reference) = if (flags & 0x100) == 0x100 {
             fragment_ref(i).map(|(rem, f)| (rem, Some(f)))?
         } else {
             (i, None)
@@ -2297,17 +2297,17 @@ impl Fragment for BspRegionFragment {
                 size4,
                 params2,
                 size5,
-                size6,
+                pvs_count,
                 data1,
                 data2,
                 data3,
                 data4,
                 data5,
-                data6,
+                pvs,
                 size7,
                 name7,
                 fragment2,
-                fragment3,
+                mesh_reference,
             },
         ))
     }
