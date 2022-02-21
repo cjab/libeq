@@ -2562,7 +2562,7 @@ pub struct MeshFragment {
 
     /// A reference to a [MeshAnimatedVerticesReferenceFragment]. This is set for non-character
     /// animated meshes. For example swaying flags and trees.
-    fragment2: FragmentRef<i32>,
+    animation_ref: FragmentRef<i32>,
 
     /// _Unknown_ - Usually empty
     fragment3: FragmentRef<i32>,
@@ -2577,7 +2577,7 @@ pub struct MeshFragment {
     ///
     /// For placeable objects this seems to define where the vertices will lie relative to
     /// the object’s local origin. This seems to allow placeable objects to be created that
-    /// lie at some distance from their position as given in a [ObjectLocation] fragment
+    /// lie at some distance from their position as given in a [ObjectLocationFragment]
     /// (why one would do this is a mystery, though).
     pub center: (f32, f32, f32),
 
@@ -2720,7 +2720,7 @@ impl Fragment for MeshFragment {
             (
                 flags,
                 material_list_ref,
-                fragment2,
+                animation_ref,
                 fragment3,
                 fragment4,
                 center,
@@ -2792,7 +2792,7 @@ impl Fragment for MeshFragment {
             MeshFragment {
                 flags,
                 material_list_ref,
-                fragment2,
+                animation_ref,
                 fragment3,
                 fragment4,
                 center,
@@ -3022,6 +3022,29 @@ impl Fragment for TextureReferenceFragment {
     fn parse(input: &[u8]) -> IResult<&[u8], TextureReferenceFragment> {
         let (remaining, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
         Ok((remaining, TextureReferenceFragment { reference, flags }))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [MeshFragment] fragment.
+///
+/// **Type ID:** 0x2d
+pub struct MeshReferenceFragment {
+    /// The [MeshFragment] reference.
+    pub reference: FragmentRef<MeshFragment>,
+
+    /// _Unknown_ - Apparently must be zero.
+    pub params: u32,
+}
+
+impl Fragment for MeshReferenceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x2d;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], MeshReferenceFragment> {
+        let (remaining, (reference, params)) = tuple((fragment_ref, le_u32))(input)?;
+        Ok((remaining, MeshReferenceFragment { reference, params }))
     }
 }
 
