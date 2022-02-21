@@ -1,4 +1,4 @@
-mod fragments;
+pub mod fragments;
 mod strings;
 
 use core::fmt::Debug;
@@ -180,7 +180,7 @@ type FragmentTypeId = u32;
 pub struct FragmentHeader<'a> {
     /// The size of the fragment in bytes. All fragments are padded such that `size`
     /// is evenly divisible by 4 and Size should reflect the padded value.
-    size: u32,
+    pub size: u32,
 
     /// The fragment type. This will typically be a value in the
     /// range 0x03 to 0x37 and tells the file reader which specific kind of fragment
