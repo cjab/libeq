@@ -10,6 +10,9 @@ keywords = ["everquest", "eq", "wld", "loader"]
 categories = ["game-development", "graphics", "parsing", "rendering::data-formats"]
 license = "MIT"
 
+[workspace]
+members = ["tools/*"]
+
 [dependencies]
 log = "0.4.14"
 env_logger = "0.9"
