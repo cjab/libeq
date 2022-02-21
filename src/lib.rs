@@ -39,7 +39,7 @@
 //! hopefully the names used are more familiar in that context.
 //!
 
-mod parser;
+pub mod parser;
 
 pub use parser::Error;
 use parser::{MaterialFragment, MeshFragment, MeshFragmentPolygonEntry, TextureFragment, WldDoc};
@@ -283,7 +283,7 @@ impl<'a> Texture<'a> {
     /// source images per texture but in practice only ever seem to have one.
     pub fn source(&self) -> Option<String> {
         self.fragment
-            .references
+            .frame_references
             .iter()
             // [TextureFragment]s reference a [TextureImagesFragment]
             .map(|r| self.doc.get(&r))
