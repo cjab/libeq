@@ -2109,7 +2109,7 @@ impl Fragment for ModelFragment {
 /// **Type ID:** 0x21
 pub struct BspTreeFragment {
     /// The number of [BspTreeFragmentEntry]s in this tree.
-    size1: u32,
+    pub size1: u32,
 
     /// The [BspTreeFragmentEntry]s
     pub entries: Vec<BspTreeFragmentEntry>,
@@ -2184,63 +2184,63 @@ pub struct BspRegionFragment {
     /// for regions that are empty.
     /// * bit 5 - If set then `pvs` contains u32 entries.
     /// * bit 7 - If set then `pvs` contains u8 entries (more common).
-    flags: u32,
+    pub flags: u32,
 
     /// _Unknown_ - Some sort of fragment reference. Usually nothing is referenced.
-    fragment1: FragmentRef<i32>,
+    pub fragment1: FragmentRef<i32>,
 
     /// The number of bytes in `data1`
-    size1: u32,
+    pub size1: u32,
 
     /// The number of bytes in `data2`
-    size2: u32,
+    pub size2: u32,
 
     /// _Unknown_ - Usually 0
-    params1: u32,
+    pub params1: u32,
 
     /// The number of `data3` entries. Usually 0.
-    size3: u32,
+    pub size3: u32,
 
     /// The number of `data4` entries. Usually 0.
-    size4: u32,
+    pub size4: u32,
 
     /// _Unknown_ - Usually 0.
-    params2: u32,
+    pub params2: u32,
 
     /// The number of `data5` entries. Usually 1.
-    size5: u32,
+    pub size5: u32,
 
     /// The number of `pvs` entries. Usually 1.
-    pvs_count: u32,
+    pub pvs_count: u32,
 
     /// According to the ZoneConverter source there are 12 * `size1` bytes here. Their format is
     /// _unknown_ for lack of sample data to figure it out.
-    data1: Vec<u8>,
+    pub data1: Vec<u8>,
 
     /// According to the ZoneConverter source there are 8 * `size2` bytes here. Their format is
     /// _unknown_ for lack of sample data to figure it out.
-    data2: Vec<u8>,
+    pub data2: Vec<u8>,
 
     /// _Unknown_ data entries
-    data3: Vec<BspRegionFragmentData3Entry>,
+    pub data3: Vec<BspRegionFragmentData3Entry>,
 
     /// _Unknown_ data entries
-    data4: Vec<BspRegionFragmentData4Entry>,
+    pub data4: Vec<BspRegionFragmentData4Entry>,
 
     /// _Unknown_ data entries
-    data5: Vec<BspRegionFragmentData5Entry>,
+    pub data5: Vec<BspRegionFragmentData5Entry>,
 
     /// A potentially visible set (PVS) of regions
-    pvs: Vec<BspRegionFragmentPVS>,
+    pub pvs: Vec<BspRegionFragmentPVS>,
 
     /// The number of bytes in the `name7` field.
-    size7: u32,
+    pub size7: u32,
 
     /// _Unknown_ - An encoded string.
-    name7: Vec<u8>,
+    pub name7: Vec<u8>,
 
     /// _Unknown_ - Usually references nothing.
-    fragment2: FragmentRef<i32>,
+    pub fragment2: FragmentRef<i32>,
 
     /// If there are any polygons in this region then this reference points to a [MeshFragment]
     /// that contains only those polygons. That [MeshFragment] must contain all geometry information
@@ -2548,7 +2548,7 @@ pub struct MeshFragment {
     ///
     /// * For zone meshes: 0x00018003
     /// * For placeable objects: 0x00014003
-    flags: u32,
+    pub flags: u32,
 
     /// A reference to a [MaterialListFragment] fragment. This tells the client which materials
     /// this mesh uses.
@@ -2562,13 +2562,13 @@ pub struct MeshFragment {
 
     /// A reference to a [MeshAnimatedVerticesReferenceFragment]. This is set for non-character
     /// animated meshes. For example swaying flags and trees.
-    animation_ref: FragmentRef<i32>,
+    pub animation_ref: FragmentRef<i32>,
 
     /// _Unknown_ - Usually empty
-    fragment3: FragmentRef<i32>,
+    pub fragment3: FragmentRef<i32>,
 
     /// _Unknown_ - This usually seems to reference the first [TextureImagesFragment] fragment in the file.
-    fragment4: FragmentRef<i32>,
+    pub fragment4: FragmentRef<i32>,
 
     /// For zone meshes this typically contains the X coordinate of the center of the mesh.
     /// This allows vertex coordinates in the mesh to be relative to the center instead of
@@ -2582,12 +2582,12 @@ pub struct MeshFragment {
     pub center: (f32, f32, f32),
 
     /// _Unknown_ - Usually (0, 0, 0).
-    params2: (u32, u32, u32),
+    pub params2: (u32, u32, u32),
 
     /// Given the values in `center`, this seems to contain the maximum distance between any
     /// vertex and that position. It seems to define a radius from that position within which
     /// the mesh lies.
-    max_distance: f32,
+    pub max_distance: f32,
 
     /// Contains min x, y, and z coords in absolute coords of any vertex in the mesh.
     pub min: (f32, f32, f32),
@@ -2599,27 +2599,27 @@ pub struct MeshFragment {
     /// the number of polygons, but this is by no means necessary as polygons can
     /// share vertices. However, sharing vertices degrades the ability to use vertex
     /// normals to make a mesh look more rounded (with shading).
-    position_count: u16,
+    pub position_count: u16,
 
     /// The number of texture coordinate pairs there are in the mesh. This should
     /// equal the number of vertices in the mesh. Presumably this could contain zero
     /// if none of the polygons have textures mapped to them (but why would anyone do that?)
-    texture_coordinate_count: u16,
+    pub texture_coordinate_count: u16,
 
     /// The number of vertex normal entries in the mesh. This should equal the number
     /// of vertices in the mesh. Presumably this could contain zero if vertices should
     /// use polygon normals instead, but I haven’t tried it (vertex normals are preferable
     /// anyway).
-    normal_count: u16,
+    pub normal_count: u16,
 
     /// The number of vertex color entries in the mesh. This should equal the number
     /// of vertices in the mesh, or zero if there are no vertex color entries.
     /// Meshes do not require color entries to work. Color entries are used for
     /// illuminating polygons when there is a nearby light source.
-    color_count: u16,
+    pub color_count: u16,
 
     /// The number of polygons in the mesh.
-    polygon_count: u16,
+    pub polygon_count: u16,
 
     /// This seems to only be used when dealing with animated (mob) models.
     /// It contains the number of vertex piece entries. Vertices are grouped together by
@@ -2628,21 +2628,21 @@ pub struct MeshFragment {
     /// pieces in the skeleton than are in the meshes it references. Extra pieces have
     /// no polygons or vertices and I suspect they are there to define attachment points for
     /// objects (e.g. weapons or shields).
-    vertex_piece_count: u16,
+    pub vertex_piece_count: u16,
 
     /// The number of polygon texture entries. Polygons are grouped together by
     /// material and polygon material entries. This tells the client the number of
     /// polygons using a material.
-    polygon_material_count: u16,
+    pub polygon_material_count: u16,
 
     /// The number of vertex material entries. Vertices are grouped together
     /// by material and vertex material entries tell the client how many vertices there
     /// are using a material.
-    vertex_material_count: u16,
+    pub vertex_material_count: u16,
 
     /// _Unknown_ - The number of entries in `data9`. Seems to be used only for
     /// animated mob models.
-    size9: u16,
+    pub size9: u16,
 
     /// This allows vertex coordinates to be stored as integral values instead of
     /// floating-point values, without losing precision based on mesh size. Vertex
@@ -2674,7 +2674,7 @@ pub struct MeshFragment {
     /// That is, it’s either a blending value or an alpha value. Further
     /// experimentation is required. 0xD9 seems to be a good (typical) A value for
     /// most illuminated vertices.
-    vertex_colors: Vec<u32>,
+    pub vertex_colors: Vec<u32>,
 
     /// A collection of [MeshFragmentPolygonEntry]s used in this mesh.
     pub polygons: Vec<MeshFragmentPolygonEntry>,
@@ -2686,7 +2686,7 @@ pub struct MeshFragment {
     /// as it is usually jsut a "stem" starting point for the skeleton. Only those pieces
     /// referenced here in the mesh should actually be rendered. Any other pieces in the skeleton
     /// contain no vertices or polygons And have other purposes.
-    vertex_pieces: Vec<(u16, u16)>,
+    pub vertex_pieces: Vec<(u16, u16)>,
 
     /// The first element of the tuple is the number of polygons that use the same material. All
     /// polygon entries are sorted by material index so that polygons use the same material are
@@ -2703,10 +2703,10 @@ pub struct MeshFragment {
     /// The second element of the tuple is the index of the material that the
     /// vertices use, according to the [MaterialListFragment] fragment that this fragment
     /// references.
-    vertex_materials: Vec<(u16, u16)>,
+    pub vertex_materials: Vec<(u16, u16)>,
 
     /// _Unknown_ - A collection of [MeshFragmentData9Entry]s
-    data9: Vec<MeshFragmentData9Entry>,
+    pub data9: Vec<MeshFragmentData9Entry>,
 }
 
 impl Fragment for MeshFragment {
@@ -2856,26 +2856,26 @@ impl Fragment for MeshFragmentPolygonEntry {
 
 #[derive(Debug)]
 /// _Unknown_
-struct MeshFragmentData9Entry {
+pub struct MeshFragmentData9Entry {
     /// _Unknown_ - This seems to reference one of the vertex entries. This field
     /// only exists if `type_field` contains a value in the range 1-3.
-    index1: Option<u16>,
+    pub index1: Option<u16>,
 
     /// _Unknown_ - This seems to reference one of the vertex entries. This field is only valid if
     /// `type_field` contains 1. Otherwise, this field must contain 0.
-    index2: Option<u16>,
+    pub index2: Option<u16>,
 
     /// _Unknown_ - If `type_field` contains 4, then this field exists instead of `index1`
     /// and `index2`. [MeshFragmentData9Entry]s seem to be sorted by this value.
-    offset: Option<f32>,
+    pub offset: Option<f32>,
 
     /// _Unknown_ - It seems to only contain values in the range 0-2.
-    param1: u16,
+    pub param1: u16,
 
     /// _Unknown_ - It seems to control whether `index1`, `index2`, and `offset` exist. It can only
     /// contain values in the range 1-4. It looks like the [MeshFragmentData9Entry]s are broken up into
     /// blocks, where each block is terminated by an entry where `type_field` is 4.
-    type_field: u16,
+    pub type_field: u16,
 }
 
 impl Fragment for MeshFragmentData9Entry {
@@ -2909,10 +2909,10 @@ impl Fragment for MeshFragmentData9Entry {
 /// **Type ID:** 0x31
 pub struct MaterialListFragment {
     /// _Unknown_ - Must contain 0.
-    flags: u32,
+    pub flags: u32,
 
     /// The number of fragment references this fragment contains.
-    size1: u32,
+    pub size1: u32,
 
     /// `size1` references to [MaterialFragment] fragments.
     pub fragments: Vec<FragmentRef<MaterialFragment>>,
@@ -2943,7 +2943,7 @@ impl Fragment for MaterialListFragment {
 pub struct MaterialFragment {
     /// Most flags are _unknown_, however:
     /// * bit 1 - If set then the `pair` field exists. This is usually set.
-    flags: u32,
+    pub flags: u32,
 
     /// Most flags are _unknown_, however:
     /// * bit 0 - It seems like this must be set if the texture is not transparent.
@@ -2952,20 +2952,20 @@ pub struct MaterialFragment {
     /// * bit 3 - Set if the texture is masked and semi-transparent.
     /// * bit 4 Set if the texture is masked but not semi-transparent.
     /// * bit 31 - It seems like this must be set if the texture is not transparent.
-    params1: u32,
+    pub params1: u32,
 
     /// This typically contains 0x004E4E4E but has also bee known to contain 0xB2B2B2.
     /// Could this be an RGB reflectivity value?
-    params2: u32,
+    pub params2: u32,
 
     /// _Unknown_ - Usually contains 0.
-    params3: (f32, f32),
+    pub params3: (f32, f32),
 
     /// A reference to a [TextureReferenceFragment] fragment.
     pub reference: FragmentRef<TextureReferenceFragment>,
 
     /// _Unknown_ - This only exists if bit 1 of flags is set. Both fields usually contain 0.
-    pair: Option<(u32, f32)>,
+    pub pair: Option<(u32, f32)>,
 }
 
 impl Fragment for MaterialFragment {
@@ -3011,7 +3011,7 @@ pub struct TextureReferenceFragment {
     pub reference: FragmentRef<TextureFragment>,
 
     /// _Unknown_ - Seems to always contain 0x50.
-    flags: u32,
+    pub flags: u32,
 }
 
 impl Fragment for TextureReferenceFragment {
@@ -3061,16 +3061,16 @@ pub struct TextureFragment {
     /// * bit 3 - If set texture is animated (has more than one [TextureImagesFragment] reference.
     /// This also means that a `params1` field exists.
     /// * bit 4 - If set a `params2` field exists. This _seems_ to always be set.
-    flags: TextureFragmentFlags,
+    pub flags: TextureFragmentFlags,
 
     /// The number of [TextureImagesFragment] references.
-    frame_count: u32,
+    pub frame_count: u32,
 
     /// Only present if bit `has_current_frame` in `flags` is set.
-    current_frame: Option<u32>,
+    pub current_frame: Option<u32>,
 
     /// Only present if `sleep` in `flags` is set.
-    sleep: Option<u32>,
+    pub sleep: Option<u32>,
 
     /// One or more references to [TextureImagesFragment] fragments. For most textures this will
     /// be a single reference but animated textures will reference multiple.
@@ -3104,7 +3104,7 @@ impl Fragment for TextureFragment {
 }
 
 #[derive(Debug)]
-pub struct TextureFragmentFlags(u32);
+pub struct TextureFragmentFlags(pub u32);
 
 impl TextureFragmentFlags {
     fn parse(input: &[u8]) -> IResult<&[u8], TextureFragmentFlags> {
@@ -3137,7 +3137,7 @@ impl TextureFragmentFlags {
 pub struct TextureImagesFragment {
     /// Contains the number of texture filenames in this fragment. Again, this appears
     /// to always be 1.
-    size1: u32,
+    pub size1: u32,
 
     /// Bitmap filename entries
     pub entries: Vec<TextureImagesFragmentEntry>,
@@ -3160,7 +3160,7 @@ impl Fragment for TextureImagesFragment {
 /// Bitmap filename entries within the [TextureImagesFragment] fragment.
 pub struct TextureImagesFragmentEntry {
     /// The length of the filename in bytes.
-    name_length: u16,
+    pub name_length: u16,
 
     /// The encoded filename. See [string hash encoding].
     ///
