@@ -3061,20 +3061,20 @@ pub struct TextureFragment {
     /// * bit 3 - If set texture is animated (has more than one [TextureImagesFragment] reference.
     /// This also means that a `params1` field exists.
     /// * bit 4 - If set a `params2` field exists. This _seems_ to always be set.
-    flags: u32,
+    flags: TextureFragmentFlags,
 
     /// The number of [TextureImagesFragment] references.
-    size: u32,
+    frame_count: u32,
 
-    /// _Unknown_ - Only present if bit 3 of `flags` is set.
-    params1: Option<u32>,
+    /// Only present if bit `has_current_frame` in `flags` is set.
+    current_frame: Option<u32>,
 
-    /// _Unknown_ - Only present if bit 4 of `flags` is set.
-    params2: Option<u32>,
+    /// Only present if `sleep` in `flags` is set.
+    sleep: Option<u32>,
 
     /// One or more references to [TextureImagesFragment] fragments. For most textures this will
     /// be a single reference but animated textures will reference multiple.
-    pub references: Vec<FragmentRef<TextureImagesFragment>>,
+    pub frame_references: Vec<FragmentRef<TextureImagesFragment>>,
 }
 
 impl Fragment for TextureFragment {
@@ -3083,23 +3083,49 @@ impl Fragment for TextureFragment {
     const TYPE_ID: u32 = 0x04;
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureFragment> {
-        let (i, (flags, size)) = tuple((le_u32, le_u32))(input)?;
+        let (i, (flags, frame_count)) = tuple((TextureFragmentFlags::parse, le_u32))(input)?;
 
         // TODO: Do these fields even really exist?
-        let params1 = None;
-        let params2 = None;
-        let (remaining, references) = count(fragment_ref, size as usize)(i)?;
+        let current_frame = None;
+        let sleep = None;
+        let (remaining, frame_references) = count(fragment_ref, frame_count as usize)(i)?;
 
         Ok((
             remaining,
             TextureFragment {
                 flags,
-                size,
-                params1,
-                params2,
-                references,
+                frame_count,
+                current_frame,
+                sleep,
+                frame_references,
             },
         ))
+    }
+}
+
+#[derive(Debug)]
+pub struct TextureFragmentFlags(u32);
+
+impl TextureFragmentFlags {
+    fn parse(input: &[u8]) -> IResult<&[u8], TextureFragmentFlags> {
+        let (remaining, raw_flags) = le_u32(input)?;
+        Ok((remaining, TextureFragmentFlags(raw_flags)))
+    }
+
+    pub fn skip_frames(&self) -> bool {
+        self.0 & 0x02 == 0x02
+    }
+
+    pub fn is_animated(&self) -> bool {
+        self.0 & 0x08 == 0x08
+    }
+
+    pub fn has_sleep(&self) -> bool {
+        self.0 & 0x10 == 0x10
+    }
+
+    pub fn has_current_frame(&self) -> bool {
+        self.0 & 0x20 == 0x20
     }
 }
 
