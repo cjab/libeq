@@ -1,5 +1,18 @@
 use std::collections::HashMap;
 
+#[derive(Clone, Copy, Debug)]
+pub struct StringReference(usize);
+
+impl StringReference {
+    pub fn new(idx: i32) -> Option<StringReference> {
+        if idx.is_negative() {
+            Some(StringReference(idx.abs() as usize))
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct StringHash(HashMap<usize, String>);
 
@@ -36,12 +49,7 @@ impl StringHash {
         )
     }
 
-    pub fn get(&self, name_reference: i32) -> Option<&str> {
-        if name_reference.is_negative() {
-            let key = name_reference.abs() as usize;
-            self.0.get(&key).map(|s| s.as_ref())
-        } else {
-            None
-        }
+    pub fn get(&self, string_reference: StringReference) -> Option<&str> {
+        self.0.get(&string_reference.0).map(|s| s.as_ref())
     }
 }

@@ -6,33 +6,2101 @@ use nom::number::complete::{le_f32, le_i16, le_i32, le_i8, le_u16, le_u32, le_u8
 use nom::sequence::tuple;
 use nom::IResult;
 
-use super::decode_string;
+use super::{decode_string, StringReference};
 
 #[derive(Debug, Clone, Copy)]
-pub struct FragmentRef<T>(pub i32, PhantomData<T>);
+pub enum FragmentRef<T> {
+    Name(StringReference, PhantomData<T>),
+    Index(u32, PhantomData<T>),
+}
 
 impl<T> FragmentRef<T> {
     pub fn new(idx: i32) -> FragmentRef<T> {
-        FragmentRef(idx, PhantomData)
-    }
-
-    pub fn is_name_ref(&self) -> bool {
-        self.0 <= 0
-    }
-
-    pub fn is_index_ref(&self) -> bool {
-        self.0 > 0
+        match StringReference::new(idx) {
+            Some(name_ref) => FragmentRef::Name(name_ref, PhantomData),
+            None => FragmentRef::Index(idx as u32, PhantomData),
+        }
     }
 }
 
 pub trait Fragment {
     type T;
+    const TYPE_ID: u32;
     fn parse(input: &[u8]) -> IResult<&[u8], Self::T>;
 }
 
 fn fragment_ref<T>(input: &[u8]) -> IResult<&[u8], FragmentRef<T>> {
     let (remaining, frag_ref_idx) = le_i32(input)?;
-    Ok((remaining, FragmentRef(frag_ref_idx, PhantomData)))
+    Ok((remaining, FragmentRef::new(frag_ref_idx)))
+}
+
+#[derive(Debug)]
+/// This fragment is rarely seen. It is very similar to the 0x36 [MeshFragment].
+/// I believe that this might have been the original type and was later replaced
+/// by the 0x36 [MeshFragment]. I’ve only seen one example of this fragment so
+/// far so the information here is uncertain.
+///
+/// **Type ID:** 0x2c
+pub struct AlternateMeshFragment {
+    /// Most fields are _unknown_. This usually contains 0x00001803.
+    /// * bit  0 - If set then `center_x`, `center_y`, and `center_z` are valid.
+    ///            Otherwise they must contain 0.
+    /// * bit  1 - If set then `params2` is valid. Otherwise it must contain 0.
+    /// * bit  9 - If set then the `size8` and `data8` entries exist.
+    /// * bit 11 - If set then the `polygon_tex_count` field and `polygon_tex` entries exist.
+    /// * bit 12 - If set then the `vertex_tex_count` field and `vertex_tex` entries exist.
+    /// * bit 13 - If set then the `params_3[]` fields exist
+    pub flags: u32,
+
+    /// Tells how many vertices there are in the mesh. Normally this is three times the number
+    /// of polygons, but this is by no means necessary as polygons can share vertices. However,
+    /// sharing vertices degrades the ability to use vertex normals to make a mesh look
+    /// more rounded (with shading).
+    pub vertex_count: u32,
+
+    /// Tells how many texture coordinate pairs there are in the mesh. This should equal the
+    /// number of vertices in the mesh. Presumably this could contain zero if none of the
+    /// polygons have textures mapped to them (but why would anyone do that?)
+    pub tex_coords_count: u32,
+
+    /// Tells how many vertex normal entries there are in the mesh. This should equal the number
+    /// of vertices in the mesh. Presumably this could contain zero if vertices should use
+    /// polygon normals instead, but I haven’t tried it (vertex normals are preferable anyway).
+    pub normals_count: u32,
+
+    /// Its purpose is unknown (though if the pattern with the 0x36 fragment holds then it
+    /// should contain color information).
+    pub size4: u32,
+
+    /// The number of polygons in the mesh.
+    pub polygon_count: u32,
+
+    /// This seems to only be used when dealing with animated (mob) models.
+    /// It determines the number of entries in `data6`.
+    pub size6: u16,
+
+    /// This seems to only be used when dealing with animated (mob) models. It tells how many
+    /// VertexPiece entries there are. Vertices are grouped together by skeleton piece in this
+    /// case and VertexPiece entries tell the client how many vertices are in each piece.
+    /// It’s possible that there could be more pieces in the skeleton than are in the meshes
+    /// it references. Extra pieces have no polygons or vertices and I suspect they are there
+    /// to define attachment points for objects (e.g. weapons or shields).
+    pub vertex_piece_count: i16,
+
+    /// References a 0x31 [MaterialListFragment]. It tells the client which textures this mesh
+    /// uses. For zone meshes, a single 0x31 fragment should be built that contains all the
+    /// textures used in the entire zone. For placeable objects, there should be a 0x31
+    /// fragment that references only those textures used in that particular object.
+    pub fragment1: FragmentRef<MaterialListFragment>,
+
+    /// _Unknown_
+    pub fragment2: u32,
+
+    /// _Unknown_
+    pub fragment3: u32,
+
+    /// This seems to define the center of the model and is used for positioning (I think).
+    pub center: (f32, f32, f32),
+
+    /// _Unknown_
+    pub params2: u32,
+
+    /// There are `vertex_count` of these.
+    pub vertices: Vec<(f32, f32, f32)>,
+
+    /// There are `tex_coords_count` of these.
+    pub texture_coords: Vec<(f32, f32)>,
+
+    /// There are `normals_count` of these
+    pub normals: Vec<(f32, f32, f32)>,
+
+    /// _Unknown_ - There are `size4` of these.
+    pub data4: Vec<u32>,
+
+    /// _Unknown_ - There are `polygon_count` of these.
+    /// First tuple value seems to be flags, usually contains 0x004b for polygons.
+    /// Second tuple values are usually zero. Their purpose is _unknown_.
+    pub polygons: Vec<AlternateMeshFragmentPolygonEntry>,
+
+    /// There are `size6` of these.
+    pub data6: Vec<AlternateMeshFragmentData6Entry>,
+
+    /// The first element of the tuple is the number of vertices in a skeleton piece.
+    ///
+    /// The second element of the tuple is the index of the piece according to the
+    /// [SkeletonTrackSet] fragment. The very first piece (index 0) is usually not referenced here
+    /// as it is usually jsut a "stem" starting point for the skeleton. Only those pieces
+    /// referenced here in the mesh should actually be rendered. Any other pieces in the skeleton
+    /// contain no vertices or polygons And have other purposes.
+    pub vertex_pieces: Vec<(u16, u16)>,
+
+    /// _Unknown_ - This only exists if bit 9 of `flags` is set.
+    pub size8: u32,
+
+    /// _Unknown_ - This only exists if bit 9 of `flags` is set. There are `size8` of these.
+    pub data8: Vec<u32>,
+
+    /// The number of `vertex_materials` entries there are. Polygons are grouped together by
+    /// material and `vertex_material` entries telling the client how many polygons there are
+    /// that use a particular material. This field only exists if bit 12 of `flags` is set.
+    pub vertex_material_count: u32,
+
+    /// The first element of the tuple is the number of vertices that use the same
+    /// material. Vertex materials, like polygons, are sorted by material index so
+    /// that vertices that use the same material are together.
+    ///
+    /// The second element of the tuple is the index of the material that the
+    /// vertices use, according to the [MaterialListFragment] fragment that this fragment
+    /// references. This field only exists if bit 12 of `flags` is set.
+    ///
+    /// The rest are _Unknown_
+    ///
+    /// There are 'vertex_material_count` of these.
+    pub vertex_materials: Vec<(u16, u16, u32, u32, u32)>,
+}
+
+impl Fragment for AlternateMeshFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x2c;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], AlternateMeshFragment> {
+        let (
+            i,
+            (
+                flags,
+                vertex_count,
+                tex_coords_count,
+                normals_count,
+                size4,
+                polygon_count,
+                size6,
+                vertex_piece_count,
+                fragment1,
+                fragment2,
+                fragment3,
+                center,
+                params2,
+            ),
+        ) = tuple((
+            le_u32,
+            le_u32,
+            le_u32,
+            le_u32,
+            le_u32,
+            le_u32,
+            le_u16,
+            le_i16,
+            fragment_ref,
+            le_u32,
+            le_u32,
+            tuple((le_f32, le_f32, le_f32)),
+            le_u32,
+        ))(input)?;
+
+        let (i, (vertices, texture_coords, normals, data4, polygons, data6, vertex_pieces, size8)) =
+            tuple((
+                count(tuple((le_f32, le_f32, le_f32)), vertex_count as usize),
+                count(tuple((le_f32, le_f32)), tex_coords_count as usize),
+                count(tuple((le_f32, le_f32, le_f32)), normals_count as usize),
+                count(le_u32, size4 as usize),
+                count(
+                    AlternateMeshFragmentPolygonEntry::parse,
+                    polygon_count as usize,
+                ),
+                count(AlternateMeshFragmentData6Entry::parse, size6 as usize),
+                count(tuple((le_u16, le_u16)), vertex_piece_count as usize),
+                le_u32,
+            ))(i)?;
+
+        let (i, (data8, vertex_material_count)) =
+            tuple((count(le_u32, size8 as usize), le_u32))(i)?;
+
+        let (remaining, vertex_materials) = count(
+            tuple((le_u16, le_u16, le_u32, le_u32, le_u32)),
+            vertex_material_count as usize,
+        )(i)?;
+
+        Ok((
+            remaining,
+            AlternateMeshFragment {
+                flags,
+                vertex_count,
+                tex_coords_count,
+                normals_count,
+                size4,
+                polygon_count,
+                size6,
+                vertex_piece_count,
+                fragment1,
+                fragment2,
+                fragment3,
+                center,
+                params2,
+                vertices,
+                texture_coords,
+                normals,
+                data4,
+                polygons,
+                data6,
+                vertex_pieces,
+                size8,
+                data8,
+                vertex_material_count,
+                vertex_materials,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// Represents a polygon within a [AlternativeMeshFragment].
+pub struct AlternateMeshFragmentPolygonEntry {
+    /// This usually contains 0x004b for polygons.
+    pub flags: u16,
+
+    /// _Unknown_ - Usually contains zeros.
+    pub data: (u16, u16, u16, u16),
+
+    /// An index for each of the polygon's vertex coordinates (idx1, idx2, idx3).
+    pub vertex_indexes: (u16, u16, u16),
+}
+
+impl Fragment for AlternateMeshFragmentPolygonEntry {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x0;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], AlternateMeshFragmentPolygonEntry> {
+        let (remaining, (flags, data, vertex_indexes)) = tuple((
+            le_u16,
+            tuple((le_u16, le_u16, le_u16, le_u16)),
+            tuple((le_u16, le_u16, le_u16)),
+        ))(input)?;
+        Ok((
+            remaining,
+            AlternateMeshFragmentPolygonEntry {
+                flags,
+                data,
+                vertex_indexes,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// Represents a polygon within a [AlternativeMeshFragment].
+pub struct AlternateMeshFragmentData6Entry {
+    /// _Unknown_ - It seems to control whether VertexIndex1, VertexIndex2, and Offset exist.
+    /// It can only contain values in the range 1 to 4. It looks like the Data9 entries are broken
+    /// up into blocks, where each block is terminated by an entry where Data9Type is 4.
+    pub _type: u32,
+
+    /// This seems to reference one of the vertex entries. This field only exists if `_type`
+    /// contains a value in the range 1 to 3.
+    pub vertex_index: u32,
+
+    /// _Unknown_
+    /// If `_type` contains 4 then this field exists instead of `vertex_index`. Data6 entries seem
+    /// to be sorted by this value
+    pub offset: f32,
+
+    /// _Unknown_ - Seems to only contain values in the range 0 to 2.
+    pub param1: u16,
+
+    /// _Unknown_
+    pub param2: u16,
+}
+
+impl Fragment for AlternateMeshFragmentData6Entry {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x0;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], AlternateMeshFragmentData6Entry> {
+        let (remaining, (_type, vertex_index, offset, param1, param2)) =
+            tuple((le_u32, le_u32, le_f32, le_u16, le_u16))(input)?;
+        Ok((
+            remaining,
+            AlternateMeshFragmentData6Entry {
+                _type,
+                vertex_index,
+                offset,
+                param1,
+                param2,
+            },
+        ))
+    }
+}
+
+impl Fragment for VertexColorReferenceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x0;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], VertexColorReferenceFragment> {
+        let (remaining, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
+        Ok((remaining, VertexColorReferenceFragment { reference, flags }))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [VertexColorFragment].
+///
+/// **Type ID:** 0x2f
+pub struct VertexColorReferenceFragment {
+    /// The [MeshAnimatedVerticesFragment] reference.
+    pub reference: FragmentRef<MeshAnimatedVerticesFragment>,
+
+    /// _Unknown_ - Usually contains 0.
+    pub flags: u32,
+}
+
+#[derive(Debug)]
+/// **Type ID:** 0x32
+pub struct VertexColorFragment {
+    /// _Unknown_ - Usually contains 1.
+    pub data1: u32,
+
+    /// The number of color values in the `vertex_colors` list. It should be equal
+    /// to the number of vertices in the placeable object, as contained in its 0x36
+    /// [MeshFragment].
+    pub vertex_color_count: u32,
+
+    /// _Unknown_ - Usually contains 1.
+    pub data2: u32,
+
+    /// _Unknown_ - Usually contains 200.
+    pub data3: u32,
+
+    /// _Unknown_ - Usually contains 0.
+    pub data4: u32,
+
+    /// This contains an RGBA color value for each vertex in the placeable object. It
+    /// specifies the additional color to be applied to the vertex, as if that vertex
+    /// has been illuminated by a nearby light source. The A value isn’t fully understood;
+    /// I believe it represents an alpha as applied to the texture, such that 0 makes the
+    /// polygon a pure color and 0xFF either illuminates an unaltered texture or mutes the
+    /// illumination completely. That is, it’s either a blending value or an alpha value.
+    /// Further experimentation is required. 0xD9 seems to be a good (typical) A value for
+    /// most illuminated vertices.
+    ///
+    /// This field works in exactly the same way as it does in the 0x36 [MeshFragment].
+    pub vertex_colors: Vec<u32>,
+}
+
+impl Fragment for VertexColorFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x0;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], VertexColorFragment> {
+        let (i, (data1, vertex_color_count, data2, data3, data4)) =
+            tuple((le_u32, le_u32, le_u32, le_u32, le_u32))(input)?;
+        let (remaining, vertex_colors) = count(le_u32, vertex_color_count as usize)(i)?;
+
+        Ok((
+            remaining,
+            VertexColorFragment {
+                data1,
+                vertex_color_count,
+                data2,
+                data3,
+                data4,
+                vertex_colors,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// This fragment contains sets of vertex values to be substituted for the
+/// vertex values in a 0x36 Mesh fragment if that mesh is animated. For example,
+/// if a mesh has 50 vertices then this fragment will have one or more sets of
+/// 50 vertices, one set for each animation frame. The vertex values in this
+/// fragment will then be used instead of the vertex values in the 0x36 Mesh
+/// fragment as the client cycles through the animation frames.
+///
+/// **Type ID:** 0x37
+pub struct MeshAnimatedVerticesFragment {
+    /// _Unknown_ - Usually contains 0.
+    pub flags: u32,
+
+    /// Should be equal to the number of vertices in the mesh,
+    /// as contained in its 0x36 Mesh fragment.
+    pub vertex_count: u16,
+
+    /// The number of animation frames.
+    pub frame_count: u16,
+
+    /// _Unknown_ - Usually contains 100.
+    pub param1: u16,
+
+    /// _Unknown_ - Usually contains 0.
+    pub param2: u16,
+
+    /// This works in exactly the same way as the Scale field in the 0x36 Mesh
+    /// fragment. By dividing the vertex values by (1 shl Scale), real vertex
+    /// values are created.
+    pub scale: u16,
+
+    /// There are `frame_count` of these.
+    pub frames: Vec<u32>,
+
+    /// Components of the vertex positions, multiplied by (1 shl Scale).
+    /// There are `vertex_count` of these.
+    pub vertices: Vec<(i16, i16, i16)>,
+
+    /// _Unknown_ - Usually contains 0.
+    pub size6: u16,
+}
+
+impl Fragment for MeshAnimatedVerticesFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x37;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], MeshAnimatedVerticesFragment> {
+        let (i, (flags, vertex_count, frame_count, param1, param2, scale)) =
+            tuple((le_u32, le_u16, le_u16, le_u16, le_u16, le_u16))(input)?;
+        let (remaining, (frames, vertices, size6)) = tuple((
+            count(le_u32, frame_count as usize),
+            count(tuple((le_i16, le_i16, le_i16)), vertex_count as usize),
+            le_u16,
+        ))(i)?;
+
+        Ok((
+            remaining,
+            MeshAnimatedVerticesFragment {
+                flags,
+                vertex_count,
+                frame_count,
+                param1,
+                param2,
+                scale,
+                frames,
+                vertices,
+                size6,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [MeshAnimatedVerticesFragment].
+///
+/// **Type ID:** 0x2f
+pub struct MeshAnimatedVerticesReferenceFragment {
+    /// The [MeshAnimatedVerticesFragment] reference.
+    pub reference: FragmentRef<MeshAnimatedVerticesFragment>,
+
+    /// _Unknown_ - Usually contains 0.
+    pub flags: u32,
+}
+
+impl Fragment for MeshAnimatedVerticesReferenceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x2f;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], MeshAnimatedVerticesReferenceFragment> {
+        let (remaining, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
+        Ok((
+            remaining,
+            MeshAnimatedVerticesReferenceFragment { reference, flags },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [LightSourceReferenceFragment].
+///
+/// **Type ID:** 0x2a
+pub struct AmbientLightFragment {
+    /// The [LightSourceReferenceFragment] reference.
+    pub reference: FragmentRef<LightSourceReferenceFragment>,
+
+    /// _Unknown_ - Usually contains 0.
+    pub flags: u32,
+
+    /// The number of region ids.
+    pub region_count: u32,
+
+    /// There are `region_count` region ids here. Each isn’t a fragment reference
+    /// per se, but the ID of a 0x22 BSP region fragment. For example, if there are
+    /// 100 0x22 BSP Region fragments, then the possible values are in the range 0-99.
+    /// This constitutes a list of regions that have the ambient lighting given by the
+    /// 0x1C fragment that this fragment references.
+    pub regions: Vec<u32>,
+}
+
+impl Fragment for AmbientLightFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x2a;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], AmbientLightFragment> {
+        let (i, (reference, flags, region_count)) = tuple((fragment_ref, le_u32, le_u32))(input)?;
+        let (remaining, regions) = count(le_u32, region_count as usize)(i)?;
+
+        Ok((
+            remaining,
+            AmbientLightFragment {
+                reference,
+                flags,
+                region_count,
+                regions,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// This fragment lets you flag certain regions (as defined by 0x22 BSP Region fragments)
+/// in a particular way. The flagging is done by setting the name of this fragment to a
+/// particular “magic” value.
+///
+/// The possible values are:
+///
+/// * WT_ZONE ...............Flag all regions in the list as underwater regions.
+/// * LA_ZONE ...............Flag all regions in the list as lava regions.
+/// * DRP_ZONE ..............Flag all regions in the list as PvP regions.
+/// * DRNTP##########_ZONE...Flag all regions in the list as zone point regions.
+///                          The ####’s are actually numbers and hyphens that somehow tell
+///                          the client the zone destination. This method of setting zone
+///                          points may or may not be obsolete.
+///
+/// **Type ID:** 0x29
+pub struct RegionFlagFragment {
+    /// _Unknown_ - Usually contains 0.
+    pub flags: u32,
+
+    /// The number of region ids.
+    pub region_count: u32,
+
+    /// There are `region_count` regions. Each isn’t a fragment reference per se, but the
+    /// ID of a 0x22 BSP region fragment. For example, if there are 100 0x22 BSP Region
+    /// fragments, then the possible values are in the range 0-99. This constitutes a
+    /// list of regions that are to be flagged in the particular way.
+    pub regions: Vec<u32>,
+
+    /// The number of bytes following in the `data2` field.
+    pub size2: u32,
+
+    /// An encoded string. An alternate way of using this fragment is to call this fragment
+    /// Z####_ZONE, where #### is a four- digit number starting with zero. Then Data2 would
+    /// contain a “magic” string that told the client what was special about the included
+    /// regions (e.g. WTN__01521000000000000000000000___000000000000). This field is padded
+    /// with nulls to make it end on a DWORD boundary.
+    pub data2: Vec<u8>,
+}
+
+impl Fragment for RegionFlagFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x29;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], RegionFlagFragment> {
+        let (i, (flags, region_count)) = tuple((le_u32, le_u32))(input)?;
+        let (i, (regions, size2)) = tuple((count(le_u32, region_count as usize), le_u32))(i)?;
+
+        let padding = (4 - size2 % 4) % 4;
+        let size2_with_padding = size2 + padding;
+        let (remaining, data2) = count(le_u8, size2_with_padding as usize)(i)?;
+
+        Ok((
+            remaining,
+            RegionFlagFragment {
+                flags,
+                region_count,
+                regions,
+                size2,
+                data2,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [LightSourceReferenceFragment].
+///
+/// **Type ID:** 0x28
+pub struct LightInfoFragment {
+    /// The [LightSourceReferenceFragment] reference.
+    pub reference: FragmentRef<LightSourceReferenceFragment>,
+
+    /// _Unknown_ - Usually contains 256 (0x100).
+    pub flags: u32,
+
+    /// X component of the light location.
+    pub x: f32,
+
+    /// Y component of the light location.
+    pub y: f32,
+
+    /// Z component of the light location.
+    pub z: f32,
+
+    /// Contains the light radius.
+    pub radius: f32,
+}
+
+impl Fragment for LightInfoFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x28;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], LightInfoFragment> {
+        let (remaining, (reference, flags, x, y, z, radius)) =
+            tuple((fragment_ref, le_u32, le_f32, le_f32, le_f32, le_f32))(input)?;
+        Ok((
+            remaining,
+            LightInfoFragment {
+                reference,
+                flags,
+                x,
+                y,
+                z,
+                radius,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [LightSourceFragment].
+///
+/// **Type ID:** 0x1c
+pub struct LightSourceReferenceFragment {
+    /// The [LightSourceFragment] reference.
+    pub reference: FragmentRef<LightSourceFragment>,
+
+    /// _Unknown_ - Usually contains 0.
+    pub flags: u32,
+}
+
+impl Fragment for LightSourceReferenceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x1c;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], LightSourceReferenceFragment> {
+        let (remaining, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
+        Ok((remaining, LightSourceReferenceFragment { reference, flags }))
+    }
+}
+
+#[derive(Debug)]
+/// **Type ID:** 0x1b
+pub struct LightSourceFragment {
+    /// _Unknown_
+    /// * bit 1 - Usually 1 when dealing with placed light sources.
+    /// * bit 2 - Usually 1.
+    /// * bit 3 - Usually 1 when dealing with placed light source.
+    ///           If bit 4 is set then `params3b` only exists if
+    ///           this bit is also set (not sure about this).
+    /// * bit 4 - If unset `params3a` exists but `params3b` and `red`, `green` and `blue` don't exist.
+    ///           Otherwise, `params3a` doesn't exist but `params3b` and `red`, `green` and `blue` do exist.
+    ///           This flag seems to determine whether the light is just a simple white light
+    ///           or a light with its own color values.
+    pub flags: u32,
+
+    /// _Unknown_ - Usually contains 1
+    pub params2: u32,
+
+    /// _Unknown_ - Usually contains 1
+    pub params3a: Option<f32>,
+
+    /// _Unknown_ - Usually contains 200 (attenuation?).
+    pub params3b: Option<u32>,
+
+    /// _Unknown_ - Usually contains 1.
+    pub params4: Option<u8>,
+
+    /// Red component, scaled from 0 (no red component) to 1 (100% red).
+    pub red: Option<u8>,
+
+    /// Green component, scaled from 0 (no green component) to 1 (100% green).
+    pub green: Option<u8>,
+
+    /// Blue component, scaled from 0 (no blue component) to 1 (100% blue).
+    pub blue: Option<u8>,
+}
+
+impl Fragment for LightSourceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x1b;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], LightSourceFragment> {
+        let (i, (flags, params2)) = tuple((le_u32, le_u32))(input)?;
+
+        let (i, params3a) = if flags & 0x10 == 0x00 {
+            le_f32(i).map(|(i, params3a)| (i, Some(params3a)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, params3b) = if flags & 0x18 == 0x18 {
+            le_u32(i).map(|(i, params3b)| (i, Some(params3b)))?
+        } else {
+            (i, None)
+        };
+
+        let (remaining, (params4, red, green, blue)) = if flags & 0x10 == 0x10 {
+            tuple((le_u8, le_u8, le_u8, le_u8))(i)
+                .map(|(i, (p4, r, g, b))| (i, (Some(p4), Some(r), Some(g), Some(b))))?
+        } else {
+            (i, (None, None, None, None))
+        };
+
+        Ok((
+            remaining,
+            LightSourceFragment {
+                flags,
+                params2,
+                params3a,
+                params3b,
+                params4,
+                red,
+                green,
+                blue,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [PolygonAnimationFragment].
+///
+/// **Type ID:** 0x18
+pub struct PolygonAnimationReferenceFragment {
+    /// The [PolygonAnimationFragment] reference.
+    pub reference: FragmentRef<PolygonAnimationFragment>,
+
+    /// _Unknown_
+    /// * bit 0 - If set `params1` exists.
+    pub flags: u32,
+
+    /// _Unknown_
+    pub params1: f32,
+}
+
+impl Fragment for PolygonAnimationReferenceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x18;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], PolygonAnimationReferenceFragment> {
+        let (remaining, (reference, flags, params1)) =
+            tuple((fragment_ref, le_u32, le_f32))(input)?;
+        Ok((
+            remaining,
+            PolygonAnimationReferenceFragment {
+                reference,
+                flags,
+                params1,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// **Type ID:** 0x17
+pub struct PolygonAnimationFragment {
+    /// _Unknown_ - Usually contains 0.1
+    pub params1: f32,
+
+    /// _Unknown_
+    /// * bit 0 - If unset `params2` must be 1.0
+    pub flags: u32,
+
+    /// The number of `entries1` entries.
+    pub size1: u32,
+
+    /// The number of `entries2` entries.
+    pub size2: u32,
+
+    /// _Unknown_
+    pub params2: f32,
+
+    /// _Unknown_ - Usually contains 1.0
+    pub params3: f32,
+
+    /// _Unknown_ - There are size1 of these.
+    pub entries1: Vec<(f32, f32, f32)>,
+
+    /// _Unknown_ - There are size2 of these.
+    ///
+    /// Tuple is as follows:
+    /// (number of entries in data, data vec)
+    ///
+    /// The data appears to be indices into the X, Y, Z entries above.
+    pub entries2: Vec<(u32, Vec<u32>)>,
+}
+
+impl Fragment for PolygonAnimationFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x17;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], PolygonAnimationFragment> {
+        let (i, (params1, flags, size1, size2, params2, params3)) =
+            tuple((le_f32, le_u32, le_u32, le_u32, le_f32, le_f32))(input)?;
+
+        let entry2 = |input| {
+            let (i, entry_size) = le_u32(input)?;
+            let (i, entries) = count(le_u32, entry_size as usize)(i)?;
+            Ok((i, (entry_size, entries)))
+        };
+
+        let (remaining, (entries1, entries2)) = tuple((
+            count(tuple((le_f32, le_f32, le_f32)), size1 as usize),
+            count(entry2, size2 as usize),
+        ))(i)?;
+
+        Ok((
+            remaining,
+            PolygonAnimationFragment {
+                params1,
+                flags,
+                size1,
+                size2,
+                params2,
+                params3,
+                entries1,
+                entries2,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// There are no fields.
+///
+/// **Type ID:** 0x35
+pub struct FirstFragment {}
+
+impl Fragment for FirstFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x35;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], FirstFragment> {
+        Ok((input, FirstFragment {}))
+    }
+}
+
+#[derive(Debug)]
+/// _Unknown_
+///
+/// **Type ID:** 0x16
+pub struct ZoneUnknownFragment {}
+
+impl Fragment for ZoneUnknownFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x16;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], ZoneUnknownFragment> {
+        Ok((input, ZoneUnknownFragment {}))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [SkeletonTrackSetFragment].
+///
+/// **Type ID:** 0x11
+pub struct SkeletonTrackSetReferenceFragment {
+    /// The [SkeletonTrackSetFragment] reference.
+    pub reference: FragmentRef<SkeletonTrackSetFragment>,
+
+    /// _Unknown_ Seems to always contain 0.
+    pub params1: u32,
+}
+
+impl Fragment for SkeletonTrackSetReferenceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x11;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], SkeletonTrackSetReferenceFragment> {
+        let (remaining, (reference, params1)) = tuple((fragment_ref, le_u32))(input)?;
+        Ok((
+            remaining,
+            SkeletonTrackSetReferenceFragment { reference, params1 },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [CameraFragment].
+///
+/// **Type ID:** 0x09
+pub struct CameraReferenceFragment {
+    /// The [CameraFragment] reference.
+    pub reference: FragmentRef<CameraFragment>,
+
+    /// _Unknown_ Seems to always contain 0.
+    pub flags: u32,
+}
+
+impl Fragment for CameraReferenceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x09;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], CameraReferenceFragment> {
+        let (remaining, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
+        Ok((remaining, CameraReferenceFragment { reference, flags }))
+    }
+}
+
+#[derive(Debug)]
+/// This fragment is poorly understood. It seems to contain 26 parameters, some of which
+/// are DWORDS (32-bit integers) and some of which are FLOATS (32-bit floating-point values).
+/// Until more is known, they are here described as Params[0..25] and their known values
+/// are documented.
+///
+/// In main zone files, the name of this fragment always seems to be CAMERA_DUMMY.
+///
+/// **Type ID:** 0x08
+pub struct CameraFragment {
+    /// _Unknown_ - Usually 0
+    pub params0: u32,
+
+    /// _Unknown_ - Usually 0
+    pub params1: u32,
+
+    /// _Unknown_ - Usually 1
+    pub params2: f32,
+
+    /// _Unknown_ - Usually 0
+    pub params3: u32,
+
+    /// _Unknown_ - Usually 0
+    pub params4: u32,
+
+    /// _Unknown_ - Usually -1.0
+    pub params5: f32,
+
+    /// _Unknown_ - Usually 1.0
+    pub params6: f32,
+
+    /// _Unknown_ - Usually 0
+    pub params7: u32,
+
+    /// _Unknown_ - Usually 1.0
+    pub params8: f32,
+
+    /// _Unknown_ - Usually 1.0
+    pub params9: f32,
+
+    /// _Unknown_ - Usually 0
+    pub params10: u32,
+
+    /// _Unknown_ - Usually 1.0
+    pub params11: f32,
+
+    /// _Unknown_ - Usually -1.0
+    pub params12: f32,
+
+    /// _Unknown_ - Usually 0
+    pub params13: u32,
+
+    /// _Unknown_ - Usually -1.0
+    pub params14: f32,
+
+    /// _Unknown_ - Usually -1.0
+    pub params15: f32,
+
+    /// _Unknown_ - Usually 4
+    pub params16: u32,
+
+    /// _Unknown_ - Usually 0
+    pub params17: u32,
+
+    /// _Unknown_ - Usually 0
+    pub params18: u32,
+
+    /// _Unknown_ - Usually 0
+    pub params19: u32,
+
+    /// _Unknown_ - Usually 1
+    pub params20: u32,
+
+    /// _Unknown_ - Usually 2
+    pub params21: u32,
+
+    /// _Unknown_ - Usually 3
+    pub params22: u32,
+
+    /// _Unknown_ - Usually 0
+    pub params23: u32,
+
+    /// _Unknown_ - Usually 1
+    pub params24: u32,
+
+    /// _Unknown_ - Usually 11
+    pub params25: u32,
+}
+
+impl Fragment for CameraFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x08;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], CameraFragment> {
+        let (
+            i,
+            (
+                params0,
+                params1,
+                params2,
+                params3,
+                params4,
+                params5,
+                params6,
+                params7,
+                params8,
+                params9,
+            ),
+        ) = tuple((
+            le_u32, le_u32, le_f32, le_u32, le_u32, le_f32, le_f32, le_u32, le_f32, le_f32,
+        ))(input)?;
+
+        let (
+            remaining,
+            (
+                params10,
+                params11,
+                params12,
+                params13,
+                params14,
+                params15,
+                params16,
+                params17,
+                params18,
+                params19,
+                params20,
+                params21,
+                params22,
+                params23,
+                params24,
+                params25,
+            ),
+        ) = tuple((
+            le_u32, le_f32, le_f32, le_u32, le_f32, le_f32, le_u32, le_u32, le_u32, le_u32, le_u32,
+            le_u32, le_u32, le_u32, le_u32, le_u32,
+        ))(i)?;
+
+        Ok((
+            remaining,
+            CameraFragment {
+                params0,
+                params1,
+                params2,
+                params3,
+                params4,
+                params5,
+                params6,
+                params7,
+                params8,
+                params9,
+                params10,
+                params11,
+                params12,
+                params13,
+                params14,
+                params15,
+                params16,
+                params17,
+                params18,
+                params19,
+                params20,
+                params21,
+                params22,
+                params23,
+                params24,
+                params25,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [TwoDimensionalObjectFragment].
+///
+/// **Type ID:** 0x07
+pub struct TwoDimensionalObjectReferenceFragment {
+    /// The [TwoDimensionalObjectFragment] reference.
+    pub reference: FragmentRef<TwoDimensionalObjectReferenceFragment>,
+
+    /// _Unknown_ Seems to always contain 0.
+    pub flags: u32,
+}
+
+impl Fragment for TwoDimensionalObjectReferenceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x07;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], TwoDimensionalObjectReferenceFragment> {
+        let (remaining, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
+        Ok((
+            remaining,
+            TwoDimensionalObjectReferenceFragment { reference, flags },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// This fragment is rarely used. It describes objects that are purely two-dimensional
+/// in nature. Examples are coins and blood spatters.
+///
+/// **Type ID:** 0x06
+pub struct TwoDimensionalObjectFragment {
+    /// Most flags are _unknown_.
+    /// * bit 0 - If set `center_offset` exists.
+    /// * bit 1 - If set `bounding_radius` exists.
+    /// * bit 2 - If set `current_frame` exists.
+    /// * bit 3 - If set `sleep` exists.
+    /// * bit 6 - skip frames
+    /// * bit 7 - If set `depth_scale` exists.
+    pub flags: u32,
+
+    /// Windcatcher:
+    /// _Unknown_
+    /// NEW:
+    /// The number of frames that are present in each HEADING block.
+    pub num_frames: u32,
+
+    /// Windcatcher:
+    /// _Unknown_
+    ///
+    /// NEW:
+    /// The number of PITCH blocks
+    pub num_pitches: u32,
+
+    /// Windcatcher:
+    /// _Unknown_ - though I suspect it might be the object’s size.
+    /// NEW:
+    /// The SPRITESIZE %f %f statement
+    pub sprite_size: (f32, f32),
+
+    /// Windcatcher:
+    /// _Unknown_
+    /// NEW:
+    /// SPHERE statement, references a 0x22 fragment
+    pub sphere_fragment: u32,
+
+    /// Windcatcher:
+    /// _Unknown_ - Only exists if bit 7 of flags is set.
+    /// NEW:
+    /// DEPTHSCALE statement
+    pub depth_scale: Option<f32>,
+
+    /// Windcatcher:
+    /// _Unknown_ - Only exists if bit 0 of flags is set.
+    /// NEW:
+    /// CENTEROFFSET statement
+    pub center_offset: Option<(f32, f32, f32)>,
+
+    /// _Unknown_ - Only exists if bit 1 of flags is set.
+    pub bounding_radius: Option<f32>,
+
+    /// Windcatcher:
+    /// _Unknown_ - Only exists if bit 2 of flags is set.
+    /// NEW:
+    /// CURRENTFRAME statement
+    pub current_frame: Option<u32>,
+
+    /// Windcatcher:
+    /// _Unknown_ - Only exists if bit 3 of flags is set.
+    /// Typically contains 100.
+    ///
+    /// NEW:
+    /// SLEEP statement
+    pub sleep: Option<u32>,
+
+    /// PITCH blocks
+    pub pitches: Vec<SpritePitch>,
+
+    /// Windcatcher:
+    /// _Unknown_
+    /// NEW:
+    /// Corresponds to RENDER_METHOD. Possible values so far:
+    /// TEXTURE1 = 0x107
+    /// TEXTURE2 = 0x207
+    /// TEXTURE3 = 0x307
+    /// TEXTURE4 = 0x407
+    /// TEXTURE5 = 0x507
+    /// TRANSTEXTURE1 = 0x187
+    /// TRANSTEXTURE2 = 0x287
+    /// TRANSTEXTURE4 = 0x487
+    /// TRANSTEXTURE5 = 0x587
+    /// SOLIDFILL = 0x007
+    pub render_method: u32,
+
+    /// Mostly _Unknown_
+    /// * bit 0 - If set `pen` exists.
+    /// * bit 1 - If set `brightness` exists.
+    /// * bit 2 - If set `scaled_ambient` exists.
+    /// * bit 3 - If set `params7_fragment` exists.
+    /// * bit 4 - If set `params7_matrix` exists.
+    /// * bit 5 - If set `params7_size` and `params7_data` exist.
+    /// * bit 6 - TWOSIDED
+    pub renderinfo_flags: u32,
+
+    /// Windcatcher:
+    /// _Unknown_ - Only exists if bit 0 of `renderinfo_flags` is set.
+    /// NEW:
+    /// Corresponds to PEN in RENDERINFO.
+    pub pen: Option<u32>,
+
+    /// Windcatcher:
+    /// _Unknown_ - Only exists if bit 1 of `renderinfo_flags` is set.
+    /// NEW:
+    /// Corresponds to BRIGHTNESS in RENDERINFO.
+    pub brightness: Option<f32>,
+
+    /// Windcatcher:
+    /// _Unknown_ - Only exists if bit 2 of `renderinfo_flags` is set.
+    /// NEW:
+    /// Corresponds to SCALEDAMBIENT in RENDERINFO.
+    pub scaled_ambient: Option<f32>,
+
+    /// _Unknown_ - Only exists if bit 3 of `renderinfo_flags` is set.
+    pub params7_fragment: Option<f32>,
+
+    /// Windcatcher:
+    /// _Unknown_ - Only exists if bit 4 of `renderinfo_flags` is set.
+    /// It looks like some sort of transformation matrix.
+    /// NEW:
+    /// Corresponds to UVORIGIN, UAXIS, and VAXIS in RENDERINFO
+    pub uv_info: Option<UvInfo>,
+
+    /// _Unknown_ - Only exists if bit 5 of `renderinfo_flags` is set.
+    pub params7_size: Option<u32>,
+
+    /// _Unknown_ - Only exists if bit 5 of `renderinfo_flags` is set.
+    /// `params7_size` * 2 entries.
+    pub params7_data: Option<Vec<u32>>,
+}
+
+impl Fragment for TwoDimensionalObjectFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x06;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], TwoDimensionalObjectFragment> {
+        let (i, (flags, num_frames, num_pitches, sprite_size, sphere_fragment)) =
+            tuple((le_u32, le_u32, le_u32, tuple((le_f32, le_f32)), le_u32))(input)?;
+
+        let (i, depth_scale) = if flags & 0x80 == 0x80 {
+            le_f32(i).map(|(i, p2)| (i, Some(p2)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, center_offset) = if flags & 0x01 == 0x01 {
+            tuple((le_f32, le_f32, le_f32))(i).map(|(i, p3)| (i, Some(p3)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, bounding_radius) = if flags & 0x02 == 0x02 {
+            le_f32(i).map(|(i, p4)| (i, Some(p4)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, current_frame) = if flags & 0x04 == 0x04 {
+            le_u32(i).map(|(i, p5)| (i, Some(p5)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, sleep) = if flags & 0x08 == 0x08 {
+            le_u32(i).map(|(i, p6)| (i, Some(p6)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, pitches) = count(
+            |input| SpritePitch::parse(num_frames, input),
+            num_pitches as usize,
+        )(i)?;
+
+        let (i, (render_method, renderinfo_flags)) = tuple((le_u32, le_u32))(i)?;
+
+        let (i, pen) = if renderinfo_flags & 0x01 == 0x01 {
+            le_u32(i).map(|(i, p2)| (i, Some(p2)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, brightness) = if renderinfo_flags & 0x02 == 0x02 {
+            le_f32(i).map(|(i, p3)| (i, Some(p3)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, scaled_ambient) = if renderinfo_flags & 0x04 == 0x04 {
+            le_f32(i).map(|(i, p4)| (i, Some(p4)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, params7_fragment) = if renderinfo_flags & 0x08 == 0x08 {
+            le_f32(i).map(|(i, f)| (i, Some(f)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, uv_info) = if renderinfo_flags & 0x10 == 0x10 {
+            UvInfo::parse(i).map(|(i, m)| (i, Some(m)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, params7_size) = if renderinfo_flags & 0x20 == 0x20 {
+            le_u32(i).map(|(i, s)| (i, Some(s)))?
+        } else {
+            (i, None)
+        };
+
+        let (remaining, params7_data) = match params7_size {
+            Some(size) => {
+                if flags & 0x40 == 0x40 && params7_size.is_some() {
+                    count(le_u32, (size * 2) as usize)(i).map(|(i, d)| (i, Some(d)))?
+                } else {
+                    (i, None)
+                }
+            }
+            _ => (i, None),
+        };
+
+        Ok((
+            remaining,
+            TwoDimensionalObjectFragment {
+                flags,
+                num_frames,
+                num_pitches,
+                sprite_size,
+                sphere_fragment,
+                depth_scale,
+                center_offset,
+                bounding_radius,
+                current_frame,
+                sleep,
+                pitches,
+                render_method,
+                renderinfo_flags,
+                pen,
+                brightness,
+                scaled_ambient,
+                params7_fragment,
+                uv_info,
+                params7_size,
+                params7_data,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+pub struct UvInfo {
+    pub uv_origin: (f32, f32, f32),
+    pub u_axis: (f32, f32, f32),
+    pub v_axis: (f32, f32, f32),
+}
+
+impl Fragment for UvInfo {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x00;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], UvInfo> {
+        let (remaining, (uv_origin, u_axis, v_axis)) = tuple((
+            tuple((le_f32, le_f32, le_f32)),
+            tuple((le_f32, le_f32, le_f32)),
+            tuple((le_f32, le_f32, le_f32)),
+        ))(input)?;
+
+        Ok((
+            remaining,
+            UvInfo {
+                uv_origin,
+                u_axis,
+                v_axis,
+            },
+        ))
+    }
+}
+#[derive(Debug)]
+/// `pitches` entries in the [TwoDimensionalObjectFragment]
+pub struct SpritePitch {
+    /// Windcatcher:
+    /// _Unknown_ - Usually contains 0x200.
+    ///
+    /// NEW: Corresponds to PITCHCAP statement
+    pub pitch_cap: i32,
+
+    /// Windcatcher:
+    /// The most significant bit of this field (0x80000000) is a flag
+    /// of some sort. The other bits constitute another size field which
+    /// we shall call `data6_size` here.
+    /// NEW:
+    /// Corresponds to NUMHEADINGS for a PITCH
+    pub num_headings: u32,
+
+    /// Windcatcher:
+    /// There are `data6_size` of these.
+    /// NEW:
+    /// There are `num_headings` of these.
+    pub headings: Vec<SpriteHeading>,
+}
+
+impl SpritePitch {
+    fn parse(num_frames: u32, input: &[u8]) -> IResult<&[u8], SpritePitch> {
+        let (i, (pitch_cap, num_headings)) = tuple((le_i32, le_u32))(input)?;
+        let (remaining, headings) = count(
+            |input| SpriteHeading::parse(num_frames, input),
+            num_headings as usize,
+        )(i)?;
+
+        Ok((
+            remaining,
+            SpritePitch {
+                pitch_cap,
+                num_headings,
+                headings,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// `headings` entries in [SpritePitch]
+pub struct SpriteHeading {
+    /// Windcatcher:
+    /// _Unknown_ - Usually contains 64 (0x40).
+    /// NEW:
+    /// HEADINGCAP
+    pub heading_cap: u32,
+
+    /// These point to one or more 0x03 Texture Bitmap Name fragments
+    /// (one if the object is static or more than one if it has an animated
+    /// texture, such as blood from a weapon strike).
+    /// There are `num_frames` of these.
+    pub frames: Vec<u32>,
+}
+
+impl SpriteHeading {
+    fn parse(num_frames: u32, input: &[u8]) -> IResult<&[u8], SpriteHeading> {
+        let (remaining, (heading_cap, frames)) =
+            tuple((le_u32, count(le_u32, num_frames as usize)))(input)?;
+        Ok((
+            remaining,
+            SpriteHeading {
+                heading_cap,
+                frames,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// **Type ID:** 0x15
+pub struct ObjectLocationFragment {
+    /// Typically 0x2E when used in main zone files and 0x32E when
+    /// used for placeable objects.
+    pub flags: u32,
+
+    /// When used in main zone files, points to a 0x16 fragment.
+    /// When used for placeable objects, seems to always contain 0.
+    /// This might be due to the difference in the Flags value.
+    pub fragment1: u32,
+
+    /// When used in main zone files, contains the minimum X value of the
+    /// entire zone. When used for placeable objects, contains the X value
+    /// of the object’s location.
+    pub x: f32,
+
+    /// When used in main zone files, contains the minimum Y value of the
+    /// entire zone. When used for placeable objects, contains the Y value
+    /// of the object’s location.
+    pub y: f32,
+
+    /// When used in main zone files, contains the minimum Z value of the
+    /// entire zone. When used for placeable objects, contains the Z value
+    /// of the object’s location.
+    pub z: f32,
+
+    /// When used in main zone files, typically contains 0. When used for
+    /// placeable objects, contains a value describing rotation around the Z
+    /// axis, scaled as Degrees x (512 / 360).
+    pub rotate_z: f32,
+
+    /// When used in main zone files, typically contains 0. When used for
+    /// placeable objects, contains a value describing rotation around the Y
+    /// axis, scaled as Degrees x (512 / 360).
+    pub rotate_y: f32,
+
+    /// When used in main zone files, typically contains 0. When used for
+    /// placeable objects, contains a value describing rotation around the X
+    /// axis, scaled as Degrees x (512 / 360).
+    pub rotate_x: f32,
+
+    /// _Unknown_ - Typically contains 0 (though might be more significant for placeable objects).
+    pub params1: u32,
+
+    /// When used in main zone files, typically contains 0.5. When used for
+    /// placeable objects, contains the object’s scaling factor in the Y direction
+    /// (e.g. 2.0 would make the object twice as big in the Y direction).
+    pub scale_y: f32,
+
+    /// When used in main zone files, typically contains 0.5. When used for
+    /// placeable objects, contains the object’s scaling factor in the X direction
+    /// (e.g. 2.0 would make the object twice as big in the X direction).
+    pub scale_x: f32,
+
+    /// When used in main zone files, typically contains 0 (might be related to
+    /// the Flags value). When used for placeable objects, points to a 0x33 Vertex
+    /// Color Reference fragment.
+    pub fragment2: u32,
+
+    /// Typically contains 30 when used in main zone files and 0 when used for
+    /// placeable objects. This field only exists if `fragment2` points to a fragment.
+    pub params2: u32,
+}
+
+impl Fragment for ObjectLocationFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x15;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], ObjectLocationFragment> {
+        let (
+            remaining,
+            (
+                flags,
+                fragment1,
+                x,
+                y,
+                z,
+                rotate_z,
+                rotate_y,
+                rotate_x,
+                params1,
+                scale_y,
+                scale_x,
+                fragment2,
+                params2,
+            ),
+        ) = tuple((
+            le_u32, le_u32, le_f32, le_f32, le_f32, le_f32, le_f32, le_f32, le_u32, le_f32, le_f32,
+            le_u32, le_u32,
+        ))(input)?;
+        Ok((
+            remaining,
+            ObjectLocationFragment {
+                flags,
+                fragment1,
+                x,
+                y,
+                z,
+                rotate_z,
+                rotate_y,
+                rotate_x,
+                params1,
+                scale_y,
+                scale_x,
+                fragment2,
+                params2,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [MobSkeletonPieceTrackFragment].
+///
+/// **Type ID:** 0x13
+pub struct MobSkeletonPieceTrackReferenceFragment {
+    /// The [MobSkeletonPieceTrackFragment] reference.
+    pub reference: FragmentRef<MobSkeletonPieceTrackFragment>,
+
+    /// Most flags are _unknown_
+    /// * bit 0 - If set `params1` exists.
+    /// * bit 2 - Usually set.
+    pub flags: u32,
+
+    /// _Unknown_
+    pub params1: Option<u32>,
+}
+
+impl Fragment for MobSkeletonPieceTrackReferenceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x13;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], MobSkeletonPieceTrackReferenceFragment> {
+        let (i, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
+
+        let (remaining, params1) = if flags & 0x01 == 0x01 {
+            le_u32(i).map(|(i, params1)| (i, Some(params1)))?
+        } else {
+            (i, None)
+        };
+
+        Ok((
+            remaining,
+            MobSkeletonPieceTrackReferenceFragment {
+                reference,
+                flags,
+                params1,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// ## Notes
+/// This fragment describes how a skeleton piece is shifted or rotated relative to its parent
+/// piece. The overall skeleton is contained in a 0x10 Skeleton Track Set fragment and is
+/// structured as a hierarchical tree (see that fragment for information on how skeletons
+/// are structured). The 0x12 fragment contains information on how that particular skeleton
+/// piece is rotated and/or shifted relative to its parent piece.
+///
+/// Rotation and shifting information is contained as a series of fractions. The fragment
+/// contains one denominator value for rotation and another for translation (X, Y, Z, shift).
+/// It contains one numerator each for X, Y, Z rotation and shift, for a total of eight values.
+/// For rotation, the resulting value should be multiplied by Pi / 2 radians (i.e. 1 corresponds
+/// to 90 degrees, 2 corresponds to 180 degrees, etc.).
+///
+/// ## Fields
+/// For rendering polygons, the X, Y, Z rotation and shift information in this fragment should
+/// be taken into account by adding them to the rotation and shift values passed from the parent
+/// piece (that is, rotation and shift are cumulative). However, before adding the shift values,
+/// the X, Y, and Z shift values should first be rotated according to the parent’s rotation values.
+/// The rotation values in this fragment represent the orientation of this piece relative to the
+/// parent so calculating its starting position should not take its own rotation into account.
+///
+/// Software rendering a skeleton piece should perform the following steps in this order:
+///   * Calculate the X, Y, and Z shift values from this fragment
+///   * Rotate the shift values according to the rotation values from the parent piece
+///   * Add the shift values to the shift values from the parent piece
+///   * Calculate the X, Y, and Z rotation values from this fragment
+///   * Add the rotation values to the rotation values from the parent piece
+///   * Adjust the vertices for this piece by rotating them using the new rotation values and then
+///     shifting them by the new shift values (or save the rotation and shift values for this piece
+///     to be looked up later on when rendering)
+///   * Process the next piece in the tree with the new rotation and shift values
+///   * When all pieces have been processed, render all meshes in the model, using either the
+///     adjusted vertex values (more efficient) or looking up the corresponding piece for each
+///     vertex and adjusting the vertex values according to the adjusted rotation and shift values
+///     calculated above (less efficient).
+///
+/// **Type ID:** 0x12
+pub struct MobSkeletonPieceTrackFragment {
+    /// Most flags are _unknown_.
+    /// * bit 3 - If set then `data2` exists (though I’m not at all sure about this since I
+    ///           have yet to see an example). It could instead mean that the rotation and
+    ///           shift entries are `u32`s or it could mean that they’re `f32`s.
+    pub flags: u32,
+
+    /// The number of `data1` and `data2` entries there are.
+    pub size: u32,
+
+    /// This represents the denominator for the piece’s X, Y, and Z rotation values.
+    /// It’s vital to note that it is possible to encounter situations where this value is zero.
+    /// I have seen this for pieces with no vertices or polygons and in this case rotation should
+    /// be ignored (just use the existing rotation value as passed from the parent piece). My belief
+    /// is that such pieces represent attachment points for weapons or items (e.g. shields) and
+    /// otherwise don’t represent a part of the model to be rendered.
+    pub rotate_denominator: i16,
+
+    /// The numerator for rotation about the X axis.
+    pub rotate_x_numerator: i16,
+
+    /// The numerator for rotation about the Y axis.
+    pub rotate_y_numerator: i16,
+
+    /// The numerator for rotation about the Z axis.
+    pub rotate_z_numerator: i16,
+
+    /// The numerator for translation along the X axis.
+    pub shift_x_numerator: i16,
+
+    /// The numerator for translation along the Y axis.
+    pub shift_y_numerator: i16,
+
+    /// The numerator for translation along the Z axis.
+    pub shift_z_numerator: i16,
+
+    /// The denominator for the piece X, Y, and Z shift values. Like the rotation denominator,
+    /// software should check to see if this is zero and ignore translation in that case.
+    pub shift_denominator: i16,
+
+    /// _Unknown_ - There are (4 x Size) DWORDs here. This field exists only if the proper bit
+    /// in Flags is set. It’s possible that this is a bogus field and really just represents
+    /// the above fields in some sort of 32-bit form
+    pub data2: Option<Vec<u8>>,
+}
+
+impl Fragment for MobSkeletonPieceTrackFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x12;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], MobSkeletonPieceTrackFragment> {
+        let (
+            i,
+            (
+                flags,
+                size,
+                rotate_denominator,
+                rotate_x_numerator,
+                rotate_y_numerator,
+                rotate_z_numerator,
+                shift_x_numerator,
+                shift_y_numerator,
+                shift_z_numerator,
+                shift_denominator,
+            ),
+        ) = tuple((
+            le_u32, le_u32, le_i16, le_i16, le_i16, le_i16, le_i16, le_i16, le_i16, le_i16,
+        ))(input)?;
+
+        let (remaining, data2) = if i.len() > 0 && (flags & 0x08 == 0x08) {
+            (&i[0..0], Some(i.to_vec()))
+        } else {
+            (i, None)
+        };
+        if remaining.len() > 0 {
+            panic!(
+                "Data2 of MobSkeletonPieceTrackFragment found - flags: {:?}, size: {:?}, len: {:?}, remaining: {:?}",
+                flags, size, remaining.len(), remaining
+            );
+        }
+
+        //let (remaining, data2) = if flags & 0x08 == 0x08 {
+        //    count(le_i32, (size * 4) as usize)(i).map(|(i, data2)| (i, Some(data2)))?
+        //} else {
+        //    (i, None)
+        //};
+
+        Ok((
+            remaining,
+            MobSkeletonPieceTrackFragment {
+                flags,
+                size,
+                rotate_denominator,
+                rotate_x_numerator,
+                rotate_y_numerator,
+                rotate_z_numerator,
+                shift_x_numerator,
+                shift_y_numerator,
+                shift_z_numerator,
+                shift_denominator,
+                data2,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// This fragment describes a skeleton for an entire animated model, and is used for mob
+/// models. The overall skeleton is contained in a 0x10 [SkeletonTrackSetFragment] and
+/// is structured as a hierarchical tree. For example, a pelvis piece might connect to chest,
+/// left thigh, and right thigh pieces. The chest piece might connect to left bicep, right
+/// bicep, and neck pieces. The left bicep piece might connect to a left forearm piece.
+/// The left forearm piece might connect to a left hand piece. The idea is to start at the
+/// base “stem” piece in the skeleton and recursively walk the tree to each successive piece.
+///
+/// For each piece there is a 0x13 [MobSkeletonPieceTrackReferenceFragment], which
+/// references one 0x12 [MobSkeletonPieceTrackFragment]. Each 0x12 fragment defines
+/// how that piece is rotated and/or shifted relative to its parent piece.
+///
+/// **Type ID:** 0x10
+pub struct SkeletonTrackSetFragment {
+    /// Most flags are _unknown_.
+    /// * bit 0 - If set then `unknown_params1` exists.
+    /// * bit 1 - If set then `unknown_params2` exists.
+    /// * bit 9 - If set then `size2`, `fragment3`, and `data3` exist.
+    pub flags: u32,
+
+    /// The number of track reference entries
+    pub entry_count: u32,
+
+    /// Optionally points to a 0x18 [PolygonAnimationReferenceFragment]?
+    pub fragment: u32,
+
+    /// _Unknown_
+    pub unknown_params1: Option<(u32, u32, u32)>,
+
+    /// _Unknown_
+    pub unknown_params2: Option<f32>,
+
+    /// There are `entry_count` entries.
+    pub entries: Vec<SkeletonTrackSetFragmentEntry>,
+
+    /// The number of fragment3 and data3 entries there are.
+    pub size2: Option<u32>,
+
+    /// There are `size2` of these. This field only exists if the proper bit in the `flags`
+    /// field is set. These entries generally point to 0x2D [MeshReferenceFragment]s and
+    /// outline all of the meshes in the animated model. For example, there might be a mesh
+    /// for a model’s body and another one for the head.
+    pub fragment3: Option<Vec<u32>>,
+
+    /// _Unknown_ - There are size2 of these.
+    pub data3: Option<Vec<u32>>,
+}
+
+impl Fragment for SkeletonTrackSetFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x10;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], SkeletonTrackSetFragment> {
+        let (i, (flags, entry_count, fragment)) = tuple((le_u32, le_u32, le_u32))(input)?;
+
+        let (i, unknown_params1) = if flags & 0x01 == 0x01 {
+            tuple((le_u32, le_u32, le_u32))(i).map(|(i, p1)| (i, Some(p1)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, unknown_params2) = if flags & 0x02 == 0x02 {
+            le_f32(i).map(|(i, p2)| (i, Some(p2)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, entries) = count(SkeletonTrackSetFragmentEntry::parse, entry_count as usize)(i)?;
+
+        let (i, size2) = if flags & 0x200 == 0x200 {
+            le_u32(i).map(|(i, size2)| (i, Some(size2)))?
+        } else {
+            (i, None)
+        };
+
+        let (remaining, (fragment3, data3)) = if flags & 0x200 == 0x200 {
+            let size = size2.unwrap_or(0) as usize;
+            tuple((count(le_u32, size), count(le_u32, size)))(i)
+                .map(|(i, (f3, d3))| (i, (Some(f3), Some(d3))))?
+        } else {
+            (i, (None, None))
+        };
+
+        Ok((
+            remaining,
+            SkeletonTrackSetFragment {
+                flags,
+                entry_count,
+                fragment,
+                unknown_params1,
+                unknown_params2,
+                entries,
+                size2,
+                fragment3,
+                data3,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// Entries in the map's [SkeletonTrackSetFragment]
+pub struct SkeletonTrackSetFragmentEntry {
+    /// This seems to refer to the name of either this or another 0x10 fragment.
+    /// It seems that at least one name reference points to the name of this fragment.
+    pub name_reference: u32,
+
+    /// _Unknown_ - Usually 0x0
+    pub flags: u32,
+
+    /// Reference to a 0x13 Mob Skeleton Piece Track Reference fragment.
+    ///
+    /// Important: animated models generally only reference a basic set of fragments
+    /// necessary to render the model but not animate it. There will generally be
+    /// other sets of 0x13 fragments where each set corresponds to a different
+    /// animation of the model. Software reading .WLD files must use the name of
+    /// the first 0x13 fragment referenced by the 0x10 Skeleton Track Set to discover
+    /// any other animation sets. The first fragment of any alternate animation set
+    /// will have the same name as the first 0x13 fragment, with an additional prefix.
+    /// All other 0x13 fragments in that same set will likewise correspond to their
+    /// counterparts in the basic animation set. Different animation sets will have
+    /// different prefixes (e.g. “C01” for one combat animation, “C02” for another
+    /// combat animation, etc.). All alternate animation sets for a particular model
+    /// generally immediately follow the 0x10 Skeleton Track Set fragment (with the
+    /// 0x11 Skeleton Track Set Reference immediately following those). I don’t know
+    /// if this is a necessary arrangement.
+    pub fragment1: u32,
+
+    /// Sometimes refers to a 0x2D Mesh Reference fragment.
+    pub fragment2: u32,
+
+    /// The number of data entries
+    pub data_entry_count: u32,
+
+    /// Each of these contains the index of the next piece in the skeleton tree. A
+    /// Skeleton Track Set is a hierarchical tree of pieces in the skeleton. It
+    /// generally starts with a central “stem” and branches out to a skeleton’s
+    /// extremities. For instance, the first entry might be the stem; that entry
+    /// might point to the pelvis entry; the pelvis entry might point to the left thigh,
+    /// right thigh, and chest entries; and those entries would each point to other parts
+    /// of the skeleton. The exact topography of the tree depends upon the overall
+    /// structure of the skeleton. The proper way to use a Skeleton Track Set fragment
+    /// is to start with the first entry and recursively walk the tree by following each
+    /// entry’s Entry1Data field to other connected pieces.
+    ///
+    /// It’s also worth noting that, although an entry might reference a 0x13 Mob Skeleton
+    /// Piece Track Reference fragment in its EntityFragment1 field, that does not mean it
+    /// will be valid for rendering (see the 0x12 Mob Skeleton Piece Track fragment for more
+    /// information). Many model skeletons apparently contain extraneous pieces that have an
+    /// unknown purpose, though I suspect that they are for determining attachment points
+    /// for weapons and shields and are otherwise not meant to be rendered. These pieces are
+    /// generally not referenced by the 0x36 Mesh fragments that the skeleton indirectly
+    /// references (via 0x2D Mesh Reference fragments).
+    pub data_entries: Vec<u32>,
+}
+
+impl Fragment for SkeletonTrackSetFragmentEntry {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x00;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], SkeletonTrackSetFragmentEntry> {
+        let (i, (name_reference, flags, fragment1, fragment2, data_entry_count)) =
+            tuple((le_u32, le_u32, le_u32, le_u32, le_u32))(input)?;
+
+        let (remaining, data_entries) = count(le_u32, data_entry_count as usize)(i)?;
+
+        Ok((
+            remaining,
+            SkeletonTrackSetFragmentEntry {
+                name_reference,
+                flags,
+                fragment1,
+                fragment2,
+                data_entry_count,
+                data_entries,
+            },
+        ))
+    }
+}
+
+#[derive(Debug)]
+/// Static or animated model reference or player info.
+///
+/// **Type ID:** 0x14
+pub struct ModelFragment {
+    /// Most flags are _unknown_.
+    /// * bit 0 - If set then `unknown_params1` exists.
+    /// * bit 1 - If set then `unknown_params2` exists.
+    /// * bit 7 - If unset then `unknown_fragment` must contain 0.
+    pub flags: u32,
+
+    /// This isn’t really a fragment reference but a string reference.
+    /// It points to a “magic” string. When this fragment is used in main zone
+    /// files the string is “FLYCAMCALLBACK”. When used as a placeable object reference,
+    /// the string is “SPRITECALLBACK”. When creating a 0x14 fragment this is currently
+    /// accomplished by creating a fragment reference, setting the fragment to null, and
+    /// setting the reference name to the magic string.
+    pub name_fragment: u32,
+
+    /// Tells how many entries there are.
+    pub unknown_params2_count: u32,
+
+    /// Tells how many fragment entries there are.
+    pub fragment_count: u32,
+
+    /// _Unknown_
+    pub unknown_fragment: u32,
+
+    /// This seems to always contain 0. It seems to only be used in main zone files.
+    pub unknown_params1: Option<u32>,
+
+    /// These seem to always contain zeroes. They seem to only be used in main zone files.
+    /// There are `unknown_params2_count` of these.
+    pub unknown_params2: Option<Vec<u32>>,
+
+    /// Tells how many `unknown_data` pairs there are.
+    pub unknown_data_count: u32,
+
+    /// _Unknown_. There are `unknown_data_count` of these.
+    pub unknown_data: Vec<(i32, f32)>,
+
+    /// There are `fragment_count` fragment references here. These references can point to several different
+    /// kinds of fragments. In main zone files, there seems to be only one entry, which points to
+    /// a 0x09 Camera Reference fragment. When this is instead a static object reference, the entry
+    /// points to either a 0x2D Mesh Reference fragment. If this is an animated (mob) object
+    /// reference, it points to a 0x11 Skeleton Track Set Reference fragment.
+    /// This also has been seen to point to a 0x07 Two-dimensional Object Reference fragment
+    /// (e.g. coins and blood spots).
+    pub fragments: Vec<u32>,
+
+    /// The number of bytes in the name field.
+    pub name_size: u32,
+
+    /// An encoded string. It's purpose and possible values are unknown.
+    pub name: Vec<u8>,
+}
+
+impl Fragment for ModelFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x14;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], ModelFragment> {
+        let (i, (flags, name_fragment, unknown_params2_count, fragment_count, unknown_fragment)) =
+            tuple((le_u32, le_u32, le_u32, le_u32, le_u32))(input)?;
+
+        let (i, unknown_params1) = if flags & 0x01 == 0x01 {
+            le_u32(i).map(|(i, params1)| (i, Some(params1)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, unknown_params2) = if flags & 0x02 == 0x02 {
+            count(le_u32, unknown_params2_count as usize)(i)
+                .map(|(i, params2)| (i, Some(params2)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, unknown_data_count) = le_u32(i)?;
+
+        let (i, (unknown_data, fragments, name_size)) = tuple((
+            count(tuple((le_i32, le_f32)), unknown_data_count as usize),
+            count(le_u32, fragment_count as usize),
+            le_u32,
+        ))(i)?;
+
+        let (remaining, name) = count(le_u8, name_size as usize)(i)?;
+
+        Ok((
+            remaining,
+            ModelFragment {
+                flags,
+                name_fragment,
+                unknown_params2_count,
+                fragment_count,
+                unknown_fragment,
+                unknown_params1,
+                unknown_params2,
+                unknown_data_count,
+                unknown_data,
+                fragments,
+                name_size,
+                name,
+            },
+        ))
+    }
 }
 
 #[derive(Debug)]
@@ -49,6 +2117,8 @@ pub struct BspTreeFragment {
 
 impl Fragment for BspTreeFragment {
     type T = Self;
+
+    const TYPE_ID: u32 = 0x21;
 
     fn parse(input: &[u8]) -> IResult<&[u8], BspTreeFragment> {
         let (i, size1) = le_u32(input)?;
@@ -83,6 +2153,8 @@ pub struct BspTreeFragmentEntry {
 impl Fragment for BspTreeFragmentEntry {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x00;
+
     fn parse(input: &[u8]) -> IResult<&[u8], BspTreeFragmentEntry> {
         let (remaining, (normal, split_distance, region, nodes)) = tuple((
             tuple((le_f32, le_f32, le_f32)),
@@ -110,8 +2182,8 @@ impl Fragment for BspTreeFragmentEntry {
 pub struct BspRegionFragment {
     /// Most flags are _unknown_. Usually contains 0x181 for regions that contain polygons and 0x81
     /// for regions that are empty.
-    /// * bit 5 - If set then `data6` contains u32 entries.
-    /// * bit 7 - If set then `data6` contains u8 entries (more common).
+    /// * bit 5 - If set then `pvs` contains u32 entries.
+    /// * bit 7 - If set then `pvs` contains u8 entries (more common).
     flags: u32,
 
     /// _Unknown_ - Some sort of fragment reference. Usually nothing is referenced.
@@ -138,8 +2210,8 @@ pub struct BspRegionFragment {
     /// The number of `data5` entries. Usually 1.
     size5: u32,
 
-    /// The number of `data6` entries. Usually 1.
-    size6: u32,
+    /// The number of `pvs` entries. Usually 1.
+    pvs_count: u32,
 
     /// According to the ZoneConverter source there are 12 * `size1` bytes here. Their format is
     /// _unknown_ for lack of sample data to figure it out.
@@ -158,8 +2230,8 @@ pub struct BspRegionFragment {
     /// _Unknown_ data entries
     data5: Vec<BspRegionFragmentData5Entry>,
 
-    /// _Unknown_ data entries
-    data6: Vec<BspRegionFragmentData6Entry>,
+    /// A potentially visible set (PVS) of regions
+    pvs: Vec<BspRegionFragmentPVS>,
 
     /// The number of bytes in the `name7` field.
     size7: u32,
@@ -174,14 +2246,16 @@ pub struct BspRegionFragment {
     /// that contains only those polygons. That [MeshFragment] must contain all geometry information
     /// contained within the volume that this region represents and nothing that lies outside of
     /// that volume.
-    pub fragment3: Option<FragmentRef<MeshFragment>>,
+    pub mesh_reference: Option<FragmentRef<MeshFragment>>,
 }
 
 impl Fragment for BspRegionFragment {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x22;
+
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragment> {
-        let (i, (flags, fragment1, size1, size2, params1, size3, size4, params2, size5, size6)) =
+        let (i, (flags, fragment1, size1, size2, params1, size3, size4, params2, size5, pvs_count)) =
             tuple((
                 le_u32,
                 fragment_ref,
@@ -194,18 +2268,18 @@ impl Fragment for BspRegionFragment {
                 le_u32,
                 le_u32,
             ))(input)?;
-        let (i, (data1, data2, data3, data4, data5, data6, size7)) = tuple((
+        let (i, (data1, data2, data3, data4, data5, pvs, size7)) = tuple((
             count(le_u8, size1 as usize),
             count(le_u8, size2 as usize),
             count(BspRegionFragmentData3Entry::parse, size3 as usize),
             count(BspRegionFragmentData4Entry::parse, size4 as usize),
             count(BspRegionFragmentData5Entry::parse, size5 as usize),
-            count(BspRegionFragmentData6Entry::parse, size6 as usize),
+            count(BspRegionFragmentPVS::parse, pvs_count as usize),
             le_u32,
         ))(i)?;
         let (i, (name7, fragment2)) = tuple((count(le_u8, 12), fragment_ref))(i)?;
 
-        let (remaining, fragment3) = if (flags & 0x100) == 0x100 {
+        let (remaining, mesh_reference) = if (flags & 0x100) == 0x100 {
             fragment_ref(i).map(|(rem, f)| (rem, Some(f)))?
         } else {
             (i, None)
@@ -223,17 +2297,17 @@ impl Fragment for BspRegionFragment {
                 size4,
                 params2,
                 size5,
-                size6,
+                pvs_count,
                 data1,
                 data2,
                 data3,
                 data4,
                 data5,
-                data6,
+                pvs,
                 size7,
                 name7,
                 fragment2,
-                fragment3,
+                mesh_reference,
             },
         ))
     }
@@ -261,6 +2335,8 @@ pub struct BspRegionFragmentData3Entry {
 
 impl Fragment for BspRegionFragmentData3Entry {
     type T = Self;
+
+    const TYPE_ID: u32 = 0x00;
 
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentData3Entry> {
         let (i, (flags, size1)) = tuple((le_u32, le_u32))(input)?;
@@ -321,6 +2397,8 @@ pub struct BspRegionFragmentData4Entry {
 impl Fragment for BspRegionFragmentData4Entry {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x00;
+
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentData4Entry> {
         let (i, (flags, params1, type_field)) = tuple((le_u32, le_u32, le_u32))(input)?;
 
@@ -377,6 +2455,8 @@ pub struct BspRegionFragmentData5Entry {
 impl Fragment for BspRegionFragmentData5Entry {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x00;
+
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentData5Entry> {
         let (remaining, (params1, params2, params3, params4, params5)) = tuple((
             tuple((le_u32, le_u32, le_u32)),
@@ -400,10 +2480,10 @@ impl Fragment for BspRegionFragmentData5Entry {
 }
 
 #[derive(Debug)]
-/// _Unknown_
-pub struct BspRegionFragmentData6Entry {
+/// A potentially visible set (PVS) of regions
+pub struct BspRegionFragmentPVS {
     /// The number of entries in the `data` field
-    size1: u16,
+    size: u16,
 
     /// This is a complicated field. It contains run-length-encoded data that tells the
     /// client which regions are “nearby”. The purpose appears to be so that the client
@@ -444,14 +2524,16 @@ pub struct BspRegionFragmentData6Entry {
     data: Vec<u8>,
 }
 
-impl Fragment for BspRegionFragmentData6Entry {
+impl Fragment for BspRegionFragmentPVS {
     type T = Self;
 
-    fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentData6Entry> {
-        let (i, size1) = le_u16(input)?;
-        let (remaining, data) = count(le_u8, size1 as usize)(i)?;
+    const TYPE_ID: u32 = 0x00;
 
-        Ok((remaining, BspRegionFragmentData6Entry { size1, data }))
+    fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentPVS> {
+        let (i, size) = le_u16(input)?;
+        let (remaining, data) = count(le_u8, size as usize)(i)?;
+
+        Ok((remaining, BspRegionFragmentPVS { size, data }))
     }
 }
 
@@ -480,7 +2562,7 @@ pub struct MeshFragment {
 
     /// A reference to a [MeshAnimatedVerticesReferenceFragment]. This is set for non-character
     /// animated meshes. For example swaying flags and trees.
-    fragment2: FragmentRef<i32>,
+    animation_ref: FragmentRef<i32>,
 
     /// _Unknown_ - Usually empty
     fragment3: FragmentRef<i32>,
@@ -495,7 +2577,7 @@ pub struct MeshFragment {
     ///
     /// For placeable objects this seems to define where the vertices will lie relative to
     /// the object’s local origin. This seems to allow placeable objects to be created that
-    /// lie at some distance from their position as given in a [ObjectLocation] fragment
+    /// lie at some distance from their position as given in a [ObjectLocationFragment]
     /// (why one would do this is a mystery, though).
     pub center: (f32, f32, f32),
 
@@ -630,13 +2712,15 @@ pub struct MeshFragment {
 impl Fragment for MeshFragment {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x36;
+
     fn parse(input: &[u8]) -> IResult<&[u8], MeshFragment> {
         let (
             i,
             (
                 flags,
                 material_list_ref,
-                fragment2,
+                animation_ref,
                 fragment3,
                 fragment4,
                 center,
@@ -708,7 +2792,7 @@ impl Fragment for MeshFragment {
             MeshFragment {
                 flags,
                 material_list_ref,
-                fragment2,
+                animation_ref,
                 fragment3,
                 fragment4,
                 center,
@@ -755,6 +2839,8 @@ pub struct MeshFragmentPolygonEntry {
 impl Fragment for MeshFragmentPolygonEntry {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x00;
+
     fn parse(input: &[u8]) -> IResult<&[u8], MeshFragmentPolygonEntry> {
         let (remaining, (flags, vertex_indexes)) =
             tuple((le_u16, tuple((le_u16, le_u16, le_u16))))(input)?;
@@ -795,6 +2881,8 @@ struct MeshFragmentData9Entry {
 impl Fragment for MeshFragmentData9Entry {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x00;
+
     fn parse(input: &[u8]) -> IResult<&[u8], MeshFragmentData9Entry> {
         let (remaining, (index1, index2, offset, param1, type_field)) = tuple((
             map(le_u16, Some),
@@ -832,6 +2920,8 @@ pub struct MaterialListFragment {
 
 impl Fragment for MaterialListFragment {
     type T = Self;
+
+    const TYPE_ID: u32 = 0x31;
 
     fn parse(input: &[u8]) -> IResult<&[u8], MaterialListFragment> {
         let (i, (flags, size1)) = tuple((le_u32, le_u32))(input)?;
@@ -881,6 +2971,8 @@ pub struct MaterialFragment {
 impl Fragment for MaterialFragment {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x30;
+
     fn parse(input: &[u8]) -> IResult<&[u8], MaterialFragment> {
         let (i, (flags, params1, params2, params3, reference)) = tuple((
             le_u32,
@@ -925,9 +3017,34 @@ pub struct TextureReferenceFragment {
 impl Fragment for TextureReferenceFragment {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x05;
+
     fn parse(input: &[u8]) -> IResult<&[u8], TextureReferenceFragment> {
         let (remaining, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
         Ok((remaining, TextureReferenceFragment { reference, flags }))
+    }
+}
+
+#[derive(Debug)]
+/// A reference to a [MeshFragment] fragment.
+///
+/// **Type ID:** 0x2d
+pub struct MeshReferenceFragment {
+    /// The [MeshFragment] reference.
+    pub reference: FragmentRef<MeshFragment>,
+
+    /// _Unknown_ - Apparently must be zero.
+    pub params: u32,
+}
+
+impl Fragment for MeshReferenceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x2d;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], MeshReferenceFragment> {
+        let (remaining, (reference, params)) = tuple((fragment_ref, le_u32))(input)?;
+        Ok((remaining, MeshReferenceFragment { reference, params }))
     }
 }
 
@@ -944,43 +3061,71 @@ pub struct TextureFragment {
     /// * bit 3 - If set texture is animated (has more than one [TextureImagesFragment] reference.
     /// This also means that a `params1` field exists.
     /// * bit 4 - If set a `params2` field exists. This _seems_ to always be set.
-    flags: u32,
+    flags: TextureFragmentFlags,
 
     /// The number of [TextureImagesFragment] references.
-    size: u32,
+    frame_count: u32,
 
-    /// _Unknown_ - Only present if bit 3 of `flags` is set.
-    params1: Option<u32>,
+    /// Only present if bit `has_current_frame` in `flags` is set.
+    current_frame: Option<u32>,
 
-    /// _Unknown_ - Only present if bit 4 of `flags` is set.
-    params2: Option<u32>,
+    /// Only present if `sleep` in `flags` is set.
+    sleep: Option<u32>,
 
     /// One or more references to [TextureImagesFragment] fragments. For most textures this will
     /// be a single reference but animated textures will reference multiple.
-    pub references: Vec<FragmentRef<TextureImagesFragment>>,
+    pub frame_references: Vec<FragmentRef<TextureImagesFragment>>,
 }
 
 impl Fragment for TextureFragment {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x04;
+
     fn parse(input: &[u8]) -> IResult<&[u8], TextureFragment> {
-        let (i, (flags, size)) = tuple((le_u32, le_u32))(input)?;
+        let (i, (flags, frame_count)) = tuple((TextureFragmentFlags::parse, le_u32))(input)?;
 
         // TODO: Do these fields even really exist?
-        let params1 = None;
-        let params2 = None;
-        let (remaining, references) = count(fragment_ref, size as usize)(i)?;
+        let current_frame = None;
+        let sleep = None;
+        let (remaining, frame_references) = count(fragment_ref, frame_count as usize)(i)?;
 
         Ok((
             remaining,
             TextureFragment {
                 flags,
-                size,
-                params1,
-                params2,
-                references,
+                frame_count,
+                current_frame,
+                sleep,
+                frame_references,
             },
         ))
+    }
+}
+
+#[derive(Debug)]
+pub struct TextureFragmentFlags(u32);
+
+impl TextureFragmentFlags {
+    fn parse(input: &[u8]) -> IResult<&[u8], TextureFragmentFlags> {
+        let (remaining, raw_flags) = le_u32(input)?;
+        Ok((remaining, TextureFragmentFlags(raw_flags)))
+    }
+
+    pub fn skip_frames(&self) -> bool {
+        self.0 & 0x02 == 0x02
+    }
+
+    pub fn is_animated(&self) -> bool {
+        self.0 & 0x08 == 0x08
+    }
+
+    pub fn has_sleep(&self) -> bool {
+        self.0 & 0x10 == 0x10
+    }
+
+    pub fn has_current_frame(&self) -> bool {
+        self.0 & 0x20 == 0x20
     }
 }
 
@@ -1000,6 +3145,8 @@ pub struct TextureImagesFragment {
 
 impl Fragment for TextureImagesFragment {
     type T = Self;
+
+    const TYPE_ID: u32 = 0x03;
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureImagesFragment> {
         let (i, size1) = le_u32(input)?;
@@ -1030,6 +3177,8 @@ pub struct TextureImagesFragmentEntry {
 impl Fragment for TextureImagesFragmentEntry {
     type T = Self;
 
+    const TYPE_ID: u32 = 0x0;
+
     fn parse(input: &[u8]) -> IResult<&[u8], TextureImagesFragmentEntry> {
         let (i, name_length) = le_u16(input)?;
         let (remaining, file_name) = count(le_u8, name_length as usize)(i)?;
@@ -1040,363 +3189,5 @@ impl Fragment for TextureImagesFragmentEntry {
                 file_name: decode_string(&file_name),
             },
         ))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_bsp_tree() {
-        let data: Vec<u8> = vec![
-            0x02, 0x00, 0x00, 0x00, // Size1
-            0x00, 0x00, 0x80, 0xbf, // Entry1NormalX
-            0x00, 0x00, 0x00, 0x00, // Entry1NormalY
-            0x00, 0x00, 0x00, 0x00, // Entry1NormalZ
-            0xea, 0xe4, 0x3b, 0xc3, // Entry1SplitDistance
-            0x00, 0x00, 0x00, 0x00, // Entry1RegionID
-            0x02, 0x00, 0x00, 0x00, // Entry1Node1
-            0xcb, 0x09, 0x00, 0x00, // Entry1Node2
-            0x00, 0x00, 0x80, 0xbf, // Entry2NormalX
-            0x00, 0x00, 0x00, 0x00, // Entry2NormalY
-            0x00, 0x00, 0x00, 0x00, // Entry2NormalZ
-            0xea, 0xe4, 0x3b, 0xc3, // Entry2SplitDistance
-            0x00, 0x00, 0x00, 0x00, // Entry2RegionID
-            0x02, 0x00, 0x00, 0x00, // Entry2Node1
-            0xcb, 0x09, 0x00, 0x00, // Entry2Node2
-        ];
-        let (_, result) = BspTreeFragment::parse(&data).unwrap();
-
-        assert_eq!(result.size1, 2);
-        assert_eq!(result.entries.len(), 2);
-    }
-
-    #[test]
-    fn test_bsp_tree_entry() {
-        let data: Vec<u8> = vec![
-            0x00, 0x00, 0x80, 0xbf, // NormalX
-            0x00, 0x00, 0x00, 0x00, // NormalY
-            0x00, 0x00, 0x00, 0x00, // NormalZ
-            0xea, 0xe4, 0x3b, 0xc3, // SplitDistance
-            0x00, 0x00, 0x00, 0x00, // RegionID
-            0x02, 0x00, 0x00, 0x00, // Node1
-            0xcb, 0x09, 0x00, 0x00, // Node2
-        ];
-        let (_, result) = BspTreeFragmentEntry::parse(&data).unwrap();
-
-        assert_eq!(result.normal, (-1.0, 0.0, 0.0));
-        assert_eq!(result.split_distance, -187.8942);
-        assert_eq!(result.region, 0);
-        assert_eq!(result.nodes, (2, 2507));
-    }
-
-    #[test]
-    fn test_bsp_region() {
-        let data: Vec<u8> = vec![
-            0x81, 0x01, 0x00, 0x00, // flags
-            0x01, 0x00, 0x00, 0x00, // fragment1
-            0x02, 0x00, 0x00, 0x00, // size1
-            0x02, 0x00, 0x00, 0x00, // size2
-            0x00, 0x00, 0x00, 0x00, // params1
-            0x01, 0x00, 0x00, 0x00, // size3
-            0x01, 0x00, 0x00, 0x00, // size4
-            0x00, 0x00, 0x00, 0x00, // params2
-            0x01, 0x00, 0x00, 0x00, // size5
-            0x01, 0x00, 0x00, 0x00, // size6
-            0x01, 0x02, // data1
-            0x03, 0x04, // data2
-            // data3
-            0x00, 0x00, 0x00, 0x00, // data3.flags
-            0x02, 0x00, 0x00, 0x00, // data3.size1
-            0x01, 0x00, 0x00, 0x00, // data3.data1[0]
-            0x02, 0x00, 0x00, 0x00, // data3.data1[1]
-            // data4
-            0x00, 0x00, 0x00, 0x00, // data4.flags
-            0x01, 0x00, 0x00, 0x00, // data4.params1
-            0x01, 0x00, 0x00, 0x00, // data4.type_field
-            0x02, 0x00, 0x00, 0x00, // data4.name_size
-            0x41, 0x42, // data4.name
-            // data5
-            0x01, 0x00, 0x00, 0x00, // data5.params1.0
-            0x02, 0x00, 0x00, 0x00, // data5.params1.1
-            0x03, 0x00, 0x00, 0x00, // data5.params1.2
-            0x04, 0x00, 0x00, 0x00, // data5.params2
-            0x05, 0x00, 0x00, 0x00, // data5.params3
-            0x06, 0x00, 0x00, 0x00, // data5.params4
-            0x07, 0x00, 0x00, 0x00, // data5.params5
-            // data6
-            0x02, 0x00, // data6.size1
-            0x01, 0x02, // data6.data
-            0x02, 0x00, 0x00, 0x00, // size7
-            0x00, 0x00, 0x00, 0x00, // name7
-            0x00, 0x00, 0x00, 0x00, // name7
-            0x00, 0x00, 0x00, 0x00, // name7
-            0x00, 0x00, 0x00, 0x00, // fragment2
-            0x01, 0x00, 0x00, 0x00, // fragment3
-        ];
-        let (_, result) = BspRegionFragment::parse(&data).unwrap();
-
-        assert_eq!(result.flags, 0x181);
-        assert_eq!(result.fragment1, 1);
-        assert_eq!(result.size1, 2);
-        assert_eq!(result.size2, 2);
-        assert_eq!(result.params1, 0);
-        assert_eq!(result.size3, 1);
-        assert_eq!(result.size4, 1);
-        assert_eq!(result.params2, 0);
-        assert_eq!(result.size5, 1);
-        assert_eq!(result.size6, 1);
-        assert_eq!(result.data1, vec![0x01, 0x02]);
-        assert_eq!(result.data2, vec![0x03, 0x04]);
-        assert_eq!(result.data3.len(), 1);
-        assert_eq!(result.data4.len(), 1);
-        assert_eq!(result.data5.len(), 1);
-        assert_eq!(result.data6.len(), 1);
-        assert_eq!(result.size7, 2);
-        //assert_eq!(result.name7, "AB");
-        assert_eq!(result.fragment2, 0x00);
-        assert_eq!(result.fragment3, Some(0x01));
-    }
-
-    #[test]
-    fn test_bsp_region_data3_entry_with_params() {
-        let data: Vec<u8> = vec![
-            0x02, 0x00, 0x00, 0x00, // flags
-            0x02, 0x00, 0x00, 0x00, // size1
-            0x01, 0x00, 0x00, 0x00, // data1[0]
-            0x02, 0x00, 0x00, 0x00, // data1[1]
-            0x01, 0x00, 0x00, 0x00, // params1.0
-            0x02, 0x00, 0x00, 0x00, // params1.1
-            0x03, 0x00, 0x00, 0x00, // params1.2
-            0x01, 0x00, 0x00, 0x00, // params2
-        ];
-        let (_, result) = BspRegionFragmentData3Entry::parse(&data).unwrap();
-
-        assert_eq!(result.flags, 0x02);
-        assert_eq!(result.size1, 2);
-        assert_eq!(result.data1.len(), 2);
-        assert_eq!(result.data1[0], 1);
-        assert_eq!(result.data1[1], 2);
-        assert_eq!(result.params1, Some((1, 2, 3)));
-        assert_eq!(result.params2, Some(1));
-    }
-
-    #[test]
-    fn test_bsp_region_data3_entry_without_params() {
-        let data: Vec<u8> = vec![
-            0x00, 0x00, 0x00, 0x00, // flags
-            0x02, 0x00, 0x00, 0x00, // size1
-            0x01, 0x00, 0x00, 0x00, // data1[0]
-            0x02, 0x00, 0x00, 0x00, // data1[1]
-        ];
-        let (_, result) = BspRegionFragmentData3Entry::parse(&data).unwrap();
-
-        assert_eq!(result.flags, 0x00);
-        assert_eq!(result.size1, 2);
-        assert_eq!(result.data1.len(), 2);
-        assert_eq!(result.data1[0], 1);
-        assert_eq!(result.data1[1], 2);
-        assert_eq!(result.params1, None);
-        assert_eq!(result.params2, None);
-    }
-
-    #[test]
-    fn test_bsp_region_data4_entry_without_params2() {
-        let data: Vec<u8> = vec![
-            0x00, 0x00, 0x00, 0x00, // flags
-            0x01, 0x00, 0x00, 0x00, // params1
-            0x01, 0x00, 0x00, 0x00, // type_field
-            0x02, 0x00, 0x00, 0x00, // name_size
-            0x41, 0x42, // name
-        ];
-        let (_, result) = BspRegionFragmentData4Entry::parse(&data).unwrap();
-
-        assert_eq!(result.flags, 0x00);
-        assert_eq!(result.params1, 1);
-        assert_eq!(result.type_field, 1);
-        assert_eq!(result.params2a, None);
-        assert_eq!(result.params2b, None);
-        assert_eq!(result.name_size, 2);
-        assert_eq!(result.name, "AB");
-    }
-
-    #[test]
-    fn test_bsp_region_data4_entry_with_params2() {
-        let data: Vec<u8> = vec![
-            0x00, 0x00, 0x00, 0x00, // flags
-            0x01, 0x00, 0x00, 0x00, // params1
-            0x0a, 0x00, 0x00, 0x00, // type_field
-            0x01, 0x00, 0x00, 0x00, // params2a
-            0x02, 0x00, 0x00, 0x00, // params2b
-            0x02, 0x00, 0x00, 0x00, // name_size
-            0x41, 0x42, // name
-        ];
-        let (_, result) = BspRegionFragmentData4Entry::parse(&data).unwrap();
-
-        assert_eq!(result.flags, 0x00);
-        assert_eq!(result.params1, 1);
-        assert_eq!(result.type_field, 10);
-        assert_eq!(result.params2a, Some(1));
-        assert_eq!(result.params2b, Some(2));
-        assert_eq!(result.name_size, 2);
-        assert_eq!(result.name, "AB");
-    }
-
-    #[test]
-    fn test_bsp_region_data5_entry() {
-        let data: Vec<u8> = vec![
-            0x01, 0x00, 0x00, 0x00, // params1.0
-            0x02, 0x00, 0x00, 0x00, // params1.1
-            0x03, 0x00, 0x00, 0x00, // params1.2
-            0x04, 0x00, 0x00, 0x00, // params2
-            0x05, 0x00, 0x00, 0x00, // params3
-            0x06, 0x00, 0x00, 0x00, // params4
-            0x07, 0x00, 0x00, 0x00, // params5
-        ];
-        let (_, result) = BspRegionFragmentData5Entry::parse(&data).unwrap();
-
-        assert_eq!(result.params1, (1, 2, 3));
-        assert_eq!(result.params2, 4);
-        assert_eq!(result.params3, 5);
-        assert_eq!(result.params4, 6);
-        assert_eq!(result.params5, 7);
-    }
-
-    #[test]
-    fn test_bsp_region_data6_entry() {
-        let data: Vec<u8> = vec![
-            0x02, 0x00, // size1
-            0x01, 0x02, // data
-        ];
-        let (_, result) = BspRegionFragmentData6Entry::parse(&data).unwrap();
-
-        assert_eq!(result.size1, 2);
-        assert_eq!(result.data[0], 1);
-        assert_eq!(result.data[1], 2);
-    }
-
-    #[test]
-    fn test_mesh() {
-        let data: Vec<u8> = vec![
-            0x03, 0x80, 0x01, 0x00, // flags
-            0x01, 0x00, 0x00, 0x00, // fragment1
-            0x02, 0x00, 0x00, 0x00, // fragment2
-            0x03, 0x00, 0x00, 0x00, // fragment3
-            0x04, 0x00, 0x00, 0x00, // fragment4
-            0x00, 0x00, 0x80, 0x3f, // center.0
-            0x00, 0x00, 0x80, 0x3f, // center.1
-            0x00, 0x00, 0x80, 0x3f, // center.2
-            0x01, 0x00, 0x00, 0x00, // params2.0
-            0x01, 0x00, 0x00, 0x00, // params2.1
-            0x01, 0x00, 0x00, 0x00, // params2.2
-            0x00, 0x00, 0x80, 0x3f, // max_distance
-            0x00, 0x00, 0x80, 0x3f, // min.0
-            0x00, 0x00, 0x80, 0x3f, // min.1
-            0x00, 0x00, 0x80, 0x3f, // min.2
-            0x00, 0x00, 0x80, 0x3f, // max.0
-            0x00, 0x00, 0x80, 0x3f, // max.1
-            0x00, 0x00, 0x80, 0x3f, // max.2
-            0x02, 0x00, // vertex_count
-            0x02, 0x00, // texture_coordinate_count
-            0x02, 0x00, // normal_count
-            0x02, 0x00, // color_count
-            0x02, 0x00, // polygon_count
-            0x02, 0x00, // vertex_piece_count
-            0x02, 0x00, // polygon_texture_count
-            0x02, 0x00, // vertex_texture_count
-            0x01, 0x00, // size9
-            0x01, 0x00, // scale
-            0x01, 0x00, 0x01, 0x00, 0x01, 0x00, // vertices[0]
-            0x02, 0x00, 0x02, 0x00, 0x02, 0x00, // vertices[1]
-            0x01, 0x00, 0x01, 0x00, // texture_coordinates[0]
-            0x02, 0x00, 0x02, 0x00, // texture_coordinates[1]
-            0x01, 0x01, 0x01, // vertex_normals[0]
-            0x02, 0x02, 0x02, // vertex_normals[1]
-            0x01, 0x00, 0x00, 0x00, // vertex_colors[0]
-            0x02, 0x00, 0x00, 0x00, // vertex_colors[1]
-            0x01, 0x00, // polygons[0].flags
-            0x01, 0x00, // polygons[0].vertex_indexes.0
-            0x02, 0x00, // polygons[0].vertex_indexes.1
-            0x03, 0x00, // polygons[0].vertex_indexes.2
-            0x01, 0x00, // polygons[1].flags
-            0x01, 0x00, // polygons[1].vertex_indexes.0
-            0x02, 0x00, // polygons[1].vertex_indexes.1
-            0x03, 0x00, // polygons[1].vertex_indexes.2
-            0x01, 0x00, 0x01, 0x00, // vertex_pieces[0]
-            0x02, 0x00, 0x02, 0x00, // vertex_pieces[1]
-            0x01, 0x00, 0x01, 0x00, // polygon_textures[0]
-            0x02, 0x00, 0x02, 0x00, // polygon_textures[1]
-            0x01, 0x00, 0x01, 0x00, // vertex_textures[0]
-            0x02, 0x00, 0x02, 0x00, // vertex_textures[1]
-            0x01, 0x00, // data9[0].index1
-            0x02, 0x00, // data9[0].index2
-            0x00, 0x00, 0x80, 0x3f, // data9[0].offset
-            0x01, 0x00, // data9[0].param1
-            0x01, 0x00, // data9[0].type_field
-        ];
-        let (_, result) = MeshFragment::parse(&data).unwrap();
-
-        assert_eq!(result.flags, 0x00018003);
-        assert_eq!(result.fragment1, 1);
-        assert_eq!(result.fragment2, 2);
-        assert_eq!(result.fragment3, 3);
-        assert_eq!(result.fragment4, 4);
-        assert_eq!(result.center, (1f32, 1f32, 1f32));
-        assert_eq!(result.params2, (1, 1, 1));
-        assert_eq!(result.max_distance, 1f32);
-        assert_eq!(result.min, (1f32, 1f32, 1f32));
-        assert_eq!(result.max, (1f32, 1f32, 1f32));
-        assert_eq!(result.vertex_count, 2);
-        assert_eq!(result.texture_coordinate_count, 2);
-        assert_eq!(result.normal_count, 2);
-        assert_eq!(result.color_count, 2);
-        assert_eq!(result.polygon_count, 2);
-        assert_eq!(result.vertex_piece_count, 2);
-        assert_eq!(result.polygon_texture_count, 2);
-        assert_eq!(result.vertex_texture_count, 2);
-        assert_eq!(result.size9, 1);
-        assert_eq!(result.scale, 1);
-        assert_eq!(result.vertices, vec![(1, 1, 1), (2, 2, 2)]);
-        assert_eq!(result.texture_coordinates, vec![(1, 1), (2, 2)]);
-        assert_eq!(result.vertex_normals, vec![(1, 1, 1), (2, 2, 2)]);
-        assert_eq!(result.vertex_colors, vec![1, 2]);
-        assert_eq!(result.polygons.len(), 2);
-        assert_eq!(result.vertex_pieces, vec![(1, 1), (2, 2)]);
-        assert_eq!(result.polygon_textures, vec![(1, 1), (2, 2)]);
-        assert_eq!(result.vertex_textures, vec![(1, 1), (2, 2)]);
-        assert_eq!(result.data9.len(), 1);
-    }
-
-    #[test]
-    fn test_mesh_data9_entry() {
-        let data: Vec<u8> = vec![
-            0x01, 0x00, // index1
-            0x02, 0x00, // index2
-            0x00, 0x00, 0x80, 0x3f, // offset
-            0x01, 0x00, // param1
-            0x01, 0x00, // type_field
-        ];
-        let (_, result) = MeshFragmentData9Entry::parse(&data).unwrap();
-
-        assert_eq!(result.index1, Some(1));
-        assert_eq!(result.index2, Some(2));
-        assert_eq!(result.offset, Some(1f32));
-        assert_eq!(result.param1, 1);
-        assert_eq!(result.type_field, 1);
-    }
-
-    #[test]
-    fn test_mesh_polygon_entry() {
-        let data: Vec<u8> = vec![
-            0x01, 0x00, // flags
-            0x01, 0x00, // vertex_indexes.0
-            0x02, 0x00, // vertex_indexes.1
-            0x03, 0x00, // vertex_indexes.2
-        ];
-        let (_, result) = MeshFragmentPolygonEntry::parse(&data).unwrap();
-
-        assert_eq!(result.flags, 1);
-        assert_eq!(result.vertex_indexes, (1, 2, 3));
     }
 }
