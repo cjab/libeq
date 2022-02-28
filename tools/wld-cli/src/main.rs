@@ -172,6 +172,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let (_, wld_doc) = parser::WldDoc::parse(&wld_data).unwrap();
 
+    println!("--------");
+    println!("{:02x?}", wld_doc.serialize());
+    println!("--------");
+
     let show_stats = matches.is_present("stats");
 
     if show_stats {
