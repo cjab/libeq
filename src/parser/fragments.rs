@@ -6,6 +6,9 @@ use nom::number::complete::{le_f32, le_i16, le_i32, le_i8, le_u16, le_u32, le_u8
 use nom::sequence::tuple;
 use nom::IResult;
 
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
+
 use super::{decode_string, StringReference};
 
 #[derive(Debug, Clone, Copy)]
@@ -1160,14 +1163,7 @@ impl Fragment for TwoDimensionalObjectReferenceFragment {
 ///
 /// **Type ID:** 0x06
 pub struct TwoDimensionalObjectFragment {
-    /// Most flags are _unknown_.
-    /// * bit 0 - If set `center_offset` exists.
-    /// * bit 1 - If set `bounding_radius` exists.
-    /// * bit 2 - If set `current_frame` exists.
-    /// * bit 3 - If set `sleep` exists.
-    /// * bit 6 - skip frames
-    /// * bit 7 - If set `depth_scale` exists.
-    pub flags: u32,
+    pub flags: SpriteFlags,
 
     /// Windcatcher:
     /// _Unknown_
@@ -1229,18 +1225,8 @@ pub struct TwoDimensionalObjectFragment {
     /// Windcatcher:
     /// _Unknown_
     /// NEW:
-    /// Corresponds to RENDER_METHOD. Possible values so far:
-    /// TEXTURE1 = 0x107
-    /// TEXTURE2 = 0x207
-    /// TEXTURE3 = 0x307
-    /// TEXTURE4 = 0x407
-    /// TEXTURE5 = 0x507
-    /// TRANSTEXTURE1 = 0x187
-    /// TRANSTEXTURE2 = 0x287
-    /// TRANSTEXTURE4 = 0x487
-    /// TRANSTEXTURE5 = 0x587
-    /// SOLIDFILL = 0x007
-    pub render_method: u32,
+    /// Corresponds to RENDER_METHOD statement.
+    pub render_method: RenderMethod,
 
     /// Mostly _Unknown_
     /// * bit 0 - If set `pen` exists.
@@ -1250,7 +1236,7 @@ pub struct TwoDimensionalObjectFragment {
     /// * bit 4 - If set `params7_matrix` exists.
     /// * bit 5 - If set `params7_size` and `params7_data` exist.
     /// * bit 6 - TWOSIDED
-    pub renderinfo_flags: u32,
+    pub render_flags: RenderFlags,
 
     /// Windcatcher:
     /// _Unknown_ - Only exists if bit 0 of `renderinfo_flags` is set.
@@ -1294,34 +1280,39 @@ impl Fragment for TwoDimensionalObjectFragment {
     const TYPE_ID: u32 = 0x06;
 
     fn parse(input: &[u8]) -> IResult<&[u8], TwoDimensionalObjectFragment> {
-        let (i, (flags, num_frames, num_pitches, sprite_size, sphere_fragment)) =
-            tuple((le_u32, le_u32, le_u32, tuple((le_f32, le_f32)), le_u32))(input)?;
+        let (i, (flags, num_frames, num_pitches, sprite_size, sphere_fragment)) = tuple((
+            SpriteFlags::parse,
+            le_u32,
+            le_u32,
+            tuple((le_f32, le_f32)),
+            le_u32,
+        ))(input)?;
 
-        let (i, depth_scale) = if flags & 0x80 == 0x80 {
+        let (i, depth_scale) = if flags.has_depth_scale() {
             le_f32(i).map(|(i, p2)| (i, Some(p2)))?
         } else {
             (i, None)
         };
 
-        let (i, center_offset) = if flags & 0x01 == 0x01 {
+        let (i, center_offset) = if flags.has_center_offset() {
             tuple((le_f32, le_f32, le_f32))(i).map(|(i, p3)| (i, Some(p3)))?
         } else {
             (i, None)
         };
 
-        let (i, bounding_radius) = if flags & 0x02 == 0x02 {
+        let (i, bounding_radius) = if flags.has_bounding_radius() {
             le_f32(i).map(|(i, p4)| (i, Some(p4)))?
         } else {
             (i, None)
         };
 
-        let (i, current_frame) = if flags & 0x04 == 0x04 {
+        let (i, current_frame) = if flags.has_current_frame() {
             le_u32(i).map(|(i, p5)| (i, Some(p5)))?
         } else {
             (i, None)
         };
 
-        let (i, sleep) = if flags & 0x08 == 0x08 {
+        let (i, sleep) = if flags.has_sleep() {
             le_u32(i).map(|(i, p6)| (i, Some(p6)))?
         } else {
             (i, None)
@@ -1332,47 +1323,50 @@ impl Fragment for TwoDimensionalObjectFragment {
             num_pitches as usize,
         )(i)?;
 
-        let (i, (render_method, renderinfo_flags)) = tuple((le_u32, le_u32))(i)?;
+        let (i, (render_method, render_flags)) =
+            tuple((RenderMethod::parse, RenderFlags::parse))(i)?;
 
-        let (i, pen) = if renderinfo_flags & 0x01 == 0x01 {
+        let (i, pen) = if render_flags.has_pen() {
             le_u32(i).map(|(i, p2)| (i, Some(p2)))?
         } else {
             (i, None)
         };
 
-        let (i, brightness) = if renderinfo_flags & 0x02 == 0x02 {
+        let (i, brightness) = if render_flags.has_brightness() {
             le_f32(i).map(|(i, p3)| (i, Some(p3)))?
         } else {
             (i, None)
         };
 
-        let (i, scaled_ambient) = if renderinfo_flags & 0x04 == 0x04 {
+        let (i, scaled_ambient) = if render_flags.has_scaled_ambient() {
             le_f32(i).map(|(i, p4)| (i, Some(p4)))?
         } else {
             (i, None)
         };
 
-        let (i, params7_fragment) = if renderinfo_flags & 0x08 == 0x08 {
+        let (i, params7_fragment) = if render_flags.has_simple_sprite() {
             le_f32(i).map(|(i, f)| (i, Some(f)))?
         } else {
             (i, None)
         };
 
-        let (i, uv_info) = if renderinfo_flags & 0x10 == 0x10 {
+        let (i, uv_info) = if render_flags.has_uv_info() {
             UvInfo::parse(i).map(|(i, m)| (i, Some(m)))?
         } else {
             (i, None)
         };
 
-        let (i, params7_size) = if renderinfo_flags & 0x20 == 0x20 {
+        // TODO: This seems wrong.
+        let (i, params7_size) = if render_flags.0 & 0x20 == 0x20 {
             le_u32(i).map(|(i, s)| (i, Some(s)))?
         } else {
             (i, None)
         };
 
+        // TODO: This seems wrong.
         let (remaining, params7_data) = match params7_size {
             Some(size) => {
-                if flags & 0x40 == 0x40 && params7_size.is_some() {
+                if render_flags.0 & 0x40 == 0x40 && params7_size.is_some() {
                     count(le_u32, (size * 2) as usize)(i).map(|(i, d)| (i, Some(d)))?
                 } else {
                     (i, None)
@@ -1396,7 +1390,7 @@ impl Fragment for TwoDimensionalObjectFragment {
                 sleep,
                 pitches,
                 render_method,
-                renderinfo_flags,
+                render_flags,
                 pen,
                 brightness,
                 scaled_ambient,
@@ -1438,6 +1432,179 @@ impl Fragment for UvInfo {
         ))
     }
 }
+
+#[derive(Debug)]
+pub struct SpriteFlags(u32);
+
+impl SpriteFlags {
+    const HAS_CENTER_OFFSET: u32 = 0x01;
+    const HAS_BOUNDING_RADIUS: u32 = 0x02;
+    const HAS_CURRENT_FRAME: u32 = 0x04;
+    const HAS_SLEEP: u32 = 0x08;
+    const SKIP_FRAMES: u32 = 0x40;
+    const HAS_DEPTH_SCALE: u32 = 0x80;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+        let (remaining, raw_flags) = le_u32(input)?;
+        Ok((remaining, Self(raw_flags)))
+    }
+
+    pub fn has_center_offset(&self) -> bool {
+        self.0 & Self::HAS_CENTER_OFFSET == Self::HAS_CENTER_OFFSET
+    }
+
+    pub fn has_bounding_radius(&self) -> bool {
+        self.0 & Self::HAS_BOUNDING_RADIUS == Self::HAS_BOUNDING_RADIUS
+    }
+
+    pub fn has_current_frame(&self) -> bool {
+        self.0 & Self::HAS_CURRENT_FRAME == Self::HAS_CURRENT_FRAME
+    }
+
+    pub fn has_sleep(&self) -> bool {
+        self.0 & Self::HAS_SLEEP == Self::HAS_SLEEP
+    }
+
+    pub fn skip_frames(&self) -> bool {
+        self.0 & Self::SKIP_FRAMES == Self::SKIP_FRAMES
+    }
+
+    pub fn has_depth_scale(&self) -> bool {
+        self.0 & Self::HAS_DEPTH_SCALE == Self::HAS_DEPTH_SCALE
+    }
+}
+
+#[derive(Debug)]
+pub struct RenderMethod(u32);
+
+impl RenderMethod {
+    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+        let (remaining, raw_flags) = le_u32(input)?;
+        Ok((remaining, Self(raw_flags)))
+    }
+
+    pub fn draw_style(&self) -> DrawStyle {
+        // Safe to unwrap because mask limits to two bits
+        // and all values are covered by the `DrawStyle` enum.
+        FromPrimitive::from_u32(self.0 & 0b11).unwrap()
+    }
+
+    pub fn lighting(&self) -> Lighting {
+        // Safe to unwrap because mask limits to three bits
+        // and all values are covered by the `Lighting` enum.
+        FromPrimitive::from_u32((self.0 >> 2) & 0b111).unwrap()
+    }
+
+    pub fn shading(&self) -> Shading {
+        // Safe to unwrap because mask limits to two bits
+        // and all values are covered by the `Shading` enum.
+        FromPrimitive::from_u32((self.0 >> 5) & 0b11).unwrap()
+    }
+
+    pub fn texture_style(&self) -> TextureStyle {
+        // Safe to unwrap because mask limits to four bits
+        // and all values are covered by the `TextureStyle` enum.
+        FromPrimitive::from_u32((self.0 >> 7) & 0b1111).unwrap()
+    }
+
+    pub fn unknown_bits(&self) -> u32 {
+        (self.0 >> 11) & 0xfffff
+    }
+
+    pub fn user_defined(&self) -> bool {
+        self.0 >> 31 == 1
+    }
+}
+
+#[derive(FromPrimitive)]
+pub enum DrawStyle {
+    Transparent = 0x0,
+    Unknown = 0x1,
+    Wireframe = 0x2,
+    Solid = 0x3,
+}
+
+#[derive(FromPrimitive)]
+pub enum Lighting {
+    ZeroIntensity = 0x0,
+    Unknown1 = 0x1,
+    Constant = 0x2,
+    XXXXX = 0x3,
+    Ambient = 0x4,
+    ScaledAmbient = 0x5,
+    Unknown2 = 0x6,
+    Invalid = 0x7,
+}
+
+#[derive(FromPrimitive)]
+pub enum Shading {
+    None1 = 0x0,
+    None2 = 0x1,
+    Gouraud1 = 0x2,
+    Gouraud2 = 0x3,
+}
+
+#[derive(FromPrimitive)]
+pub enum TextureStyle {
+    None = 0x0,
+    XXXXXXXX1 = 0x1,
+    Texture1 = 0x2,
+    TransTexture1 = 0x3,
+    Texture2 = 0x4,
+    TransTexture2 = 0x5,
+    Texture3 = 0x6,
+    XXXXXXXX2 = 0x7,
+    Texture4 = 0x8,
+    TransTexture4 = 0x9,
+    Texture5 = 0xa,
+    TransTexture5 = 0xb,
+    Unknown1 = 0xc,
+    Unknown2 = 0xe,
+    XXXXX = 0xf,
+}
+
+#[derive(Debug)]
+pub struct RenderFlags(u32);
+
+impl RenderFlags {
+    const HAS_PEN: u32 = 0x01;
+    const HAS_BRIGHTNESS: u32 = 0x02;
+    const HAS_SCALED_AMBIENT: u32 = 0x04;
+    const HAS_SIMPLE_SPRITE: u32 = 0x08;
+    const HAS_UV_INFO: u32 = 0x10;
+    // const UNKNOWN: u32 = 0x20;
+    const IS_TWO_SIDED: u32 = 0x40;
+
+    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+        let (remaining, raw_flags) = le_u32(input)?;
+        Ok((remaining, Self(raw_flags)))
+    }
+
+    pub fn has_pen(&self) -> bool {
+        self.0 & Self::HAS_PEN == Self::HAS_PEN
+    }
+
+    pub fn has_brightness(&self) -> bool {
+        self.0 & Self::HAS_BRIGHTNESS == Self::HAS_BRIGHTNESS
+    }
+
+    pub fn has_scaled_ambient(&self) -> bool {
+        self.0 & Self::HAS_SCALED_AMBIENT == Self::HAS_SCALED_AMBIENT
+    }
+
+    pub fn has_simple_sprite(&self) -> bool {
+        self.0 & Self::HAS_SIMPLE_SPRITE == Self::HAS_SIMPLE_SPRITE
+    }
+
+    pub fn has_uv_info(&self) -> bool {
+        self.0 & Self::HAS_UV_INFO == Self::HAS_UV_INFO
+    }
+
+    pub fn is_two_sided(&self) -> bool {
+        self.0 & Self::IS_TWO_SIDED == Self::IS_TWO_SIDED
+    }
+}
+
 #[derive(Debug)]
 /// `pitches` entries in the [TwoDimensionalObjectFragment]
 pub struct SpritePitch {
@@ -3107,25 +3274,30 @@ impl Fragment for TextureFragment {
 pub struct TextureFragmentFlags(pub u32);
 
 impl TextureFragmentFlags {
+    const SKIP_FRAMES: u32 = 0x02;
+    const IS_ANIMATED: u32 = 0x08;
+    const HAS_SLEEP: u32 = 0x10;
+    const HAS_CURRENT_FRAME: u32 = 0x10;
+
     fn parse(input: &[u8]) -> IResult<&[u8], TextureFragmentFlags> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, TextureFragmentFlags(raw_flags)))
     }
 
     pub fn skip_frames(&self) -> bool {
-        self.0 & 0x02 == 0x02
+        self.0 & Self::SKIP_FRAMES == Self::SKIP_FRAMES
     }
 
     pub fn is_animated(&self) -> bool {
-        self.0 & 0x08 == 0x08
+        self.0 & Self::IS_ANIMATED == Self::IS_ANIMATED
     }
 
     pub fn has_sleep(&self) -> bool {
-        self.0 & 0x10 == 0x10
+        self.0 & Self::HAS_SLEEP == Self::HAS_SLEEP
     }
 
     pub fn has_current_frame(&self) -> bool {
-        self.0 & 0x20 == 0x20
+        self.0 & Self::HAS_CURRENT_FRAME == Self::HAS_CURRENT_FRAME
     }
 }
 
