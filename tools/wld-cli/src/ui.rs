@@ -1494,7 +1494,7 @@ pub fn draw_two_dimensional_object_fragment<B>(
 ) where
     B: Backend,
 {
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
+    let flags = format!("{:?}", fragment.flags);
     let num_frames = format!("{:?}", fragment.num_frames);
     let num_pitches = format!("{:?}", fragment.num_pitches);
     let sprite_size = format!("{:?}", fragment.sprite_size);
@@ -1506,7 +1506,7 @@ pub fn draw_two_dimensional_object_fragment<B>(
     let sleep = format!("{:?}", fragment.sleep);
     let pitches = format!("{:?}", fragment.pitches);
     let render_method = format!("{:?}", fragment.render_method);
-    let renderinfo_flags = format!("{:?}", fragment.renderinfo_flags);
+    let render_flags = format!("{:?}", fragment.render_flags);
     let pen = format!("{:?}", fragment.pen);
     let brightness = format!("{:?}", fragment.brightness);
     let scaled_ambient = format!("{:?}", fragment.scaled_ambient);
@@ -1528,7 +1528,7 @@ pub fn draw_two_dimensional_object_fragment<B>(
         Row::new(vec!["Sleep", &sleep]),
         Row::new(vec!["Pitches", &pitches]),
         Row::new(vec!["Render Method", &render_method]),
-        Row::new(vec!["RenderInfo Flags", &renderinfo_flags]),
+        Row::new(vec!["Render Flags", &render_flags]),
         Row::new(vec!["Pen", &pen]),
         Row::new(vec!["Brightness", &brightness]),
         Row::new(vec!["Scaled Ambient", &scaled_ambient]),
