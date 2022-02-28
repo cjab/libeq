@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 
+use encoding_rs::WINDOWS_1252;
+
 #[derive(Clone, Copy, Debug)]
 pub struct StringReference(usize);
 
 impl StringReference {
     pub fn new(idx: i32) -> Option<StringReference> {
-        if idx.is_negative() {
+        if idx <= 0 {
             Some(StringReference(idx.abs() as usize))
         } else {
             None
@@ -19,16 +21,13 @@ pub struct StringHash(HashMap<usize, String>);
 const XOR_KEY: [u8; 8] = [0x95, 0x3a, 0xc5, 0x2a, 0x95, 0x7a, 0x95, 0x6a];
 
 pub fn decode_string(encoded_data: &[u8]) -> String {
-    String::from_utf8(
-        encoded_data
-            .iter()
-            .zip(XOR_KEY.iter().cycle())
-            .map(|(encoded_char, key_char)| encoded_char ^ key_char)
-            .collect(),
-    )
-    .expect("Invalid data in encoded string")
-    .trim_end_matches('\u{0}')
-    .to_string()
+    let data: Vec<u8> = encoded_data
+        .iter()
+        .zip(XOR_KEY.iter().cycle())
+        .map(|(encoded_char, key_char)| encoded_char ^ key_char)
+        .collect();
+    let (cow, _, _) = WINDOWS_1252.decode(&data);
+    cow.into_owned().trim_end_matches('\u{0}').to_string()
 }
 
 impl StringHash {
