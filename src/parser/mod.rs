@@ -53,6 +53,15 @@ impl<'a> WldDoc<'a> {
         ))
     }
 
+    pub fn serialize(&self) -> Vec<u8> {
+        [
+            self.header.serialize(),
+            self.strings.serialize(),
+            self.fragments.iter().flat_map(|f| f.serialize()).collect(),
+        ]
+        .concat()
+    }
+
     /// Get a fragment given a fragment reference.
     pub fn get<T: Fragment<T = T> + Debug>(
         &self,
@@ -171,6 +180,21 @@ impl WldHeader {
             },
         ))
     }
+
+    pub fn serialize(&self) -> Vec<u8> {
+        [
+            self.magic,
+            self.version,
+            self.fragment_count,
+            self.header_3,
+            self.header_4,
+            self.string_hash_size,
+            self.header_6,
+        ]
+        .iter()
+        .flat_map(|f| f.to_le_bytes())
+        .collect()
+    }
 }
 
 type FragmentTypeId = u32;
@@ -226,6 +250,18 @@ impl<'a> FragmentHeader<'a> {
                 field_data,
             },
         ))
+    }
+
+    pub fn serialize(&self) -> Vec<u8> {
+        let result = [
+            self.size.to_le_bytes(),
+            self.fragment_type.to_le_bytes(),
+            self.name_reference
+                .map_or(0, |r| r.serialize())
+                .to_le_bytes(),
+        ]
+        .concat();
+        result
     }
 
     pub fn name(&self, doc: &'a WldDoc) -> Option<&'a str> {
