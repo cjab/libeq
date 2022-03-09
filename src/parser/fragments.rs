@@ -336,27 +336,27 @@ impl Fragment for AlternateMeshFragmentData6Entry {
     }
 }
 
-impl Fragment for VertexColorReferenceFragment {
-    type T = Self;
-
-    const TYPE_ID: u32 = 0x0;
-
-    fn parse(input: &[u8]) -> IResult<&[u8], VertexColorReferenceFragment> {
-        let (remaining, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
-        Ok((remaining, VertexColorReferenceFragment { reference, flags }))
-    }
-}
-
 #[derive(Debug)]
 /// A reference to a [VertexColorFragment].
 ///
-/// **Type ID:** 0x2f
+/// **Type ID:** 0x33
 pub struct VertexColorReferenceFragment {
     /// The [MeshAnimatedVerticesFragment] reference.
     pub reference: FragmentRef<MeshAnimatedVerticesFragment>,
 
     /// _Unknown_ - Usually contains 0.
     pub flags: u32,
+}
+
+impl Fragment for VertexColorReferenceFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x33;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], VertexColorReferenceFragment> {
+        let (remaining, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
+        Ok((remaining, VertexColorReferenceFragment { reference, flags }))
+    }
 }
 
 #[derive(Debug)]
@@ -395,7 +395,7 @@ pub struct VertexColorFragment {
 impl Fragment for VertexColorFragment {
     type T = Self;
 
-    const TYPE_ID: u32 = 0x0;
+    const TYPE_ID: u32 = 0x32;
 
     fn parse(input: &[u8]) -> IResult<&[u8], VertexColorFragment> {
         let (i, (data1, vertex_color_count, data2, data3, data4)) =

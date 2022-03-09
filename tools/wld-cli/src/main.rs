@@ -173,28 +173,29 @@ fn main() -> Result<(), Box<dyn Error>> {
     let (_, wld_doc) = parser::WldDoc::parse(&wld_data).unwrap();
 
     println!("--------");
-    println!("{:02x?}", wld_doc.serialize());
+    //    println!("{:02x?}", wld_doc.serialize());
+    println!("{:?}", wld_doc.fragments);
     println!("--------");
 
     let show_stats = matches.is_present("stats");
 
-    if show_stats {
-        let stats = wld_doc
-            .fragments
-            .iter()
-            .fold(HashMap::new(), |mut map, header| {
-                map.entry(header.fragment_type)
-                    .or_insert_with(|| Vec::new())
-                    .push(header);
-                map
-            });
-        let mut sorted_keys: Vec<_> = stats.keys().collect();
-        sorted_keys.sort();
-        for k in sorted_keys {
-            println!("0x{:02x?}: {}", k, stats[k].len());
-        }
-        return Ok(());
-    }
+    //if show_stats {
+    //    let stats = wld_doc
+    //        .fragments
+    //        .iter()
+    //        .fold(HashMap::new(), |mut map, header| {
+    //            map.entry(header.fragment_type)
+    //                .or_insert_with(|| Vec::new())
+    //                .push(header);
+    //            map
+    //        });
+    //    let mut sorted_keys: Vec<_> = stats.keys().collect();
+    //    sorted_keys.sort();
+    //    for k in sorted_keys {
+    //        println!("0x{:02x?}: {}", k, stats[k].len());
+    //    }
+    //    return Ok(());
+    //}
 
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);

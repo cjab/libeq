@@ -75,7 +75,7 @@ where
 {
     let list_items: Vec<ListItem> = app
         .wld_doc
-        .fragments
+        .fragment_headers
         .iter()
         .map(|f| {
             let fragment_type = FragmentType::new(f.fragment_type);
@@ -152,7 +152,7 @@ where
     let fragment_idx = app.selected_fragment_idx.expect("No fragment selected");
     let fragment = app
         .wld_doc
-        .fragments
+        .fragment_headers
         .get(fragment_idx)
         .expect("Invalid fragment selected");
 

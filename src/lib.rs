@@ -41,19 +41,25 @@
 
 pub mod parser;
 
-pub use parser::Error;
 use parser::{MaterialFragment, MeshFragment, MeshFragmentPolygonEntry, TextureFragment, WldDoc};
+use std::error::Error;
+
+pub struct WldError;
 
 pub struct Wld<'a>(WldDoc<'a>);
 
 /// Load and parse a wld file from a slice.
-pub fn load(data: &[u8]) -> Result<Wld, Error> {
-    Wld::load(data)
+pub fn load(data: &[u8]) -> Result<Wld, Box<dyn Error>> {
+    Ok(Wld::load(data))
 }
 
 impl<'a> Wld<'a> {
-    fn load(data: &[u8]) -> Result<Wld, Error> {
-        WldDoc::parse(&data[..]).map(|(_, wld_doc)| Ok(Wld(wld_doc)))?
+    // FIXME: Handle errors, do not panic!
+    fn load(data: &[u8]) -> Wld {
+        match WldDoc::parse(&data[..]) {
+            Ok((_, wld_doc)) => Wld(wld_doc),
+            Err(err) => panic!("Failed to parse Wld: {:?}", err),
+        }
     }
 
     /// Iterate over all meshes in the wld file.

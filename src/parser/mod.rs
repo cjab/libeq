@@ -4,26 +4,197 @@ mod strings;
 use core::fmt::Debug;
 
 use nom::bytes::complete::take;
-use nom::error::ErrorKind;
 use nom::multi::count;
 use nom::number::complete::{le_i32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-pub use fragments::{
-    Fragment, FragmentRef, MaterialFragment, MeshFragment, MeshFragmentPolygonEntry,
-    TextureFragment,
-};
+pub use fragments::*;
 pub use strings::{decode_string, StringHash, StringReference};
 
 #[derive(Debug)]
-pub enum Error {
-    Parser,
+pub enum FragmentType {
+    AlternateMesh(Box<AlternateMeshFragment>),
+    VertexColorReference(Box<VertexColorReferenceFragment>),
+    VertexColor(Box<VertexColorFragment>),
+    MeshAnimatedVertices(Box<MeshAnimatedVerticesFragment>),
+    MeshAnimatedVerticesReference(Box<MeshAnimatedVerticesReferenceFragment>),
+    AmbientLight(Box<AmbientLightFragment>),
+    RegionFlag(Box<RegionFlagFragment>),
+    LightInfo(Box<LightInfoFragment>),
+    LightSourceReference(Box<LightSourceReferenceFragment>),
+    LightSource(Box<LightSourceFragment>),
+    PolygonAnimationReference(Box<PolygonAnimationReferenceFragment>),
+    PolygonAnimation(Box<PolygonAnimationFragment>),
+    First(Box<FirstFragment>),
+    ZoneUnknown(Box<ZoneUnknownFragment>),
+    SkeletonTrackSetReference(Box<SkeletonTrackSetReferenceFragment>),
+    CameraReference(Box<CameraReferenceFragment>),
+    Camera(Box<CameraFragment>),
+    TwoDimensionalObjectReference(Box<TwoDimensionalObjectReferenceFragment>),
+    TwoDimensionalObject(Box<TwoDimensionalObjectFragment>),
+    ObjectLocation(Box<ObjectLocationFragment>),
+    MobSkeletonPieceTrackReference(Box<MobSkeletonPieceTrackReferenceFragment>),
+    MobSkeletonPieceTrack(Box<MobSkeletonPieceTrackFragment>),
+    SkeletonTrackSet(Box<SkeletonTrackSetFragment>),
+    Model(Box<ModelFragment>),
+    BspTree(Box<BspTreeFragment>),
+    BspRegion(Box<BspRegionFragment>),
+    Mesh(Box<MeshFragment>),
+    MaterialList(Box<MaterialListFragment>),
+    Material(Box<MaterialFragment>),
+    TextureReference(Box<TextureReferenceFragment>),
+    MeshReference(Box<MeshReferenceFragment>),
+    Texture(Box<TextureFragment>),
+    TextureImages(Box<TextureImagesFragment>),
+    Unknown(u32),
 }
 
-impl From<nom::Err<(&[u8], ErrorKind)>> for Error {
-    fn from(_e: nom::Err<(&[u8], ErrorKind)>) -> Self {
-        Self::Parser
+impl FragmentType {
+    // TODO: Fix error handling here
+    fn from_header(header: &FragmentHeader) -> FragmentType {
+        match header.fragment_type {
+            AlternateMeshFragment::TYPE_ID => FragmentType::AlternateMesh(Box::new(
+                AlternateMeshFragment::parse(&header.field_data).unwrap().1,
+            )),
+            VertexColorReferenceFragment::TYPE_ID => FragmentType::VertexColorReference(Box::new(
+                VertexColorReferenceFragment::parse(&header.field_data)
+                    .unwrap()
+                    .1,
+            )),
+            VertexColorFragment::TYPE_ID => FragmentType::VertexColor(Box::new(
+                VertexColorFragment::parse(&header.field_data).unwrap().1,
+            )),
+            MeshAnimatedVerticesFragment::TYPE_ID => FragmentType::MeshAnimatedVertices(Box::new(
+                MeshAnimatedVerticesFragment::parse(&header.field_data)
+                    .unwrap()
+                    .1,
+            )),
+            MeshAnimatedVerticesReferenceFragment::TYPE_ID => {
+                FragmentType::MeshAnimatedVerticesReference(Box::new(
+                    MeshAnimatedVerticesReferenceFragment::parse(&header.field_data)
+                        .unwrap()
+                        .1,
+                ))
+            }
+            AmbientLightFragment::TYPE_ID => FragmentType::AmbientLight(Box::new(
+                AmbientLightFragment::parse(&header.field_data).unwrap().1,
+            )),
+            RegionFlagFragment::TYPE_ID => FragmentType::RegionFlag(Box::new(
+                RegionFlagFragment::parse(&header.field_data).unwrap().1,
+            )),
+            LightInfoFragment::TYPE_ID => FragmentType::LightInfo(Box::new(
+                LightInfoFragment::parse(&header.field_data).unwrap().1,
+            )),
+            LightSourceReferenceFragment::TYPE_ID => FragmentType::LightSourceReference(Box::new(
+                LightSourceReferenceFragment::parse(&header.field_data)
+                    .unwrap()
+                    .1,
+            )),
+            LightSourceFragment::TYPE_ID => FragmentType::LightSource(Box::new(
+                LightSourceFragment::parse(&header.field_data).unwrap().1,
+            )),
+            PolygonAnimationReferenceFragment::TYPE_ID => {
+                FragmentType::PolygonAnimationReference(Box::new(
+                    PolygonAnimationReferenceFragment::parse(&header.field_data)
+                        .unwrap()
+                        .1,
+                ))
+            }
+            PolygonAnimationFragment::TYPE_ID => FragmentType::PolygonAnimation(Box::new(
+                PolygonAnimationFragment::parse(&header.field_data)
+                    .unwrap()
+                    .1,
+            )),
+            FirstFragment::TYPE_ID => FragmentType::First(Box::new(
+                FirstFragment::parse(&header.field_data).unwrap().1,
+            )),
+            ZoneUnknownFragment::TYPE_ID => FragmentType::ZoneUnknown(Box::new(
+                ZoneUnknownFragment::parse(&header.field_data).unwrap().1,
+            )),
+            SkeletonTrackSetReferenceFragment::TYPE_ID => {
+                FragmentType::SkeletonTrackSetReference(Box::new(
+                    SkeletonTrackSetReferenceFragment::parse(&header.field_data)
+                        .unwrap()
+                        .1,
+                ))
+            }
+            CameraReferenceFragment::TYPE_ID => FragmentType::CameraReference(Box::new(
+                CameraReferenceFragment::parse(&header.field_data)
+                    .unwrap()
+                    .1,
+            )),
+            CameraFragment::TYPE_ID => FragmentType::Camera(Box::new(
+                CameraFragment::parse(&header.field_data).unwrap().1,
+            )),
+            TwoDimensionalObjectReferenceFragment::TYPE_ID => {
+                FragmentType::TwoDimensionalObjectReference(Box::new(
+                    TwoDimensionalObjectReferenceFragment::parse(&header.field_data)
+                        .unwrap()
+                        .1,
+                ))
+            }
+            TwoDimensionalObjectFragment::TYPE_ID => FragmentType::TwoDimensionalObject(Box::new(
+                TwoDimensionalObjectFragment::parse(&header.field_data)
+                    .unwrap()
+                    .1,
+            )),
+            ObjectLocationFragment::TYPE_ID => FragmentType::ObjectLocation(Box::new(
+                ObjectLocationFragment::parse(&header.field_data).unwrap().1,
+            )),
+            MobSkeletonPieceTrackReferenceFragment::TYPE_ID => {
+                FragmentType::MobSkeletonPieceTrackReference(Box::new(
+                    MobSkeletonPieceTrackReferenceFragment::parse(&header.field_data)
+                        .unwrap()
+                        .1,
+                ))
+            }
+            MobSkeletonPieceTrackFragment::TYPE_ID => {
+                FragmentType::MobSkeletonPieceTrack(Box::new(
+                    MobSkeletonPieceTrackFragment::parse(&header.field_data)
+                        .unwrap()
+                        .1,
+                ))
+            }
+            SkeletonTrackSetFragment::TYPE_ID => FragmentType::SkeletonTrackSet(Box::new(
+                SkeletonTrackSetFragment::parse(&header.field_data)
+                    .unwrap()
+                    .1,
+            )),
+            ModelFragment::TYPE_ID => FragmentType::Model(Box::new(
+                ModelFragment::parse(&header.field_data).unwrap().1,
+            )),
+            BspTreeFragment::TYPE_ID => FragmentType::BspTree(Box::new(
+                BspTreeFragment::parse(&header.field_data).unwrap().1,
+            )),
+            BspRegionFragment::TYPE_ID => FragmentType::BspRegion(Box::new(
+                BspRegionFragment::parse(&header.field_data).unwrap().1,
+            )),
+            MeshFragment::TYPE_ID => {
+                FragmentType::Mesh(Box::new(MeshFragment::parse(&header.field_data).unwrap().1))
+            }
+            MaterialListFragment::TYPE_ID => FragmentType::MaterialList(Box::new(
+                MaterialListFragment::parse(&header.field_data).unwrap().1,
+            )),
+            MaterialFragment::TYPE_ID => FragmentType::Material(Box::new(
+                MaterialFragment::parse(&header.field_data).unwrap().1,
+            )),
+            TextureReferenceFragment::TYPE_ID => FragmentType::TextureReference(Box::new(
+                TextureReferenceFragment::parse(&header.field_data)
+                    .unwrap()
+                    .1,
+            )),
+            MeshReferenceFragment::TYPE_ID => FragmentType::MeshReference(Box::new(
+                MeshReferenceFragment::parse(&header.field_data).unwrap().1,
+            )),
+            TextureFragment::TYPE_ID => FragmentType::Texture(Box::new(
+                TextureFragment::parse(&header.field_data).unwrap().1,
+            )),
+            TextureImagesFragment::TYPE_ID => FragmentType::TextureImages(Box::new(
+                TextureImagesFragment::parse(&header.field_data).unwrap().1,
+            )),
+            type_id => FragmentType::Unknown(type_id),
+        }
     }
 }
 
@@ -31,23 +202,30 @@ impl From<nom::Err<(&[u8], ErrorKind)>> for Error {
 pub struct WldDoc<'a> {
     header: WldHeader,
     pub strings: StringHash,
-    pub fragments: Vec<FragmentHeader<'a>>,
+    pub fragment_headers: Vec<FragmentHeader<'a>>,
+    pub fragments: Vec<FragmentType>,
 }
 
 impl<'a> WldDoc<'a> {
     pub fn parse(input: &[u8]) -> IResult<&[u8], WldDoc> {
         let (i, header) = WldHeader::parse(input)?;
-        let (remaining, (string_hash_data, fragments)) = tuple((
+        let (remaining, (string_hash_data, fragment_headers)) = tuple((
             take(header.string_hash_size),
             count(FragmentHeader::parse, header.fragment_count as usize),
         ))(i)?;
         let strings = StringHash::new(string_hash_data);
+
+        let fragments: Vec<FragmentType> = fragment_headers
+            .iter()
+            .map(FragmentType::from_header)
+            .collect();
 
         Ok((
             remaining,
             WldDoc {
                 header,
                 strings,
+                fragment_headers,
                 fragments,
             },
         ))
@@ -57,7 +235,10 @@ impl<'a> WldDoc<'a> {
         [
             self.header.serialize(),
             self.strings.serialize(),
-            self.fragments.iter().flat_map(|f| f.serialize()).collect(),
+            self.fragment_headers
+                .iter()
+                .flat_map(|f| f.serialize())
+                .collect(),
         ]
         .concat()
     }
@@ -83,7 +264,7 @@ impl<'a> WldDoc<'a> {
             return None;
         };
 
-        let fragment = self.fragments.get((idx - 1) as usize)?;
+        let fragment = self.fragment_headers.get((idx - 1) as usize)?;
         let name = fragment.name_reference.and_then(|r| self.strings.get(r));
         T::parse(&fragment.field_data).map(|r| (name, r.1)).ok()
     }
@@ -99,7 +280,7 @@ impl<'a> WldDoc<'a> {
         };
 
         if let Some(target_name) = self.strings.get(name_ref) {
-            self.fragments
+            self.fragment_headers
                 .iter()
                 .find(|f| f.name(self).map_or(false, |name| name == target_name))
                 .and_then(|f| {
@@ -124,7 +305,7 @@ impl<'a> WldDoc<'a> {
     pub fn fragment_iter<T: Fragment<T = T> + Debug>(
         &self,
     ) -> impl Iterator<Item = (Option<&str>, T)> + '_ {
-        self.fragments
+        self.fragment_headers
             .iter()
             .enumerate()
             .filter(move |(_, f)| f.fragment_type == T::TYPE_ID)
