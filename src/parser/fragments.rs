@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::marker::PhantomData;
 
 use nom::combinator::map;
@@ -24,9 +25,21 @@ impl<T> FragmentRef<T> {
             None => FragmentRef::Index(idx as u32, PhantomData),
         }
     }
+
+    pub fn serialize(&self) -> i32 {
+        match self {
+            Self::Name(string_ref, _) => string_ref.serialize(),
+            Self::Index(idx, _) => idx as i32,
+        }
+    }
 }
 
-pub trait Fragment {
+trait Fragment {
+    fn serialize(&self) -> Vec<u8>;
+    fn as_any(&self) -> &dyn Any;
+}
+
+pub trait FragmentType {
     type T;
     const TYPE_ID: u32;
     fn parse(input: &[u8]) -> IResult<&[u8], Self::T>;
@@ -162,7 +175,7 @@ pub struct AlternateMeshFragment {
     pub vertex_materials: Vec<(u16, u16, u32, u32, u32)>,
 }
 
-impl Fragment for AlternateMeshFragment {
+impl FragmentType for AlternateMeshFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2c;
@@ -256,6 +269,74 @@ impl Fragment for AlternateMeshFragment {
     }
 }
 
+impl Fragment for AlternateMeshFragment {
+    fn serialize(&self) -> Vec<u8> {
+        let vertices = self
+            .vertices
+            .iter()
+            .flat_map(|v| vec![v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()])
+            .flatten()
+            .collect::<Vec<_>>();
+        let texture_coords = self
+            .texture_coords
+            .iter()
+            .flat_map(|v| vec![v.0.to_le_bytes(), v.1.to_le_bytes()])
+            .flatten()
+            .collect::<Vec<_>>();
+        let normals = self
+            .normals
+            .iter()
+            .flat_map(|v| vec![v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()])
+            .flatten()
+            .collect::<Vec<_>>();
+        let polygons = self
+            .polygons
+            .iter()
+            .flat_map(|p| p.serialize())
+            .collect::<Vec<_>>();
+        let data6 = self
+            .data6
+            .iter()
+            .flat_map(|d| d.serialize())
+            .collect::<Vec<_>>();
+        let vertex_pieces = self
+            .vertex_pieces
+            .iter()
+            .flat_map(|v| vec![v.0.to_le_bytes(), v.1.to_le_bytes()])
+            .collect::<Vec<_>>();
+
+        vec![
+            self.flags.to_le_bytes(),
+            self.vertex_count.to_le_bytes(),
+            self.tex_coords_count.to_le_bytes(),
+            self.size4.to_le_bytes(),
+            self.polygon_count.to_le_bytes(),
+            self.size6.to_le_bytes(),
+            self.vertex_piece_count.to_le_bytes(),
+            self.fragment1.serialize().to_le_bytes(),
+            self.fragment2.to_le_bytes(),
+            self.fragment3.to_le_bytes(),
+            self.center.0.to_le_bytes(),
+            self.center.1.to_le_bytes(),
+            self.center.2.to_le_bytes(),
+            self.params2.to_le_bytes(),
+            vertices,
+            texture_coords,
+            normals,
+            self.data4.flat_map(|d| d.to_le_bytes()),
+            polygons,
+            data6,
+        ]
+        .iter()
+        .flatten()
+        .collect()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
 #[derive(Debug)]
 /// Represents a polygon within a [AlternativeMeshFragment].
 pub struct AlternateMeshFragmentPolygonEntry {
@@ -269,7 +350,25 @@ pub struct AlternateMeshFragmentPolygonEntry {
     pub vertex_indexes: (u16, u16, u16),
 }
 
-impl Fragment for AlternateMeshFragmentPolygonEntry {
+impl AlternateMeshFragmentPolygonEntry {
+    fn serialize(&self) -> Vec<u8> {
+        vec![
+            self.flags.to_le_bytes(),
+            self.data.0.to_le_bytes(),
+            self.data.1.to_le_bytes(),
+            self.data.2.to_le_bytes(),
+            self.data.3.to_le_bytes(),
+            self.vertex_indexes.0.to_le_bytes(),
+            self.vertex_indexes.1.to_le_bytes(),
+            self.vertex_indexes.2.to_le_bytes(),
+        ]
+        .iter()
+        .flatten()
+        .collect()
+    }
+}
+
+impl FragmentType for AlternateMeshFragmentPolygonEntry {
     type T = Self;
 
     const TYPE_ID: u32 = 0x0;
@@ -315,7 +414,22 @@ pub struct AlternateMeshFragmentData6Entry {
     pub param2: u16,
 }
 
-impl Fragment for AlternateMeshFragmentData6Entry {
+impl AlternateMeshFragmentData6Entry {
+    fn serialize(&self) -> Vec<u8> {
+        vec![
+            self._type.to_le_bytes(),
+            self.vertex_index.to_le_bytes(),
+            self.offset.to_le_bytes(),
+            self.param1.to_le_bytes(),
+            self.param2.to_le_bytes(),
+        ]
+        .iter()
+        .flatten()
+        .collect()
+    }
+}
+
+impl FragmentType for AlternateMeshFragmentData6Entry {
     type T = Self;
 
     const TYPE_ID: u32 = 0x0;
@@ -348,7 +462,7 @@ pub struct VertexColorReferenceFragment {
     pub flags: u32,
 }
 
-impl Fragment for VertexColorReferenceFragment {
+impl FragmentType for VertexColorReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x33;
@@ -392,7 +506,7 @@ pub struct VertexColorFragment {
     pub vertex_colors: Vec<u32>,
 }
 
-impl Fragment for VertexColorFragment {
+impl FragmentType for VertexColorFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x32;
@@ -458,7 +572,7 @@ pub struct MeshAnimatedVerticesFragment {
     pub size6: u16,
 }
 
-impl Fragment for MeshAnimatedVerticesFragment {
+impl FragmentType for MeshAnimatedVerticesFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x37;
@@ -501,7 +615,7 @@ pub struct MeshAnimatedVerticesReferenceFragment {
     pub flags: u32,
 }
 
-impl Fragment for MeshAnimatedVerticesReferenceFragment {
+impl FragmentType for MeshAnimatedVerticesReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2f;
@@ -537,7 +651,7 @@ pub struct AmbientLightFragment {
     pub regions: Vec<u32>,
 }
 
-impl Fragment for AmbientLightFragment {
+impl FragmentType for AmbientLightFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2a;
@@ -598,7 +712,7 @@ pub struct RegionFlagFragment {
     pub data2: Vec<u8>,
 }
 
-impl Fragment for RegionFlagFragment {
+impl FragmentType for RegionFlagFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x29;
@@ -648,7 +762,7 @@ pub struct LightInfoFragment {
     pub radius: f32,
 }
 
-impl Fragment for LightInfoFragment {
+impl FragmentType for LightInfoFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x28;
@@ -682,7 +796,7 @@ pub struct LightSourceReferenceFragment {
     pub flags: u32,
 }
 
-impl Fragment for LightSourceReferenceFragment {
+impl FragmentType for LightSourceReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x1c;
@@ -730,7 +844,7 @@ pub struct LightSourceFragment {
     pub blue: Option<u8>,
 }
 
-impl Fragment for LightSourceFragment {
+impl FragmentType for LightSourceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x1b;
@@ -789,7 +903,7 @@ pub struct PolygonAnimationReferenceFragment {
     pub params1: f32,
 }
 
-impl Fragment for PolygonAnimationReferenceFragment {
+impl FragmentType for PolygonAnimationReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x18;
@@ -842,7 +956,7 @@ pub struct PolygonAnimationFragment {
     pub entries2: Vec<(u32, Vec<u32>)>,
 }
 
-impl Fragment for PolygonAnimationFragment {
+impl FragmentType for PolygonAnimationFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x17;
@@ -884,7 +998,7 @@ impl Fragment for PolygonAnimationFragment {
 /// **Type ID:** 0x35
 pub struct FirstFragment {}
 
-impl Fragment for FirstFragment {
+impl FragmentType for FirstFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x35;
@@ -900,7 +1014,7 @@ impl Fragment for FirstFragment {
 /// **Type ID:** 0x16
 pub struct ZoneUnknownFragment {}
 
-impl Fragment for ZoneUnknownFragment {
+impl FragmentType for ZoneUnknownFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x16;
@@ -922,7 +1036,7 @@ pub struct SkeletonTrackSetReferenceFragment {
     pub params1: u32,
 }
 
-impl Fragment for SkeletonTrackSetReferenceFragment {
+impl FragmentType for SkeletonTrackSetReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x11;
@@ -948,7 +1062,7 @@ pub struct CameraReferenceFragment {
     pub flags: u32,
 }
 
-impl Fragment for CameraReferenceFragment {
+impl FragmentType for CameraReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x09;
@@ -1048,7 +1162,7 @@ pub struct CameraFragment {
     pub params25: u32,
 }
 
-impl Fragment for CameraFragment {
+impl FragmentType for CameraFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x08;
@@ -1143,7 +1257,7 @@ pub struct TwoDimensionalObjectReferenceFragment {
     pub flags: u32,
 }
 
-impl Fragment for TwoDimensionalObjectReferenceFragment {
+impl FragmentType for TwoDimensionalObjectReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x07;
@@ -1274,7 +1388,7 @@ pub struct TwoDimensionalObjectFragment {
     pub params7_data: Option<Vec<u32>>,
 }
 
-impl Fragment for TwoDimensionalObjectFragment {
+impl FragmentType for TwoDimensionalObjectFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x06;
@@ -1410,7 +1524,7 @@ pub struct UvInfo {
     pub v_axis: (f32, f32, f32),
 }
 
-impl Fragment for UvInfo {
+impl FragmentType for UvInfo {
     type T = Self;
 
     const TYPE_ID: u32 = 0x00;
@@ -1743,7 +1857,7 @@ pub struct ObjectLocationFragment {
     pub params2: u32,
 }
 
-impl Fragment for ObjectLocationFragment {
+impl FragmentType for ObjectLocationFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x15;
@@ -1808,7 +1922,7 @@ pub struct MobSkeletonPieceTrackReferenceFragment {
     pub params1: Option<u32>,
 }
 
-impl Fragment for MobSkeletonPieceTrackReferenceFragment {
+impl FragmentType for MobSkeletonPieceTrackReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x13;
@@ -1917,7 +2031,7 @@ pub struct MobSkeletonPieceTrackFragment {
     pub data2: Option<Vec<u8>>,
 }
 
-impl Fragment for MobSkeletonPieceTrackFragment {
+impl FragmentType for MobSkeletonPieceTrackFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x12;
@@ -2027,7 +2141,7 @@ pub struct SkeletonTrackSetFragment {
     pub data3: Option<Vec<u32>>,
 }
 
-impl Fragment for SkeletonTrackSetFragment {
+impl FragmentType for SkeletonTrackSetFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x10;
@@ -2136,7 +2250,7 @@ pub struct SkeletonTrackSetFragmentEntry {
     pub data_entries: Vec<u32>,
 }
 
-impl Fragment for SkeletonTrackSetFragmentEntry {
+impl FragmentType for SkeletonTrackSetFragmentEntry {
     type T = Self;
 
     const TYPE_ID: u32 = 0x00;
@@ -2218,7 +2332,7 @@ pub struct ModelFragment {
     pub name: Vec<u8>,
 }
 
-impl Fragment for ModelFragment {
+impl FragmentType for ModelFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x14;
@@ -2282,7 +2396,7 @@ pub struct BspTreeFragment {
     pub entries: Vec<BspTreeFragmentEntry>,
 }
 
-impl Fragment for BspTreeFragment {
+impl FragmentType for BspTreeFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x21;
@@ -2317,7 +2431,7 @@ pub struct BspTreeFragmentEntry {
     ),
 }
 
-impl Fragment for BspTreeFragmentEntry {
+impl FragmentType for BspTreeFragmentEntry {
     type T = Self;
 
     const TYPE_ID: u32 = 0x00;
@@ -2416,7 +2530,7 @@ pub struct BspRegionFragment {
     pub mesh_reference: Option<FragmentRef<MeshFragment>>,
 }
 
-impl Fragment for BspRegionFragment {
+impl FragmentType for BspRegionFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x22;
@@ -2500,7 +2614,7 @@ pub struct BspRegionFragmentData3Entry {
     params2: Option<u32>,
 }
 
-impl Fragment for BspRegionFragmentData3Entry {
+impl FragmentType for BspRegionFragmentData3Entry {
     type T = Self;
 
     const TYPE_ID: u32 = 0x00;
@@ -2561,7 +2675,7 @@ pub struct BspRegionFragmentData4Entry {
     name: String,
 }
 
-impl Fragment for BspRegionFragmentData4Entry {
+impl FragmentType for BspRegionFragmentData4Entry {
     type T = Self;
 
     const TYPE_ID: u32 = 0x00;
@@ -2619,7 +2733,7 @@ pub struct BspRegionFragmentData5Entry {
     params5: u32,
 }
 
-impl Fragment for BspRegionFragmentData5Entry {
+impl FragmentType for BspRegionFragmentData5Entry {
     type T = Self;
 
     const TYPE_ID: u32 = 0x00;
@@ -2691,7 +2805,7 @@ pub struct BspRegionFragmentPVS {
     data: Vec<u8>,
 }
 
-impl Fragment for BspRegionFragmentPVS {
+impl FragmentType for BspRegionFragmentPVS {
     type T = Self;
 
     const TYPE_ID: u32 = 0x00;
@@ -2876,7 +2990,7 @@ pub struct MeshFragment {
     pub data9: Vec<MeshFragmentData9Entry>,
 }
 
-impl Fragment for MeshFragment {
+impl FragmentType for MeshFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x36;
@@ -3003,7 +3117,7 @@ pub struct MeshFragmentPolygonEntry {
     pub vertex_indexes: (u16, u16, u16),
 }
 
-impl Fragment for MeshFragmentPolygonEntry {
+impl FragmentType for MeshFragmentPolygonEntry {
     type T = Self;
 
     const TYPE_ID: u32 = 0x00;
@@ -3045,7 +3159,7 @@ pub struct MeshFragmentData9Entry {
     pub type_field: u16,
 }
 
-impl Fragment for MeshFragmentData9Entry {
+impl FragmentType for MeshFragmentData9Entry {
     type T = Self;
 
     const TYPE_ID: u32 = 0x00;
@@ -3085,7 +3199,7 @@ pub struct MaterialListFragment {
     pub fragments: Vec<FragmentRef<MaterialFragment>>,
 }
 
-impl Fragment for MaterialListFragment {
+impl FragmentType for MaterialListFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x31;
@@ -3135,7 +3249,7 @@ pub struct MaterialFragment {
     pub pair: Option<(u32, f32)>,
 }
 
-impl Fragment for MaterialFragment {
+impl FragmentType for MaterialFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x30;
@@ -3181,7 +3295,7 @@ pub struct TextureReferenceFragment {
     pub flags: u32,
 }
 
-impl Fragment for TextureReferenceFragment {
+impl FragmentType for TextureReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x05;
@@ -3204,7 +3318,7 @@ pub struct MeshReferenceFragment {
     pub params: u32,
 }
 
-impl Fragment for MeshReferenceFragment {
+impl FragmentType for MeshReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2d;
@@ -3244,7 +3358,7 @@ pub struct TextureFragment {
     pub frame_references: Vec<FragmentRef<TextureImagesFragment>>,
 }
 
-impl Fragment for TextureFragment {
+impl FragmentType for TextureFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x04;
@@ -3315,7 +3429,7 @@ pub struct TextureImagesFragment {
     pub entries: Vec<TextureImagesFragmentEntry>,
 }
 
-impl Fragment for TextureImagesFragment {
+impl FragmentType for TextureImagesFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x03;
@@ -3346,7 +3460,7 @@ pub struct TextureImagesFragmentEntry {
     pub file_name: String,
 }
 
-impl Fragment for TextureImagesFragmentEntry {
+impl FragmentType for TextureImagesFragmentEntry {
     type T = Self;
 
     const TYPE_ID: u32 = 0x0;
