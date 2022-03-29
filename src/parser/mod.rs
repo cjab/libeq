@@ -3,7 +3,6 @@ mod strings;
 
 use core::fmt::Debug;
 use std::any::Any;
-use std::collections::HashMap;
 
 use nom::bytes::complete::take;
 use nom::multi::count;
