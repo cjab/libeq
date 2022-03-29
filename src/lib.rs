@@ -46,14 +46,14 @@ use std::error::Error;
 
 pub struct WldError;
 
-pub struct Wld<'a>(WldDoc<'a>);
+pub struct Wld(WldDoc);
 
 /// Load and parse a wld file from a slice.
 pub fn load(data: &[u8]) -> Result<Wld, Box<dyn Error>> {
     Ok(Wld::load(data))
 }
 
-impl<'a> Wld<'a> {
+impl Wld {
     // FIXME: Handle errors, do not panic!
     fn load(data: &[u8]) -> Wld {
         match WldDoc::parse(&data[..]) {
@@ -83,7 +83,7 @@ impl<'a> Wld<'a> {
 
 #[derive(Debug)]
 pub struct Mesh<'a> {
-    doc: &'a WldDoc<'a>,
+    doc: &'a WldDoc,
     fragment: MeshFragment,
     name: Option<&'a str>,
 }
@@ -248,7 +248,7 @@ impl<'a> Primitive<'a> {
 
 #[derive(Debug)]
 pub struct Material<'a> {
-    doc: &'a WldDoc<'a>,
+    doc: &'a WldDoc,
     fragment: MaterialFragment,
     name: Option<&'a str>,
 }
@@ -274,7 +274,7 @@ impl<'a> Material<'a> {
 
 #[derive(Debug)]
 pub struct Texture<'a> {
-    doc: &'a WldDoc<'a>,
+    doc: &'a WldDoc,
     fragment: TextureFragment,
     name: Option<&'a str>,
 }
