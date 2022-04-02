@@ -1,7 +1,7 @@
 pub mod fragments;
 mod strings;
 
-use core::fmt::Debug;
+use core::fmt::{Debug, Error, Formatter};
 
 use nom::bytes::complete::take;
 use nom::multi::count;
@@ -12,11 +12,17 @@ use nom::IResult;
 pub use fragments::*;
 pub use strings::{decode_string, StringHash, StringReference};
 
-//#[derive(Debug)]
+#[derive(Debug)]
 pub struct WldDoc {
     header: WldHeader,
     pub strings: StringHash,
     pub fragments: Vec<Box<dyn Fragment>>,
+}
+
+impl Debug for dyn Fragment + 'static {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        Ok(())
+    }
 }
 
 impl WldDoc {
@@ -97,26 +103,26 @@ impl WldDoc {
         }
     }
 
-    //    /// Iterate over all mesh fragments in the wld file.
-    //    pub(super) fn meshes(&self) -> impl Iterator<Item = (Option<&str>, MeshFragment)> + '_ {
-    //        self.fragment_iter::<MeshFragment>()
-    //    }
-    //
-    //    /// Iterate over all material fragments in the wld file.
-    //    pub(super) fn materials(&self) -> impl Iterator<Item = (Option<&str>, MaterialFragment)> + '_ {
-    //        self.fragment_iter::<MaterialFragment>()
-    //    }
-    //
-    //    pub fn fragment_iter<T: Fragment<T = T> + Debug>(
-    //        &self,
-    //    ) -> impl Iterator<Item = (Option<&str>, T)> + '_ {
-    //        self.fragment_headers
-    //            .iter()
-    //            .enumerate()
-    //            .filter(move |(_, f)| f.fragment_type == T::TYPE_ID)
-    //            .map(|(i, _)| FragmentRef::new((i + 1) as i32))
-    //            .filter_map(move |r| self.get(&r))
-    //    }
+    /// Iterate over all mesh fragments in the wld file.
+    pub(super) fn meshes(&self) -> impl Iterator<Item = &MeshFragment> + '_ {
+        self.fragment_iter::<MeshFragment>()
+    }
+
+    /// Iterate over all material fragments in the wld file.
+    pub(super) fn materials(&self) -> impl Iterator<Item = &MaterialFragment> + '_ {
+        self.fragment_iter::<MaterialFragment>()
+    }
+
+    pub fn fragment_iter<'a, T: 'static + FragmentType<T = T> + Debug>(
+        &'a self,
+    ) -> impl Iterator<Item = &'a T> + '_ {
+        self.fragments
+            .iter()
+            .enumerate()
+            .filter(|(_, f)| f.as_any().downcast_ref::<T>().is_some())
+            .map(|(i, _)| FragmentRef::new((i + 1) as i32))
+            .filter_map(move |r| self.get(&r))
+    }
 }
 
 /// This header is present at the beginning of every .wld file.
