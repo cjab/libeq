@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
@@ -16,6 +16,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x06
 pub struct TwoDimensionalObjectFragment {
+    pub name_reference: StringReference,
+
     pub flags: SpriteFlags,
 
     /// Windcatcher:
@@ -133,13 +135,15 @@ impl FragmentType for TwoDimensionalObjectFragment {
     const TYPE_ID: u32 = 0x06;
 
     fn parse(input: &[u8]) -> IResult<&[u8], TwoDimensionalObjectFragment> {
-        let (i, (flags, num_frames, num_pitches, sprite_size, sphere_fragment)) = tuple((
-            SpriteFlags::parse,
-            le_u32,
-            le_u32,
-            tuple((le_f32, le_f32)),
-            le_u32,
-        ))(input)?;
+        let (i, (name_reference, flags, num_frames, num_pitches, sprite_size, sphere_fragment)) =
+            tuple((
+                StringReference::parse,
+                SpriteFlags::parse,
+                le_u32,
+                le_u32,
+                tuple((le_f32, le_f32)),
+                le_u32,
+            ))(input)?;
 
         let (i, depth_scale) = if flags.has_depth_scale() {
             le_f32(i).map(|(i, p2)| (i, Some(p2)))?
@@ -231,6 +235,7 @@ impl FragmentType for TwoDimensionalObjectFragment {
         Ok((
             remaining,
             TwoDimensionalObjectFragment {
+                name_reference,
                 flags,
                 num_frames,
                 num_pitches,
@@ -259,6 +264,7 @@ impl FragmentType for TwoDimensionalObjectFragment {
 impl Fragment for TwoDimensionalObjectFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.serialize()[..],
             &self.num_frames.to_le_bytes()[..],
             &self.num_pitches.to_le_bytes()[..],
@@ -308,8 +314,8 @@ impl Fragment for TwoDimensionalObjectFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }
 

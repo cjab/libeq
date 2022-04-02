@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_i16, le_u16, le_u32};
@@ -17,6 +17,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x37
 pub struct MeshAnimatedVerticesFragment {
+    pub name_reference: StringReference,
+
     /// _Unknown_ - Usually contains 0.
     pub flags: u32,
 
@@ -55,8 +57,16 @@ impl FragmentType for MeshAnimatedVerticesFragment {
     const TYPE_ID: u32 = 0x37;
 
     fn parse(input: &[u8]) -> IResult<&[u8], MeshAnimatedVerticesFragment> {
-        let (i, (flags, vertex_count, frame_count, param1, param2, scale)) =
-            tuple((le_u32, le_u16, le_u16, le_u16, le_u16, le_u16))(input)?;
+        let (i, (name_reference, flags, vertex_count, frame_count, param1, param2, scale)) =
+            tuple((
+                StringReference::parse,
+                le_u32,
+                le_u16,
+                le_u16,
+                le_u16,
+                le_u16,
+                le_u16,
+            ))(input)?;
         let (remaining, (frames, vertices, size6)) = tuple((
             count(le_u32, frame_count as usize),
             count(tuple((le_i16, le_i16, le_i16)), vertex_count as usize),
@@ -66,6 +76,7 @@ impl FragmentType for MeshAnimatedVerticesFragment {
         Ok((
             remaining,
             MeshAnimatedVerticesFragment {
+                name_reference,
                 flags,
                 vertex_count,
                 frame_count,
@@ -83,6 +94,7 @@ impl FragmentType for MeshAnimatedVerticesFragment {
 impl Fragment for MeshAnimatedVerticesFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.vertex_count.to_le_bytes()[..],
             &self.frame_count.to_le_bytes()[..],
@@ -108,7 +120,7 @@ impl Fragment for MeshAnimatedVerticesFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

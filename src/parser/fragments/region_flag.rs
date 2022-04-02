@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_u32, le_u8};
@@ -24,6 +24,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x29
 pub struct RegionFlagFragment {
+    pub name_reference: StringReference,
+
     /// _Unknown_ - Usually contains 0.
     pub flags: u32,
 
@@ -53,7 +55,8 @@ impl FragmentType for RegionFlagFragment {
     const TYPE_ID: u32 = 0x29;
 
     fn parse(input: &[u8]) -> IResult<&[u8], RegionFlagFragment> {
-        let (i, (flags, region_count)) = tuple((le_u32, le_u32))(input)?;
+        let (i, (name_reference, flags, region_count)) =
+            tuple((StringReference::parse, le_u32, le_u32))(input)?;
         let (i, (regions, size2)) = tuple((count(le_u32, region_count as usize), le_u32))(i)?;
 
         let padding = (4 - size2 % 4) % 4;
@@ -63,6 +66,7 @@ impl FragmentType for RegionFlagFragment {
         Ok((
             remaining,
             RegionFlagFragment {
+                name_reference,
                 flags,
                 region_count,
                 regions,
@@ -76,6 +80,7 @@ impl FragmentType for RegionFlagFragment {
 impl Fragment for RegionFlagFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.region_count.to_le_bytes()[..],
             &self
@@ -97,7 +102,7 @@ impl Fragment for RegionFlagFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

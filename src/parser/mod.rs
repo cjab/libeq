@@ -5,7 +5,7 @@ use core::fmt::Debug;
 
 use nom::bytes::complete::take;
 use nom::multi::count;
-use nom::number::complete::{le_i32, le_u32};
+use nom::number::complete::le_u32;
 use nom::sequence::tuple;
 use nom::IResult;
 
@@ -89,10 +89,7 @@ impl WldDoc {
         if let Some(target_name) = self.strings.get(name_ref) {
             self.fragments
                 .iter()
-                .find(|f| {
-                    f.name(&self.strings) == target_name
-                    //.map_or(false, |name| name == target_name)
-                })?
+                .find(|f| self.strings.get(*f.name_ref()) == Some(target_name))?
                 .as_any()
                 .downcast_ref()
         } else {
@@ -218,13 +215,8 @@ pub struct FragmentHeader<'a> {
 
 impl<'a> FragmentHeader<'a> {
     pub fn parse(input: &[u8]) -> IResult<&[u8], FragmentHeader> {
-        let (i, (size, fragment_type, name_reference)) = tuple((le_u32, le_u32, le_i32))(input)?;
-
-        let (remaining, field_data) = if fragment_type != 0x35 {
-            take(size - 4)(i)? // TODO: What are the extra 4 bytes for?
-        } else {
-            (i, &[] as &[u8])
-        };
+        let (i, (size, fragment_type)) = tuple((le_u32, le_u32))(input)?;
+        let (remaining, field_data) = take(size)(i)?;
 
         Ok((
             remaining,

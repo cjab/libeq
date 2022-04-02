@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
@@ -16,6 +16,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x08
 pub struct CameraFragment {
+    pub name_reference: StringReference,
+
     /// _Unknown_ - Usually 0
     pub params0: u32,
 
@@ -104,6 +106,7 @@ impl FragmentType for CameraFragment {
         let (
             i,
             (
+                name_reference,
                 params0,
                 params1,
                 params2,
@@ -116,7 +119,17 @@ impl FragmentType for CameraFragment {
                 params9,
             ),
         ) = tuple((
-            le_u32, le_u32, le_f32, le_u32, le_u32, le_f32, le_f32, le_u32, le_f32, le_f32,
+            StringReference::parse,
+            le_u32,
+            le_u32,
+            le_f32,
+            le_u32,
+            le_u32,
+            le_f32,
+            le_f32,
+            le_u32,
+            le_f32,
+            le_f32,
         ))(input)?;
 
         let (
@@ -147,6 +160,7 @@ impl FragmentType for CameraFragment {
         Ok((
             remaining,
             CameraFragment {
+                name_reference,
                 params0,
                 params1,
                 params2,
@@ -181,6 +195,7 @@ impl FragmentType for CameraFragment {
 impl Fragment for CameraFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.params0.to_le_bytes()[..],
             &self.params1.to_le_bytes()[..],
             &self.params2.to_le_bytes()[..],
@@ -215,7 +230,7 @@ impl Fragment for CameraFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

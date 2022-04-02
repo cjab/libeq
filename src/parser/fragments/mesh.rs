@@ -1,6 +1,8 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment, StringHash};
+use super::{
+    fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment, StringReference,
+};
 
 use nom::combinator::map;
 use nom::multi::count;
@@ -14,6 +16,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x36
 pub struct MeshFragment {
+    pub name_reference: StringReference,
+
     /// _Unknown_ - The meaning of the flags is unknown but the following values
     /// have been observed:
     ///
@@ -189,6 +193,7 @@ impl FragmentType for MeshFragment {
         let (
             i,
             (
+                name_reference,
                 flags,
                 material_list_ref,
                 animation_ref,
@@ -211,6 +216,7 @@ impl FragmentType for MeshFragment {
                 scale,
             ),
         ) = tuple((
+            StringReference::parse,
             le_u32,
             fragment_ref,
             fragment_ref,
@@ -261,6 +267,7 @@ impl FragmentType for MeshFragment {
         Ok((
             remaining,
             MeshFragment {
+                name_reference,
                 flags,
                 material_list_ref,
                 animation_ref,
@@ -298,6 +305,7 @@ impl FragmentType for MeshFragment {
 impl Fragment for MeshFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.material_list_ref.serialize()[..],
             &self.fragment3.serialize()[..],
@@ -378,8 +386,8 @@ impl Fragment for MeshFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }
 

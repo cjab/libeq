@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, StringHash, TextureReferenceFragment,
+    fragment_ref, Fragment, FragmentRef, FragmentType, StringReference, TextureReferenceFragment,
 };
 
 use nom::number::complete::{le_f32, le_u32};
@@ -12,6 +12,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x30
 pub struct MaterialFragment {
+    pub name_reference: StringReference,
+
     /// Most flags are _unknown_, however:
     /// * bit 1 - If set then the `pair` field exists. This is usually set.
     pub flags: u32,
@@ -45,7 +47,8 @@ impl FragmentType for MaterialFragment {
     const TYPE_ID: u32 = 0x30;
 
     fn parse(input: &[u8]) -> IResult<&[u8], MaterialFragment> {
-        let (i, (flags, params1, params2, params3, reference)) = tuple((
+        let (i, (name_reference, flags, params1, params2, params3, reference)) = tuple((
+            StringReference::parse,
             le_u32,
             le_u32,
             le_u32,
@@ -62,6 +65,7 @@ impl FragmentType for MaterialFragment {
         Ok((
             remaining,
             MaterialFragment {
+                name_reference,
                 flags,
                 params1,
                 params2,
@@ -76,6 +80,7 @@ impl FragmentType for MaterialFragment {
 impl Fragment for MaterialFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.params1.to_le_bytes()[..],
             &self.params2.to_le_bytes()[..],
@@ -93,7 +98,7 @@ impl Fragment for MaterialFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

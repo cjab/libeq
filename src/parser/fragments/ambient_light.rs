@@ -1,7 +1,8 @@
 use std::any::Any;
 
 use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, LightSourceReferenceFragment, StringHash,
+    fragment_ref, Fragment, FragmentRef, FragmentType, LightSourceReferenceFragment,
+    StringReference,
 };
 
 use nom::multi::count;
@@ -14,6 +15,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x2a
 pub struct AmbientLightFragment {
+    pub name_reference: StringReference,
+
     /// The [LightSourceReferenceFragment] reference.
     pub reference: FragmentRef<LightSourceReferenceFragment>,
 
@@ -37,12 +40,14 @@ impl FragmentType for AmbientLightFragment {
     const TYPE_ID: u32 = 0x2a;
 
     fn parse(input: &[u8]) -> IResult<&[u8], AmbientLightFragment> {
-        let (i, (reference, flags, region_count)) = tuple((fragment_ref, le_u32, le_u32))(input)?;
+        let (i, (name_reference, reference, flags, region_count)) =
+            tuple((StringReference::parse, fragment_ref, le_u32, le_u32))(input)?;
         let (remaining, regions) = count(le_u32, region_count as usize)(i)?;
 
         Ok((
             remaining,
             AmbientLightFragment {
+                name_reference,
                 reference,
                 flags,
                 region_count,
@@ -55,6 +60,7 @@ impl FragmentType for AmbientLightFragment {
 impl Fragment for AmbientLightFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.region_count.to_le_bytes()[..],
@@ -71,7 +77,7 @@ impl Fragment for AmbientLightFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

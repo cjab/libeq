@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MaterialFragment, StringHash};
+use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MaterialFragment, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -11,6 +11,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x31
 pub struct MaterialListFragment {
+    pub name_reference: StringReference,
+
     /// _Unknown_ - Must contain 0.
     pub flags: u32,
 
@@ -27,11 +29,13 @@ impl FragmentType for MaterialListFragment {
     const TYPE_ID: u32 = 0x31;
 
     fn parse(input: &[u8]) -> IResult<&[u8], MaterialListFragment> {
-        let (i, (flags, size1)) = tuple((le_u32, le_u32))(input)?;
+        let (i, (name_reference, flags, size1)) =
+            tuple((StringReference::parse, le_u32, le_u32))(input)?;
         let (remaining, fragments) = count(fragment_ref, size1 as usize)(i)?;
         Ok((
             remaining,
             MaterialListFragment {
+                name_reference,
                 flags,
                 size1,
                 fragments,
@@ -43,6 +47,7 @@ impl FragmentType for MaterialListFragment {
 impl Fragment for MaterialListFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.size1.to_le_bytes()[..],
             &self
@@ -58,7 +63,7 @@ impl Fragment for MaterialListFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

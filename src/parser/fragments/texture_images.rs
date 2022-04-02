@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::decode_string;
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_u16, le_u32, le_u8};
@@ -13,6 +13,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x03
 pub struct TextureImagesFragment {
+    pub name_reference: StringReference,
+
     /// Contains the number of texture filenames in this fragment. Again, this appears
     /// to always be 1.
     pub size1: u32,
@@ -27,10 +29,18 @@ impl FragmentType for TextureImagesFragment {
     const TYPE_ID: u32 = 0x03;
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureImagesFragment> {
-        let (i, size1) = le_u32(input)?;
+        let (i, name_reference) = StringReference::parse(input)?;
+        let (i, size1) = le_u32(i)?;
         // TODO: This is hardcoded to one entry, is this all we need?
         let (remaining, entries) = count(TextureImagesFragmentEntry::parse, 1 as usize)(i)?;
-        Ok((remaining, TextureImagesFragment { size1, entries }))
+        Ok((
+            remaining,
+            TextureImagesFragment {
+                name_reference,
+                size1,
+                entries,
+            },
+        ))
     }
 }
 
@@ -77,6 +87,7 @@ impl TextureImagesFragmentEntry {
 impl Fragment for TextureImagesFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.size1.to_le_bytes()[..],
             &self
                 .entries
@@ -91,7 +102,7 @@ impl Fragment for TextureImagesFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

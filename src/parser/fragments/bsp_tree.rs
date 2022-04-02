@@ -1,6 +1,8 @@
 use std::any::Any;
 
-use super::{fragment_ref, BspRegionFragment, Fragment, FragmentRef, FragmentType, StringHash};
+use super::{
+    fragment_ref, BspRegionFragment, Fragment, FragmentRef, FragmentType, StringReference,
+};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
@@ -12,6 +14,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x21
 pub struct BspTreeFragment {
+    pub name_reference: StringReference,
+
     /// The number of [BspTreeFragmentEntry]s in this tree.
     pub size1: u32,
 
@@ -25,16 +29,25 @@ impl FragmentType for BspTreeFragment {
     const TYPE_ID: u32 = 0x21;
 
     fn parse(input: &[u8]) -> IResult<&[u8], BspTreeFragment> {
-        let (i, size1) = le_u32(input)?;
+        let (i, name_reference) = StringReference::parse(input)?;
+        let (i, size1) = le_u32(i)?;
         let (remaining, entries) = count(BspTreeFragmentEntry::parse, size1 as usize)(i)?;
 
-        Ok((remaining, BspTreeFragment { size1, entries }))
+        Ok((
+            remaining,
+            BspTreeFragment {
+                name_reference,
+                size1,
+                entries,
+            },
+        ))
     }
 }
 
 impl Fragment for BspTreeFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.size1.to_le_bytes()[..],
             &self
                 .entries
@@ -49,8 +62,8 @@ impl Fragment for BspTreeFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }
 

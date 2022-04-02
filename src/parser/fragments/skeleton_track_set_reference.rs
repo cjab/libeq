@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, SkeletonTrackSetFragment, StringHash,
+    fragment_ref, Fragment, FragmentRef, FragmentType, SkeletonTrackSetFragment, StringReference,
 };
 
 use nom::number::complete::le_u32;
@@ -13,6 +13,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x11
 pub struct SkeletonTrackSetReferenceFragment {
+    pub name_reference: StringReference,
+
     /// The [SkeletonTrackSetFragment] reference.
     pub reference: FragmentRef<SkeletonTrackSetFragment>,
 
@@ -26,10 +28,15 @@ impl FragmentType for SkeletonTrackSetReferenceFragment {
     const TYPE_ID: u32 = 0x11;
 
     fn parse(input: &[u8]) -> IResult<&[u8], SkeletonTrackSetReferenceFragment> {
-        let (remaining, (reference, params1)) = tuple((fragment_ref, le_u32))(input)?;
+        let (remaining, (name_reference, reference, params1)) =
+            tuple((StringReference::parse, fragment_ref, le_u32))(input)?;
         Ok((
             remaining,
-            SkeletonTrackSetReferenceFragment { reference, params1 },
+            SkeletonTrackSetReferenceFragment {
+                name_reference,
+                reference,
+                params1,
+            },
         ))
     }
 }
@@ -37,6 +44,7 @@ impl FragmentType for SkeletonTrackSetReferenceFragment {
 impl Fragment for SkeletonTrackSetReferenceFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.reference.serialize()[..],
             &self.params1.to_le_bytes()[..],
         ]
@@ -47,7 +55,7 @@ impl Fragment for SkeletonTrackSetReferenceFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }
