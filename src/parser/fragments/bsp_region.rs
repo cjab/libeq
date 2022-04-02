@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MeshFragment, StringHash};
+use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MeshFragment, StringReference};
 
 use nom::combinator::map;
 use nom::multi::count;
@@ -13,6 +13,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x22
 pub struct BspRegionFragment {
+    pub name_reference: StringReference,
+
     /// Most flags are _unknown_. Usually contains 0x181 for regions that contain polygons and 0x81
     /// for regions that are empty.
     /// * bit 5 - If set then `pvs` contains u32 entries.
@@ -88,19 +90,34 @@ impl FragmentType for BspRegionFragment {
     const TYPE_ID: u32 = 0x22;
 
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragment> {
-        let (i, (flags, fragment1, size1, size2, params1, size3, size4, params2, size5, pvs_count)) =
-            tuple((
-                le_u32,
-                fragment_ref,
-                le_u32,
-                le_u32,
-                le_u32,
-                le_u32,
-                le_u32,
-                le_u32,
-                le_u32,
-                le_u32,
-            ))(input)?;
+        let (
+            i,
+            (
+                name_reference,
+                flags,
+                fragment1,
+                size1,
+                size2,
+                params1,
+                size3,
+                size4,
+                params2,
+                size5,
+                pvs_count,
+            ),
+        ) = tuple((
+            StringReference::parse,
+            le_u32,
+            fragment_ref,
+            le_u32,
+            le_u32,
+            le_u32,
+            le_u32,
+            le_u32,
+            le_u32,
+            le_u32,
+            le_u32,
+        ))(input)?;
         let (i, (data1, data2, data3, data4, data5, pvs, size7)) = tuple((
             count(le_u8, size1 as usize),
             count(le_u8, size2 as usize),
@@ -121,6 +138,7 @@ impl FragmentType for BspRegionFragment {
         Ok((
             remaining,
             BspRegionFragment {
+                name_reference,
                 flags,
                 fragment1,
                 size1,
@@ -149,6 +167,7 @@ impl FragmentType for BspRegionFragment {
 impl Fragment for BspRegionFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.fragment1.serialize()[..],
             &self.size1.to_le_bytes()[..],
@@ -195,8 +214,8 @@ impl Fragment for BspRegionFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }
 

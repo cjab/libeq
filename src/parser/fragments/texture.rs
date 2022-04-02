@@ -1,6 +1,8 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, StringHash, TextureImagesFragment};
+use super::{
+    fragment_ref, Fragment, FragmentRef, FragmentType, StringReference, TextureImagesFragment,
+};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -16,6 +18,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x04
 pub struct TextureFragment {
+    pub name_reference: StringReference,
+
     /// Most flags are _unknown_ however:
     /// * bit 3 - If set texture is animated (has more than one [TextureImagesFragment] reference.
     /// This also means that a `params1` field exists.
@@ -42,7 +46,8 @@ impl FragmentType for TextureFragment {
     const TYPE_ID: u32 = 0x04;
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureFragment> {
-        let (i, (flags, frame_count)) = tuple((TextureFragmentFlags::parse, le_u32))(input)?;
+        let (i, (name_reference, flags, frame_count)) =
+            tuple((StringReference::parse, TextureFragmentFlags::parse, le_u32))(input)?;
 
         // TODO: Do these fields even really exist?
         let current_frame = None;
@@ -52,6 +57,7 @@ impl FragmentType for TextureFragment {
         Ok((
             remaining,
             TextureFragment {
+                name_reference,
                 flags,
                 frame_count,
                 current_frame,
@@ -65,6 +71,7 @@ impl FragmentType for TextureFragment {
 impl Fragment for TextureFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.serialize()[..],
             &self.frame_count.to_le_bytes()[..],
             &self
@@ -84,8 +91,8 @@ impl Fragment for TextureFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }
 

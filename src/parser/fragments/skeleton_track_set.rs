@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
@@ -22,6 +22,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x10
 pub struct SkeletonTrackSetFragment {
+    pub name_reference: StringReference,
+
     /// Most flags are _unknown_.
     /// * bit 0 - If set then `unknown_params1` exists.
     /// * bit 1 - If set then `unknown_params2` exists.
@@ -62,7 +64,8 @@ impl FragmentType for SkeletonTrackSetFragment {
     const TYPE_ID: u32 = 0x10;
 
     fn parse(input: &[u8]) -> IResult<&[u8], SkeletonTrackSetFragment> {
-        let (i, (flags, entry_count, fragment)) = tuple((le_u32, le_u32, le_u32))(input)?;
+        let (i, (name_reference, flags, entry_count, fragment)) =
+            tuple((StringReference::parse, le_u32, le_u32, le_u32))(input)?;
 
         let (i, unknown_params1) = if flags & 0x01 == 0x01 {
             tuple((le_u32, le_u32, le_u32))(i).map(|(i, p1)| (i, Some(p1)))?
@@ -95,6 +98,7 @@ impl FragmentType for SkeletonTrackSetFragment {
         Ok((
             remaining,
             SkeletonTrackSetFragment {
+                name_reference,
                 flags,
                 entry_count,
                 fragment,
@@ -205,6 +209,7 @@ impl SkeletonTrackSetFragmentEntry {
 impl Fragment for SkeletonTrackSetFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.entry_count.to_le_bytes()[..],
             &self.fragment.to_le_bytes()[..],
@@ -236,7 +241,7 @@ impl Fragment for SkeletonTrackSetFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

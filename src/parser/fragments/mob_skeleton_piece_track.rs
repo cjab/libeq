@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use nom::number::complete::{le_i16, le_u32};
 use nom::sequence::tuple;
@@ -45,6 +45,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x12
 pub struct MobSkeletonPieceTrackFragment {
+    pub name_reference: StringReference,
+
     /// Most flags are _unknown_.
     /// * bit 3 - If set then `data2` exists (though I’m not at all sure about this since I
     ///           have yet to see an example). It could instead mean that the rotation and
@@ -99,6 +101,7 @@ impl FragmentType for MobSkeletonPieceTrackFragment {
         let (
             i,
             (
+                name_reference,
                 flags,
                 size,
                 rotate_denominator,
@@ -111,7 +114,17 @@ impl FragmentType for MobSkeletonPieceTrackFragment {
                 shift_denominator,
             ),
         ) = tuple((
-            le_u32, le_u32, le_i16, le_i16, le_i16, le_i16, le_i16, le_i16, le_i16, le_i16,
+            StringReference::parse,
+            le_u32,
+            le_u32,
+            le_i16,
+            le_i16,
+            le_i16,
+            le_i16,
+            le_i16,
+            le_i16,
+            le_i16,
+            le_i16,
         ))(input)?;
 
         let (remaining, data2) = if i.len() > 0 && (flags & 0x08 == 0x08) {
@@ -135,6 +148,7 @@ impl FragmentType for MobSkeletonPieceTrackFragment {
         Ok((
             remaining,
             MobSkeletonPieceTrackFragment {
+                name_reference,
                 flags,
                 size,
                 rotate_denominator,
@@ -154,6 +168,7 @@ impl FragmentType for MobSkeletonPieceTrackFragment {
 impl Fragment for MobSkeletonPieceTrackFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.size.to_le_bytes()[..],
             &self.rotate_denominator.to_le_bytes()[..],
@@ -173,7 +188,7 @@ impl Fragment for MobSkeletonPieceTrackFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

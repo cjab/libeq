@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use nom::number::complete::{le_f32, le_u32, le_u8};
 use nom::sequence::tuple;
@@ -9,6 +9,8 @@ use nom::IResult;
 #[derive(Debug)]
 /// **Type ID:** 0x1b
 pub struct LightSourceFragment {
+    pub name_reference: StringReference,
+
     /// _Unknown_
     /// * bit 1 - Usually 1 when dealing with placed light sources.
     /// * bit 2 - Usually 1.
@@ -49,7 +51,8 @@ impl FragmentType for LightSourceFragment {
     const TYPE_ID: u32 = 0x1b;
 
     fn parse(input: &[u8]) -> IResult<&[u8], LightSourceFragment> {
-        let (i, (flags, params2)) = tuple((le_u32, le_u32))(input)?;
+        let (i, (name_reference, flags, params2)) =
+            tuple((StringReference::parse, le_u32, le_u32))(input)?;
 
         let (i, params3a) = if flags & 0x10 == 0x00 {
             le_f32(i).map(|(i, params3a)| (i, Some(params3a)))?
@@ -73,6 +76,7 @@ impl FragmentType for LightSourceFragment {
         Ok((
             remaining,
             LightSourceFragment {
+                name_reference,
                 flags,
                 params2,
                 params3a,
@@ -89,6 +93,7 @@ impl FragmentType for LightSourceFragment {
 impl Fragment for LightSourceFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.params2.to_le_bytes()[..],
             &self.params3a.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
@@ -105,7 +110,7 @@ impl Fragment for LightSourceFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

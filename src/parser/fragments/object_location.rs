@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
@@ -9,6 +9,8 @@ use nom::IResult;
 #[derive(Debug)]
 /// **Type ID:** 0x15
 pub struct ObjectLocationFragment {
+    pub name_reference: StringReference,
+
     /// Typically 0x2E when used in main zone files and 0x32E when
     /// used for placeable objects.
     pub flags: u32,
@@ -80,6 +82,7 @@ impl FragmentType for ObjectLocationFragment {
         let (
             remaining,
             (
+                name_reference,
                 flags,
                 fragment1,
                 x,
@@ -95,12 +98,25 @@ impl FragmentType for ObjectLocationFragment {
                 params2,
             ),
         ) = tuple((
-            le_u32, le_u32, le_f32, le_f32, le_f32, le_f32, le_f32, le_f32, le_u32, le_f32, le_f32,
-            le_u32, le_u32,
+            StringReference::parse,
+            le_u32,
+            le_u32,
+            le_f32,
+            le_f32,
+            le_f32,
+            le_f32,
+            le_f32,
+            le_f32,
+            le_u32,
+            le_f32,
+            le_f32,
+            le_u32,
+            le_u32,
         ))(input)?;
         Ok((
             remaining,
             ObjectLocationFragment {
+                name_reference,
                 flags,
                 fragment1,
                 x,
@@ -122,6 +138,7 @@ impl FragmentType for ObjectLocationFragment {
 impl Fragment for ObjectLocationFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.fragment1.to_le_bytes()[..],
             &self.x.to_le_bytes()[..],
@@ -143,7 +160,7 @@ impl Fragment for ObjectLocationFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -10,6 +10,8 @@ use nom::IResult;
 #[derive(Debug)]
 /// **Type ID:** 0x32
 pub struct VertexColorFragment {
+    pub name_reference: StringReference,
+
     /// _Unknown_ - Usually contains 1.
     pub data1: u32,
 
@@ -46,13 +48,21 @@ impl FragmentType for VertexColorFragment {
     const TYPE_ID: u32 = 0x32;
 
     fn parse(input: &[u8]) -> IResult<&[u8], VertexColorFragment> {
-        let (i, (data1, vertex_color_count, data2, data3, data4)) =
-            tuple((le_u32, le_u32, le_u32, le_u32, le_u32))(input)?;
+        let (i, (name_reference, data1, vertex_color_count, data2, data3, data4)) =
+            tuple((
+                StringReference::parse,
+                le_u32,
+                le_u32,
+                le_u32,
+                le_u32,
+                le_u32,
+            ))(input)?;
         let (remaining, vertex_colors) = count(le_u32, vertex_color_count as usize)(i)?;
 
         Ok((
             remaining,
             VertexColorFragment {
+                name_reference,
                 data1,
                 vertex_color_count,
                 data2,
@@ -67,6 +77,7 @@ impl FragmentType for VertexColorFragment {
 impl Fragment for VertexColorFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.data1.to_le_bytes()[..],
             &self.vertex_color_count.to_le_bytes()[..],
             &self.data2.to_le_bytes()[..],
@@ -80,7 +91,7 @@ impl Fragment for VertexColorFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

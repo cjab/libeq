@@ -1,7 +1,8 @@
 use std::any::Any;
 
 use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, MeshAnimatedVerticesFragment, StringHash,
+    fragment_ref, Fragment, FragmentRef, FragmentType, MeshAnimatedVerticesFragment,
+    StringReference,
 };
 
 use nom::number::complete::le_u32;
@@ -13,6 +14,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x2f
 pub struct MeshAnimatedVerticesReferenceFragment {
+    pub name_reference: StringReference,
+
     /// The [MeshAnimatedVerticesFragment] reference.
     pub reference: FragmentRef<MeshAnimatedVerticesFragment>,
 
@@ -26,10 +29,15 @@ impl FragmentType for MeshAnimatedVerticesReferenceFragment {
     const TYPE_ID: u32 = 0x2f;
 
     fn parse(input: &[u8]) -> IResult<&[u8], MeshAnimatedVerticesReferenceFragment> {
-        let (remaining, (reference, flags)) = tuple((fragment_ref, le_u32))(input)?;
+        let (remaining, (name_reference, reference, flags)) =
+            tuple((StringReference::parse, fragment_ref, le_u32))(input)?;
         Ok((
             remaining,
-            MeshAnimatedVerticesReferenceFragment { reference, flags },
+            MeshAnimatedVerticesReferenceFragment {
+                name_reference,
+                reference,
+                flags,
+            },
         ))
     }
 }
@@ -37,6 +45,7 @@ impl FragmentType for MeshAnimatedVerticesReferenceFragment {
 impl Fragment for MeshAnimatedVerticesReferenceFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
         ]
@@ -47,7 +56,7 @@ impl Fragment for MeshAnimatedVerticesReferenceFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

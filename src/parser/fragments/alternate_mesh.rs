@@ -1,8 +1,7 @@
 use std::any::Any;
 
 use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment, StringHash,
-    StringReference,
+    fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment, StringReference,
 };
 
 use nom::multi::count;
@@ -327,8 +326,8 @@ impl Fragment for AlternateMeshFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }
 

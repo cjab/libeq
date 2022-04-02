@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use nom::IResult;
 
@@ -8,7 +8,9 @@ use nom::IResult;
 /// _Unknown_
 ///
 /// **Type ID:** 0x16
-pub struct ZoneUnknownFragment {}
+pub struct ZoneUnknownFragment {
+    pub name_reference: StringReference,
+}
 
 impl FragmentType for ZoneUnknownFragment {
     type T = Self;
@@ -16,7 +18,8 @@ impl FragmentType for ZoneUnknownFragment {
     const TYPE_ID: u32 = 0x16;
 
     fn parse(input: &[u8]) -> IResult<&[u8], ZoneUnknownFragment> {
-        Ok((input, ZoneUnknownFragment {}))
+        let (remaining, name_reference) = StringReference::parse(input)?;
+        Ok((remaining, ZoneUnknownFragment { name_reference }))
     }
 }
 
@@ -29,7 +32,7 @@ impl Fragment for ZoneUnknownFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }

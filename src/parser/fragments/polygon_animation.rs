@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringHash};
+use super::{Fragment, FragmentType, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
@@ -10,6 +10,8 @@ use nom::IResult;
 #[derive(Debug)]
 /// **Type ID:** 0x17
 pub struct PolygonAnimationFragment {
+    pub name_reference: StringReference,
+
     /// _Unknown_ - Usually contains 0.1
     pub params1: f32,
 
@@ -47,8 +49,16 @@ impl FragmentType for PolygonAnimationFragment {
     const TYPE_ID: u32 = 0x17;
 
     fn parse(input: &[u8]) -> IResult<&[u8], PolygonAnimationFragment> {
-        let (i, (params1, flags, size1, size2, params2, params3)) =
-            tuple((le_f32, le_u32, le_u32, le_u32, le_f32, le_f32))(input)?;
+        let (i, (name_reference, params1, flags, size1, size2, params2, params3)) =
+            tuple((
+                StringReference::parse,
+                le_f32,
+                le_u32,
+                le_u32,
+                le_u32,
+                le_f32,
+                le_f32,
+            ))(input)?;
 
         let entry2 = |input| {
             let (i, entry_size) = le_u32(input)?;
@@ -64,6 +74,7 @@ impl FragmentType for PolygonAnimationFragment {
         Ok((
             remaining,
             PolygonAnimationFragment {
+                name_reference,
                 params1,
                 flags,
                 size1,
@@ -80,6 +91,7 @@ impl FragmentType for PolygonAnimationFragment {
 impl Fragment for PolygonAnimationFragment {
     fn serialize(&self) -> Vec<u8> {
         [
+            &self.name_reference.serialize()[..],
             &self.params1.to_le_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.size1.to_le_bytes()[..],
@@ -110,7 +122,7 @@ impl Fragment for PolygonAnimationFragment {
         self
     }
 
-    fn name(&self, string_hash: &StringHash) -> String {
-        String::new()
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }
