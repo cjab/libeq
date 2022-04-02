@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{fragment_ref, BspRegionFragment, Fragment, FragmentRef, FragmentType};
+use super::{fragment_ref, BspRegionFragment, Fragment, FragmentRef, FragmentType, StringHash};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
@@ -47,6 +47,10 @@ impl Fragment for BspTreeFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }
 

@@ -1,6 +1,8 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, LightSourceReferenceFragment};
+use super::{
+    fragment_ref, Fragment, FragmentRef, FragmentType, LightSourceReferenceFragment, StringHash,
+};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -67,5 +69,9 @@ impl Fragment for AmbientLightFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }

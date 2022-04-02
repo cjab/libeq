@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MaterialFragment};
+use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MaterialFragment, StringHash};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -56,5 +56,9 @@ impl Fragment for MaterialListFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }

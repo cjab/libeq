@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType};
+use super::{Fragment, FragmentType, StringHash};
 
 use nom::number::complete::{le_i16, le_u32};
 use nom::sequence::tuple;
@@ -171,5 +171,9 @@ impl Fragment for MobSkeletonPieceTrackFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }

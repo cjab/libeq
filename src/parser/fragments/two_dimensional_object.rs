@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType};
+use super::{Fragment, FragmentType, StringHash};
 
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
@@ -306,6 +306,10 @@ impl Fragment for TwoDimensionalObjectFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }
 

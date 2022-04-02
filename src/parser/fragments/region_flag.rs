@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType};
+use super::{Fragment, FragmentType, StringHash};
 
 use nom::multi::count;
 use nom::number::complete::{le_u32, le_u8};
@@ -95,5 +95,9 @@ impl Fragment for RegionFlagFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }

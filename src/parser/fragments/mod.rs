@@ -38,7 +38,7 @@ use std::marker::PhantomData;
 use nom::number::complete::le_i32;
 use nom::IResult;
 
-use super::{decode_string, StringReference};
+use super::{decode_string, StringHash, StringReference};
 
 pub use alternate_mesh::*;
 pub use ambient_light::*;
@@ -99,6 +99,7 @@ impl<T> FragmentRef<T> {
 pub trait Fragment {
     fn serialize(&self) -> Vec<u8>;
     fn as_any(&self) -> &dyn Any;
+    fn name(&self, strings_hash: &StringHash) -> String;
 }
 
 pub trait FragmentType {

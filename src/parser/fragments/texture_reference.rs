@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, TextureFragment};
+use super::{fragment_ref, Fragment, FragmentRef, FragmentType, StringHash, TextureFragment};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -40,5 +40,9 @@ impl Fragment for TextureReferenceFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }

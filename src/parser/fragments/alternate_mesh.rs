@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment};
+use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment, StringHash};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_u16, le_u32};
@@ -316,6 +316,10 @@ impl Fragment for AlternateMeshFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }
 

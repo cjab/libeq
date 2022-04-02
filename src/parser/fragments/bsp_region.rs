@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MeshFragment};
+use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MeshFragment, StringHash};
 
 use nom::combinator::map;
 use nom::multi::count;
@@ -193,6 +193,10 @@ impl Fragment for BspRegionFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }
 

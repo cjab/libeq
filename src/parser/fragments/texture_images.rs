@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::decode_string;
-use super::{Fragment, FragmentType};
+use super::{Fragment, FragmentType, StringHash};
 
 use nom::multi::count;
 use nom::number::complete::{le_u16, le_u32, le_u8};
@@ -89,5 +89,9 @@ impl Fragment for TextureImagesFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }

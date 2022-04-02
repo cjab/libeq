@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment};
+use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment, StringHash};
 
 use nom::combinator::map;
 use nom::multi::count;
@@ -376,6 +376,10 @@ impl Fragment for MeshFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }
 
