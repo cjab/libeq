@@ -257,6 +257,7 @@ impl FragmentType for TwoDimensionalObjectFragment {
 }
 
 impl Fragment for TwoDimensionalObjectFragment {
+    // TODO: Serialize!
     fn serialize(&self) -> Vec<u8> {
         vec![].iter().flatten().collect()
     }
