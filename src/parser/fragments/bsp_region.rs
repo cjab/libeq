@@ -150,7 +150,7 @@ impl Fragment for BspRegionFragment {
     fn serialize(&self) -> Vec<u8> {
         [
             &self.flags.to_le_bytes()[..],
-            &self.fragment1.serialize().to_le_bytes()[..],
+            &self.fragment1.serialize()[..],
             &self.size1.to_le_bytes()[..],
             &self.size2.to_le_bytes()[..],
             &self.params1.to_le_bytes()[..],
@@ -182,11 +182,11 @@ impl Fragment for BspRegionFragment {
                 .collect::<Vec<_>>()[..],
             &self.size7.to_le_bytes()[..],
             &self.name7,
-            &self.fragment2.serialize().to_le_bytes()[..],
+            &self.fragment2.serialize()[..],
             &self
                 .mesh_reference
                 .as_ref()
-                .map_or(vec![], |m| m.serialize().to_le_bytes().to_vec())[..],
+                .map_or(vec![], |m| m.serialize())[..],
         ]
         .concat()
     }

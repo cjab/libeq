@@ -102,9 +102,9 @@ impl BspTreeFragmentEntry {
             &self.normal.1.to_le_bytes()[..],
             &self.normal.2.to_le_bytes()[..],
             &self.split_distance.to_le_bytes()[..],
-            &self.region.serialize().to_le_bytes()[..],
-            &self.nodes.0.serialize().to_le_bytes()[..],
-            &self.nodes.1.serialize().to_le_bytes()[..],
+            &self.region.serialize()[..],
+            &self.nodes.0.serialize()[..],
+            &self.nodes.1.serialize()[..],
         ]
         .concat()
     }

@@ -82,16 +82,18 @@ pub enum FragmentRef<T> {
 
 impl<T> FragmentRef<T> {
     pub fn new(idx: i32) -> FragmentRef<T> {
-        match StringReference::new(idx) {
-            Some(name_ref) => FragmentRef::Name(name_ref, PhantomData),
-            None => FragmentRef::Index(idx as u32, PhantomData),
+        if idx > 0 {
+            FragmentRef::Index(idx as u32, PhantomData)
+        } else {
+            let name_ref = StringReference::new(idx);
+            FragmentRef::Name(name_ref, PhantomData)
         }
     }
 
-    pub fn serialize(&self) -> i32 {
+    pub fn serialize(&self) -> Vec<u8> {
         match self {
             Self::Name(string_ref, _) => string_ref.serialize(),
-            Self::Index(idx, _) => *idx as i32,
+            Self::Index(idx, _) => idx.to_le_bytes().to_vec(),
         }
     }
 }

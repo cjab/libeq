@@ -213,8 +213,6 @@ pub struct FragmentHeader<'a> {
     ///
     /// All fragments without a name will have a `name_reference` of 0.
     /// The one exception being the 0x35 fragment which will always reference 0xFF000000.
-    pub name_reference: Option<StringReference>,
-
     pub field_data: &'a [u8],
 }
 
@@ -232,7 +230,6 @@ impl<'a> FragmentHeader<'a> {
             remaining,
             FragmentHeader {
                 size,
-                name_reference: StringReference::new(name_reference),
                 fragment_type,
                 field_data,
             },
@@ -360,15 +357,7 @@ impl<'a> FragmentHeader<'a> {
         [
             &self.size.to_le_bytes()[..],
             &self.fragment_type.to_le_bytes()[..],
-            &self
-                .name_reference
-                .map_or(0, |r| r.serialize())
-                .to_le_bytes()[..],
         ]
         .concat()
-    }
-
-    pub fn name(&self, strings: &'a StringHash) -> Option<&'a str> {
-        self.name_reference.and_then(|r| strings.get(r))
     }
 }

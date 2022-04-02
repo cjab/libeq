@@ -74,7 +74,7 @@ impl Fragment for TextureFragment {
             &self
                 .frame_references
                 .iter()
-                .flat_map(|f| f.serialize().to_le_bytes())
+                .flat_map(|f| f.serialize())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()

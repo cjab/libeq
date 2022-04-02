@@ -37,7 +37,7 @@ impl FragmentType for SkeletonTrackSetReferenceFragment {
 impl Fragment for SkeletonTrackSetReferenceFragment {
     fn serialize(&self) -> Vec<u8> {
         [
-            &self.reference.serialize().to_le_bytes()[..],
+            &self.reference.serialize()[..],
             &self.params1.to_le_bytes()[..],
         ]
         .concat()

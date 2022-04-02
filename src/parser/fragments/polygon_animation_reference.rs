@@ -46,7 +46,7 @@ impl FragmentType for PolygonAnimationReferenceFragment {
 impl Fragment for PolygonAnimationReferenceFragment {
     fn serialize(&self) -> Vec<u8> {
         [
-            &self.reference.serialize().to_le_bytes()[..],
+            &self.reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.params1.to_le_bytes()[..],
         ]

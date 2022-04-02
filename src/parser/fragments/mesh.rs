@@ -299,9 +299,9 @@ impl Fragment for MeshFragment {
     fn serialize(&self) -> Vec<u8> {
         [
             &self.flags.to_le_bytes()[..],
-            &self.material_list_ref.serialize().to_le_bytes()[..],
-            &self.fragment3.serialize().to_le_bytes()[..],
-            &self.fragment4.serialize().to_le_bytes()[..],
+            &self.material_list_ref.serialize()[..],
+            &self.fragment3.serialize()[..],
+            &self.fragment4.serialize()[..],
             &self.center.0.to_le_bytes()[..],
             &self.center.1.to_le_bytes()[..],
             &self.center.2.to_le_bytes()[..],
