@@ -2,7 +2,6 @@ pub mod fragments;
 mod strings;
 
 use core::fmt::Debug;
-use std::any::Any;
 
 use nom::bytes::complete::take;
 use nom::multi::count;
@@ -53,54 +52,53 @@ impl WldDoc {
         .concat()
     }
 
-    ///// Get a fragment given a fragment reference.
-    //    pub fn get<T: Fragment<T = T> + Debug>(
-    //        &self,
-    //        fragment_ref: &FragmentRef<T>,
-    //    ) -> Option<(Option<&str>, T)> {
-    //        match fragment_ref {
-    //            FragmentRef::Name(_, _) => self.get_by_name_ref(fragment_ref),
-    //            FragmentRef::Index(_, _) => self.get_by_index_ref(fragment_ref),
-    //        }
-    //    }
-    //
-    //    fn get_by_index_ref<T: Fragment<T = T> + Debug>(
-    //        &self,
-    //        fragment_ref: &FragmentRef<T>,
-    //    ) -> Option<(Option<&str>, T)> {
-    //        let idx = if let FragmentRef::Index(idx, _) = fragment_ref {
-    //            idx
-    //        } else {
-    //            return None;
-    //        };
-    //
-    //        let fragment = self.fragment_headers.get((idx - 1) as usize)?;
-    //        let name = fragment.name_reference.and_then(|r| self.strings.get(r));
-    //        T::parse(&fragment.field_data).map(|r| (name, r.1)).ok()
-    //    }
-    //
-    //    fn get_by_name_ref<T: Fragment<T = T> + Debug>(
-    //        &self,
-    //        fragment_ref: &FragmentRef<T>,
-    //    ) -> Option<(Option<&str>, T)> {
-    //        let name_ref = if let FragmentRef::Name(name_ref, _) = fragment_ref {
-    //            *name_ref
-    //        } else {
-    //            return None;
-    //        };
-    //
-    //        if let Some(target_name) = self.strings.get(name_ref) {
-    //            self.fragment_headers
-    //                .iter()
-    //                .find(|f| f.name(self).map_or(false, |name| name == target_name))
-    //                .and_then(|f| {
-    //                    let name = f.name_reference.and_then(|r| self.strings.get(r));
-    //                    T::parse(&f.field_data).map(|r| (name, r.1)).ok()
-    //                })
-    //        } else {
-    //            None
-    //        }
-    //    }
+    /// Get a fragment given a fragment reference.
+    pub fn get<T: 'static + FragmentType<T = T> + Debug>(
+        &self,
+        fragment_ref: &FragmentRef<T>,
+    ) -> Option<&T> {
+        match fragment_ref {
+            FragmentRef::Name(_, _) => self.get_by_name_ref(fragment_ref),
+            FragmentRef::Index(_, _) => self.get_by_index_ref(fragment_ref),
+        }
+    }
+
+    fn get_by_index_ref<T: 'static + FragmentType<T = T> + Debug>(
+        &self,
+        fragment_ref: &FragmentRef<T>,
+    ) -> Option<&T> {
+        let idx = if let FragmentRef::Index(idx, _) = fragment_ref {
+            idx
+        } else {
+            return None;
+        };
+
+        self.fragments
+            .get((idx - 1) as usize)?
+            .as_any()
+            .downcast_ref()
+    }
+
+    fn get_by_name_ref<T: FragmentType<T = T> + Debug>(
+        &self,
+        fragment_ref: &FragmentRef<T>,
+    ) -> Option<&T> {
+        let name_ref = if let FragmentRef::Name(name_ref, _) = fragment_ref {
+            *name_ref
+        } else {
+            return None;
+        };
+
+        if let Some(target_name) = self.strings.get(name_ref) {
+            self.fragments
+                .iter()
+                .find(|f| f.name(self).map_or(false, |name| name == target_name))?
+                .as_any()
+                .downcast_ref()
+        } else {
+            None
+        }
+    }
 
     //    /// Iterate over all mesh fragments in the wld file.
     //    pub(super) fn meshes(&self) -> impl Iterator<Item = (Option<&str>, MeshFragment)> + '_ {
@@ -174,17 +172,15 @@ impl WldHeader {
 
     pub fn serialize(&self) -> Vec<u8> {
         [
-            self.magic,
-            self.version,
-            self.fragment_count,
-            self.header_3,
-            self.header_4,
-            self.string_hash_size,
-            self.header_6,
+            &self.magic.to_le_bytes()[..],
+            &self.version.to_le_bytes()[..],
+            &self.fragment_count.to_le_bytes()[..],
+            &self.header_3.to_le_bytes()[..],
+            &self.header_4.to_le_bytes()[..],
+            &self.string_hash_size.to_le_bytes()[..],
+            &self.header_6.to_le_bytes()[..],
         ]
-        .iter()
-        .flat_map(|f| f.to_le_bytes())
-        .collect()
+        .concat()
     }
 }
 
@@ -361,15 +357,15 @@ impl<'a> FragmentHeader<'a> {
     }
 
     pub fn serialize(&self) -> Vec<u8> {
-        let result = [
-            self.size.to_le_bytes(),
-            self.fragment_type.to_le_bytes(),
-            self.name_reference
+        [
+            &self.size.to_le_bytes()[..],
+            &self.fragment_type.to_le_bytes()[..],
+            &self
+                .name_reference
                 .map_or(0, |r| r.serialize())
-                .to_le_bytes(),
+                .to_le_bytes()[..],
         ]
-        .concat();
-        result
+        .concat()
     }
 
     pub fn name(&self, strings: &'a StringHash) -> Option<&'a str> {
