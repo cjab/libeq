@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType};
+use super::{Fragment, FragmentType, StringHash};
 
 use nom::number::complete::{le_f32, le_u32, le_u8};
 use nom::sequence::tuple;
@@ -103,5 +103,9 @@ impl Fragment for LightSourceFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }

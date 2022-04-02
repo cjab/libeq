@@ -1,6 +1,8 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MeshAnimatedVerticesFragment};
+use super::{
+    fragment_ref, Fragment, FragmentRef, FragmentType, MeshAnimatedVerticesFragment, StringHash,
+};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -40,5 +42,9 @@ impl Fragment for VertexColorReferenceFragment {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn name(&self, string_hash: &StringHash) -> String {
+        String::new()
     }
 }

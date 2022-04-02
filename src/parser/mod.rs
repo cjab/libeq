@@ -28,10 +28,7 @@ impl WldDoc {
         ))(i)?;
         let strings = StringHash::new(string_hash_data);
 
-        let fragments = fragment_headers
-            .iter()
-            .map(|h| h.parse_body(&strings))
-            .collect();
+        let fragments = fragment_headers.iter().map(|h| h.parse_body()).collect();
 
         Ok((
             remaining,
@@ -79,7 +76,7 @@ impl WldDoc {
             .downcast_ref()
     }
 
-    fn get_by_name_ref<T: FragmentType<T = T> + Debug>(
+    fn get_by_name_ref<T: 'static + FragmentType<T = T> + Debug>(
         &self,
         fragment_ref: &FragmentRef<T>,
     ) -> Option<&T> {
@@ -92,7 +89,10 @@ impl WldDoc {
         if let Some(target_name) = self.strings.get(name_ref) {
             self.fragments
                 .iter()
-                .find(|f| f.name(self).map_or(false, |name| name == target_name))?
+                .find(|f| {
+                    f.name(&self.strings) == target_name
+                    //.map_or(false, |name| name == target_name)
+                })?
                 .as_any()
                 .downcast_ref()
         } else {
@@ -239,7 +239,7 @@ impl<'a> FragmentHeader<'a> {
         ))
     }
 
-    fn parse_body(&self, strings: &'a StringHash) -> Box<dyn Fragment> {
+    fn parse_body(&self) -> Box<dyn Fragment> {
         match self.fragment_type {
             AlternateMeshFragment::TYPE_ID => {
                 Box::new(AlternateMeshFragment::parse(&self.field_data).unwrap().1)
