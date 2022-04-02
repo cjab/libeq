@@ -3,25 +3,24 @@ use std::convert::TryInto;
 
 use encoding_rs::WINDOWS_1252;
 
+use nom::number::complete::le_i32;
+use nom::IResult;
+
 #[derive(Clone, Copy, Debug)]
-pub struct StringReference(usize);
+pub struct StringReference(i32);
 
 impl StringReference {
-    pub fn new(idx: i32) -> Option<StringReference> {
-        if idx <= 0 {
-            Some(StringReference(idx.abs() as usize))
-        } else {
-            None
-        }
+    pub fn new(idx: i32) -> Self {
+        Self(idx)
     }
 
-    pub fn serialize(&self) -> i32 {
-        if self.0 == 0 {
-            0
-        } else {
-            let out: i32 = self.0.try_into().unwrap();
-            -out
-        }
+    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+        let (remaining, idx) = le_i32(input)?;
+        Ok((remaining, Self::new(idx)))
+    }
+
+    pub fn serialize(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
     }
 }
 
@@ -73,6 +72,8 @@ impl StringHash {
     }
 
     pub fn get(&self, string_reference: StringReference) -> Option<&str> {
-        self.0.get(&string_reference.0).map(|s| s.as_ref())
+        self.0
+            .get(&(string_reference.0.abs() as usize))
+            .map(|s| s.as_ref())
     }
 }

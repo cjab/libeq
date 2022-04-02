@@ -32,7 +32,7 @@ impl FragmentType for LightSourceReferenceFragment {
 impl Fragment for LightSourceReferenceFragment {
     fn serialize(&self) -> Vec<u8> {
         [
-            &self.reference.serialize().to_le_bytes()[..],
+            &self.reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
         ]
         .concat()

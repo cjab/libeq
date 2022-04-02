@@ -1,6 +1,9 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment, StringHash};
+use super::{
+    fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment, StringHash,
+    StringReference,
+};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_u16, le_u32};
@@ -15,6 +18,8 @@ use nom::IResult;
 ///
 /// **Type ID:** 0x2c
 pub struct AlternateMeshFragment {
+    pub name_reference: StringReference,
+
     /// Most fields are _unknown_. This usually contains 0x00001803.
     /// * bit  0 - If set then `center_x`, `center_y`, and `center_z` are valid.
     ///            Otherwise they must contain 0.
@@ -141,6 +146,7 @@ impl FragmentType for AlternateMeshFragment {
         let (
             i,
             (
+                name_reference,
                 flags,
                 vertex_count,
                 tex_coords_count,
@@ -156,6 +162,7 @@ impl FragmentType for AlternateMeshFragment {
                 params2,
             ),
         ) = tuple((
+            StringReference::parse,
             le_u32,
             le_u32,
             le_u32,
@@ -197,6 +204,7 @@ impl FragmentType for AlternateMeshFragment {
         Ok((
             remaining,
             AlternateMeshFragment {
+                name_reference,
                 flags,
                 vertex_count,
                 tex_coords_count,
@@ -277,6 +285,7 @@ impl Fragment for AlternateMeshFragment {
             .collect::<Vec<_>>();
 
         [
+            &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.vertex_count.to_le_bytes()[..],
             &self.tex_coords_count.to_le_bytes()[..],
@@ -284,7 +293,7 @@ impl Fragment for AlternateMeshFragment {
             &self.polygon_count.to_le_bytes()[..],
             &self.size6.to_le_bytes()[..],
             &self.vertex_piece_count.to_le_bytes()[..],
-            &self.fragment1.serialize().to_le_bytes()[..],
+            &self.fragment1.serialize()[..],
             &self.fragment2.to_le_bytes()[..],
             &self.fragment3.to_le_bytes()[..],
             &self.center.0.to_le_bytes()[..],

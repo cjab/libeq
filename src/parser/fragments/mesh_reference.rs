@@ -32,7 +32,7 @@ impl FragmentType for MeshReferenceFragment {
 impl Fragment for MeshReferenceFragment {
     fn serialize(&self) -> Vec<u8> {
         [
-            &self.reference.serialize().to_le_bytes()[..],
+            &self.reference.serialize()[..],
             &self.params.to_le_bytes()[..],
         ]
         .concat()

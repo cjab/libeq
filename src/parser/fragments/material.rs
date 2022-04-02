@@ -81,7 +81,7 @@ impl Fragment for MaterialFragment {
             &self.params2.to_le_bytes()[..],
             &self.params3.0.to_le_bytes()[..],
             &self.params3.1.to_le_bytes()[..],
-            &self.reference.serialize().to_le_bytes()[..],
+            &self.reference.serialize()[..],
             &self
                 .pair
                 .map_or(vec![], |p| [p.0.to_le_bytes(), p.1.to_le_bytes()].concat())[..],
