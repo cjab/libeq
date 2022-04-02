@@ -297,77 +297,81 @@ impl FragmentType for MeshFragment {
 
 impl Fragment for MeshFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.material_list_ref.serialize().to_le_bytes(),
-            self.fragment3.serialize().to_le_bytes(),
-            self.fragment4.serialize().to_le_bytes(),
-            self.center.0.to_le_bytes(),
-            self.center.1.to_le_bytes(),
-            self.center.2.to_le_bytes(),
-            self.params2.0.to_le_bytes(),
-            self.params2.1.to_le_bytes(),
-            self.params2.2.to_le_bytes(),
-            self.max_distance.to_le_bytes(),
-            self.min.0.to_le_bytes(),
-            self.min.1.to_le_bytes(),
-            self.min.2.to_le_bytes(),
-            self.max.0.to_le_bytes(),
-            self.max.1.to_le_bytes(),
-            self.max.2.to_le_bytes(),
-            self.position_count.to_le_bytes(),
-            self.texture_coordinate_count.to_le_bytes(),
-            self.normal_count.to_le_bytes(),
-            self.color_count.to_le_bytes(),
-            self.polygon_count.to_le_bytes(),
-            self.vertex_piece_count.to_le_bytes(),
-            self.polygon_material_count.to_le_bytes(),
-            self.vertex_material_count.to_le_bytes(),
-            self.size9.to_le_bytes(),
-            self.scale.to_le_bytes(),
-            self.positions.flat_map(|p| {
-                vec![p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes()]
-                    .iter()
-                    .flatten()
-                    .collect()
-            }),
-            self.texture_coordinates.flat_map(|t| {
-                vec![t.0.to_le_bytes(), t.1.to_le_bytes()]
-                    .iter()
-                    .flatten()
-                    .collect()
-            }),
-            self.vertex_normals.flat_map(|v| {
-                vec![v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()]
-                    .iter()
-                    .flatten()
-                    .collect()
-            }),
-            self.vertex_colors.flat_map(|v| v.to_le_bytes()),
-            self.polygons.flat_map(|p| p.serialize()),
-            self.vertex_pieces.flat_map(|v| {
-                vec![v.0.to_le_bytes(), v.1.to_le_bytes()]
-                    .iter()
-                    .flatten()
-                    .collect()
-            }),
-            self.polygon_materials.flat_map(|p| {
-                vec![p.0.to_le_bytes(), p.1.to_le_bytes()]
-                    .iter()
-                    .flatten()
-                    .collect()
-            }),
-            self.vertex_materials.flat_map(|v| {
-                vec![v.0.to_le_bytes(), v.1.to_le_bytes()]
-                    .iter()
-                    .flatten()
-                    .collect()
-            }),
-            self.data9.flat_map(|d| d.serialize()),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.material_list_ref.serialize().to_le_bytes()[..],
+            &self.fragment3.serialize().to_le_bytes()[..],
+            &self.fragment4.serialize().to_le_bytes()[..],
+            &self.center.0.to_le_bytes()[..],
+            &self.center.1.to_le_bytes()[..],
+            &self.center.2.to_le_bytes()[..],
+            &self.params2.0.to_le_bytes()[..],
+            &self.params2.1.to_le_bytes()[..],
+            &self.params2.2.to_le_bytes()[..],
+            &self.max_distance.to_le_bytes()[..],
+            &self.min.0.to_le_bytes()[..],
+            &self.min.1.to_le_bytes()[..],
+            &self.min.2.to_le_bytes()[..],
+            &self.max.0.to_le_bytes()[..],
+            &self.max.1.to_le_bytes()[..],
+            &self.max.2.to_le_bytes()[..],
+            &self.position_count.to_le_bytes()[..],
+            &self.texture_coordinate_count.to_le_bytes()[..],
+            &self.normal_count.to_le_bytes()[..],
+            &self.color_count.to_le_bytes()[..],
+            &self.polygon_count.to_le_bytes()[..],
+            &self.vertex_piece_count.to_le_bytes()[..],
+            &self.polygon_material_count.to_le_bytes()[..],
+            &self.vertex_material_count.to_le_bytes()[..],
+            &self.size9.to_le_bytes()[..],
+            &self.scale.to_le_bytes()[..],
+            &self
+                .positions
+                .iter()
+                .flat_map(|p| [p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes()].concat())
+                .collect::<Vec<_>>()[..],
+            &self
+                .texture_coordinates
+                .iter()
+                .flat_map(|t| [t.0.to_le_bytes(), t.1.to_le_bytes()].concat())
+                .collect::<Vec<_>>()[..],
+            &self
+                .vertex_normals
+                .iter()
+                .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()].concat())
+                .collect::<Vec<_>>()[..],
+            &self
+                .vertex_colors
+                .iter()
+                .flat_map(|v| v.to_le_bytes())
+                .collect::<Vec<_>>()[..],
+            &self
+                .polygons
+                .iter()
+                .flat_map(|p| p.serialize())
+                .collect::<Vec<_>>()[..],
+            &self
+                .vertex_pieces
+                .iter()
+                .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes()].concat())
+                .collect::<Vec<_>>()[..],
+            &self
+                .polygon_materials
+                .iter()
+                .flat_map(|p| [p.0.to_le_bytes(), p.1.to_le_bytes()].concat())
+                .collect::<Vec<_>>()[..],
+            &self
+                .vertex_materials
+                .iter()
+                .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes()].concat())
+                .collect::<Vec<_>>()[..],
+            &self
+                .data9
+                .iter()
+                .flat_map(|d| d.serialize())
+                .collect::<Vec<_>>()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -401,18 +405,13 @@ impl MeshFragmentPolygonEntry {
     }
 
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.vertex_indexes.flat_map(|v| {
-                vec![v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()]
-                    .iter()
-                    .flatten()
-                    .collect()
-            }),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.vertex_indexes.0.to_le_bytes()[..],
+            &self.vertex_indexes.1.to_le_bytes()[..],
+            &self.vertex_indexes.2.to_le_bytes()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 }
 
@@ -462,15 +461,13 @@ impl MeshFragmentData9Entry {
     }
 
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.index1.map_or(vec![], |i| i.to_le_bytes()),
-            self.index2.map_or(vec![], |i| i.to_le_bytes()),
-            self.offset.map_or(vec![], |o| o.to_le_bytes()),
-            self.param1.to_le_bytes(),
-            self.type_field.to_le_bytes(),
+        [
+            &self.index1.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
+            &self.index2.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
+            &self.offset.map_or(vec![], |o| o.to_le_bytes().to_vec())[..],
+            &self.param1.to_le_bytes()[..],
+            &self.type_field.to_le_bytes()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 }

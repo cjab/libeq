@@ -50,14 +50,12 @@ impl FragmentType for MobSkeletonPieceTrackReferenceFragment {
 
 impl Fragment for MobSkeletonPieceTrackReferenceFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.reference.serialize().to_le_bytes(),
-            self.flags.to_le_bytes(),
-            self.params1.map_or(vec![], |p| p.to_le_bytes()),
+        [
+            &self.reference.serialize().to_le_bytes()[..],
+            &self.flags.to_le_bytes()[..],
+            &self.params1.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

@@ -75,16 +75,22 @@ impl FragmentType for RegionFlagFragment {
 
 impl Fragment for RegionFlagFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.region_count.to_le_bytes(),
-            self.regions.iter().flat_map(|r| r.to_le_bytes()),
-            self.size2.to_le_bytes(),
-            self.data2.iter().flat_map(|d| d.to_le_bytes()),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.region_count.to_le_bytes()[..],
+            &self
+                .regions
+                .iter()
+                .flat_map(|r| r.to_le_bytes())
+                .collect::<Vec<_>>()[..],
+            &self.size2.to_le_bytes()[..],
+            &self
+                .data2
+                .iter()
+                .flat_map(|d| d.to_le_bytes())
+                .collect::<Vec<_>>()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

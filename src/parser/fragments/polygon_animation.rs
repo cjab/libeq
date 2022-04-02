@@ -79,29 +79,31 @@ impl FragmentType for PolygonAnimationFragment {
 
 impl Fragment for PolygonAnimationFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.params1.to_le_bytes(),
-            self.flags.to_le_bytes(),
-            self.size1.to_le_bytes(),
-            self.size2.to_le_bytes(),
-            self.params2.to_le_bytes(),
-            self.params3.to_le_bytes(),
-            self.entries1
-                .flat_map(|e| vec![e.0.to_le_bytes(), e.1.to_le_bytes(), e.2.to_le_bytes()])
-                .collect(),
-            self.entries2
+        [
+            &self.params1.to_le_bytes()[..],
+            &self.flags.to_le_bytes()[..],
+            &self.size1.to_le_bytes()[..],
+            &self.size2.to_le_bytes()[..],
+            &self.params2.to_le_bytes()[..],
+            &self.params3.to_le_bytes()[..],
+            &self
+                .entries1
+                .iter()
+                .flat_map(|e| [e.0.to_le_bytes(), e.1.to_le_bytes(), e.2.to_le_bytes()].concat())
+                .collect::<Vec<_>>()[..],
+            &self
+                .entries2
+                .iter()
                 .flat_map(|e| {
-                    vec![
-                        e.0.to_le_bytes(),
-                        e.1.flat_map(|x| vec![x.0.to_le_bytes(), x.1.to_le_bytes()])
-                            .collect(),
+                    [
+                        &e.0.to_le_bytes()[..],
+                        &e.1.iter().flat_map(|x| x.to_le_bytes()).collect::<Vec<_>>()[..],
                     ]
+                    .concat()
                 })
-                .collect(),
+                .collect::<Vec<_>>()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

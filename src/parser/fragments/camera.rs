@@ -180,37 +180,35 @@ impl FragmentType for CameraFragment {
 
 impl Fragment for CameraFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.params0.to_le_bytes(),
-            self.params1.to_le_bytes(),
-            self.params2.to_le_bytes(),
-            self.params3.to_le_bytes(),
-            self.params4.to_le_bytes(),
-            self.params5.to_le_bytes(),
-            self.params6.to_le_bytes(),
-            self.params7.to_le_bytes(),
-            self.params8.to_le_bytes(),
-            self.params9.to_le_bytes(),
-            self.params10.to_le_bytes(),
-            self.params11.to_le_bytes(),
-            self.params12.to_le_bytes(),
-            self.params13.to_le_bytes(),
-            self.params14.to_le_bytes(),
-            self.params15.to_le_bytes(),
-            self.params16.to_le_bytes(),
-            self.params17.to_le_bytes(),
-            self.params18.to_le_bytes(),
-            self.params19.to_le_bytes(),
-            self.params20.to_le_bytes(),
-            self.params21.to_le_bytes(),
-            self.params22.to_le_bytes(),
-            self.params23.to_le_bytes(),
-            self.params24.to_le_bytes(),
-            self.params25.to_le_bytes(),
+        [
+            &self.params0.to_le_bytes()[..],
+            &self.params1.to_le_bytes()[..],
+            &self.params2.to_le_bytes()[..],
+            &self.params3.to_le_bytes()[..],
+            &self.params4.to_le_bytes()[..],
+            &self.params5.to_le_bytes()[..],
+            &self.params6.to_le_bytes()[..],
+            &self.params7.to_le_bytes()[..],
+            &self.params8.to_le_bytes()[..],
+            &self.params9.to_le_bytes()[..],
+            &self.params10.to_le_bytes()[..],
+            &self.params11.to_le_bytes()[..],
+            &self.params12.to_le_bytes()[..],
+            &self.params13.to_le_bytes()[..],
+            &self.params14.to_le_bytes()[..],
+            &self.params15.to_le_bytes()[..],
+            &self.params16.to_le_bytes()[..],
+            &self.params17.to_le_bytes()[..],
+            &self.params18.to_le_bytes()[..],
+            &self.params19.to_le_bytes()[..],
+            &self.params20.to_le_bytes()[..],
+            &self.params21.to_le_bytes()[..],
+            &self.params22.to_le_bytes()[..],
+            &self.params23.to_le_bytes()[..],
+            &self.params24.to_le_bytes()[..],
+            &self.params25.to_le_bytes()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

@@ -186,40 +186,50 @@ impl SkeletonTrackSetFragmentEntry {
     }
 
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.name_reference.to_le_bytes(),
-            self.flags.to_le_bytes(),
-            self.fragments1.to_le_bytes(),
-            self.fragments2.to_le_bytes(),
-            self.data_entry_count(),
-            self.data_entries.flat_map(|d| d.to_le_bytes()),
+        [
+            &self.name_reference.to_le_bytes()[..],
+            &self.flags.to_le_bytes()[..],
+            &self.fragment1.to_le_bytes()[..],
+            &self.fragment2.to_le_bytes()[..],
+            &self.data_entry_count.to_le_bytes()[..],
+            &self
+                .data_entries
+                .iter()
+                .flat_map(|d| d.to_le_bytes())
+                .collect::<Vec<_>>()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 }
 
 impl Fragment for SkeletonTrackSetFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.entry_count.to_le_bytes(),
-            self.fragment.to_le_bytes(),
-            self.unknown_params1.map_or(vec![], |p| {
-                vec![p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes()]
-            }),
-            self.unknown_params2.map_or(vec![], |p| p.to_le_bytes()),
-            self.entries.flat_map(|e| e.serialize()),
-            self.size2.map_or(vec![], |p| p.to_le_bytes()),
-            self.fragment3
-                .map_or(vec![], |f| f.flat_map(|x| x.to_le_bytes())),
-            self.data3
-                .map_or(vec![], |d| d.flat_map(|x| x.to_le_bytes())),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.entry_count.to_le_bytes()[..],
+            &self.fragment.to_le_bytes()[..],
+            &self.unknown_params1.map_or(vec![], |p| {
+                [p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes()].concat()
+            })[..],
+            &self
+                .unknown_params2
+                .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self
+                .entries
+                .iter()
+                .flat_map(|e| e.serialize())
+                .collect::<Vec<_>>()[..],
+            &self.size2.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self
+                .fragment3
+                .as_ref()
+                .map_or(vec![], |f| f.iter().flat_map(|x| x.to_le_bytes()).collect())[..],
+            &self
+                .data3
+                .as_ref()
+                .map_or(vec![], |d| d.iter().flat_map(|x| x.to_le_bytes()).collect())[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

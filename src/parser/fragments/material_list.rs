@@ -42,14 +42,16 @@ impl FragmentType for MaterialListFragment {
 
 impl Fragment for MaterialListFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.size1.to_le_bytes(),
-            self.fragments.flat_map(|f| f.serialize().to_le_bytes()),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.size1.to_le_bytes()[..],
+            &self
+                .fragments
+                .iter()
+                .flat_map(|f| f.serialize().to_le_bytes())
+                .collect::<Vec<_>>()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

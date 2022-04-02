@@ -153,23 +153,20 @@ impl FragmentType for MobSkeletonPieceTrackFragment {
 
 impl Fragment for MobSkeletonPieceTrackFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.size.to_le_bytes(),
-            self.rotate_denominator.to_le_bytes(),
-            self.rotate_x_numerator(),
-            self.rotate_y_numerator(),
-            self.rotate_z_numerator(),
-            self.shift_x_numerator(),
-            self.shift_y_numerator(),
-            self.shift_z_numerator(),
-            self.shift_denominator(),
-            self.data2
-                .map_or(vec![], |d| d.flat_map(|x| x.to_le_bytes())),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.size.to_le_bytes()[..],
+            &self.rotate_denominator.to_le_bytes()[..],
+            &self.rotate_x_numerator.to_le_bytes()[..],
+            &self.rotate_y_numerator.to_le_bytes()[..],
+            &self.rotate_z_numerator.to_le_bytes()[..],
+            &self.shift_x_numerator.to_le_bytes()[..],
+            &self.shift_y_numerator.to_le_bytes()[..],
+            &self.shift_z_numerator.to_le_bytes()[..],
+            &self.shift_denominator.to_le_bytes()[..],
+            &self.data2.as_ref().map_or(vec![], |d| d.to_vec())[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

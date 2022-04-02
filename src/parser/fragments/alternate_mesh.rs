@@ -259,52 +259,59 @@ impl Fragment for AlternateMeshFragment {
         let vertex_pieces = self
             .vertex_pieces
             .iter()
-            .flat_map(|v| vec![v.0.to_le_bytes(), v.1.to_le_bytes()])
+            .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes()].concat())
             .collect::<Vec<_>>();
         let vertex_materials = self
             .vertex_materials
             .iter()
             .flat_map(|v| {
-                vec![
-                    v.0.to_le_bytes(),
-                    v.1.to_le_bytes(),
-                    v.2.to_le_bytes(),
-                    v.3.to_le_bytes(),
-                    v.4.to_le_bytes(),
+                [
+                    &v.0.to_le_bytes()[..],
+                    &v.1.to_le_bytes()[..],
+                    &v.2.to_le_bytes()[..],
+                    &v.3.to_le_bytes()[..],
+                    &v.4.to_le_bytes()[..],
                 ]
+                .concat()
             })
             .collect::<Vec<_>>();
 
-        vec![
-            self.flags.to_le_bytes(),
-            self.vertex_count.to_le_bytes(),
-            self.tex_coords_count.to_le_bytes(),
-            self.size4.to_le_bytes(),
-            self.polygon_count.to_le_bytes(),
-            self.size6.to_le_bytes(),
-            self.vertex_piece_count.to_le_bytes(),
-            self.fragment1.serialize().to_le_bytes(),
-            self.fragment2.to_le_bytes(),
-            self.fragment3.to_le_bytes(),
-            self.center.0.to_le_bytes(),
-            self.center.1.to_le_bytes(),
-            self.center.2.to_le_bytes(),
-            self.params2.to_le_bytes(),
-            vertices,
-            texture_coords,
-            normals,
-            self.data4.flat_map(|d| d.to_le_bytes()),
-            polygons,
-            data6,
-            vertex_pieces,
-            self.size8.to_le_bytes(),
-            self.data8.flat_map(|d| d.to_bytes()),
-            self.vertex_material_count.to_le_bytes(),
-            vertex_materials,
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.vertex_count.to_le_bytes()[..],
+            &self.tex_coords_count.to_le_bytes()[..],
+            &self.size4.to_le_bytes()[..],
+            &self.polygon_count.to_le_bytes()[..],
+            &self.size6.to_le_bytes()[..],
+            &self.vertex_piece_count.to_le_bytes()[..],
+            &self.fragment1.serialize().to_le_bytes()[..],
+            &self.fragment2.to_le_bytes()[..],
+            &self.fragment3.to_le_bytes()[..],
+            &self.center.0.to_le_bytes()[..],
+            &self.center.1.to_le_bytes()[..],
+            &self.center.2.to_le_bytes()[..],
+            &self.params2.to_le_bytes()[..],
+            &vertices[..],
+            &texture_coords[..],
+            &normals[..],
+            &self
+                .data4
+                .iter()
+                .flat_map(|d| d.to_le_bytes())
+                .collect::<Vec<_>>()[..],
+            &polygons[..],
+            &data6[..],
+            &vertex_pieces[..],
+            &self.size8.to_le_bytes()[..],
+            &self
+                .data8
+                .iter()
+                .flat_map(|d| d.to_le_bytes())
+                .collect::<Vec<_>>()[..],
+            &self.vertex_material_count.to_le_bytes()[..],
+            &vertex_materials[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -327,19 +334,17 @@ pub struct AlternateMeshFragmentPolygonEntry {
 
 impl AlternateMeshFragmentPolygonEntry {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.data.0.to_le_bytes(),
-            self.data.1.to_le_bytes(),
-            self.data.2.to_le_bytes(),
-            self.data.3.to_le_bytes(),
-            self.vertex_indexes.0.to_le_bytes(),
-            self.vertex_indexes.1.to_le_bytes(),
-            self.vertex_indexes.2.to_le_bytes(),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.data.0.to_le_bytes()[..],
+            &self.data.1.to_le_bytes()[..],
+            &self.data.2.to_le_bytes()[..],
+            &self.data.3.to_le_bytes()[..],
+            &self.vertex_indexes.0.to_le_bytes()[..],
+            &self.vertex_indexes.1.to_le_bytes()[..],
+            &self.vertex_indexes.2.to_le_bytes()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 }
 
@@ -391,16 +396,14 @@ pub struct AlternateMeshFragmentData6Entry {
 
 impl AlternateMeshFragmentData6Entry {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self._type.to_le_bytes(),
-            self.vertex_index.to_le_bytes(),
-            self.offset.to_le_bytes(),
-            self.param1.to_le_bytes(),
-            self.param2.to_le_bytes(),
+        [
+            &self._type.to_le_bytes()[..],
+            &self.vertex_index.to_le_bytes()[..],
+            &self.offset.to_le_bytes()[..],
+            &self.param1.to_le_bytes()[..],
+            &self.param2.to_le_bytes()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 }
 

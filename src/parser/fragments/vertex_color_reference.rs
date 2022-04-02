@@ -31,13 +31,11 @@ impl FragmentType for VertexColorReferenceFragment {
 
 impl Fragment for VertexColorReferenceFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.reference.serialize().to_le_bytes(),
-            self.flags.to_le_bytes(),
+        [
+            &self.reference.serialize().to_le_bytes()[..],
+            &self.flags.to_le_bytes()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

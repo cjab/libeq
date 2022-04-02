@@ -118,25 +118,38 @@ impl FragmentType for ModelFragment {
 
 impl Fragment for ModelFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.name_fragment.to_le_bytes(),
-            self.unknown_params2_count.to_le_bytes(),
-            self.fragment_count.to_le_bytes(),
-            self.unknown_fragment.to_le_bytes(),
-            self.unknown_params1.map_or(vec![], |p| p.to_le_bytes()),
-            self.unknown_params2
-                .map_or(vec![], |p| p.flat_map(|x| x.to_le_bytes())),
-            self.unknown_data_count.to_le_bytes(),
-            self.unknown_data
-                .flat_map(|d| vec![d.0.to_le_bytes(), d.1.to_le_bytes()]),
-            self.fragments.flat_map(|f| f.to_le_bytes()),
-            self.name_size.to_le_bytes(),
-            self.name.flat_map(|n| n.to_le_bytes()),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.name_fragment.to_le_bytes()[..],
+            &self.unknown_params2_count.to_le_bytes()[..],
+            &self.fragment_count.to_le_bytes()[..],
+            &self.unknown_fragment.to_le_bytes()[..],
+            &self
+                .unknown_params1
+                .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self
+                .unknown_params2
+                .as_ref()
+                .map_or(vec![], |p| p.iter().flat_map(|x| x.to_le_bytes()).collect())[..],
+            &self.unknown_data_count.to_le_bytes()[..],
+            &self
+                .unknown_data
+                .iter()
+                .flat_map(|d| [d.0.to_le_bytes(), d.1.to_le_bytes()].concat())
+                .collect::<Vec<_>>()[..],
+            &self
+                .fragments
+                .iter()
+                .flat_map(|f| f.to_le_bytes())
+                .collect::<Vec<_>>()[..],
+            &self.name_size.to_le_bytes()[..],
+            &self
+                .name
+                .iter()
+                .flat_map(|n| n.to_le_bytes())
+                .collect::<Vec<_>>()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

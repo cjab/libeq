@@ -13,7 +13,7 @@ use nom::IResult;
 pub use fragments::*;
 pub use strings::{decode_string, StringHash, StringReference};
 
-#[derive(Debug)]
+//#[derive(Debug)]
 pub struct WldDoc {
     header: WldHeader,
     pub strings: StringHash,
@@ -29,9 +29,9 @@ impl WldDoc {
         ))(i)?;
         let strings = StringHash::new(string_hash_data);
 
-        let fragments: Vec<Box<dyn Any>> = fragment_headers
+        let fragments = fragment_headers
             .iter()
-            .map(FragmentHeader::parse_body)
+            .map(|h| h.parse_body(&strings))
             .collect();
 
         Ok((
@@ -48,83 +48,80 @@ impl WldDoc {
         [
             self.header.serialize(),
             self.strings.serialize(),
-            self.fragment_headers
-                .iter()
-                .flat_map(|f| f.serialize())
-                .collect(),
+            self.fragments.iter().flat_map(|f| f.serialize()).collect(),
         ]
         .concat()
     }
 
-    /// Get a fragment given a fragment reference.
-    pub fn get<T: Fragment<T = T> + Debug>(
-        &self,
-        fragment_ref: &FragmentRef<T>,
-    ) -> Option<(Option<&str>, T)> {
-        match fragment_ref {
-            FragmentRef::Name(_, _) => self.get_by_name_ref(fragment_ref),
-            FragmentRef::Index(_, _) => self.get_by_index_ref(fragment_ref),
-        }
-    }
+    ///// Get a fragment given a fragment reference.
+    //    pub fn get<T: Fragment<T = T> + Debug>(
+    //        &self,
+    //        fragment_ref: &FragmentRef<T>,
+    //    ) -> Option<(Option<&str>, T)> {
+    //        match fragment_ref {
+    //            FragmentRef::Name(_, _) => self.get_by_name_ref(fragment_ref),
+    //            FragmentRef::Index(_, _) => self.get_by_index_ref(fragment_ref),
+    //        }
+    //    }
+    //
+    //    fn get_by_index_ref<T: Fragment<T = T> + Debug>(
+    //        &self,
+    //        fragment_ref: &FragmentRef<T>,
+    //    ) -> Option<(Option<&str>, T)> {
+    //        let idx = if let FragmentRef::Index(idx, _) = fragment_ref {
+    //            idx
+    //        } else {
+    //            return None;
+    //        };
+    //
+    //        let fragment = self.fragment_headers.get((idx - 1) as usize)?;
+    //        let name = fragment.name_reference.and_then(|r| self.strings.get(r));
+    //        T::parse(&fragment.field_data).map(|r| (name, r.1)).ok()
+    //    }
+    //
+    //    fn get_by_name_ref<T: Fragment<T = T> + Debug>(
+    //        &self,
+    //        fragment_ref: &FragmentRef<T>,
+    //    ) -> Option<(Option<&str>, T)> {
+    //        let name_ref = if let FragmentRef::Name(name_ref, _) = fragment_ref {
+    //            *name_ref
+    //        } else {
+    //            return None;
+    //        };
+    //
+    //        if let Some(target_name) = self.strings.get(name_ref) {
+    //            self.fragment_headers
+    //                .iter()
+    //                .find(|f| f.name(self).map_or(false, |name| name == target_name))
+    //                .and_then(|f| {
+    //                    let name = f.name_reference.and_then(|r| self.strings.get(r));
+    //                    T::parse(&f.field_data).map(|r| (name, r.1)).ok()
+    //                })
+    //        } else {
+    //            None
+    //        }
+    //    }
 
-    fn get_by_index_ref<T: Fragment<T = T> + Debug>(
-        &self,
-        fragment_ref: &FragmentRef<T>,
-    ) -> Option<(Option<&str>, T)> {
-        let idx = if let FragmentRef::Index(idx, _) = fragment_ref {
-            idx
-        } else {
-            return None;
-        };
-
-        let fragment = self.fragment_headers.get((idx - 1) as usize)?;
-        let name = fragment.name_reference.and_then(|r| self.strings.get(r));
-        T::parse(&fragment.field_data).map(|r| (name, r.1)).ok()
-    }
-
-    fn get_by_name_ref<T: Fragment<T = T> + Debug>(
-        &self,
-        fragment_ref: &FragmentRef<T>,
-    ) -> Option<(Option<&str>, T)> {
-        let name_ref = if let FragmentRef::Name(name_ref, _) = fragment_ref {
-            *name_ref
-        } else {
-            return None;
-        };
-
-        if let Some(target_name) = self.strings.get(name_ref) {
-            self.fragment_headers
-                .iter()
-                .find(|f| f.name(self).map_or(false, |name| name == target_name))
-                .and_then(|f| {
-                    let name = f.name_reference.and_then(|r| self.strings.get(r));
-                    T::parse(&f.field_data).map(|r| (name, r.1)).ok()
-                })
-        } else {
-            None
-        }
-    }
-
-    /// Iterate over all mesh fragments in the wld file.
-    pub(super) fn meshes(&self) -> impl Iterator<Item = (Option<&str>, MeshFragment)> + '_ {
-        self.fragment_iter::<MeshFragment>()
-    }
-
-    /// Iterate over all material fragments in the wld file.
-    pub(super) fn materials(&self) -> impl Iterator<Item = (Option<&str>, MaterialFragment)> + '_ {
-        self.fragment_iter::<MaterialFragment>()
-    }
-
-    pub fn fragment_iter<T: Fragment<T = T> + Debug>(
-        &self,
-    ) -> impl Iterator<Item = (Option<&str>, T)> + '_ {
-        self.fragment_headers
-            .iter()
-            .enumerate()
-            .filter(move |(_, f)| f.fragment_type == T::TYPE_ID)
-            .map(|(i, _)| FragmentRef::new((i + 1) as i32))
-            .filter_map(move |r| self.get(&r))
-    }
+    //    /// Iterate over all mesh fragments in the wld file.
+    //    pub(super) fn meshes(&self) -> impl Iterator<Item = (Option<&str>, MeshFragment)> + '_ {
+    //        self.fragment_iter::<MeshFragment>()
+    //    }
+    //
+    //    /// Iterate over all material fragments in the wld file.
+    //    pub(super) fn materials(&self) -> impl Iterator<Item = (Option<&str>, MaterialFragment)> + '_ {
+    //        self.fragment_iter::<MaterialFragment>()
+    //    }
+    //
+    //    pub fn fragment_iter<T: Fragment<T = T> + Debug>(
+    //        &self,
+    //    ) -> impl Iterator<Item = (Option<&str>, T)> + '_ {
+    //        self.fragment_headers
+    //            .iter()
+    //            .enumerate()
+    //            .filter(move |(_, f)| f.fragment_type == T::TYPE_ID)
+    //            .map(|(i, _)| FragmentRef::new((i + 1) as i32))
+    //            .filter_map(move |r| self.get(&r))
+    //    }
 }
 
 /// This header is present at the beginning of every .wld file.
@@ -246,8 +243,8 @@ impl<'a> FragmentHeader<'a> {
         ))
     }
 
-    fn parse_body(&self, strings: &'a StringHash) -> (Option<&'a str>, Box<dyn Any>) {
-        let fragment: Box<dyn Any> = match self.fragment_type {
+    fn parse_body(&self, strings: &'a StringHash) -> Box<dyn Fragment> {
+        match self.fragment_type {
             AlternateMeshFragment::TYPE_ID => {
                 Box::new(AlternateMeshFragment::parse(&self.field_data).unwrap().1)
             }
@@ -360,8 +357,7 @@ impl<'a> FragmentHeader<'a> {
                 Box::new(TextureImagesFragment::parse(&self.field_data).unwrap().1)
             }
             _ => panic!("Unknown fragment type"),
-        };
-        (self.name(&strings), fragment)
+        }
     }
 
     pub fn serialize(&self) -> Vec<u8> {

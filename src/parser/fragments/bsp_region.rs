@@ -148,31 +148,47 @@ impl FragmentType for BspRegionFragment {
 
 impl Fragment for BspRegionFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.fragment1.serialize().to_le_bytes(),
-            self.size1.to_le_bytes(),
-            self.size2.to_le_bytes(),
-            self.params1.to_le_bytes(),
-            self.size3.to_le_bytes(),
-            self.size4.to_le_bytes(),
-            self.params2.to_le_bytes(),
-            self.size5.to_le_bytes(),
-            self.pvs_count.to_le_bytes(),
-            self.data2,
-            self.data3.flat_map(|d| d.serialize()),
-            self.data4.flat_map(|d| d.serialize()),
-            self.data5.flat_map(|d| d.serialize()),
-            self.pvs.flat_map(|p| p.serialize()),
-            self.size7.to_le_bytes(),
-            self.name7,
-            self.fragment2.serialize().to_le_bytes(),
-            self.mesh_reference
-                .map_or(vec![], |m| m.serialize().to_le_bytes()),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.fragment1.serialize().to_le_bytes()[..],
+            &self.size1.to_le_bytes()[..],
+            &self.size2.to_le_bytes()[..],
+            &self.params1.to_le_bytes()[..],
+            &self.size3.to_le_bytes()[..],
+            &self.size4.to_le_bytes()[..],
+            &self.params2.to_le_bytes()[..],
+            &self.size5.to_le_bytes()[..],
+            &self.pvs_count.to_le_bytes()[..],
+            &self.data2[..],
+            &self
+                .data3
+                .iter()
+                .flat_map(|d| d.serialize())
+                .collect::<Vec<_>>()[..],
+            &self
+                .data4
+                .iter()
+                .flat_map(|d| d.serialize())
+                .collect::<Vec<_>>()[..],
+            &self
+                .data5
+                .iter()
+                .flat_map(|d| d.serialize())
+                .collect::<Vec<_>>()[..],
+            &self
+                .pvs
+                .iter()
+                .flat_map(|p| p.serialize())
+                .collect::<Vec<_>>()[..],
+            &self.size7.to_le_bytes()[..],
+            &self.name7,
+            &self.fragment2.serialize().to_le_bytes()[..],
+            &self
+                .mesh_reference
+                .as_ref()
+                .map_or(vec![], |m| m.serialize().to_le_bytes().to_vec())[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -228,23 +244,20 @@ impl BspRegionFragmentData3Entry {
     }
 
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.size1.to_le_bytes(),
-            self.data1.flat_map(|d| d.to_le_bytes()),
-            self.params1.map_or(vec![], |p| {
-                p.flat_map(|x| {
-                    vec![x.0.to_le_bytes(), x.1.to_le_bytes(), x.2.to_le_bytes()]
-                        .iter()
-                        .flatten()
-                        .collect()
-                })
-            }),
-            self.params2.map_or(vec![], |p| p.to_le_bytes()),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.size1.to_le_bytes()[..],
+            &self
+                .data1
+                .iter()
+                .flat_map(|d| d.to_le_bytes())
+                .collect::<Vec<_>>()[..],
+            &self.params1.map_or(vec![], |p| {
+                [p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes()].concat()
+            })[..],
+            &self.params2.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 }
 
@@ -312,18 +325,16 @@ impl BspRegionFragmentData4Entry {
     }
 
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.params1.to_le_bytes(),
-            self.type_field.to_le_bytes(),
-            self.params2a.map_or(vec![], |p| p.to_le_bytes()),
-            self.params2b.map_or(vec![], |p| p.to_le_bytes()),
-            self.name_size.to_le_bytes(),
-            self.name.as_bytes(),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.params1.to_le_bytes()[..],
+            &self.type_field.to_le_bytes()[..],
+            &self.params2a.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.params2b.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.name_size.to_le_bytes()[..],
+            &self.name.as_bytes()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 }
 
@@ -369,18 +380,16 @@ impl BspRegionFragmentData5Entry {
     }
 
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.params1.0.to_le_bytes(),
-            self.params1.1.to_le_bytes(),
-            self.params1.2.to_le_bytes(),
-            self.params2.to_le_bytes(),
-            self.params3.to_le_bytes(),
-            self.params4.to_le_bytes(),
-            self.params5.to_le_bytes(),
+        [
+            &self.params1.0.to_le_bytes()[..],
+            &self.params1.1.to_le_bytes()[..],
+            &self.params1.2.to_le_bytes()[..],
+            &self.params2.to_le_bytes()[..],
+            &self.params3.to_le_bytes()[..],
+            &self.params4.to_le_bytes()[..],
+            &self.params5.to_le_bytes()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 }
 
@@ -438,9 +447,6 @@ impl BspRegionFragmentPVS {
     }
 
     fn serialize(&self) -> Vec<u8> {
-        vec![self.size.to_le_bytes(), self.data]
-            .iter()
-            .flatten()
-            .collect()
+        [&self.size.to_le_bytes()[..], &self.data[..]].concat()
     }
 }
