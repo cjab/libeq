@@ -121,24 +121,22 @@ impl FragmentType for ObjectLocationFragment {
 
 impl Fragment for ObjectLocationFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.fragment1.to_le_bytes(),
-            self.x.to_le_bytes(),
-            self.y.to_le_bytes(),
-            self.z.to_le_bytes(),
-            self.rotate_z.to_le_bytes(),
-            self.rotate_y.to_le_bytes(),
-            self.rotate_x.to_le_bytes(),
-            self.params1.to_le_bytes(),
-            self.scale_y.to_le_bytes(),
-            self.scale_x.to_le_bytes(),
-            self.fragment2.to_le_bytes(),
-            self.params2.to_le_bytes(),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.fragment1.to_le_bytes()[..],
+            &self.x.to_le_bytes()[..],
+            &self.y.to_le_bytes()[..],
+            &self.z.to_le_bytes()[..],
+            &self.rotate_z.to_le_bytes()[..],
+            &self.rotate_y.to_le_bytes()[..],
+            &self.rotate_x.to_le_bytes()[..],
+            &self.params1.to_le_bytes()[..],
+            &self.scale_y.to_le_bytes()[..],
+            &self.scale_x.to_le_bytes()[..],
+            &self.fragment2.to_le_bytes()[..],
+            &self.params2.to_le_bytes()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

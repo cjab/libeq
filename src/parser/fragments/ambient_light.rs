@@ -52,15 +52,17 @@ impl FragmentType for AmbientLightFragment {
 
 impl Fragment for AmbientLightFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.reference.serialize().to_le_bytes(),
-            self.flags.to_le_bytes(),
-            self.region_count.to_le_bytes(),
-            self.regions.iter().flat_map(|r| r.to_le_bytes()).collect(),
+        [
+            &self.reference.serialize().to_le_bytes()[..],
+            &self.flags.to_le_bytes()[..],
+            &self.region_count.to_le_bytes()[..],
+            &self
+                .regions
+                .iter()
+                .flat_map(|r| r.to_le_bytes())
+                .collect::<Vec<_>>()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

@@ -91,7 +91,7 @@ impl<T> FragmentRef<T> {
     pub fn serialize(&self) -> i32 {
         match self {
             Self::Name(string_ref, _) => string_ref.serialize(),
-            Self::Index(idx, _) => idx as i32,
+            Self::Index(idx, _) => *idx as i32,
         }
     }
 }

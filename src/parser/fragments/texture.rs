@@ -64,17 +64,20 @@ impl FragmentType for TextureFragment {
 
 impl Fragment for TextureFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.serialize(),
-            self.frame_count.to_le_bytes(),
-            self.current_frame.map_or(vec![], |c| c.to_le_bytes()),
-            self.sleep.map_or(vec![], |s| s.to_le_bytes()),
-            self.frame_references
-                .flat_map(|f| f.serialize().to_le_bytes()),
+        [
+            &self.flags.serialize()[..],
+            &self.frame_count.to_le_bytes()[..],
+            &self
+                .current_frame
+                .map_or(vec![], |c| c.to_le_bytes().to_vec())[..],
+            &self.sleep.map_or(vec![], |s| s.to_le_bytes().to_vec())[..],
+            &self
+                .frame_references
+                .iter()
+                .flat_map(|f| f.serialize().to_le_bytes())
+                .collect::<Vec<_>>()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -97,7 +100,7 @@ impl TextureFragmentFlags {
     }
 
     fn serialize(&self) -> Vec<u8> {
-        self.0.to_le_bytes()
+        self.0.to_le_bytes().to_vec()
     }
 
     pub fn skip_frames(&self) -> bool {

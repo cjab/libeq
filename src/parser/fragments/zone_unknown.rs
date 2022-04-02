@@ -22,7 +22,7 @@ impl FragmentType for ZoneUnknownFragment {
 
 impl Fragment for ZoneUnknownFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![].iter().flatten().collect()
+        vec![]
     }
 
     fn as_any(&self) -> &dyn Any {

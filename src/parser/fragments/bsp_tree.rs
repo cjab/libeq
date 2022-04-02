@@ -34,13 +34,15 @@ impl FragmentType for BspTreeFragment {
 
 impl Fragment for BspTreeFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.size1.to_le_bytes(),
-            self.entries.flat_map(|e| e.serialize()),
+        [
+            &self.size1.to_le_bytes()[..],
+            &self
+                .entries
+                .iter()
+                .flat_map(|e| e.serialize())
+                .collect::<Vec<_>>()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -91,20 +93,15 @@ impl BspTreeFragmentEntry {
     }
 
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.normal.flat_map(|n| {
-                vec![n.0.to_le_bytes(), n.1.to_le_bytes(), n.2.to_le_bytes()]
-                    .iter()
-                    .flatten()
-                    .collect()
-            }),
-            self.split_distance.to_le_bytes(),
-            self.region.serialize().to_le_bytes(),
-            self.nodes.0.serialize.to_le_bytes(),
-            self.nodes.1.serialize.to_le_bytes(),
+        [
+            &self.normal.0.to_le_bytes()[..],
+            &self.normal.1.to_le_bytes()[..],
+            &self.normal.2.to_le_bytes()[..],
+            &self.split_distance.to_le_bytes()[..],
+            &self.region.serialize().to_le_bytes()[..],
+            &self.nodes.0.serialize().to_le_bytes()[..],
+            &self.nodes.1.serialize().to_le_bytes()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 }

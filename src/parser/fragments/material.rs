@@ -73,23 +73,18 @@ impl FragmentType for MaterialFragment {
 
 impl Fragment for MaterialFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.params1.to_le_bytes(),
-            self.params2.to_le_bytes(),
-            self.params3.0.to_le_bytes(),
-            self.params3.1.to_le_bytes(),
-            self.reference.serialize().to_le_bytes(),
-            self.pair.map_or(vec![], |p| {
-                vec![p.0.to_le_bytes(), p.1.to_le_bytes()]
-                    .iter()
-                    .flatten()
-                    .collect()
-            }),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.params1.to_le_bytes()[..],
+            &self.params2.to_le_bytes()[..],
+            &self.params3.0.to_le_bytes()[..],
+            &self.params3.1.to_le_bytes()[..],
+            &self.reference.serialize().to_le_bytes()[..],
+            &self
+                .pair
+                .map_or(vec![], |p| [p.0.to_le_bytes(), p.1.to_le_bytes()].concat())[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

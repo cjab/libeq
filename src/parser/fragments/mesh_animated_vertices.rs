@@ -82,19 +82,26 @@ impl FragmentType for MeshAnimatedVerticesFragment {
 
 impl Fragment for MeshAnimatedVerticesFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.vertex_count.to_le_bytes(),
-            self.frame_count.to_le_bytes(),
-            self.param1.to_le_bytes(),
-            self.param2.to_le_bytes(),
-            self.scale.to_le_bytes(),
-            self.frames.flat_map(|f| f.to_le_bytes()).collect(),
-            self.vertices
-                .flat_map(|v| vec![v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()])
-                .collect(),
-            self.size6.to_le_bytes(),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.vertex_count.to_le_bytes()[..],
+            &self.frame_count.to_le_bytes()[..],
+            &self.param1.to_le_bytes()[..],
+            &self.param2.to_le_bytes()[..],
+            &self.scale.to_le_bytes()[..],
+            &self
+                .frames
+                .iter()
+                .flat_map(|f| f.to_le_bytes())
+                .collect::<Vec<_>>()[..],
+            &self
+                .vertices
+                .iter()
+                .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()].concat())
+                .collect::<Vec<_>>()[..],
+            &self.size6.to_le_bytes()[..],
         ]
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

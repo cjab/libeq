@@ -88,19 +88,17 @@ impl FragmentType for LightSourceFragment {
 
 impl Fragment for LightSourceFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.flags.to_le_bytes(),
-            self.params2.to_le_bytes(),
-            self.params3a.map_or(vec![], |p| p.to_le_bytes()),
-            self.params3b.map_or(vec![], |p| p.to_le_bytes()),
-            self.params4.map_or(vec![], |p| p.to_le_bytes()),
-            self.red.map_or(vec![], |p| p.to_le_bytes()),
-            self.green.map_or(vec![], |p| p.to_le_bytes()),
-            self.blue.map_or(vec![], |p| p.to_le_bytes()),
+        [
+            &self.flags.to_le_bytes()[..],
+            &self.params2.to_le_bytes()[..],
+            &self.params3a.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.params3b.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.params4.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.red.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.green.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.blue.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

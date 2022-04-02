@@ -66,22 +66,25 @@ impl TextureImagesFragmentEntry {
     }
 
     fn serialize(&self) -> Vec<u8> {
-        vec![self.name_length.to_le_bytes(), self.file_name.to_le_bytes()]
-            .iter()
-            .flatten()
-            .collect()
+        [
+            &self.name_length.to_le_bytes()[..],
+            &self.file_name.bytes().collect::<Vec<_>>()[..],
+        ]
+        .concat()
     }
 }
 
 impl Fragment for TextureImagesFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![
-            self.size1.to_le_bytes(),
-            self.entries.flat_map(|e| e.serialize()),
+        [
+            &self.size1.to_le_bytes()[..],
+            &self
+                .entries
+                .iter()
+                .flat_map(|e| e.serialize())
+                .collect::<Vec<_>>()[..],
         ]
-        .iter()
-        .flatten()
-        .collect()
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

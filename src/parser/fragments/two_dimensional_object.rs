@@ -257,9 +257,51 @@ impl FragmentType for TwoDimensionalObjectFragment {
 }
 
 impl Fragment for TwoDimensionalObjectFragment {
-    // TODO: Serialize!
     fn serialize(&self) -> Vec<u8> {
-        vec![].iter().flatten().collect()
+        [
+            &self.flags.serialize()[..],
+            &self.num_frames.to_le_bytes()[..],
+            &self.num_pitches.to_le_bytes()[..],
+            &self.sprite_size.0.to_le_bytes()[..],
+            &self.sprite_size.1.to_le_bytes()[..],
+            &self.sphere_fragment.to_le_bytes()[..],
+            &self
+                .depth_scale
+                .map_or(vec![], |d| d.to_le_bytes().to_vec())[..],
+            &self.center_offset.map_or(vec![], |c| {
+                [c.0.to_le_bytes(), c.1.to_le_bytes(), c.2.to_le_bytes()].concat()
+            })[..],
+            &self
+                .bounding_radius
+                .map_or(vec![], |b| b.to_le_bytes().to_vec())[..],
+            &self
+                .current_frame
+                .map_or(vec![], |c| c.to_le_bytes().to_vec())[..],
+            &self.sleep.map_or(vec![], |s| s.to_le_bytes().to_vec())[..],
+            &self
+                .pitches
+                .iter()
+                .flat_map(|p| p.serialize())
+                .collect::<Vec<_>>()[..],
+            &self.render_method.serialize()[..],
+            &self.render_flags.serialize()[..],
+            &self.pen.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.brightness.map_or(vec![], |b| b.to_le_bytes().to_vec())[..],
+            &self
+                .scaled_ambient
+                .map_or(vec![], |s| s.to_le_bytes().to_vec())[..],
+            &self
+                .params7_fragment
+                .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.uv_info.as_ref().map_or(vec![], |u| u.serialize())[..],
+            &self
+                .params7_size
+                .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.params7_data.as_ref().map_or(vec![], |p| {
+                p.iter().flat_map(|x| x.to_le_bytes().to_vec()).collect()
+            })[..],
+        ]
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -274,11 +316,7 @@ pub struct UvInfo {
     pub v_axis: (f32, f32, f32),
 }
 
-impl FragmentType for UvInfo {
-    type T = Self;
-
-    const TYPE_ID: u32 = 0x00;
-
+impl UvInfo {
     fn parse(input: &[u8]) -> IResult<&[u8], UvInfo> {
         let (remaining, (uv_origin, u_axis, v_axis)) = tuple((
             tuple((le_f32, le_f32, le_f32)),
@@ -294,6 +332,21 @@ impl FragmentType for UvInfo {
                 v_axis,
             },
         ))
+    }
+
+    fn serialize(&self) -> Vec<u8> {
+        [
+            &self.uv_origin.0.to_le_bytes()[..],
+            &self.uv_origin.1.to_le_bytes()[..],
+            &self.uv_origin.2.to_le_bytes()[..],
+            &self.u_axis.0.to_le_bytes()[..],
+            &self.u_axis.1.to_le_bytes()[..],
+            &self.u_axis.2.to_le_bytes()[..],
+            &self.v_axis.0.to_le_bytes()[..],
+            &self.v_axis.1.to_le_bytes()[..],
+            &self.v_axis.2.to_le_bytes()[..],
+        ]
+        .concat()
     }
 }
 
@@ -311,6 +364,10 @@ impl SpriteFlags {
     fn parse(input: &[u8]) -> IResult<&[u8], Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
+    }
+
+    fn serialize(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
     }
 
     pub fn has_center_offset(&self) -> bool {
@@ -345,6 +402,10 @@ impl RenderMethod {
     fn parse(input: &[u8]) -> IResult<&[u8], Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
+    }
+
+    fn serialize(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
     }
 
     pub fn draw_style(&self) -> DrawStyle {
@@ -444,6 +505,10 @@ impl RenderFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
+    fn serialize(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
+    }
+
     pub fn has_pen(&self) -> bool {
         self.0 & Self::HAS_PEN == Self::HAS_PEN
     }
@@ -510,6 +575,19 @@ impl SpritePitch {
             },
         ))
     }
+
+    fn serialize(&self) -> Vec<u8> {
+        [
+            &self.pitch_cap.to_le_bytes()[..],
+            &self.num_headings.to_le_bytes()[..],
+            &self
+                .headings
+                .iter()
+                .flat_map(|h| h.serialize())
+                .collect::<Vec<_>>()[..],
+        ]
+        .concat()
+    }
 }
 
 #[derive(Debug)]
@@ -539,5 +617,17 @@ impl SpriteHeading {
                 frames,
             },
         ))
+    }
+
+    fn serialize(&self) -> Vec<u8> {
+        [
+            &self.heading_cap.to_le_bytes()[..],
+            &self
+                .frames
+                .iter()
+                .flat_map(|h| h.to_le_bytes())
+                .collect::<Vec<_>>()[..],
+        ]
+        .concat()
     }
 }
