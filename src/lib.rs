@@ -305,13 +305,13 @@ impl<'a> Texture<'a> {
 //mod tests {
 //    use super::*;
 //
-//    //#[test]
-//    //fn it_works() {
-//    //    let wld_data = &include_bytes!("../fixtures/gfaydark.wld")[..];
-//    //    let wld = Wld::load(wld_data);
-//    //    let wld_doc = wld.0;
-//    //    println!("{:?}", wld_doc);
+//    #[test]
+//    fn it_works() {
+//        let wld_data = &include_bytes!("../fixtures/gfaydark_obj.wld")[..];
+//        let wld = Wld::load(wld_data);
+//        let wld_doc = wld.0;
+//        println!("{:?}", wld_doc);
 //
-//    //    assert_eq!(1, 1);
-//    //}
+//        assert_eq!(1, 1);
+//    }
 //}

@@ -435,3 +435,56 @@ impl AlternateMeshFragmentData6Entry {
         ))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
+        let frag = AlternateMeshFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-44));
+        assert_eq!(frag.flags, 0x1802);
+        assert_eq!(frag.vertex_count, 29);
+        assert_eq!(frag.tex_coords_count, 29);
+        assert_eq!(frag.normals_count, 29);
+        assert_eq!(frag.size4, 0);
+        assert_eq!(frag.polygon_count, 12);
+        assert_eq!(frag.size6, 64);
+        assert_eq!(frag.vertex_piece_count, 1);
+        assert_eq!(frag.fragment1, FragmentRef::new(5));
+        assert_eq!(frag.fragment2, 0);
+        assert_eq!(frag.fragment3, 0);
+        assert_eq!(frag.center, (0.0, 0.0, 0.0));
+        assert_eq!(frag.params2, 0);
+        assert_eq!(frag.vertices.len(), 29);
+        assert_eq!(frag.vertices[0], (0.0, 0.0, 0.0));
+        assert_eq!(frag.texture_coords.len(), 29);
+        assert_eq!(frag.texture_coords[0], (0.0, 0.0));
+        assert_eq!(frag.normals.len(), 29);
+        assert_eq!(frag.normals[0], (0.0, 0.0, 0.0));
+        assert_eq!(frag.data4.len(), 0);
+        assert_eq!(frag.polygons.len(), 12);
+        assert_eq!(frag.polygons[0].flags, 0);
+        assert_eq!(frag.polygons[0].data, (0, 0, 0, 0));
+        assert_eq!(frag.polygons[0].vertex_indexes, (0, 0, 0));
+        assert_eq!(frag.vertex_pieces.len(), 1);
+        assert_eq!(frag.vertex_pieces[0], (0, 0));
+        assert_eq!(frag.size8, 0);
+        assert_eq!(frag.data8.len(), 0);
+        //assert_eq!(frag.data8[0], );
+        assert_eq!(frag.vertex_material_count, 0);
+        assert_eq!(frag.vertex_materials.len(), 0);
+        //assert_eq!(frag.vertex_materials[0], );
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
+        let frag = AlternateMeshFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
+    }
+}

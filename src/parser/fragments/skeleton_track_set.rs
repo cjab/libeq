@@ -7,7 +7,7 @@ use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// This fragment describes a skeleton for an entire animated model, and is used for mob
 /// models. The overall skeleton is contained in a 0x10 [SkeletonTrackSetFragment] and
 /// is structured as a hierarchical tree. For example, a pelvis piece might connect to chest,
@@ -113,7 +113,7 @@ impl FragmentType for SkeletonTrackSetFragment {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// Entries in the map's [SkeletonTrackSetFragment]
 pub struct SkeletonTrackSetFragmentEntry {
     /// This seems to refer to the name of either this or another 0x10 fragment.
@@ -243,5 +243,41 @@ impl Fragment for SkeletonTrackSetFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0013-0x10.frag")[..];
+        let frag = SkeletonTrackSetFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-211));
+        assert_eq!(frag.entry_count, 3);
+        assert_eq!(frag.fragment, 0);
+        assert_eq!(frag.unknown_params1, None);
+        assert_eq!(frag.unknown_params2, Some(0.81542796));
+        assert_eq!(frag.entries.len(), 3);
+        assert_eq!(frag.entries[0].name_reference, 4294967128);
+        assert_eq!(frag.entries[0].flags, 0);
+        assert_eq!(frag.entries[0].fragment1, 8);
+        assert_eq!(frag.entries[0].fragment2, 0);
+        assert_eq!(frag.entries[0].data_entry_count, 1);
+        assert_eq!(frag.entries[0].data_entries.len(), 1);
+        assert_eq!(frag.entries[0].data_entries[0], 1);
+        assert_eq!(frag.size2, Some(1));
+        assert_eq!(frag.fragment3.unwrap(), vec![13]);
+        assert_eq!(frag.data3.unwrap(), vec![2]);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0013-0x10.frag")[..];
+        let frag = SkeletonTrackSetFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

@@ -8,7 +8,7 @@ use nom::number::complete::le_u32;
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// A reference to a [LightSourceFragment].
 ///
 /// **Type ID:** 0x1c

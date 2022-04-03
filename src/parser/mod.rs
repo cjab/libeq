@@ -39,7 +39,7 @@ impl WldDoc {
 
         //for (i, header) in fragment_headers.iter().enumerate() {
         //    let mut file = File::create(format!(
-        //        "fixtures/fragments/gfaydark/{:04}-{:#04x}.frag",
+        //        "fixtures/fragments/gfaydark_obj/{:04}-{:#04x}.frag",
         //        i, header.fragment_type
         //    ))
         //    .unwrap();
