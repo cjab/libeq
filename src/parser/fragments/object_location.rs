@@ -164,3 +164,37 @@ impl Fragment for ObjectLocationFragment {
         &self.name_reference
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4641-0x15.frag")[..];
+        let frag = ObjectLocationFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.flags, 0x1220);
+        assert_eq!(frag.fragment1, 46);
+        assert_eq!(frag.x, 0.000000000000000000000000000000000000000006503);
+        assert_eq!(frag.y, -2935.2515);
+        assert_eq!(frag.z, -2823.1519);
+        assert_eq!(frag.rotate_z, -19.758118);
+        assert_eq!(frag.rotate_y, 0.0);
+        assert_eq!(frag.rotate_x, 0.0);
+        assert_eq!(frag.params1, 0);
+        assert_eq!(frag.scale_y, 0.0);
+        assert_eq!(frag.scale_x, 0.5);
+        assert_eq!(frag.fragment2, 1056964608);
+        assert_eq!(frag.params2, 0);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4641-0x15.frag")[..];
+        let frag = ObjectLocationFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
+    }
+}

@@ -10,7 +10,7 @@ use nom::number::complete::{le_f32, le_i16, le_i8, le_u16, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// This is the fragment most often used for models. However, [AlternateMeshFragment] fragment
 /// is also sometimes used.
 ///
@@ -391,7 +391,7 @@ impl Fragment for MeshFragment {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// Represents a polygon within a [MeshFragment].
 pub struct MeshFragmentPolygonEntry {
     /// Most flags are _Unknown_. This usually contains 0x0 for polygons but
@@ -427,7 +427,7 @@ impl MeshFragmentPolygonEntry {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// _Unknown_
 pub struct MeshFragmentData9Entry {
     /// _Unknown_ - This seems to reference one of the vertex entries. This field
@@ -481,5 +481,63 @@ impl MeshFragmentData9Entry {
             &self.type_field.to_le_bytes()[..],
         ]
         .concat()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        #![allow(overflowing_literals)]
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
+        let frag = MeshFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-1134));
+        assert_eq!(frag.flags, 0x18003);
+        assert_eq!(frag.material_list_ref, FragmentRef::new(131));
+        assert_eq!(frag.animation_ref, FragmentRef::new(0));
+        assert_eq!(frag.fragment3, FragmentRef::new(0));
+        assert_eq!(frag.fragment4, FragmentRef::new(-2));
+        assert_eq!(frag.center, (-2502.0, -2432.0, 190.0));
+        assert_eq!(frag.params2, (0, 0, 0));
+        assert_eq!(frag.max_distance, 37.817947);
+        assert_eq!(frag.min, (0.0, 0.0, 0.0));
+        assert_eq!(frag.max, (0.0, 0.0, 0.0));
+        assert_eq!(frag.position_count, 8);
+        assert_eq!(frag.texture_coordinate_count, 8);
+        assert_eq!(frag.normal_count, 8);
+        assert_eq!(frag.polygon_count, 6);
+        assert_eq!(frag.vertex_piece_count, 0);
+        assert_eq!(frag.polygon_material_count, 1);
+        assert_eq!(frag.vertex_material_count, 1);
+        assert_eq!(frag.size9, 0);
+        assert_eq!(frag.scale, 5);
+        assert_eq!(frag.positions.len(), 8);
+        assert_eq!(frag.positions[0], (2, -1154, -3));
+        assert_eq!(frag.texture_coordinates.len(), 8);
+        assert_eq!(frag.texture_coordinates[0], (77, 77));
+        assert_eq!(frag.vertex_normals.len(), 8);
+        assert_eq!(frag.vertex_normals[0], (29, 31, 119));
+        assert_eq!(frag.vertex_colors.len(), 8);
+        assert_eq!(frag.vertex_colors[0], 4043374848);
+        assert_eq!(frag.polygons.len(), 6);
+        assert_eq!(frag.polygons[0].flags, 0);
+        assert_eq!(frag.polygons[0].vertex_indexes, (0, 1, 2));
+        assert_eq!(frag.vertex_pieces.len(), 0);
+        assert_eq!(frag.polygon_materials.len(), 1);
+        assert_eq!(frag.polygon_materials[0], (6, 0));
+        assert_eq!(frag.vertex_materials.len(), 1);
+        assert_eq!(frag.vertex_materials[0], (8, 0));
+        assert_eq!(frag.data9.len(), 0);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
+        let frag = MeshFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

@@ -59,3 +59,26 @@ impl Fragment for LightSourceReferenceFragment {
         &self.name_reference
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4636-0x1c.frag")[..];
+        let frag = LightSourceReferenceFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.reference, FragmentRef::new(1729));
+        assert_eq!(frag.flags, 0);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4636-0x1c.frag")[..];
+        let frag = LightSourceReferenceFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
+    }
+}

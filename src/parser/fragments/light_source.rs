@@ -6,7 +6,7 @@ use nom::number::complete::{le_f32, le_u32, le_u8};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// **Type ID:** 0x1b
 pub struct LightSourceFragment {
     pub name_reference: StringReference,
@@ -112,5 +112,34 @@ impl Fragment for LightSourceFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1728-0x1b.frag")[..];
+        let frag = LightSourceFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-29288));
+        assert_eq!(frag.flags, 0x04);
+        assert_eq!(frag.params2, 1);
+        assert_eq!(frag.params3a, Some(1.0));
+        assert_eq!(frag.params3b, None);
+        assert_eq!(frag.params4, None);
+        assert_eq!(frag.red, None);
+        assert_eq!(frag.green, None);
+        assert_eq!(frag.blue, None);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1728-0x1b.frag")[..];
+        let frag = LightSourceFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

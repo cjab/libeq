@@ -57,3 +57,26 @@ impl Fragment for CameraReferenceFragment {
         &self.name_reference
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4638-0x09.frag")[..];
+        let frag = CameraReferenceFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.reference, FragmentRef::new(1730));
+        assert_eq!(frag.flags, 0);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4638-0x09.frag")[..];
+        let frag = CameraReferenceFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
+    }
+}

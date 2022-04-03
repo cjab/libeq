@@ -7,7 +7,7 @@ use nom::number::complete::le_u32;
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 ///
 /// **Type ID:** 0x31
 pub struct MaterialListFragment {
@@ -65,5 +65,31 @@ impl Fragment for MaterialListFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        #![allow(overflowing_literals)]
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0130-0x31.frag")[..];
+        let frag = MaterialListFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-1122));
+        assert_eq!(frag.flags, 0x0);
+        assert_eq!(frag.size1, 33);
+        assert_eq!(frag.fragments.len(), 33);
+        assert_eq!(frag.fragments[0], FragmentRef::new(5));
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0130-0x31.frag")[..];
+        let frag = MaterialListFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

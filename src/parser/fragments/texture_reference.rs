@@ -6,7 +6,7 @@ use nom::number::complete::le_u32;
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// A reference to a [TextureFragment] fragment.
 ///
 /// **Type ID:** 0x05
@@ -55,5 +55,28 @@ impl Fragment for TextureReferenceFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0003-0x05.frag")[..];
+        let frag = TextureReferenceFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0x0));
+        assert_eq!(frag.reference, FragmentRef::new(0x3));
+        assert_eq!(frag.flags, 0x50);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0003-0x05.frag")[..];
+        let frag = TextureReferenceFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

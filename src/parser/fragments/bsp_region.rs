@@ -8,7 +8,7 @@ use nom::number::complete::{le_u16, le_u32, le_u8};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// A region within a map's BSP Tree.
 ///
 /// **Type ID:** 0x22
@@ -219,7 +219,7 @@ impl Fragment for BspRegionFragment {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// _Unknown_
 pub struct BspRegionFragmentData3Entry {
     /// _Unknown_
@@ -284,7 +284,7 @@ impl BspRegionFragmentData3Entry {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// _Unknown_
 pub struct BspRegionFragmentData4Entry {
     /// _Unknown_
@@ -361,7 +361,7 @@ impl BspRegionFragmentData4Entry {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// _Unknown_
 pub struct BspRegionFragmentData5Entry {
     /// _Unknown_ - Usually 0.
@@ -416,7 +416,7 @@ impl BspRegionFragmentData5Entry {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// A potentially visible set (PVS) of regions
 pub struct BspRegionFragmentPVS {
     /// The number of entries in the `data` field
@@ -471,5 +471,59 @@ impl BspRegionFragmentPVS {
 
     fn serialize(&self) -> Vec<u8> {
         [&self.size.to_le_bytes()[..], &self.data[..]].concat()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1731-0x22.frag")[..];
+        let frag = BspRegionFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-29318));
+        assert_eq!(frag.flags, 0x81);
+        assert_eq!(frag.fragment1, FragmentRef::new(0));
+        assert_eq!(frag.size1, 0);
+        assert_eq!(frag.size2, 0);
+        assert_eq!(frag.params1, 0);
+        assert_eq!(frag.size3, 0);
+        assert_eq!(frag.size4, 0);
+        assert_eq!(frag.params2, 0);
+        assert_eq!(frag.size5, 1);
+        assert_eq!(frag.pvs_count, 1);
+        assert_eq!(frag.data1.len(), 0);
+        assert_eq!(frag.data2.len(), 0);
+        assert_eq!(frag.data3.len(), 0);
+        assert_eq!(frag.data4.len(), 0);
+        assert_eq!(frag.data5.len(), 1);
+        assert_eq!(frag.data5[0].params1, (0, 0, 0));
+        assert_eq!(frag.data5[0].params2, 0);
+        assert_eq!(frag.data5[0].params3, 1);
+        assert_eq!(frag.data5[0].params4, 0);
+        assert_eq!(frag.data5[0].params5, 0);
+        assert_eq!(frag.pvs.len(), 1);
+        assert_eq!(frag.pvs[0].size, 14);
+        assert_eq!(
+            frag.pvs[0].data,
+            vec![254, 242, 24, 202, 86, 81, 39, 218, 87, 63, 44, 10, 19, 216]
+        );
+        assert_eq!(frag.size7, 3308745734);
+        assert_eq!(
+            frag.name7,
+            vec![111, 114, 48, 197, 160, 16, 158, 193, 238, 18, 110, 67]
+        );
+        assert_eq!(frag.fragment2, FragmentRef::new(0));
+        assert_eq!(frag.mesh_reference, None);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1731-0x22.frag")[..];
+        let frag = BspRegionFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

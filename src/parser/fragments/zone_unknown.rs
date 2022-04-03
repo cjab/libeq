@@ -2,6 +2,7 @@ use std::any::Any;
 
 use super::{Fragment, FragmentType, StringReference};
 
+use nom::number::complete::le_i32;
 use nom::IResult;
 
 #[derive(Debug)]
@@ -10,6 +11,8 @@ use nom::IResult;
 /// **Type ID:** 0x16
 pub struct ZoneUnknownFragment {
     pub name_reference: StringReference,
+
+    pub unknown: i32,
 }
 
 impl FragmentType for ZoneUnknownFragment {
@@ -18,14 +21,25 @@ impl FragmentType for ZoneUnknownFragment {
     const TYPE_ID: u32 = 0x16;
 
     fn parse(input: &[u8]) -> IResult<&[u8], ZoneUnknownFragment> {
-        let (remaining, name_reference) = StringReference::parse(input)?;
-        Ok((remaining, ZoneUnknownFragment { name_reference }))
+        let (i, name_reference) = StringReference::parse(input)?;
+        let (remaining, unknown) = le_i32(i)?;
+        Ok((
+            remaining,
+            ZoneUnknownFragment {
+                name_reference,
+                unknown,
+            },
+        ))
     }
 }
 
 impl Fragment for ZoneUnknownFragment {
     fn serialize(&self) -> Vec<u8> {
-        vec![]
+        [
+            &self.name_reference.serialize()[..],
+            &self.unknown.to_le_bytes()[..],
+        ]
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -34,5 +48,26 @@ impl Fragment for ZoneUnknownFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4640-0x16.frag")[..];
+        let frag = ZoneUnknownFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4640-0x16.frag")[..];
+        let frag = ZoneUnknownFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

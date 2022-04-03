@@ -6,7 +6,7 @@ use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// This fragment is poorly understood. It seems to contain 26 parameters, some of which
 /// are DWORDS (32-bit integers) and some of which are FLOATS (32-bit floating-point values).
 /// Until more is known, they are here described as Params[0..25] and their known values
@@ -232,5 +232,52 @@ impl Fragment for CameraFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1729-0x08.frag")[..];
+        let frag = CameraFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-29305));
+        assert_eq!(frag.params0, 0);
+        assert_eq!(frag.params1, 4);
+        assert_eq!(frag.params2, 1e-45);
+        assert_eq!(frag.params3, 0);
+        assert_eq!(frag.params4, 0);
+        assert_eq!(frag.params5, -1.0);
+        assert_eq!(frag.params6, 1.0);
+        assert_eq!(frag.params7, 0);
+        assert_eq!(frag.params8, 1.0);
+        assert_eq!(frag.params9, 1.0);
+        assert_eq!(frag.params10, 0);
+        assert_eq!(frag.params11, 1.0);
+        assert_eq!(frag.params12, -1.0);
+        assert_eq!(frag.params13, 0);
+        assert_eq!(frag.params14, -1.0);
+        assert_eq!(frag.params15, -1.0);
+        assert_eq!(frag.params16, 4);
+        assert_eq!(frag.params17, 0);
+        assert_eq!(frag.params18, 0);
+        assert_eq!(frag.params19, 0);
+        assert_eq!(frag.params20, 1);
+        assert_eq!(frag.params21, 2);
+        assert_eq!(frag.params22, 3);
+        assert_eq!(frag.params23, 0);
+        assert_eq!(frag.params24, 1);
+        assert_eq!(frag.params25, 11);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1729-0x08.frag")[..];
+        let frag = CameraFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }
