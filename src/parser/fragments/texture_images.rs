@@ -128,8 +128,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0029-0x03.frag")[..];
         let frag = TextureImagesFragment::parse(data).unwrap().1;
 
-        println!("SIZE: {}", frag.size1);
-
         assert_eq!(&frag.serialize()[..], data);
     }
 }

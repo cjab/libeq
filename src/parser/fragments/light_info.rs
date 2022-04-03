@@ -9,7 +9,7 @@ use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// A reference to a [LightSourceReferenceFragment].
 ///
 /// **Type ID:** 0x28
@@ -85,5 +85,32 @@ impl Fragment for LightInfoFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/lights/0002-0x28.frag")[..];
+        let frag = LightInfoFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.reference, FragmentRef::new(2));
+        assert_eq!(frag.flags, 0x100);
+        assert_eq!(frag.x, -1980.6992);
+        assert_eq!(frag.y, -2354.9412);
+        assert_eq!(frag.z, 31.490416);
+        assert_eq!(frag.radius, 300.0);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/lights/0002-0x28.frag")[..];
+        let frag = LightInfoFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

@@ -10,7 +10,7 @@ use nom::number::complete::{le_f32, le_i32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// This fragment is rarely used. It describes objects that are purely two-dimensional
 /// in nature. Examples are coins and blood spatters.
 ///
@@ -319,7 +319,7 @@ impl Fragment for TwoDimensionalObjectFragment {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct UvInfo {
     pub uv_origin: (f32, f32, f32),
     pub u_axis: (f32, f32, f32),
@@ -360,7 +360,7 @@ impl UvInfo {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct SpriteFlags(u32);
 
 impl SpriteFlags {
@@ -405,7 +405,7 @@ impl SpriteFlags {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct RenderMethod(u32);
 
 impl RenderMethod {
@@ -451,7 +451,7 @@ impl RenderMethod {
     }
 }
 
-#[derive(FromPrimitive)]
+#[derive(Debug, FromPrimitive, PartialEq)]
 pub enum DrawStyle {
     Transparent = 0x0,
     Unknown = 0x1,
@@ -459,7 +459,7 @@ pub enum DrawStyle {
     Solid = 0x3,
 }
 
-#[derive(FromPrimitive)]
+#[derive(Debug, FromPrimitive, PartialEq)]
 pub enum Lighting {
     ZeroIntensity = 0x0,
     Unknown1 = 0x1,
@@ -471,7 +471,7 @@ pub enum Lighting {
     Invalid = 0x7,
 }
 
-#[derive(FromPrimitive)]
+#[derive(Debug, FromPrimitive, PartialEq)]
 pub enum Shading {
     None1 = 0x0,
     None2 = 0x1,
@@ -479,7 +479,7 @@ pub enum Shading {
     Gouraud2 = 0x3,
 }
 
-#[derive(FromPrimitive)]
+#[derive(Debug, FromPrimitive, PartialEq)]
 pub enum TextureStyle {
     None = 0x0,
     XXXXXXXX1 = 0x1,
@@ -498,7 +498,7 @@ pub enum TextureStyle {
     XXXXX = 0xf,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct RenderFlags(u32);
 
 impl RenderFlags {
@@ -544,7 +544,7 @@ impl RenderFlags {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// `pitches` entries in the [TwoDimensionalObjectFragment]
 pub struct SpritePitch {
     /// Windcatcher:
@@ -600,7 +600,7 @@ impl SpritePitch {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// `headings` entries in [SpritePitch]
 pub struct SpriteHeading {
     /// Windcatcher:
@@ -639,5 +639,64 @@ impl SpriteHeading {
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
+        let frag = TwoDimensionalObjectFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-18282));
+        assert_eq!(frag.num_frames, 1);
+        assert_eq!(frag.num_pitches, 1);
+        assert_eq!(frag.sprite_size, (0.2, 0.2));
+        assert_eq!(frag.sphere_fragment, 0);
+        assert_eq!(frag.depth_scale, None);
+        assert_eq!(frag.center_offset, None);
+        assert_eq!(frag.bounding_radius, Some(1.0198039));
+        assert_eq!(frag.current_frame, None);
+        assert_eq!(frag.sleep, Some(100));
+        assert_eq!(frag.pitches.len(), 1);
+        assert_eq!(frag.pitches[0].pitch_cap, 512);
+        assert_eq!(frag.pitches[0].num_headings, 1);
+        assert_eq!(frag.pitches[0].headings.len(), 1);
+        assert_eq!(frag.pitches[0].headings[0].heading_cap, 64);
+        assert_eq!(frag.render_method, RenderMethod(1171));
+        assert_eq!(frag.render_method.draw_style(), DrawStyle::Solid);
+        assert_eq!(frag.render_method.lighting(), Lighting::Ambient);
+        assert_eq!(frag.render_method.shading(), Shading::None1);
+        assert_eq!(
+            frag.render_method.texture_style(),
+            TextureStyle::TransTexture4
+        );
+        assert_eq!(frag.render_method.unknown_bits(), 0);
+        assert_eq!(frag.render_method.user_defined(), false);
+        assert_eq!(frag.render_flags, RenderFlags(7));
+        assert_eq!(frag.render_flags.has_pen(), true);
+        assert_eq!(frag.render_flags.has_brightness(), true);
+        assert_eq!(frag.render_flags.has_scaled_ambient(), true);
+        assert_eq!(frag.render_flags.has_simple_sprite(), false);
+        assert_eq!(frag.render_flags.has_uv_info(), false);
+        assert_eq!(frag.render_flags.is_two_sided(), false);
+        assert_eq!(frag.pen, Some(51));
+        assert_eq!(frag.brightness, Some(1.0));
+        assert_eq!(frag.scaled_ambient, Some(1.0));
+        assert_eq!(frag.params7_fragment, None);
+        assert_eq!(frag.uv_info, None);
+        assert_eq!(frag.params7_size, None);
+        assert_eq!(frag.params7_data, None);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
+        let frag = TwoDimensionalObjectFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

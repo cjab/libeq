@@ -6,7 +6,7 @@ use nom::number::complete::le_u32;
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// A reference to a [TwoDimensionalObjectReferenceFragment].
 ///
 /// **Type ID:** 0x07
@@ -55,5 +55,32 @@ impl Fragment for TwoDimensionalObjectReferenceFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/2224-0x07.frag")[..];
+        let frag = TwoDimensionalObjectReferenceFragment::parse(data)
+            .unwrap()
+            .1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.reference, FragmentRef::new(0x07f0));
+        assert_eq!(frag.flags, 0x0);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/2224-0x07.frag")[..];
+        let frag = TwoDimensionalObjectReferenceFragment::parse(data)
+            .unwrap()
+            .1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

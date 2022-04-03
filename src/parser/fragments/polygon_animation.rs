@@ -7,7 +7,7 @@ use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// **Type ID:** 0x17
 pub struct PolygonAnimationFragment {
     pub name_reference: StringReference,
@@ -124,5 +124,36 @@ impl Fragment for PolygonAnimationFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/1417-0x17.frag")[..];
+        let frag = PolygonAnimationFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-14003));
+        assert_eq!(frag.params1, 1.0);
+        assert_eq!(frag.flags, 0x8);
+        assert_eq!(frag.size1, 6);
+        assert_eq!(frag.size2, 0);
+        assert_eq!(frag.params2, 0.0);
+        assert_eq!(frag.params3, 0.0);
+        assert_eq!(frag.entries1.len(), 0);
+        assert_eq!(frag.entries1[0], (0.0, 0.0, 0.0));
+        assert_eq!(frag.entries2.len(), 0);
+        assert_eq!(frag.entries2[0], (0, vec![]));
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/1417-0x17.frag")[..];
+        let frag = PolygonAnimationFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

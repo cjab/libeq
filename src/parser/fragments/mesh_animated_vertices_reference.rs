@@ -60,3 +60,30 @@ impl Fragment for MeshAnimatedVerticesReferenceFragment {
         &self.name_reference
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0632-0x2f.frag")[..];
+        let frag = MeshAnimatedVerticesReferenceFragment::parse(data)
+            .unwrap()
+            .1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.reference, FragmentRef::new(0x0278));
+        assert_eq!(frag.flags, 0x0);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0632-0x2f.frag")[..];
+        let frag = MeshAnimatedVerticesReferenceFragment::parse(data)
+            .unwrap()
+            .1;
+
+        assert_eq!(&frag.serialize()[..], data);
+    }
+}

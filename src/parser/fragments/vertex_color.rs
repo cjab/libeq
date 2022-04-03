@@ -95,3 +95,31 @@ impl Fragment for VertexColorFragment {
         &self.name_reference
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/objects/0000-0x32.frag")[..];
+        let frag = VertexColorFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-1));
+        assert_eq!(frag.data1, 1);
+        assert_eq!(frag.vertex_color_count, 176);
+        assert_eq!(frag.data2, 1);
+        assert_eq!(frag.data3, 200);
+        assert_eq!(frag.data4, 0);
+        assert_eq!(frag.vertex_colors.len(), 176);
+        assert_eq!(frag.vertex_colors[0], 3254779903);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/objects/0000-0x32.frag")[..];
+        let frag = VertexColorFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
+    }
+}

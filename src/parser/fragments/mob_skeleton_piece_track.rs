@@ -6,7 +6,7 @@ use nom::number::complete::{le_i16, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// ## Notes
 /// This fragment describes how a skeleton piece is shifted or rotated relative to its parent
 /// piece. The overall skeleton is contained in a 0x10 Skeleton Track Set fragment and is
@@ -190,5 +190,37 @@ impl Fragment for MobSkeletonPieceTrackFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
+        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-61));
+        assert_eq!(frag.flags, 0x8);
+        assert_eq!(frag.size, 1);
+        assert_eq!(frag.rotate_denominator, 16384);
+        assert_eq!(frag.rotate_x_numerator, 0);
+        assert_eq!(frag.rotate_y_numerator, 0);
+        assert_eq!(frag.rotate_z_numerator, 0);
+        assert_eq!(frag.shift_x_numerator, 0);
+        assert_eq!(frag.shift_y_numerator, 0);
+        assert_eq!(frag.shift_z_numerator, 0);
+        assert_eq!(frag.shift_denominator, 256);
+        assert_eq!(frag.data2, None);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
+        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

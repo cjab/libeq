@@ -7,7 +7,7 @@ use nom::number::complete::{le_i16, le_u16, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// This fragment contains sets of vertex values to be substituted for the
 /// vertex values in a 0x36 Mesh fragment if that mesh is animated. For example,
 /// if a mesh has 50 vertices then this fragment will have one or more sets of
@@ -122,5 +122,37 @@ impl Fragment for MeshAnimatedVerticesFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0631-0x37.frag")[..];
+        let frag = MeshAnimatedVerticesFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-5038));
+        assert_eq!(frag.flags, 0x0);
+        assert_eq!(frag.vertex_count, 104);
+        assert_eq!(frag.frame_count, 15);
+        assert_eq!(frag.param1, 67);
+        assert_eq!(frag.param2, 0);
+        assert_eq!(frag.scale, 10);
+        assert_eq!(frag.frames.len(), 15);
+        assert_eq!(frag.frames[0], 142868935);
+        assert_eq!(frag.vertices.len(), 104);
+        assert_eq!(frag.vertices[0], (-556, -1639, -13535));
+        assert_eq!(frag.size6, 64980);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0631-0x37.frag")[..];
+        let frag = MeshAnimatedVerticesFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

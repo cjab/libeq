@@ -8,7 +8,7 @@ use nom::number::complete::le_u32;
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// A reference to a [SkeletonTrackSetFragment].
 ///
 /// **Type ID:** 0x11
@@ -57,5 +57,28 @@ impl Fragment for SkeletonTrackSetReferenceFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/2228-0x11.frag")[..];
+        let frag = SkeletonTrackSetReferenceFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.reference, FragmentRef::new(0x0e));
+        assert_eq!(frag.params1, 0x0);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/2228-0x11.frag")[..];
+        let frag = SkeletonTrackSetReferenceFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

@@ -9,7 +9,7 @@ use nom::number::complete::le_u32;
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// A reference to a [MobSkeletonPieceTrackFragment].
 ///
 /// **Type ID:** 0x13
@@ -72,5 +72,33 @@ impl Fragment for MobSkeletonPieceTrackReferenceFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
+        let frag = MobSkeletonPieceTrackReferenceFragment::parse(data)
+            .unwrap()
+            .1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-75));
+        assert_eq!(frag.reference, FragmentRef::new(7));
+        assert_eq!(frag.flags, 0x0);
+        assert_eq!(frag.params1, None);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
+        let frag = MobSkeletonPieceTrackReferenceFragment::parse(data)
+            .unwrap()
+            .1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }
