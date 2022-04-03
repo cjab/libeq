@@ -1,17 +1,15 @@
 use std::any::Any;
 
-use super::decode_string;
+use super::{decode_string, encode_string};
 use super::{Fragment, FragmentType, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_u16, le_u32, le_u8};
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// This fragment references one or more texture filenames. So far all known textures
 /// reference a single filename.
-///
-/// **Type ID:** 0x03
 pub struct TextureImagesFragment {
     pub name_reference: StringReference,
 
@@ -44,7 +42,7 @@ impl FragmentType for TextureImagesFragment {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// Bitmap filename entries within the [TextureImagesFragment] fragment.
 pub struct TextureImagesFragmentEntry {
     /// The length of the filename in bytes.
@@ -78,7 +76,7 @@ impl TextureImagesFragmentEntry {
     fn serialize(&self) -> Vec<u8> {
         [
             &self.name_length.to_le_bytes()[..],
-            &self.file_name.bytes().collect::<Vec<_>>()[..],
+            &encode_string(&self.file_name)[..],
         ]
         .concat()
     }
@@ -104,5 +102,34 @@ impl Fragment for TextureImagesFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        #![allow(overflowing_literals)]
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0001-0x03.frag")[..];
+        let frag = TextureImagesFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0xffffffff));
+        //FIXME: Why is this 0? If this is size it should be 1.
+        //assert_eq!(frag.size1, 1);
+        assert_eq!(frag.entries.len(), 1);
+        assert_eq!(frag.entries[0].name_length, 0x0b);
+        assert_eq!(frag.entries[0].file_name, "SGRASS.BMP".to_string());
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0029-0x03.frag")[..];
+        let frag = TextureImagesFragment::parse(data).unwrap().1;
+
+        println!("SIZE: {}", frag.size1);
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

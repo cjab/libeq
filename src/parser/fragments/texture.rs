@@ -9,7 +9,7 @@ use nom::number::complete::le_u32;
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// This fragment represents an entire texture rather than merely a bitmap used by that
 /// texture. The conceptual difference from [TextureImagesFragment] fragments is that textures
 /// may be animated; the [TextureFragment] fragment represents the entire texture
@@ -96,14 +96,14 @@ impl Fragment for TextureFragment {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct TextureFragmentFlags(pub u32);
 
 impl TextureFragmentFlags {
     const SKIP_FRAMES: u32 = 0x02;
     const IS_ANIMATED: u32 = 0x08;
-    const HAS_SLEEP: u32 = 0x10;
-    const HAS_CURRENT_FRAME: u32 = 0x10;
+    const HAS_SLEEP: u32 = 0x10; //FIXME: This seems wrong
+    const HAS_CURRENT_FRAME: u32 = 0x20;
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureFragmentFlags> {
         let (remaining, raw_flags) = le_u32(input)?;
@@ -128,5 +128,38 @@ impl TextureFragmentFlags {
 
     pub fn has_current_frame(&self) -> bool {
         self.0 & Self::HAS_CURRENT_FRAME == Self::HAS_CURRENT_FRAME
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        #![allow(overflowing_literals)]
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0002-0x04.frag")[..];
+        let frag = TextureFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0xfffffff8));
+        assert_eq!(frag.flags.0, 0x10);
+        //FIXME: This seems wrong
+        //assert_eq!(frag.flags.has_sleep(), true);
+        assert_eq!(frag.flags.has_current_frame(), false);
+        assert_eq!(frag.flags.skip_frames(), false);
+        assert_eq!(frag.flags.is_animated(), false);
+        assert_eq!(frag.frame_count, 0x1);
+        assert_eq!(frag.current_frame, None);
+        assert_eq!(frag.sleep, None);
+        assert_eq!(frag.frame_references.len(), 1);
+        assert_eq!(frag.frame_references[0], FragmentRef::new(0x02));
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0002-0x04.frag")[..];
+        let frag = TextureFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

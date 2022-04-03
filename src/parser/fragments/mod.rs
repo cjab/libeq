@@ -38,7 +38,7 @@ use std::marker::PhantomData;
 use nom::number::complete::le_i32;
 use nom::IResult;
 
-use super::{decode_string, StringReference};
+use super::{decode_string, encode_string, StringReference};
 
 pub use alternate_mesh::*;
 pub use ambient_light::*;
@@ -74,7 +74,7 @@ pub use vertex_color::*;
 pub use vertex_color_reference::*;
 pub use zone_unknown::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FragmentRef<T> {
     Name(StringReference, PhantomData<T>),
     Index(u32, PhantomData<T>),

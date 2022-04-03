@@ -8,7 +8,7 @@ use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 ///
 /// **Type ID:** 0x30
 pub struct MaterialFragment {
@@ -100,5 +100,32 @@ impl Fragment for MaterialFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0004-0x30.frag")[..];
+        let frag = MaterialFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-22));
+        assert_eq!(frag.flags, 0x02);
+        assert_eq!(frag.params1, 0x80000001);
+        assert_eq!(frag.params2, 0x4e4e4e);
+        assert_eq!(frag.params3, (0.0, 0.75));
+        assert_eq!(frag.reference, FragmentRef::new(4));
+        assert_eq!(frag.pair, Some((0, 0.0)));
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0004-0x30.frag")[..];
+        let frag = MaterialFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

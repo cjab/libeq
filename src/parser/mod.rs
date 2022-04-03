@@ -10,7 +10,7 @@ use nom::sequence::tuple;
 use nom::IResult;
 
 pub use fragments::*;
-pub use strings::{decode_string, StringHash, StringReference};
+pub use strings::{decode_string, encode_string, StringHash, StringReference};
 
 #[derive(Debug)]
 pub struct WldDoc {
@@ -20,7 +20,7 @@ pub struct WldDoc {
 }
 
 impl Debug for dyn Fragment + 'static {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+    fn fmt(&self, _f: &mut Formatter<'_>) -> Result<(), Error> {
         Ok(())
     }
 }
@@ -33,6 +33,18 @@ impl WldDoc {
             count(FragmentHeader::parse, header.fragment_count as usize),
         ))(i)?;
         let strings = StringHash::new(string_hash_data);
+
+        //use std::fs::File;
+        //use std::io::prelude::*;
+
+        //for (i, header) in fragment_headers.iter().enumerate() {
+        //    let mut file = File::create(format!(
+        //        "fixtures/fragments/gfaydark/{:04}-{:#04x}.frag",
+        //        i, header.fragment_type
+        //    ))
+        //    .unwrap();
+        //    file.write_all(header.field_data).unwrap();
+        //}
 
         let fragments = fragment_headers.iter().map(|h| h.parse_body()).collect();
 

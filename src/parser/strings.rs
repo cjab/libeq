@@ -5,7 +5,7 @@ use encoding_rs::WINDOWS_1252;
 use nom::number::complete::le_i32;
 use nom::IResult;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct StringReference(i32);
 
 impl StringReference {

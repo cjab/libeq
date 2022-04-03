@@ -180,3 +180,36 @@ impl Fragment for ModelFragment {
         &self.name_reference
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4639-0x14.frag")[..];
+        let frag = ModelFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-52594));
+        assert_eq!(frag.flags, 0);
+        assert_eq!(frag.name_fragment, 4294914717);
+        assert_eq!(frag.unknown_params2_count, 1);
+        assert_eq!(frag.fragment_count, 1);
+        assert_eq!(frag.unknown_fragment, 0);
+        assert_eq!(frag.unknown_params1, None);
+        assert_eq!(frag.unknown_params2, None);
+        assert_eq!(frag.unknown_data_count, 1);
+        assert_eq!(frag.unknown_data, vec![(0, 1e30)]);
+        assert_eq!(frag.fragments, vec![4639]);
+        assert_eq!(frag.name_size, 0);
+        assert_eq!(frag.name, vec![]);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4639-0x14.frag")[..];
+        let frag = ModelFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
+    }
+}

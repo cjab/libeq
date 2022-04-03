@@ -106,3 +106,29 @@ impl Fragment for RegionFlagFragment {
         &self.name_reference
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
+        let frag = RegionFlagFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-52603));
+        assert_eq!(frag.flags, 0x0);
+        assert_eq!(frag.region_count, 2);
+        assert_eq!(frag.regions, vec![2859, 2865]);
+        assert_eq!(frag.size2, 0);
+        assert_eq!(frag.data2, vec![]);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
+        let frag = RegionFlagFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
+    }
+}

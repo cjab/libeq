@@ -9,7 +9,7 @@ use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// A map's BSP Tree.
 ///
 /// **Type ID:** 0x21
@@ -67,7 +67,7 @@ impl Fragment for BspTreeFragment {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// Entries in the map's [BspTreeFragment]
 pub struct BspTreeFragmentEntry {
     /// The normal to the split plane.
@@ -120,5 +120,35 @@ impl BspTreeFragmentEntry {
             &self.nodes.1.serialize()[..],
         ]
         .concat()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
+        let frag = BspTreeFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0x0));
+        assert_eq!(frag.size1, 5809);
+        assert_eq!(frag.entries.len(), 5809);
+        assert_eq!(frag.entries[0].normal, (-1.0f32, 0.0f32, 0.0f32));
+        assert_eq!(frag.entries[0].split_distance, -187.8942f32);
+        assert_eq!(frag.entries[0].region, FragmentRef::new(0));
+        assert_eq!(
+            frag.entries[0].nodes,
+            (FragmentRef::new(2), FragmentRef::new(2507))
+        );
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
+        let frag = BspTreeFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
     }
 }

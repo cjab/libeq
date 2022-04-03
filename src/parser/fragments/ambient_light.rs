@@ -81,3 +81,28 @@ impl Fragment for AmbientLightFragment {
         &self.name_reference
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4637-0x2a.frag")[..];
+        let frag = AmbientLightFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-52558));
+        assert_eq!(frag.flags, 0);
+        assert_eq!(frag.region_count, 2905);
+        assert_eq!(frag.regions.len(), 2905);
+        assert_eq!(frag.regions[0..5], vec![0, 1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4637-0x2a.frag")[..];
+        let frag = AmbientLightFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.serialize()[..], data);
+    }
+}
