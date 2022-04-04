@@ -23,7 +23,7 @@ pub struct PolygonAnimationReferenceFragment {
     pub flags: u32,
 
     /// _Unknown_
-    pub params1: f32,
+    pub params1: Option<f32>,
 }
 
 impl FragmentType for PolygonAnimationReferenceFragment {
@@ -32,8 +32,15 @@ impl FragmentType for PolygonAnimationReferenceFragment {
     const TYPE_ID: u32 = 0x18;
 
     fn parse(input: &[u8]) -> IResult<&[u8], PolygonAnimationReferenceFragment> {
-        let (remaining, (name_reference, reference, flags, params1)) =
-            tuple((StringReference::parse, fragment_ref, le_u32, le_f32))(input)?;
+        let (i, (name_reference, reference, flags)) =
+            tuple((StringReference::parse, fragment_ref, le_u32))(input)?;
+
+        let (remaining, params1) = if (flags & 0x1) == 0x1 {
+            le_f32(i).map(|(rem, f)| (rem, Some(f)))?
+        } else {
+            (i, None)
+        };
+
         Ok((
             remaining,
             PolygonAnimationReferenceFragment {
@@ -52,7 +59,7 @@ impl Fragment for PolygonAnimationReferenceFragment {
             &self.name_reference.serialize()[..],
             &self.reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
-            &self.params1.to_le_bytes()[..],
+            &self.params1.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
         ]
         .concat()
     }
@@ -78,7 +85,7 @@ mod tests {
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(0x058a));
         assert_eq!(frag.flags, 0);
-        assert_eq!(frag.params1, 0.0);
+        assert_eq!(frag.params1, None);
     }
 
     #[test]
