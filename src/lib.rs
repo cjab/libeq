@@ -301,17 +301,40 @@ impl<'a> Texture<'a> {
     }
 }
 
-//#[cfg(test)]
-//mod tests {
-//    use super::*;
-//
-//    #[test]
-//    fn it_works() {
-//        let wld_data = &include_bytes!("../fixtures/gfaydark_obj.wld")[..];
-//        let wld = Wld::load(wld_data);
-//        let wld_doc = wld.0;
-//        println!("{:?}", wld_doc);
-//
-//        assert_eq!(1, 1);
-//    }
-//}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_builds_meshes() {
+        let wld_data = &include_bytes!("../fixtures/gfaydark.wld")[..];
+        let wld = Wld::load(wld_data);
+        let meshes = wld.meshes().collect::<Vec<_>>();
+
+        assert_eq!(meshes.len(), 1597);
+        assert_eq!(meshes[0].name(), Some("R8_DMSPRITEDEF"));
+        assert_eq!(meshes[0].positions().len(), 8);
+        assert_eq!(meshes[0].positions()[0], [0.0625, -0.09375, -36.0625]);
+        assert_eq!(meshes[0].normals().len(), 8);
+        assert_eq!(meshes[0].normals()[0], [0.22834645, 0.93700784, 0.24409449]);
+        assert_eq!(meshes[0].texture_coordinates().len(), 8);
+        assert_eq!(meshes[0].texture_coordinates()[0], [0.30078125, 0.30078125]);
+        assert_eq!(meshes[0].indices().len(), 18);
+        assert_eq!(meshes[0].indices()[0], 0);
+        assert_eq!(meshes[0].center(), (-2502.0, 190.0, -2432.0));
+    }
+
+    #[test]
+    fn it_builds_materials() {
+        let wld_data = &include_bytes!("../fixtures/gfaydark.wld")[..];
+        let wld = Wld::load(wld_data);
+        let materials = wld.materials().collect::<Vec<_>>();
+
+        assert_eq!(materials.len(), 33);
+        assert_eq!(materials[0].name(), Some("SGRASS_MDF"));
+        assert_eq!(
+            materials[0].base_color_texture().unwrap().name(),
+            Some("SGRASS_SPRITE")
+        );
+    }
+}
