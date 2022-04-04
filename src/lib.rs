@@ -336,5 +336,9 @@ mod tests {
             materials[0].base_color_texture().unwrap().name(),
             Some("SGRASS_SPRITE")
         );
+        assert_eq!(
+            materials[0].base_color_texture().unwrap().source(),
+            Some("sgrass.bmp".to_string())
+        )
     }
 }
