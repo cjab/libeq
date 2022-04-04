@@ -83,6 +83,11 @@ impl Fragment for VertexColorFragment {
             &self.data2.to_le_bytes()[..],
             &self.data3.to_le_bytes()[..],
             &self.data4.to_le_bytes()[..],
+            &self
+                .vertex_colors
+                .iter()
+                .flat_map(|v| v.to_le_bytes())
+                .collect::<Vec<_>>()[..],
         ]
         .concat()
     }
