@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::mem;
 
 use super::{decode_string, encode_string};
 use super::{Fragment, FragmentType, StringReference};
@@ -21,6 +22,14 @@ pub struct TextureImagesFragment {
     pub entries: Vec<TextureImagesFragmentEntry>,
 }
 
+impl TextureImagesFragment {
+    fn size(&self) -> usize {
+        mem::size_of::<StringReference>()
+            + mem::size_of::<u32>()
+            + self.entries.iter().map(|e| e.size()).sum::<usize>()
+    }
+}
+
 impl FragmentType for TextureImagesFragment {
     type T = Self;
 
@@ -39,6 +48,31 @@ impl FragmentType for TextureImagesFragment {
                 entries,
             },
         ))
+    }
+}
+
+impl Fragment for TextureImagesFragment {
+    fn serialize(&self) -> Vec<u8> {
+        let padding = vec![0; 4 - (self.size() % 4)];
+        [
+            &self.name_reference.serialize()[..],
+            &self.size1.to_le_bytes()[..],
+            &self
+                .entries
+                .iter()
+                .flat_map(|e| e.serialize())
+                .collect::<Vec<_>>()[..],
+            &padding[..],
+        ]
+        .concat()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
     }
 }
 
@@ -73,35 +107,16 @@ impl TextureImagesFragmentEntry {
         ))
     }
 
+    fn size(&self) -> usize {
+        mem::size_of::<u16>() + self.file_name.len() + 1
+    }
+
     fn serialize(&self) -> Vec<u8> {
         [
             &self.name_length.to_le_bytes()[..],
-            &encode_string(&self.file_name)[..],
+            &encode_string(&format!("{}{}", &self.file_name, "\0"))[..],
         ]
         .concat()
-    }
-}
-
-impl Fragment for TextureImagesFragment {
-    fn serialize(&self) -> Vec<u8> {
-        [
-            &self.name_reference.serialize()[..],
-            &self.size1.to_le_bytes()[..],
-            &self
-                .entries
-                .iter()
-                .flat_map(|e| e.serialize())
-                .collect::<Vec<_>>()[..],
-        ]
-        .concat()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn name_ref(&self) -> &StringReference {
-        &self.name_reference
     }
 }
 
