@@ -308,6 +308,7 @@ impl Fragment for MeshFragment {
             &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.material_list_ref.serialize()[..],
+            &self.animation_ref.serialize()[..],
             &self.fragment3.serialize()[..],
             &self.fragment4.serialize()[..],
             &self.center.0.to_le_bytes()[..],
