@@ -40,12 +40,9 @@ pub struct MeshAnimatedVerticesFragment {
     /// values are created.
     pub scale: u16,
 
-    /// There are `frame_count` of these.
-    pub frames: Vec<u32>,
-
+    /// There are `frame_count` frames containing `vertex_count` vertices each.
     /// Components of the vertex positions, multiplied by (1 shl Scale).
-    /// There are `vertex_count` of these.
-    pub vertices: Vec<(i16, i16, i16)>,
+    pub frames: Vec<Vec<(i16, i16, i16)>>,
 
     /// _Unknown_ - Usually contains 0.
     pub size6: u16,
@@ -67,9 +64,11 @@ impl FragmentType for MeshAnimatedVerticesFragment {
                 le_u16,
                 le_u16,
             ))(input)?;
-        let (remaining, (frames, vertices, size6)) = tuple((
-            count(le_u32, frame_count as usize),
-            count(tuple((le_i16, le_i16, le_i16)), vertex_count as usize),
+        let (remaining, (frames, size6)) = tuple((
+            count(
+                count(tuple((le_i16, le_i16, le_i16)), vertex_count as usize),
+                frame_count as usize,
+            ),
             le_u16,
         ))(i)?;
 
@@ -84,7 +83,6 @@ impl FragmentType for MeshAnimatedVerticesFragment {
                 param2,
                 scale,
                 frames,
-                vertices,
                 size6,
             },
         ))
@@ -104,12 +102,11 @@ impl Fragment for MeshAnimatedVerticesFragment {
             &self
                 .frames
                 .iter()
-                .flat_map(|f| f.to_le_bytes())
-                .collect::<Vec<_>>()[..],
-            &self
-                .vertices
-                .iter()
-                .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()].concat())
+                .flat_map(|f| {
+                    f.iter().flat_map(|x| {
+                        [x.0.to_le_bytes(), x.1.to_le_bytes(), x.2.to_le_bytes()].concat()
+                    })
+                })
                 .collect::<Vec<_>>()[..],
             &self.size6.to_le_bytes()[..],
         ]
@@ -142,10 +139,9 @@ mod tests {
         assert_eq!(frag.param2, 0);
         assert_eq!(frag.scale, 10);
         assert_eq!(frag.frames.len(), 15);
-        assert_eq!(frag.frames[0], 142868935);
-        assert_eq!(frag.vertices.len(), 104);
-        assert_eq!(frag.vertices[0], (-556, -1639, -13535));
-        assert_eq!(frag.size6, 64980);
+        assert_eq!(frag.frames[0].len(), 104);
+        assert_eq!(frag.frames[0][0], (455, 2180, 11078));
+        assert_eq!(frag.size6, 0);
     }
 
     #[test]
