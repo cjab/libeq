@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, MobSkeletonPieceTrackFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentParser, MobSkeletonPieceTrackFragment, StringReference};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -25,7 +25,7 @@ pub struct MobSkeletonPieceTrackReferenceFragment {
     pub params1: Option<u32>,
 }
 
-impl FragmentType for MobSkeletonPieceTrackReferenceFragment {
+impl FragmentParser for MobSkeletonPieceTrackReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x13;

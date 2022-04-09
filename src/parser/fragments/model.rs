@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringReference};
+use super::{Fragment, FragmentParser, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i32, le_u32, le_u8};
@@ -66,7 +66,7 @@ pub struct ModelFragment {
     pub name: Vec<u8>,
 }
 
-impl FragmentType for ModelFragment {
+impl FragmentParser for ModelFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x14;

@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, MeshAnimatedVerticesFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentParser, MeshAnimatedVerticesFragment, StringReference};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -20,7 +20,7 @@ pub struct MeshAnimatedVerticesReferenceFragment {
     pub flags: u32,
 }
 
-impl FragmentType for MeshAnimatedVerticesReferenceFragment {
+impl FragmentParser for MeshAnimatedVerticesReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2f;

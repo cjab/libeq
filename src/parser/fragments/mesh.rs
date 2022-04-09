@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, MaterialListFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentParser, MaterialListFragment, StringReference};
 
 use nom::combinator::map;
 use nom::multi::count;
@@ -182,7 +182,7 @@ pub struct MeshFragment {
     pub data9: Vec<MeshFragmentData9Entry>,
 }
 
-impl FragmentType for MeshFragment {
+impl FragmentParser for MeshFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x36;

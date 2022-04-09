@@ -109,7 +109,7 @@ pub trait Fragment {
     fn name_ref(&self) -> &StringReference;
 }
 
-pub trait FragmentType {
+pub trait FragmentParser {
     type T;
     const TYPE_ID: u32;
     const TYPE_NAME: &'static str;

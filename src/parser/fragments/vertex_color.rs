@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringReference};
+use super::{Fragment, FragmentParser, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -42,7 +42,7 @@ pub struct VertexColorFragment {
     pub vertex_colors: Vec<u32>,
 }
 
-impl FragmentType for VertexColorFragment {
+impl FragmentParser for VertexColorFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x32;

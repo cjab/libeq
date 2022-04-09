@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringReference};
+use super::{Fragment, FragmentParser, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
@@ -43,7 +43,7 @@ pub struct PolygonAnimationFragment {
     pub entries2: Vec<(u32, Vec<u32>)>,
 }
 
-impl FragmentType for PolygonAnimationFragment {
+impl FragmentParser for PolygonAnimationFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x17;

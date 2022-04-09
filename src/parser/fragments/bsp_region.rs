@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, MeshFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentParser, MeshFragment, StringReference};
 
 use nom::combinator::map;
 use nom::multi::count;
@@ -84,7 +84,7 @@ pub struct BspRegionFragment {
     pub mesh_reference: Option<FragmentRef<MeshFragment>>,
 }
 
-impl FragmentType for BspRegionFragment {
+impl FragmentParser for BspRegionFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x22;

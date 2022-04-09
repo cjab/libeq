@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringReference};
+use super::{Fragment, FragmentParser, StringReference};
 
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
@@ -129,7 +129,7 @@ pub struct TwoDimensionalObjectFragment {
     pub params7_data: Option<Vec<u32>>,
 }
 
-impl FragmentType for TwoDimensionalObjectFragment {
+impl FragmentParser for TwoDimensionalObjectFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x06;

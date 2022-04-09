@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, StringReference};
+use super::{Fragment, FragmentRef, FragmentParser, StringReference};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -20,7 +20,7 @@ pub struct TwoDimensionalObjectReferenceFragment {
     pub flags: u32,
 }
 
-impl FragmentType for TwoDimensionalObjectReferenceFragment {
+impl FragmentParser for TwoDimensionalObjectReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x07;

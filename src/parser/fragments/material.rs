@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, StringReference, TextureReferenceFragment};
+use super::{Fragment, FragmentRef, FragmentParser, StringReference, TextureReferenceFragment};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
@@ -39,7 +39,7 @@ pub struct MaterialFragment {
     pub pair: Option<(u32, f32)>,
 }
 
-impl FragmentType for MaterialFragment {
+impl FragmentParser for MaterialFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x30;
