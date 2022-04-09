@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MeshFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentType, MeshFragment, StringReference};
 
 use nom::combinator::map;
 use nom::multi::count;
@@ -109,7 +109,7 @@ impl FragmentType for BspRegionFragment {
         ) = tuple((
             StringReference::parse,
             le_u32,
-            fragment_ref,
+            FragmentRef::parse,
             le_u32,
             le_u32,
             le_u32,
@@ -128,10 +128,10 @@ impl FragmentType for BspRegionFragment {
             count(BspRegionFragmentPVS::parse, pvs_count as usize),
             le_u32,
         ))(i)?;
-        let (i, (name7, fragment2)) = tuple((count(le_u8, 12), fragment_ref))(i)?;
+        let (i, (name7, fragment2)) = tuple((count(le_u8, 12), FragmentRef::parse))(i)?;
 
         let (remaining, mesh_reference) = if (flags & 0x100) == 0x100 {
-            fragment_ref(i).map(|(rem, f)| (rem, Some(f)))?
+            FragmentRef::parse(i).map(|(rem, f)| (rem, Some(f)))?
         } else {
             (i, None)
         };

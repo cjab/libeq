@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    fragment_ref, BspRegionFragment, Fragment, FragmentRef, FragmentType, StringReference,
-};
+use super::{BspRegionFragment, Fragment, FragmentRef, FragmentType, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
@@ -95,8 +93,8 @@ impl BspTreeFragmentEntry {
         let (remaining, (normal, split_distance, region, nodes)) = tuple((
             tuple((le_f32, le_f32, le_f32)),
             le_f32,
-            fragment_ref,
-            tuple((fragment_ref, fragment_ref)),
+            FragmentRef::parse,
+            tuple((FragmentRef::parse, FragmentRef::parse)),
         ))(input)?;
 
         Ok((

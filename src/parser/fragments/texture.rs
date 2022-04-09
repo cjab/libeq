@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, StringReference, TextureImagesFragment,
-};
+use super::{Fragment, FragmentRef, FragmentType, StringReference, TextureImagesFragment};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -53,7 +51,7 @@ impl FragmentType for TextureFragment {
         // TODO: Do these fields even really exist?
         let current_frame = None;
         let sleep = None;
-        let (remaining, frame_references) = count(fragment_ref, frame_count as usize)(i)?;
+        let (remaining, frame_references) = count(FragmentRef::parse, frame_count as usize)(i)?;
 
         Ok((
             remaining,

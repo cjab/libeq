@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, SkeletonTrackSetFragment, StringReference,
-};
+use super::{Fragment, FragmentRef, FragmentType, SkeletonTrackSetFragment, StringReference};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -30,7 +28,7 @@ impl FragmentType for SkeletonTrackSetReferenceFragment {
 
     fn parse(input: &[u8]) -> IResult<&[u8], SkeletonTrackSetReferenceFragment> {
         let (remaining, (name_reference, reference, params1)) =
-            tuple((StringReference::parse, fragment_ref, le_u32))(input)?;
+            tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
             SkeletonTrackSetReferenceFragment {

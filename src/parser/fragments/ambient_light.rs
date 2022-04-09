@@ -1,9 +1,6 @@
 use std::any::Any;
 
-use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, LightSourceReferenceFragment,
-    StringReference,
-};
+use super::{Fragment, FragmentRef, FragmentType, LightSourceReferenceFragment, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -42,7 +39,7 @@ impl FragmentType for AmbientLightFragment {
 
     fn parse(input: &[u8]) -> IResult<&[u8], AmbientLightFragment> {
         let (i, (name_reference, reference, flags, region_count)) =
-            tuple((StringReference::parse, fragment_ref, le_u32, le_u32))(input)?;
+            tuple((StringReference::parse, FragmentRef::parse, le_u32, le_u32))(input)?;
         let (remaining, regions) = count(le_u32, region_count as usize)(i)?;
 
         Ok((

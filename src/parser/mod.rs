@@ -125,15 +125,13 @@ impl WldDoc {
         self.fragment_iter::<MaterialFragment>()
     }
 
+    /// Iterate over all fragments of a specific type
     pub fn fragment_iter<'a, T: 'static + FragmentType<T = T> + Debug>(
         &'a self,
     ) -> impl Iterator<Item = &'a T> + '_ {
         self.fragments
             .iter()
-            .enumerate()
-            .filter(|(_, f)| f.as_any().downcast_ref::<T>().is_some())
-            .map(|(i, _)| FragmentRef::new((i + 1) as i32))
-            .filter_map(move |r| self.get(&r))
+            .filter_map(|f| f.as_any().downcast_ref::<T>())
     }
 }
 

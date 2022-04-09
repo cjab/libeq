@@ -1,9 +1,6 @@
 use std::any::Any;
 
-use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, MobSkeletonPieceTrackFragment,
-    StringReference,
-};
+use super::{Fragment, FragmentRef, FragmentType, MobSkeletonPieceTrackFragment, StringReference};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -36,7 +33,7 @@ impl FragmentType for MobSkeletonPieceTrackReferenceFragment {
 
     fn parse(input: &[u8]) -> IResult<&[u8], MobSkeletonPieceTrackReferenceFragment> {
         let (i, (name_reference, reference, flags)) =
-            tuple((StringReference::parse, fragment_ref, le_u32))(input)?;
+            tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
 
         let (remaining, params1) = if flags & 0x01 == 0x01 {
             le_u32(i).map(|(i, params1)| (i, Some(params1)))?

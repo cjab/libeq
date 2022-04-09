@@ -1,9 +1,6 @@
 use std::any::Any;
 
-use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, LightSourceReferenceFragment,
-    StringReference,
-};
+use super::{Fragment, FragmentRef, FragmentType, LightSourceReferenceFragment, StringReference};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
@@ -44,7 +41,7 @@ impl FragmentType for LightInfoFragment {
     fn parse(input: &[u8]) -> IResult<&[u8], LightInfoFragment> {
         let (remaining, (name_reference, reference, flags, x, y, z, radius)) = tuple((
             StringReference::parse,
-            fragment_ref,
+            FragmentRef::parse,
             le_u32,
             le_f32,
             le_f32,
