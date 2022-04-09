@@ -32,6 +32,7 @@ impl FragmentType for MobSkeletonPieceTrackReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x13;
+    const TYPE_NAME: &'static str = "MobSkeletonPieceTrackReference";
 
     fn parse(input: &[u8]) -> IResult<&[u8], MobSkeletonPieceTrackReferenceFragment> {
         let (i, (name_reference, reference, flags)) =

@@ -53,6 +53,7 @@ impl FragmentType for RegionFlagFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x29;
+    const TYPE_NAME: &'static str = "RegionFlag";
 
     fn parse(input: &[u8]) -> IResult<&[u8], RegionFlagFragment> {
         let (i, (name_reference, flags, region_count)) =

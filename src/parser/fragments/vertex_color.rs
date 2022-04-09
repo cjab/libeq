@@ -46,6 +46,7 @@ impl FragmentType for VertexColorFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x32;
+    const TYPE_NAME: &'static str = "VertexColor";
 
     fn parse(input: &[u8]) -> IResult<&[u8], VertexColorFragment> {
         let (i, (name_reference, data1, vertex_color_count, data2, data3, data4)) =

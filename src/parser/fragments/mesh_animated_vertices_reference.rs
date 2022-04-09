@@ -27,6 +27,7 @@ impl FragmentType for MeshAnimatedVerticesReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2f;
+    const TYPE_NAME: &'static str = "MeshAnimatedVerticesReference";
 
     fn parse(input: &[u8]) -> IResult<&[u8], MeshAnimatedVerticesReferenceFragment> {
         let (remaining, (name_reference, reference, flags)) =

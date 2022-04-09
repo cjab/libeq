@@ -26,6 +26,7 @@ impl FragmentType for LightSourceReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x1c;
+    const TYPE_NAME: &'static str = "LightSource";
 
     fn parse(input: &[u8]) -> IResult<&[u8], LightSourceReferenceFragment> {
         let (remaining, (name_reference, reference, flags)) =

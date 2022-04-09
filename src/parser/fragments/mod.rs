@@ -107,6 +107,7 @@ pub trait Fragment {
 pub trait FragmentType {
     type T;
     const TYPE_ID: u32;
+    const TYPE_NAME: &'static str;
     fn parse(input: &[u8]) -> IResult<&[u8], Self::T>;
 }
 

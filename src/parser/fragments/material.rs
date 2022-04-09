@@ -45,6 +45,7 @@ impl FragmentType for MaterialFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x30;
+    const TYPE_NAME: &'static str = "Material";
 
     fn parse(input: &[u8]) -> IResult<&[u8], MaterialFragment> {
         let (i, (name_reference, flags, params1, params2, params3, reference)) = tuple((

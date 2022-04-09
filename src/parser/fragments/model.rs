@@ -70,6 +70,7 @@ impl FragmentType for ModelFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x14;
+    const TYPE_NAME: &'static str = "Model";
 
     fn parse(input: &[u8]) -> IResult<&[u8], ModelFragment> {
         let (

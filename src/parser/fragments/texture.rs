@@ -44,6 +44,7 @@ impl FragmentType for TextureFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x04;
+    const TYPE_NAME: &'static str = "Texture";
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureFragment> {
         let (i, (name_reference, flags, frame_count)) =

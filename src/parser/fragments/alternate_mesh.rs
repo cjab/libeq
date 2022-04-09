@@ -140,6 +140,7 @@ impl FragmentType for AlternateMeshFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2c;
+    const TYPE_NAME: &'static str = "AlternateMesh";
 
     fn parse(input: &[u8]) -> IResult<&[u8], AlternateMeshFragment> {
         let (
@@ -360,11 +361,7 @@ impl AlternateMeshFragmentPolygonEntry {
     }
 }
 
-impl FragmentType for AlternateMeshFragmentPolygonEntry {
-    type T = Self;
-
-    const TYPE_ID: u32 = 0x0;
-
+impl AlternateMeshFragmentPolygonEntry {
     fn parse(input: &[u8]) -> IResult<&[u8], AlternateMeshFragmentPolygonEntry> {
         let (remaining, (flags, data, vertex_indexes)) = tuple((
             le_u16,

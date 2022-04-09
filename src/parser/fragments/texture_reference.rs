@@ -24,6 +24,7 @@ impl FragmentType for TextureReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x05;
+    const TYPE_NAME: &'static str = "TextureReference";
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureReferenceFragment> {
         let (remaining, (name_reference, reference, flags)) =

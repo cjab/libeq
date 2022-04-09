@@ -19,6 +19,7 @@ impl FragmentType for ZoneUnknownFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x16;
+    const TYPE_NAME: &'static str = "ZoneUnknown";
 
     fn parse(input: &[u8]) -> IResult<&[u8], ZoneUnknownFragment> {
         let (i, name_reference) = StringReference::parse(input)?;

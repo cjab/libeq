@@ -88,6 +88,7 @@ impl FragmentType for BspRegionFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x22;
+    const TYPE_NAME: &'static str = "BspRegion";
 
     fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragment> {
         let (

@@ -188,6 +188,7 @@ impl FragmentType for MeshFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x36;
+    const TYPE_NAME: &'static str = "Mesh";
 
     fn parse(input: &[u8]) -> IResult<&[u8], MeshFragment> {
         let (

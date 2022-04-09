@@ -24,6 +24,7 @@ impl FragmentType for TwoDimensionalObjectReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x07;
+    const TYPE_NAME: &'static str = "TwoDimensionalObjectReference";
 
     fn parse(input: &[u8]) -> IResult<&[u8], TwoDimensionalObjectReferenceFragment> {
         let (remaining, (name_reference, reference, flags)) =
