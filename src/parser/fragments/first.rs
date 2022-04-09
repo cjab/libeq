@@ -15,6 +15,7 @@ impl FragmentType for FirstFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x35;
+    const TYPE_NAME: &'static str = "First";
 
     fn parse(input: &[u8]) -> IResult<&[u8], FirstFragment> {
         let (remainder, name_reference) = StringReference::parse(input)?;

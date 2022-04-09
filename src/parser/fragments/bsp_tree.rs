@@ -27,6 +27,7 @@ impl FragmentType for BspTreeFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x21;
+    const TYPE_NAME: &'static str = "BspTree";
 
     fn parse(input: &[u8]) -> IResult<&[u8], BspTreeFragment> {
         let (i, name_reference) = StringReference::parse(input)?;

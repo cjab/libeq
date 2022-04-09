@@ -30,6 +30,7 @@ impl FragmentType for PolygonAnimationReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x18;
+    const TYPE_NAME: &'static str = "PolygonAnimationReference";
 
     fn parse(input: &[u8]) -> IResult<&[u8], PolygonAnimationReferenceFragment> {
         let (i, (name_reference, reference, flags)) =

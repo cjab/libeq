@@ -26,6 +26,7 @@ impl FragmentType for SkeletonTrackSetReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x11;
+    const TYPE_NAME: &'static str = "SkeletonTrackSetReference";
 
     fn parse(input: &[u8]) -> IResult<&[u8], SkeletonTrackSetReferenceFragment> {
         let (remaining, (name_reference, reference, params1)) =

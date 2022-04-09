@@ -39,6 +39,7 @@ impl FragmentType for LightInfoFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x28;
+    const TYPE_NAME: &'static str = "LightInfo";
 
     fn parse(input: &[u8]) -> IResult<&[u8], LightInfoFragment> {
         let (remaining, (name_reference, reference, flags, x, y, z, radius)) = tuple((

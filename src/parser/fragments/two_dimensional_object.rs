@@ -133,6 +133,7 @@ impl FragmentType for TwoDimensionalObjectFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x06;
+    const TYPE_NAME: &'static str = "TwoDimensionalObject";
 
     fn parse(input: &[u8]) -> IResult<&[u8], TwoDimensionalObjectFragment> {
         let (i, (name_reference, flags, num_frames, num_pitches, sprite_size, sphere_fragment)) =

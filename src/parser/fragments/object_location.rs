@@ -77,6 +77,7 @@ impl FragmentType for ObjectLocationFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x15;
+    const TYPE_NAME: &'static str = "ObjectLocation";
 
     fn parse(input: &[u8]) -> IResult<&[u8], ObjectLocationFragment> {
         let (

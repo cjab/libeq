@@ -34,6 +34,7 @@ impl FragmentType for TextureImagesFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x03;
+    const TYPE_NAME: &'static str = "TextureImages";
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureImagesFragment> {
         let (i, name_reference) = StringReference::parse(input)?;

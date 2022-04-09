@@ -62,6 +62,7 @@ impl FragmentType for SkeletonTrackSetFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x10;
+    const TYPE_NAME: &'static str = "SkeletonTrackSet";
 
     fn parse(input: &[u8]) -> IResult<&[u8], SkeletonTrackSetFragment> {
         let (i, (name_reference, flags, entry_count, fragment)) =

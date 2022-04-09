@@ -101,6 +101,7 @@ impl FragmentType for CameraFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x08;
+    const TYPE_NAME: &'static str = "Camera";
 
     fn parse(input: &[u8]) -> IResult<&[u8], CameraFragment> {
         let (

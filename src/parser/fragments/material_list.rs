@@ -27,6 +27,7 @@ impl FragmentType for MaterialListFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x31;
+    const TYPE_NAME: &'static str = "MaterialList";
 
     fn parse(input: &[u8]) -> IResult<&[u8], MaterialListFragment> {
         let (i, (name_reference, flags, size1)) =

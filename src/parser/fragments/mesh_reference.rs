@@ -24,6 +24,7 @@ impl FragmentType for MeshReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2d;
+    const TYPE_NAME: &'static str = "MeshReference";
 
     fn parse(input: &[u8]) -> IResult<&[u8], MeshReferenceFragment> {
         let (remaining, (name_reference, reference, params)) =

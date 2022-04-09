@@ -38,6 +38,7 @@ impl FragmentType for AmbientLightFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2a;
+    const TYPE_NAME: &'static str = "AmbientLight";
 
     fn parse(input: &[u8]) -> IResult<&[u8], AmbientLightFragment> {
         let (i, (name_reference, reference, flags, region_count)) =

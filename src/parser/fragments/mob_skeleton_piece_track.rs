@@ -96,6 +96,7 @@ impl FragmentType for MobSkeletonPieceTrackFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x12;
+    const TYPE_NAME: &'static str = "MobSkeletonPieceTrack";
 
     fn parse(input: &[u8]) -> IResult<&[u8], MobSkeletonPieceTrackFragment> {
         let (
