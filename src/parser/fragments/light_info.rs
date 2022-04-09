@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, LightSourceReferenceFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentParser, LightSourceReferenceFragment, StringReference};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
@@ -32,7 +32,7 @@ pub struct LightInfoFragment {
     pub radius: f32,
 }
 
-impl FragmentType for LightInfoFragment {
+impl FragmentParser for LightInfoFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x28;

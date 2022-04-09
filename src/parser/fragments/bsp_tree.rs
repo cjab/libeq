@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{BspRegionFragment, Fragment, FragmentRef, FragmentType, StringReference};
+use super::{BspRegionFragment, Fragment, FragmentRef, FragmentParser, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
@@ -21,7 +21,7 @@ pub struct BspTreeFragment {
     pub entries: Vec<BspTreeFragmentEntry>,
 }
 
-impl FragmentType for BspTreeFragment {
+impl FragmentParser for BspTreeFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x21;

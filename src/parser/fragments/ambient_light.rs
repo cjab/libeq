@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, LightSourceReferenceFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentParser, LightSourceReferenceFragment, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -31,7 +31,7 @@ pub struct AmbientLightFragment {
     pub regions: Vec<u32>,
 }
 
-impl FragmentType for AmbientLightFragment {
+impl FragmentParser for AmbientLightFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2a;

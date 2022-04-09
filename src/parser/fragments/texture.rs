@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, StringReference, TextureImagesFragment};
+use super::{Fragment, FragmentRef, FragmentParser, StringReference, TextureImagesFragment};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -38,7 +38,7 @@ pub struct TextureFragment {
     pub frame_references: Vec<FragmentRef<TextureImagesFragment>>,
 }
 
-impl FragmentType for TextureFragment {
+impl FragmentParser for TextureFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x04;

@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, SkeletonTrackSetFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentParser, SkeletonTrackSetFragment, StringReference};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -20,7 +20,7 @@ pub struct SkeletonTrackSetReferenceFragment {
     pub params1: u32,
 }
 
-impl FragmentType for SkeletonTrackSetReferenceFragment {
+impl FragmentParser for SkeletonTrackSetReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x11;

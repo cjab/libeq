@@ -2,7 +2,7 @@ use std::any::Any;
 use std::mem;
 
 use super::{decode_string, encode_string};
-use super::{Fragment, FragmentType, StringReference};
+use super::{Fragment, FragmentParser, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_u16, le_u32, le_u8};
@@ -30,7 +30,7 @@ impl TextureImagesFragment {
     }
 }
 
-impl FragmentType for TextureImagesFragment {
+impl FragmentParser for TextureImagesFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x03;

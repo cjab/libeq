@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringReference};
+use super::{Fragment, FragmentParser, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
@@ -58,7 +58,7 @@ pub struct SkeletonTrackSetFragment {
     pub data3: Option<Vec<u32>>,
 }
 
-impl FragmentType for SkeletonTrackSetFragment {
+impl FragmentParser for SkeletonTrackSetFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x10;

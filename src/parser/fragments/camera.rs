@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringReference};
+use super::{Fragment, FragmentParser, StringReference};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
@@ -97,7 +97,7 @@ pub struct CameraFragment {
     pub params25: u32,
 }
 
-impl FragmentType for CameraFragment {
+impl FragmentParser for CameraFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x08;

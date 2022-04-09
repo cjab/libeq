@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringReference};
+use super::{Fragment, FragmentParser, StringReference};
 
 use nom::number::complete::le_i32;
 use nom::IResult;
@@ -15,7 +15,7 @@ pub struct ZoneUnknownFragment {
     pub unknown: i32,
 }
 
-impl FragmentType for ZoneUnknownFragment {
+impl FragmentParser for ZoneUnknownFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x16;

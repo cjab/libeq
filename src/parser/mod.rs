@@ -68,20 +68,14 @@ impl WldDoc {
     }
 
     /// Get a fragment given a fragment reference.
-    pub fn get<T: 'static + FragmentType<T = T> + Debug>(
-        &self,
-        fragment_ref: &FragmentRef<T>,
-    ) -> Option<&T> {
+    pub fn get<T: 'static + Fragment>(&self, fragment_ref: &FragmentRef<T>) -> Option<&T> {
         match fragment_ref {
             FragmentRef::Name(_, _) => self.get_by_name_ref(fragment_ref),
             FragmentRef::Index(_, _) => self.get_by_index_ref(fragment_ref),
         }
     }
 
-    fn get_by_index_ref<T: 'static + FragmentType<T = T> + Debug>(
-        &self,
-        fragment_ref: &FragmentRef<T>,
-    ) -> Option<&T> {
+    fn get_by_index_ref<T: 'static + Fragment>(&self, fragment_ref: &FragmentRef<T>) -> Option<&T> {
         let idx = if let FragmentRef::Index(idx, _) = fragment_ref {
             idx
         } else {
@@ -94,10 +88,7 @@ impl WldDoc {
             .downcast_ref()
     }
 
-    fn get_by_name_ref<T: 'static + FragmentType<T = T> + Debug>(
-        &self,
-        fragment_ref: &FragmentRef<T>,
-    ) -> Option<&T> {
+    fn get_by_name_ref<T: 'static + Fragment>(&self, fragment_ref: &FragmentRef<T>) -> Option<&T> {
         let name_ref = if let FragmentRef::Name(name_ref, _) = fragment_ref {
             *name_ref
         } else {
@@ -126,9 +117,7 @@ impl WldDoc {
     }
 
     /// Iterate over all fragments of a specific type
-    pub fn fragment_iter<'a, T: 'static + FragmentType<T = T> + Debug>(
-        &'a self,
-    ) -> impl Iterator<Item = &'a T> + '_ {
+    pub fn fragment_iter<'a, T: 'static + Fragment>(&'a self) -> impl Iterator<Item = &'a T> + '_ {
         self.fragments
             .iter()
             .filter_map(|f| f.as_any().downcast_ref::<T>())

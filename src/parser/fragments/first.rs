@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringReference};
+use super::{Fragment, FragmentParser, StringReference};
 
 use nom::IResult;
 
@@ -11,7 +11,7 @@ pub struct FirstFragment {
     pub name_reference: StringReference,
 }
 
-impl FragmentType for FirstFragment {
+impl FragmentParser for FirstFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x35;

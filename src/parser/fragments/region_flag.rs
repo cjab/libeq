@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringReference};
+use super::{Fragment, FragmentParser, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_u32, le_u8};
@@ -49,7 +49,7 @@ pub struct RegionFlagFragment {
     pub data2: Vec<u8>,
 }
 
-impl FragmentType for RegionFlagFragment {
+impl FragmentParser for RegionFlagFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x29;

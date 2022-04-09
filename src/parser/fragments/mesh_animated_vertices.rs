@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentType, StringReference};
+use super::{Fragment, FragmentParser, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_i16, le_u16, le_u32};
@@ -48,7 +48,7 @@ pub struct MeshAnimatedVerticesFragment {
     pub size6: u16,
 }
 
-impl FragmentType for MeshAnimatedVerticesFragment {
+impl FragmentParser for MeshAnimatedVerticesFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x37;

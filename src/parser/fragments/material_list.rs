@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, MaterialFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentParser, MaterialFragment, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -23,7 +23,7 @@ pub struct MaterialListFragment {
     pub fragments: Vec<FragmentRef<MaterialFragment>>,
 }
 
-impl FragmentType for MaterialListFragment {
+impl FragmentParser for MaterialListFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x31;

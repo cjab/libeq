@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, MaterialListFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentParser, MaterialListFragment, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_u16, le_u32};
@@ -134,7 +134,7 @@ pub struct AlternateMeshFragment {
     pub vertex_materials: Vec<(u16, u16, u32, u32, u32)>,
 }
 
-impl FragmentType for AlternateMeshFragment {
+impl FragmentParser for AlternateMeshFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2c;

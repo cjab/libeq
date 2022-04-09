@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentType, PolygonAnimationFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentParser, PolygonAnimationFragment, StringReference};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
@@ -24,7 +24,7 @@ pub struct PolygonAnimationReferenceFragment {
     pub params1: Option<f32>,
 }
 
-impl FragmentType for PolygonAnimationReferenceFragment {
+impl FragmentParser for PolygonAnimationReferenceFragment {
     type T = Self;
 
     const TYPE_ID: u32 = 0x18;
