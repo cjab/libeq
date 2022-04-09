@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, PolygonAnimationFragment, StringReference,
-};
+use super::{Fragment, FragmentRef, FragmentType, PolygonAnimationFragment, StringReference};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
@@ -34,7 +32,7 @@ impl FragmentType for PolygonAnimationReferenceFragment {
 
     fn parse(input: &[u8]) -> IResult<&[u8], PolygonAnimationReferenceFragment> {
         let (i, (name_reference, reference, flags)) =
-            tuple((StringReference::parse, fragment_ref, le_u32))(input)?;
+            tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
 
         let (remaining, params1) = if (flags & 0x1) == 0x1 {
             le_f32(i).map(|(rem, f)| (rem, Some(f)))?

@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{fragment_ref, Fragment, FragmentRef, FragmentType, MaterialFragment, StringReference};
+use super::{Fragment, FragmentRef, FragmentType, MaterialFragment, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -32,7 +32,7 @@ impl FragmentType for MaterialListFragment {
     fn parse(input: &[u8]) -> IResult<&[u8], MaterialListFragment> {
         let (i, (name_reference, flags, size1)) =
             tuple((StringReference::parse, le_u32, le_u32))(input)?;
-        let (remaining, fragments) = count(fragment_ref, size1 as usize)(i)?;
+        let (remaining, fragments) = count(FragmentRef::parse, size1 as usize)(i)?;
         Ok((
             remaining,
             MaterialListFragment {

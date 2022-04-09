@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{fragment_ref, CameraFragment, Fragment, FragmentRef, FragmentType, StringReference};
+use super::{CameraFragment, Fragment, FragmentRef, FragmentType, StringReference};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -28,7 +28,7 @@ impl FragmentType for CameraReferenceFragment {
 
     fn parse(input: &[u8]) -> IResult<&[u8], CameraReferenceFragment> {
         let (remaining, (name_reference, reference, flags)) =
-            tuple((StringReference::parse, fragment_ref, le_u32))(input)?;
+            tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
             CameraReferenceFragment {

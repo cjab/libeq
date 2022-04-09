@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment, StringReference,
-};
+use super::{Fragment, FragmentRef, FragmentType, MaterialListFragment, StringReference};
 
 use nom::combinator::map;
 use nom::multi::count;
@@ -219,10 +217,10 @@ impl FragmentType for MeshFragment {
         ) = tuple((
             StringReference::parse,
             le_u32,
-            fragment_ref,
-            fragment_ref,
-            fragment_ref,
-            fragment_ref,
+            FragmentRef::parse,
+            FragmentRef::parse,
+            FragmentRef::parse,
+            FragmentRef::parse,
             tuple((le_f32, le_f32, le_f32)),
             tuple((le_u32, le_u32, le_u32)),
             le_f32,

@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, StringReference, TextureReferenceFragment,
-};
+use super::{Fragment, FragmentRef, FragmentType, StringReference, TextureReferenceFragment};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
@@ -54,7 +52,7 @@ impl FragmentType for MaterialFragment {
             le_u32,
             le_u32,
             tuple((le_f32, le_f32)),
-            fragment_ref,
+            FragmentRef::parse,
         ))(input)?;
 
         let (remaining, pair) = if flags & 0x2 == 0x2 {

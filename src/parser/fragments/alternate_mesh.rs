@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    fragment_ref, Fragment, FragmentRef, FragmentType, MaterialListFragment, StringReference,
-};
+use super::{Fragment, FragmentRef, FragmentType, MaterialListFragment, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_u16, le_u32};
@@ -171,7 +169,7 @@ impl FragmentType for AlternateMeshFragment {
             le_u32,
             le_u16,
             le_i16,
-            fragment_ref,
+            FragmentRef::parse,
             le_u32,
             le_u32,
             tuple((le_f32, le_f32, le_f32)),
