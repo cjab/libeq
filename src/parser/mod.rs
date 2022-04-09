@@ -16,7 +16,7 @@ pub use strings::{decode_string, encode_string, StringHash, StringReference};
 pub struct WldDoc {
     header: WldHeader,
     pub strings: StringHash,
-    pub fragments: Vec<Box<dyn Fragment>>,
+    pub fragments: Vec<Box<FragmentType>>,
 }
 
 impl Debug for dyn Fragment + 'static {
@@ -121,6 +121,11 @@ impl WldDoc {
         self.fragments
             .iter()
             .filter_map(|f| f.as_any().downcast_ref::<T>())
+    }
+
+    /// Iterate over all fragments
+    pub fn all_fragment_iter<'a>(&'a self) -> impl Iterator<Item = &'a Box<FragmentType>> + '_ {
+        self.fragments.iter()
     }
 }
 
@@ -233,119 +238,139 @@ impl<'a> FragmentHeader<'a> {
         ))
     }
 
-    fn parse_body(&self) -> Box<dyn Fragment> {
+    fn parse_body(&self) -> Box<FragmentType> {
         match self.fragment_type {
-            AlternateMeshFragment::TYPE_ID => {
-                Box::new(AlternateMeshFragment::parse(&self.field_data).unwrap().1)
-            }
-            VertexColorReferenceFragment::TYPE_ID => Box::new(
+            AlternateMeshFragment::TYPE_ID => Box::new(FragmentType::AlternateMesh(
+                AlternateMeshFragment::parse(&self.field_data).unwrap().1,
+            )),
+            VertexColorReferenceFragment::TYPE_ID => Box::new(FragmentType::VertexColorReference(
                 VertexColorReferenceFragment::parse(&self.field_data)
                     .unwrap()
                     .1,
-            ),
-            VertexColorFragment::TYPE_ID => {
-                Box::new(VertexColorFragment::parse(&self.field_data).unwrap().1)
-            }
-            MeshAnimatedVerticesFragment::TYPE_ID => Box::new(
+            )),
+            VertexColorFragment::TYPE_ID => Box::new(FragmentType::VertexColor(
+                VertexColorFragment::parse(&self.field_data).unwrap().1,
+            )),
+            MeshAnimatedVerticesFragment::TYPE_ID => Box::new(FragmentType::MeshAnimatedVertices(
                 MeshAnimatedVerticesFragment::parse(&self.field_data)
                     .unwrap()
                     .1,
-            ),
-            MeshAnimatedVerticesReferenceFragment::TYPE_ID => Box::new(
-                MeshAnimatedVerticesReferenceFragment::parse(&self.field_data)
-                    .unwrap()
-                    .1,
-            ),
-            AmbientLightFragment::TYPE_ID => {
-                Box::new(AmbientLightFragment::parse(&self.field_data).unwrap().1)
+            )),
+            MeshAnimatedVerticesReferenceFragment::TYPE_ID => {
+                Box::new(FragmentType::MeshAnimatedVerticesReference(
+                    MeshAnimatedVerticesReferenceFragment::parse(&self.field_data)
+                        .unwrap()
+                        .1,
+                ))
             }
-            RegionFlagFragment::TYPE_ID => {
-                Box::new(RegionFlagFragment::parse(&self.field_data).unwrap().1)
-            }
-            LightInfoFragment::TYPE_ID => {
-                Box::new(LightInfoFragment::parse(&self.field_data).unwrap().1)
-            }
-            LightSourceReferenceFragment::TYPE_ID => Box::new(
+            AmbientLightFragment::TYPE_ID => Box::new(FragmentType::AmbientLight(
+                AmbientLightFragment::parse(&self.field_data).unwrap().1,
+            )),
+            RegionFlagFragment::TYPE_ID => Box::new(FragmentType::RegionFlag(
+                RegionFlagFragment::parse(&self.field_data).unwrap().1,
+            )),
+            LightInfoFragment::TYPE_ID => Box::new(FragmentType::LightInfo(
+                LightInfoFragment::parse(&self.field_data).unwrap().1,
+            )),
+            LightSourceReferenceFragment::TYPE_ID => Box::new(FragmentType::LightSourceReference(
                 LightSourceReferenceFragment::parse(&self.field_data)
                     .unwrap()
                     .1,
-            ),
-            LightSourceFragment::TYPE_ID => {
-                Box::new(LightSourceFragment::parse(&self.field_data).unwrap().1)
+            )),
+            LightSourceFragment::TYPE_ID => Box::new(FragmentType::LightSource(
+                LightSourceFragment::parse(&self.field_data).unwrap().1,
+            )),
+            PolygonAnimationReferenceFragment::TYPE_ID => {
+                Box::new(FragmentType::PolygonAnimationReference(
+                    PolygonAnimationReferenceFragment::parse(&self.field_data)
+                        .unwrap()
+                        .1,
+                ))
             }
-            PolygonAnimationReferenceFragment::TYPE_ID => Box::new(
-                PolygonAnimationReferenceFragment::parse(&self.field_data)
-                    .unwrap()
-                    .1,
-            ),
-            PolygonAnimationFragment::TYPE_ID => {
-                Box::new(PolygonAnimationFragment::parse(&self.field_data).unwrap().1)
+            PolygonAnimationFragment::TYPE_ID => Box::new(FragmentType::PolygonAnimation(
+                PolygonAnimationFragment::parse(&self.field_data).unwrap().1,
+            )),
+            FirstFragment::TYPE_ID => Box::new(FragmentType::First(
+                FirstFragment::parse(&self.field_data).unwrap().1,
+            )),
+            ZoneUnknownFragment::TYPE_ID => Box::new(FragmentType::ZoneUnknown(
+                ZoneUnknownFragment::parse(&self.field_data).unwrap().1,
+            )),
+            SkeletonTrackSetReferenceFragment::TYPE_ID => {
+                Box::new(FragmentType::SkeletonTrackSetReference(
+                    SkeletonTrackSetReferenceFragment::parse(&self.field_data)
+                        .unwrap()
+                        .1,
+                ))
             }
-            FirstFragment::TYPE_ID => Box::new(FirstFragment::parse(&self.field_data).unwrap().1),
-            ZoneUnknownFragment::TYPE_ID => {
-                Box::new(ZoneUnknownFragment::parse(&self.field_data).unwrap().1)
+            CameraReferenceFragment::TYPE_ID => Box::new(FragmentType::CameraReference(
+                CameraReferenceFragment::parse(&self.field_data).unwrap().1,
+            )),
+            CameraFragment::TYPE_ID => Box::new(FragmentType::Camera(
+                CameraFragment::parse(&self.field_data).unwrap().1,
+            )),
+            TwoDimensionalObjectReferenceFragment::TYPE_ID => {
+                Box::new(FragmentType::TwoDimensionalObjectReference(
+                    TwoDimensionalObjectReferenceFragment::parse(&self.field_data)
+                        .unwrap()
+                        .1,
+                ))
             }
-            SkeletonTrackSetReferenceFragment::TYPE_ID => Box::new(
-                SkeletonTrackSetReferenceFragment::parse(&self.field_data)
-                    .unwrap()
-                    .1,
-            ),
-            CameraReferenceFragment::TYPE_ID => {
-                Box::new(CameraReferenceFragment::parse(&self.field_data).unwrap().1)
-            }
-            CameraFragment::TYPE_ID => Box::new(CameraFragment::parse(&self.field_data).unwrap().1),
-            TwoDimensionalObjectReferenceFragment::TYPE_ID => Box::new(
-                TwoDimensionalObjectReferenceFragment::parse(&self.field_data)
-                    .unwrap()
-                    .1,
-            ),
-            TwoDimensionalObjectFragment::TYPE_ID => Box::new(
+            TwoDimensionalObjectFragment::TYPE_ID => Box::new(FragmentType::TwoDimensionalObject(
                 TwoDimensionalObjectFragment::parse(&self.field_data)
                     .unwrap()
                     .1,
-            ),
-            ObjectLocationFragment::TYPE_ID => {
-                Box::new(ObjectLocationFragment::parse(&self.field_data).unwrap().1)
+            )),
+            ObjectLocationFragment::TYPE_ID => Box::new(FragmentType::ObjectLocation(
+                ObjectLocationFragment::parse(&self.field_data).unwrap().1,
+            )),
+            MobSkeletonPieceTrackReferenceFragment::TYPE_ID => {
+                Box::new(FragmentType::MobSkeletonPieceTrackReference(
+                    MobSkeletonPieceTrackReferenceFragment::parse(&self.field_data)
+                        .unwrap()
+                        .1,
+                ))
             }
-            MobSkeletonPieceTrackReferenceFragment::TYPE_ID => Box::new(
-                MobSkeletonPieceTrackReferenceFragment::parse(&self.field_data)
-                    .unwrap()
-                    .1,
-            ),
-            MobSkeletonPieceTrackFragment::TYPE_ID => Box::new(
-                MobSkeletonPieceTrackFragment::parse(&self.field_data)
-                    .unwrap()
-                    .1,
-            ),
-            SkeletonTrackSetFragment::TYPE_ID => {
-                Box::new(SkeletonTrackSetFragment::parse(&self.field_data).unwrap().1)
+            MobSkeletonPieceTrackFragment::TYPE_ID => {
+                Box::new(FragmentType::MobSkeletonPieceTrack(
+                    MobSkeletonPieceTrackFragment::parse(&self.field_data)
+                        .unwrap()
+                        .1,
+                ))
             }
-            ModelFragment::TYPE_ID => Box::new(ModelFragment::parse(&self.field_data).unwrap().1),
-            BspTreeFragment::TYPE_ID => {
-                Box::new(BspTreeFragment::parse(&self.field_data).unwrap().1)
-            }
-            BspRegionFragment::TYPE_ID => {
-                Box::new(BspRegionFragment::parse(&self.field_data).unwrap().1)
-            }
-            MeshFragment::TYPE_ID => Box::new(MeshFragment::parse(&self.field_data).unwrap().1),
-            MaterialListFragment::TYPE_ID => {
-                Box::new(MaterialListFragment::parse(&self.field_data).unwrap().1)
-            }
-            MaterialFragment::TYPE_ID => {
-                Box::new(MaterialFragment::parse(&self.field_data).unwrap().1)
-            }
-            TextureReferenceFragment::TYPE_ID => {
-                Box::new(TextureReferenceFragment::parse(&self.field_data).unwrap().1)
-            }
-            MeshReferenceFragment::TYPE_ID => {
-                Box::new(MeshReferenceFragment::parse(&self.field_data).unwrap().1)
-            }
-            TextureFragment::TYPE_ID => {
-                Box::new(TextureFragment::parse(&self.field_data).unwrap().1)
-            }
-            TextureImagesFragment::TYPE_ID => {
-                Box::new(TextureImagesFragment::parse(&self.field_data).unwrap().1)
-            }
+            SkeletonTrackSetFragment::TYPE_ID => Box::new(FragmentType::SkeletonTrackSet(
+                SkeletonTrackSetFragment::parse(&self.field_data).unwrap().1,
+            )),
+            ModelFragment::TYPE_ID => Box::new(FragmentType::Model(
+                ModelFragment::parse(&self.field_data).unwrap().1,
+            )),
+            BspTreeFragment::TYPE_ID => Box::new(FragmentType::BspTree(
+                BspTreeFragment::parse(&self.field_data).unwrap().1,
+            )),
+            BspRegionFragment::TYPE_ID => Box::new(FragmentType::BspRegion(
+                BspRegionFragment::parse(&self.field_data).unwrap().1,
+            )),
+            MeshFragment::TYPE_ID => Box::new(FragmentType::Mesh(
+                MeshFragment::parse(&self.field_data).unwrap().1,
+            )),
+            MaterialListFragment::TYPE_ID => Box::new(FragmentType::MaterialList(
+                MaterialListFragment::parse(&self.field_data).unwrap().1,
+            )),
+            MaterialFragment::TYPE_ID => Box::new(FragmentType::Material(
+                MaterialFragment::parse(&self.field_data).unwrap().1,
+            )),
+            TextureReferenceFragment::TYPE_ID => Box::new(FragmentType::TextureReference(
+                TextureReferenceFragment::parse(&self.field_data).unwrap().1,
+            )),
+            MeshReferenceFragment::TYPE_ID => Box::new(FragmentType::MeshReference(
+                MeshReferenceFragment::parse(&self.field_data).unwrap().1,
+            )),
+            TextureFragment::TYPE_ID => Box::new(FragmentType::Texture(
+                TextureFragment::parse(&self.field_data).unwrap().1,
+            )),
+            TextureImagesFragment::TYPE_ID => Box::new(FragmentType::TextureImages(
+                TextureImagesFragment::parse(&self.field_data).unwrap().1,
+            )),
             _ => panic!("Unknown fragment type"),
         }
     }
