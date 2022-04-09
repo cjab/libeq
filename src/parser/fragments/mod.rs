@@ -34,6 +34,7 @@ mod zone_unknown;
 
 use std::any::Any;
 use std::marker::PhantomData;
+use std::ops::Deref;
 
 use nom::number::complete::le_i32;
 use nom::IResult;
@@ -116,6 +117,7 @@ pub trait FragmentParser {
     fn parse(input: &[u8]) -> IResult<&[u8], Self::T>;
 }
 
+#[derive(Debug)]
 pub enum FragmentType {
     AlternateMesh(AlternateMeshFragment),
     AmbientLight(AmbientLightFragment),
@@ -150,4 +152,46 @@ pub enum FragmentType {
     VertexColor(VertexColorFragment),
     VertexColorReference(VertexColorReferenceFragment),
     ZoneUnknown(ZoneUnknownFragment),
+}
+
+impl Deref for FragmentType {
+    type Target = dyn Fragment;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::AlternateMesh(x) => x,
+            Self::AmbientLight(x) => x,
+            Self::BspRegion(x) => x,
+            Self::BspTree(x) => x,
+            Self::Camera(x) => x,
+            Self::CameraReference(x) => x,
+            Self::First(x) => x,
+            Self::LightInfo(x) => x,
+            Self::LightSource(x) => x,
+            Self::LightSourceReference(x) => x,
+            Self::Material(x) => x,
+            Self::MaterialList(x) => x,
+            Self::Mesh(x) => x,
+            Self::MeshAnimatedVertices(x) => x,
+            Self::MeshAnimatedVerticesReference(x) => x,
+            Self::MeshReference(x) => x,
+            Self::MobSkeletonPieceTrack(x) => x,
+            Self::MobSkeletonPieceTrackReference(x) => x,
+            Self::Model(x) => x,
+            Self::ObjectLocation(x) => x,
+            Self::PolygonAnimation(x) => x,
+            Self::PolygonAnimationReference(x) => x,
+            Self::RegionFlag(x) => x,
+            Self::SkeletonTrackSet(x) => x,
+            Self::SkeletonTrackSetReference(x) => x,
+            Self::Texture(x) => x,
+            Self::TextureImages(x) => x,
+            Self::TextureReference(x) => x,
+            Self::TwoDimensionalObject(x) => x,
+            Self::TwoDimensionalObjectReference(x) => x,
+            Self::VertexColor(x) => x,
+            Self::VertexColorReference(x) => x,
+            Self::ZoneUnknown(x) => x,
+        }
+    }
 }
