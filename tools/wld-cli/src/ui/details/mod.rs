@@ -1,140 +1,20 @@
-use crate::app::{ActiveBlock, App};
-use crate::FragmentType;
 use ansi_to_tui::ansi_to_text;
-use eq_wld::parser::{
-    fragments::{self, Fragment},
-    FragmentHeader,
-};
+use eq_wld::parser::{fragments, FragmentType};
 use hexyl::{BorderStyle, Printer};
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Row, Table, Tabs},
+    text::Spans,
+    widgets::{Block, Borders, Paragraph, Row, Table, Tabs},
     Frame,
 };
 
-const ACTIVE_BLOCK_COLOR: Color = Color::Yellow;
-const INACTIVE_BLOCK_COLOR: Color = Color::White;
+use super::{ACTIVE_BLOCK_COLOR, INACTIVE_BLOCK_COLOR};
+use crate::app::{ActiveBlock, App};
+
 const TABLE_WIDTHS: [Constraint; 2] = [Constraint::Length(10), Constraint::Length(100)];
-
 const NEWLINE: u8 = 10;
-
-pub fn draw_main_layout<B>(f: &mut Frame<B>, app: &App)
-where
-    B: Backend,
-{
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0)])
-        .split(f.size());
-
-    draw_filter(
-        f,
-        app,
-        layout[0],
-        matches!(app.route.active_block, ActiveBlock::FilterInput),
-    );
-    draw_content(f, app, layout[1]);
-}
-
-pub fn draw_filter<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect, active: bool)
-where
-    B: Backend,
-{
-    let border_color = match active {
-        true => ACTIVE_BLOCK_COLOR,
-        false => INACTIVE_BLOCK_COLOR,
-    };
-
-    let paragraph = Paragraph::new(Spans::from("Search")).block(
-        Block::default()
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(border_color)),
-    );
-    f.render_widget(paragraph, layout_chunk);
-}
-
-pub fn draw_content<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
-where
-    B: Backend,
-{
-    let layout = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(25), Constraint::Percentage(75)].as_ref())
-        .split(layout_chunk);
-
-    draw_fragment_list(f, app, layout[0]);
-    draw_fragment_details(f, app, layout[1]);
-}
-
-pub fn draw_fragment_list<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
-where
-    B: Backend,
-{
-    let list_items: Vec<ListItem> = app
-        .wld_doc
-        .fragment_headers
-        .iter()
-        .map(|f| {
-            let fragment_type = FragmentType::new(f.fragment_type);
-            let name = f.name(&app.wld_doc);
-            let text = match name {
-                Some(name) => format!("{} ({})", fragment_type, name),
-                None => format!("{}", fragment_type),
-            };
-            let lines = vec![Spans::from(vec![Span::styled(
-                text,
-                Style::default().fg(fragment_type.color()),
-            )])];
-            ListItem::new(lines).style(Style::default().fg(Color::White).bg(Color::Black))
-        })
-        .collect();
-    draw_selectable_list(
-        f,
-        app,
-        layout_chunk,
-        &list_items,
-        matches!(app.route.active_block, ActiveBlock::FragmentList),
-        app.selected_fragment_idx,
-    );
-}
-
-pub fn draw_selectable_list<B>(
-    f: &mut Frame<B>,
-    app: &App,
-    layout_chunk: Rect,
-    items: &[ListItem],
-    active: bool,
-    selected_index: Option<usize>,
-) where
-    B: Backend,
-{
-    let mut state = ListState::default();
-    state.select(selected_index);
-
-    let border_color = match active {
-        true => ACTIVE_BLOCK_COLOR,
-        false => INACTIVE_BLOCK_COLOR,
-    };
-
-    let list = List::new(items)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Fragments")
-                .border_style(Style::default().fg(border_color)),
-        )
-        .highlight_style(
-            Style::default()
-                .bg(Color::LightGreen)
-                .add_modifier(Modifier::BOLD),
-        )
-        .highlight_symbol(">> ");
-
-    f.render_stateful_widget(list, layout_chunk, &mut state);
-}
 
 pub fn draw_fragment_details<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
@@ -152,7 +32,7 @@ where
     let fragment_idx = app.selected_fragment_idx.expect("No fragment selected");
     let fragment = app
         .wld_doc
-        .fragment_headers
+        .fragments
         .get(fragment_idx)
         .expect("Invalid fragment selected");
 
@@ -165,7 +45,7 @@ pub fn draw_fragment_header<B>(
     app: &App,
     layout_chunk: Rect,
     fragment_idx: usize,
-    fragment_header: &FragmentHeader,
+    fragment: &FragmentType,
 ) where
     B: Backend,
 {
@@ -174,14 +54,10 @@ pub fn draw_fragment_header<B>(
         _ => INACTIVE_BLOCK_COLOR,
     };
 
-    let size = &fragment_header.size.to_string();
-    let frag_type = format!("{:#04x}", fragment_header.fragment_type);
-    let name_ref = &format!("{:?}", fragment_header.name_reference);
-
     let table = Table::new(vec![
-        Row::new(vec!["Size", size]),
-        Row::new(vec!["Type", &frag_type]),
-        Row::new(vec!["Name Ref", name_ref]),
+        Row::new(vec!["Size", "--"]),
+        Row::new(vec!["Type", "--"]),
+        Row::new(vec!["Name Ref", "--"]),
     ])
     .block(
         Block::default()
@@ -207,7 +83,7 @@ pub fn draw_fragment_body<B>(
     app: &App,
     layout_chunk: Rect,
     fragment_idx: usize,
-    fragment_header: &FragmentHeader,
+    fragment: &FragmentType,
 ) where
     B: Backend,
 {
@@ -235,10 +111,10 @@ pub fn draw_fragment_body<B>(
 
     match app.detail_body_tab_idx {
         0 => {
-            draw_fragment_fields(f, app, layout[1], fragment_idx, fragment_header);
+            draw_fragment_fields(f, app, layout[1], fragment_idx, fragment);
         }
         _ => {
-            draw_raw_fragment_data(f, app, layout[1], fragment_idx, fragment_header);
+            draw_raw_fragment_data(f, app, layout[1], fragment_idx, fragment);
         }
     }
 }
@@ -248,7 +124,7 @@ pub fn draw_raw_fragment_data<B>(
     app: &App,
     layout_chunk: Rect,
     fragment_idx: usize,
-    fragment_header: &FragmentHeader,
+    fragment: &FragmentType,
 ) where
     B: Backend,
 {
@@ -260,7 +136,7 @@ pub fn draw_raw_fragment_data<B>(
     let mut hex = vec![];
     let mut hex_printer = Printer::new(&mut hex, true, BorderStyle::Unicode, true);
     hex_printer
-        .print_all(fragment_header.field_data)
+        .print_all(&fragment.serialize()[..])
         .expect("Error printing hex");
 
     let lines: Vec<u8> = hex
@@ -284,7 +160,7 @@ pub fn draw_fragment_fields<B>(
     app: &App,
     layout_chunk: Rect,
     fragment_idx: usize,
-    fragment_header: &FragmentHeader,
+    fragment: &FragmentType,
 ) where
     B: Backend,
 {
@@ -293,151 +169,78 @@ pub fn draw_fragment_fields<B>(
         _ => INACTIVE_BLOCK_COLOR,
     };
 
-    match FragmentType::new(fragment_header.fragment_type) {
-        FragmentType::TextureImages => {
-            let (_, fragment) = fragments::TextureImagesFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_texture_images_fragment(f, app, layout_chunk, &fragment);
+    match fragment {
+        FragmentType::TextureImages(frag) => {
+            draw_texture_images_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::Texture => {
-            let (_, fragment) = fragments::TextureFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_texture_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::Texture(frag) => {
+            draw_texture_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::TextureReference => {
-            let (_, fragment) =
-                fragments::TextureReferenceFragment::parse(fragment_header.field_data)
-                    .expect("Failed to parse fragment");
-            draw_texture_reference_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::TextureReference(frag) => {
+            draw_texture_reference_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::Material => {
-            let (_, fragment) = fragments::MaterialFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_material_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::Material(frag) => {
+            draw_material_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::AmbientLight => {
-            let (_, fragment) = fragments::AmbientLightFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_ambient_light_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::AmbientLight(frag) => {
+            draw_ambient_light_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::LightSourceReference => {
-            let (_, fragment) =
-                fragments::LightSourceReferenceFragment::parse(fragment_header.field_data)
-                    .expect("Failed to parse fragment");
-            draw_light_source_reference_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::LightSourceReference(frag) => {
+            draw_light_source_reference_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::RegionFlag => {
-            let (_, fragment) = fragments::RegionFlagFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_region_flag_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::RegionFlag(frag) => {
+            draw_region_flag_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::ObjectLocation => {
-            let (_, fragment) =
-                fragments::ObjectLocationFragment::parse(fragment_header.field_data)
-                    .expect("Failed to parse fragment");
-            draw_object_location_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::ObjectLocation(frag) => {
+            draw_object_location_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::CameraReference => {
-            let (_, fragment) =
-                fragments::CameraReferenceFragment::parse(fragment_header.field_data)
-                    .expect("Failed to parse fragment");
-            draw_camera_reference_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::CameraReference(frag) => {
+            draw_camera_reference_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::BspRegion => {
-            let (_, fragment) = fragments::BspRegionFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_bsp_region_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::BspRegion(frag) => {
+            draw_bsp_region_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::ModelReferencePlayerInfo => {
-            let (_, fragment) = fragments::ModelFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_model_reference_player_info_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::Model(frag) => {
+            draw_model_reference_player_info_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::BspTree => {
-            let (_, fragment) = fragments::BspTreeFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_bsp_tree_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::BspTree(frag) => {
+            draw_bsp_tree_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::Camera => {
-            let (_, fragment) = fragments::CameraFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_camera_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::Camera(frag) => {
+            draw_camera_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::LightSource => {
-            let (_, fragment) = fragments::LightSourceFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_light_source_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::LightSource(frag) => {
+            draw_light_source_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::MaterialList => {
-            let (_, fragment) = fragments::MaterialListFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_material_list_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::MaterialList(frag) => {
+            draw_material_list_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::Mesh => {
-            let (_, fragment) = match fragments::MeshFragment::parse(fragment_header.field_data) {
-                Ok(res) => res,
-                Err(_e) => {
-                    let mut hex = vec![];
-                    let mut hex_printer = Printer::new(&mut hex, true, BorderStyle::Unicode, true);
-                    hex_printer
-                        .print_all(fragment_header.field_data)
-                        .expect("Error printing hex");
-                    eprint!("{}", String::from_utf8(hex).unwrap());
-                    eprintln!(
-                        "expected size: {} -- actual size: {}",
-                        fragment_header.size,
-                        fragment_header.field_data.len()
-                    );
-                    panic!("Oops");
-                }
-            };
-            draw_mesh_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::Mesh(frag) => {
+            draw_mesh_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::VertexColorReference => {
-            let (_, fragment) =
-                fragments::VertexColorReferenceFragment::parse(fragment_header.field_data)
-                    .expect("Failed to parse fragment");
-            draw_vertex_color_reference_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::VertexColorReference(frag) => {
+            draw_vertex_color_reference_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::VertexColor => {
-            let (_, fragment) = fragments::VertexColorFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_vertex_color_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::VertexColor(frag) => {
+            draw_vertex_color_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::LightInfo => {
-            let (_, fragment) = fragments::LightInfoFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_light_info_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::LightInfo(frag) => {
+            draw_light_info_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::MeshReference => {
-            let (_, fragment) = fragments::MeshReferenceFragment::parse(fragment_header.field_data)
-                .expect("Failed to parse fragment");
-            draw_mesh_reference_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::MeshReference(frag) => {
+            draw_mesh_reference_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::MobSkeletonPieceTrack => {
-            let (_, fragment) =
-                fragments::MobSkeletonPieceTrackFragment::parse(fragment_header.field_data)
-                    .expect("Failed to parse fragment");
-            draw_mob_skeleton_piece_track_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::MobSkeletonPieceTrack(frag) => {
+            draw_mob_skeleton_piece_track_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::MobSkeletonPieceTrackReference => {
-            let (_, fragment) = fragments::MobSkeletonPieceTrackReferenceFragment::parse(
-                fragment_header.field_data,
-            )
-            .expect("Failed to parse fragment");
-            draw_mob_skeleton_piece_track_reference_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::MobSkeletonPieceTrackReference(frag) => {
+            draw_mob_skeleton_piece_track_reference_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::SkeletonTrackSet => {
-            let (_, fragment) =
-                fragments::SkeletonTrackSetFragment::parse(fragment_header.field_data)
-                    .expect("Failed to parse fragment");
-            draw_skeleton_track_set_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::SkeletonTrackSet(frag) => {
+            draw_skeleton_track_set_fragment(f, app, layout_chunk, &frag);
         }
-        FragmentType::TwoDimensionalObject => {
-            let (_, fragment) =
-                fragments::TwoDimensionalObjectFragment::parse(fragment_header.field_data)
-                    .expect("Failed to parse fragment");
-            draw_two_dimensional_object_fragment(f, app, layout_chunk, &fragment);
+        FragmentType::TwoDimensionalObject(frag) => {
+            draw_two_dimensional_object_fragment(f, app, layout_chunk, &frag);
         }
         _ => {}
     }
@@ -445,7 +248,7 @@ pub fn draw_fragment_fields<B>(
 
 pub fn draw_texture_images_fragment<B>(
     f: &mut Frame<B>,
-    app: &App,
+    _app: &App,
     layout_chunk: Rect,
     fragment: &fragments::TextureImagesFragment,
 ) where
@@ -483,7 +286,7 @@ pub fn draw_texture_images_fragment<B>(
 
 pub fn draw_texture_fragment<B>(
     f: &mut Frame<B>,
-    app: &App,
+    _app: &App,
     layout_chunk: Rect,
     fragment: &fragments::TextureFragment,
 ) where
@@ -527,7 +330,7 @@ pub fn draw_texture_fragment<B>(
 
 pub fn draw_texture_reference_fragment<B>(
     f: &mut Frame<B>,
-    app: &App,
+    _app: &App,
     layout_chunk: Rect,
     fragment: &fragments::TextureReferenceFragment,
 ) where
@@ -560,7 +363,7 @@ pub fn draw_texture_reference_fragment<B>(
 
 pub fn draw_material_fragment<B>(
     f: &mut Frame<B>,
-    app: &App,
+    _app: &App,
     layout_chunk: Rect,
     fragment: &fragments::MaterialFragment,
 ) where

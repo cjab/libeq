@@ -6,15 +6,15 @@ use crate::handlers::handle_app;
 use crate::{event::Event, event::Events};
 use eq_wld::parser::WldDoc;
 
-pub struct App<'a> {
-    pub wld_doc: WldDoc<'a>,
+pub struct App {
+    pub wld_doc: WldDoc,
     pub route: Route,
     pub filter_input: String,
     pub selected_fragment_idx: Option<usize>,
     pub detail_body_tab_idx: usize,
 }
 
-impl<'a> App<'a> {
+impl App {
     pub fn new(wld_doc: WldDoc) -> App {
         App {
             wld_doc,
