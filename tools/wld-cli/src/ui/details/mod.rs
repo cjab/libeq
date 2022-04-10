@@ -32,8 +32,7 @@ where
     let fragment_idx = app.selected_fragment_idx.expect("No fragment selected");
     let fragment = app
         .wld_doc
-        .fragments
-        .get(fragment_idx)
+        .at(fragment_idx)
         .expect("Invalid fragment selected");
 
     draw_fragment_header(f, app, layout[0], fragment_idx, fragment);

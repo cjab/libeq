@@ -1,8 +1,8 @@
 use std::any::Any;
 use std::mem;
 
-use super::{decode_string, encode_string};
 use super::{Fragment, FragmentParser, StringReference};
+use crate::parser::strings::{decode_string, encode_string};
 
 use nom::multi::count;
 use nom::number::complete::{le_u16, le_u32, le_u8};

@@ -63,18 +63,22 @@ impl Wld {
 
     /// Iterate over all meshes in the wld file.
     pub fn meshes(&self) -> impl Iterator<Item = Mesh> + '_ {
-        self.0.meshes().map(move |fragment| Mesh {
-            doc: &self.0,
-            fragment,
-        })
+        self.0
+            .fragment_iter::<MeshFragment>()
+            .map(move |fragment| Mesh {
+                doc: &self.0,
+                fragment,
+            })
     }
 
     /// Iterate over all materials in the wld file.
     pub fn materials(&self) -> impl Iterator<Item = Material> + '_ {
-        self.0.materials().map(move |fragment| Material {
-            doc: &self.0,
-            fragment,
-        })
+        self.0
+            .fragment_iter::<MaterialFragment>()
+            .map(move |fragment| Material {
+                doc: &self.0,
+                fragment,
+            })
     }
 }
 
@@ -87,7 +91,7 @@ pub struct Mesh<'a> {
 impl<'a> Mesh<'a> {
     /// The name of the mesh
     pub fn name(&self) -> Option<&str> {
-        self.doc.strings.get(self.fragment.name_reference)
+        self.doc.get_string(self.fragment.name_reference)
     }
 
     pub fn center(&self) -> (f32, f32, f32) {
@@ -250,7 +254,7 @@ pub struct Material<'a> {
 impl<'a> Material<'a> {
     /// The name of the material
     pub fn name(&self) -> Option<&str> {
-        self.doc.strings.get(self.fragment.name_reference)
+        self.doc.get_string(self.fragment.name_reference)
     }
 
     /// The color texture for this material.
@@ -274,7 +278,7 @@ pub struct Texture<'a> {
 impl<'a> Texture<'a> {
     /// The name of the texture
     pub fn name(&self) -> Option<&str> {
-        self.doc.strings.get(self.fragment.name_reference)
+        self.doc.get_string(self.fragment.name_reference)
     }
 
     /// The name of the source image used by this texture. Wld files in theory support multiple

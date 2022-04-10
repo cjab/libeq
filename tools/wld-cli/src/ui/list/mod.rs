@@ -14,8 +14,7 @@ use crate::ui::{ACTIVE_BLOCK_COLOR, INACTIVE_BLOCK_COLOR};
 fn draw_fragment<'a>(app: &'a App, fragment_type: &FragmentType) -> ListItem<'a> {
     let name = app
         .wld_doc
-        .strings
-        .get(*fragment_type.name_ref())
+        .get_string(*fragment_type.name_ref())
         .map_or("".to_string(), |n| format!(" ({})", n));
 
     let (frag_type_name, color) = match fragment_type {
@@ -133,12 +132,7 @@ pub fn draw_fragment_list<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let list_items: Vec<_> = app
-        .wld_doc
-        .fragments
-        .iter()
-        .map(|f| draw_fragment(&app, f))
-        .collect();
+    let list_items: Vec<_> = app.wld_doc.iter().map(|f| draw_fragment(&app, f)).collect();
 
     draw_selectable_list(
         f,

@@ -10,13 +10,13 @@ use nom::sequence::tuple;
 use nom::IResult;
 
 pub use fragments::*;
-pub use strings::{decode_string, encode_string, StringHash, StringReference};
+use strings::{StringHash, StringReference};
 
 #[derive(Debug)]
 pub struct WldDoc {
     header: WldHeader,
-    pub strings: StringHash,
-    pub fragments: Vec<Box<FragmentType>>,
+    strings: StringHash,
+    fragments: Vec<Box<FragmentType>>,
 }
 
 impl Debug for dyn Fragment + 'static {
@@ -58,13 +58,9 @@ impl WldDoc {
         ))
     }
 
-    pub fn serialize(&self) -> Vec<u8> {
-        [
-            self.header.serialize(),
-            self.strings.serialize(),
-            self.fragments.iter().flat_map(|f| f.serialize()).collect(),
-        ]
-        .concat()
+    /// Get a string given a string reference
+    pub fn get_string(&self, string_reference: StringReference) -> Option<&str> {
+        self.strings.get(string_reference)
     }
 
     /// Get a fragment given a fragment reference.
@@ -73,6 +69,23 @@ impl WldDoc {
             FragmentRef::Name(_, _) => self.get_by_name_ref(fragment_ref),
             FragmentRef::Index(_, _) => self.get_by_index_ref(fragment_ref),
         }
+    }
+
+    /// Get a fragment given an index
+    pub fn at(&self, idx: usize) -> Option<&FragmentType> {
+        self.fragments.get(idx).map(|f| f.as_ref())
+    }
+
+    /// Iterate over all fragments of a specific type
+    pub fn fragment_iter<'a, T: 'static + Fragment>(&'a self) -> impl Iterator<Item = &'a T> + '_ {
+        self.fragments
+            .iter()
+            .filter_map(|f| f.as_any().downcast_ref::<T>())
+    }
+
+    /// Iterate over all fragments
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a Box<FragmentType>> + '_ {
+        self.fragments.iter()
     }
 
     fn get_by_index_ref<T: 'static + Fragment>(&self, fragment_ref: &FragmentRef<T>) -> Option<&T> {
@@ -106,26 +119,17 @@ impl WldDoc {
         }
     }
 
-    /// Iterate over all mesh fragments in the wld file.
-    pub(super) fn meshes(&self) -> impl Iterator<Item = &MeshFragment> + '_ {
-        self.fragment_iter::<MeshFragment>()
+    pub fn fragment_count(&self) -> usize {
+        self.fragments.len()
     }
 
-    /// Iterate over all material fragments in the wld file.
-    pub(super) fn materials(&self) -> impl Iterator<Item = &MaterialFragment> + '_ {
-        self.fragment_iter::<MaterialFragment>()
-    }
-
-    /// Iterate over all fragments of a specific type
-    pub fn fragment_iter<'a, T: 'static + Fragment>(&'a self) -> impl Iterator<Item = &'a T> + '_ {
-        self.fragments
-            .iter()
-            .filter_map(|f| f.as_any().downcast_ref::<T>())
-    }
-
-    /// Iterate over all fragments
-    pub fn all_fragment_iter<'a>(&'a self) -> impl Iterator<Item = &'a Box<FragmentType>> + '_ {
-        self.fragments.iter()
+    pub fn serialize(&self) -> Vec<u8> {
+        [
+            self.header.serialize(),
+            self.strings.serialize(),
+            self.fragments.iter().flat_map(|f| f.serialize()).collect(),
+        ]
+        .concat()
     }
 }
 
