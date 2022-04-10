@@ -39,7 +39,7 @@ use std::ops::Deref;
 use nom::number::complete::le_i32;
 use nom::IResult;
 
-use super::{decode_string, encode_string, StringReference};
+use super::StringReference;
 
 pub use alternate_mesh::*;
 pub use ambient_light::*;

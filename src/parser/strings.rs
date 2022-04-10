@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use encoding_rs::WINDOWS_1252;
-
 use nom::number::complete::le_i32;
 use nom::IResult;
 
