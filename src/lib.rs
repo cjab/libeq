@@ -163,6 +163,23 @@ impl<'a> Mesh<'a> {
             .collect()
     }
 
+    /// Vertices that should be part of the collision mesh
+    pub fn collision_indices(&self) -> Vec<u32> {
+        self.fragment
+            .polygons
+            .iter()
+            .filter(|p| 0x0010 & p.flags == 0)
+            .flat_map(|v| {
+                vec![
+                    v.vertex_indexes.0 as u32,
+                    v.vertex_indexes.1 as u32,
+                    v.vertex_indexes.2 as u32,
+                ]
+                .into_iter()
+            })
+            .collect()
+    }
+
     /// A list of materials used by this mesh.
     pub fn materials(&self) -> Vec<Material> {
         let material_list = self

@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentParser, MaterialListFragment, StringReference};
+use super::{Fragment, FragmentParser, FragmentRef, MaterialListFragment, StringReference};
 
 use nom::combinator::map;
 use nom::multi::count;
@@ -397,7 +397,7 @@ pub struct MeshFragmentPolygonEntry {
     /// Most flags are _Unknown_. This usually contains 0x0 for polygons but
     /// contains 0x0010 for polygons that the player can pass through (like water
     /// and tree leaves).
-    flags: u16,
+    pub flags: u16,
 
     /// An index for each of the polygon's vertex coordinates (idx1, idx2, idx3).
     pub vertex_indexes: (u16, u16, u16),
