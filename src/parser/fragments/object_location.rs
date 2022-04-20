@@ -10,6 +10,10 @@ use nom::IResult;
 /// **Type ID:** 0x15
 pub struct ObjectLocationFragment {
     pub name_reference: StringReference,
+    /// When used in main zone files, the reference points to a 0x14 Player Info fragment. When used for static (placeable) objects,
+    /// the reference is a string reference (not a fragment reference) and points to a “magic” string.
+    /// It typically contains the name of the object with “_ACTORDEF” appended to the end.
+    pub reference: StringReference, // FIXME: This can be a FragmentRef sometimes, as stated above
 
     /// Typically 0x2E when used in main zone files and 0x32E when
     /// used for placeable objects.
@@ -67,10 +71,9 @@ pub struct ObjectLocationFragment {
     /// the Flags value). When used for placeable objects, points to a 0x33 Vertex
     /// Color Reference fragment.
     pub fragment2: u32,
-
-    /// Typically contains 30 when used in main zone files and 0 when used for
-    /// placeable objects. This field only exists if `fragment2` points to a fragment.
-    pub params2: u32,
+    // Typically contains 30 when used in main zone files and 0 when used for
+    // placeable objects. This field only exists if `fragment2` points to a fragment.
+    pub params2: Option<u32>,
 }
 
 impl FragmentParser for ObjectLocationFragment {
@@ -84,6 +87,7 @@ impl FragmentParser for ObjectLocationFragment {
             remaining,
             (
                 name_reference,
+                reference,
                 flags,
                 fragment1,
                 x,
@@ -96,9 +100,9 @@ impl FragmentParser for ObjectLocationFragment {
                 scale_y,
                 scale_x,
                 fragment2,
-                params2,
             ),
         ) = tuple((
+            StringReference::parse,
             StringReference::parse,
             le_u32,
             le_u32,
@@ -112,12 +116,19 @@ impl FragmentParser for ObjectLocationFragment {
             le_f32,
             le_f32,
             le_u32,
-            le_u32,
         ))(input)?;
+
+        let (remaining, params2) = if fragment2 != 0 {
+            le_u32(remaining).map(|(i, params2)| (i, Some(params2)))?
+        } else {
+            (remaining, None)
+        };
+
         Ok((
             remaining,
             ObjectLocationFragment {
                 name_reference,
+                reference,
                 flags,
                 fragment1,
                 x,
@@ -140,6 +151,7 @@ impl Fragment for ObjectLocationFragment {
     fn serialize(&self) -> Vec<u8> {
         [
             &self.name_reference.serialize()[..],
+            &self.reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
             &self.fragment1.to_le_bytes()[..],
             &self.x.to_le_bytes()[..],
@@ -152,7 +164,7 @@ impl Fragment for ObjectLocationFragment {
             &self.scale_y.to_le_bytes()[..],
             &self.scale_x.to_le_bytes()[..],
             &self.fragment2.to_le_bytes()[..],
-            &self.params2.to_le_bytes()[..],
+            &self.params2.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
         ]
         .concat()
     }
@@ -188,7 +200,7 @@ mod tests {
         assert_eq!(frag.scale_y, 0.0);
         assert_eq!(frag.scale_x, 0.5);
         assert_eq!(frag.fragment2, 1056964608);
-        assert_eq!(frag.params2, 0);
+        assert_eq!(frag.params2, Some(0));
     }
 
     #[test]

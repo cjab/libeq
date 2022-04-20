@@ -41,8 +41,8 @@
 pub mod parser;
 
 use parser::{
-    MaterialFragment, MeshFragment, MeshFragmentPolygonEntry, TextureFragment, TransparencyFlags,
-    WldDoc,
+    MaterialFragment, MeshFragment, MeshFragmentPolygonEntry, ObjectLocationFragment,
+    TextureFragment, TransparencyFlags, WldDoc,
 };
 use std::error::Error;
 
@@ -79,6 +79,16 @@ impl Wld {
         self.0
             .fragment_iter::<MaterialFragment>()
             .map(move |fragment| Material {
+                doc: &self.0,
+                fragment,
+            })
+    }
+
+    /// Iterate over all the objects in the wld file.
+    pub fn objects(&self) -> impl Iterator<Item = ObjectLocation> + '_ {
+        self.0
+            .fragment_iter::<ObjectLocationFragment>()
+            .map(move |fragment| ObjectLocation {
                 doc: &self.0,
                 fragment,
             })
@@ -309,6 +319,37 @@ impl<'a> Texture<'a> {
                 None => vec![],
             })
             .nth(0)
+    }
+}
+
+#[derive(Debug)]
+pub struct ObjectLocation<'a> {
+    doc: &'a WldDoc,
+    fragment: &'a ObjectLocationFragment,
+}
+
+impl<'a> ObjectLocation<'a> {
+    pub fn model_name(&self) -> Option<&str> {
+        self.doc.get_string(self.fragment.reference)
+    }
+
+    /// The world position of the object.  This must be combined with the offset of the mesh itself.
+    pub fn center(&self) -> (f32, f32, f32) {
+        (self.fragment.x, self.fragment.z, self.fragment.y)
+    }
+
+    /// The euler rotation, degrees -360 to 0.  Note that this rotation should be applied after offseting the mesh.
+    pub fn rotation(&self) -> (f32, f32, f32) {
+        (
+            (self.fragment.rotate_y / 512.0) * -360.0,
+            (self.fragment.rotate_z / 512.0) * -360.0,
+            (self.fragment.rotate_x / 512.0) * -360.0,
+        )
+    }
+
+    /// The scale of the object.  Note that X and Z are always scaled the same.
+    pub fn scale(&self) -> (f32, f32) {
+        (self.fragment.scale_x, self.fragment.scale_y)
     }
 }
 
