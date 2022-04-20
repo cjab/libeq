@@ -44,7 +44,8 @@ cargo run -p wld-cli -- gfaydark.wld
 ```
 
 ## Acknowledgements
-This project wouldn't have been possible without Windcatcher's [WLD File Reference](https://eqemu.gitbook.io/server/categories/zones/customizing-zones/wld-file-reference).
+This project wouldn't have been possible without Windcatcher's [WLD File Reference](https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md).
+
 Some documentation has been reproduced as comments within the parser module. Names of file
 fragments have been changed when another term from the [glTF reference](https://www.khronos.org/files/gltf20-reference-guide.pdf)
 seemed like a better fit. The goal is that this will be usable in more modern engines and
