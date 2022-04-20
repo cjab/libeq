@@ -40,7 +40,10 @@
 ///!
 pub mod parser;
 
-use parser::{MaterialFragment, MeshFragment, MeshFragmentPolygonEntry, TextureFragment, WldDoc};
+use parser::{
+    MaterialFragment, MeshFragment, MeshFragmentPolygonEntry, TextureFragment, TransparencyFlags,
+    WldDoc,
+};
 use std::error::Error;
 
 pub struct WldError;
@@ -266,6 +269,10 @@ impl<'a> Material<'a> {
                 doc: self.doc,
                 fragment,
             })
+    }
+
+    pub fn transparency_flags(&self) -> &TransparencyFlags {
+        &self.fragment.transparency_flags
     }
 }
 
