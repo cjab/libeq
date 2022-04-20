@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::fmt;
 
 use super::{Fragment, FragmentParser, FragmentRef, StringReference, TextureReferenceFragment};
 
@@ -6,15 +7,15 @@ use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq)]
 pub struct TransparencyFlags(u32);
 
 impl TransparencyFlags {
     const VISIBLE: u32 = 0x80000001;
-    const MASKED: u32 = 0x0000010;
-    const TRANSPARENCY: u32 = 0x0000100;
-    const MASKED_TRANSPARENCY: u32 = 0x0001000;
-    const MASKED_OPAQUE: u32 = 0x0010000;
+    const MASKED: u32 = 0x2;
+    const OPACITY: u32 = 0x4;
+    const TRANSPARENCY: u32 = 0x8;
+    const MASKED_OPAQUE: u32 = 0x10;
     /// Found on materials using 'stumpbark' texture - unknown meaning
     /// const UNKNOWN_STUMP_BARK: u32 = 0x540;
 
@@ -32,24 +33,30 @@ impl TransparencyFlags {
         self.0 & Self::VISIBLE == Self::VISIBLE
     }
 
-    /// If this material is masked by a key color
-    pub fn is_masked(&self) -> bool {
+    /// This material is masked by a key color
+    pub fn has_mask_or_transparency(&self) -> bool {
         self.0 & Self::MASKED == Self::MASKED
     }
 
-    /// If this material has transparency (e.g. water)
-    pub fn is_transparent(&self) -> bool {
-        self.0 & Self::TRANSPARENCY == Self::TRANSPARENCY
+    /// This material is alpha blended with a uniform value (e.g. water)
+    pub fn has_opacity(&self) -> bool {
+        self.0 & Self::OPACITY == Self::OPACITY
     }
 
-    /// If this material is opaque but masked by a key color (e.g. tree leaves)
-    pub fn is_masked_opaque(&self) -> bool {
+    /// This material is opaque but masked by a key color (e.g. tree leaves)
+    pub fn has_mask_opaque(&self) -> bool {
         self.0 & Self::MASKED_OPAQUE == Self::MASKED_OPAQUE
     }
 
-    /// If this material is transparent and also masked (e.g. fire)
-    pub fn is_masked_transparent(&self) -> bool {
-        self.0 & Self::MASKED_TRANSPARENCY == Self::MASKED_TRANSPARENCY
+    /// This material is alpha blended with red channel (e.g. fire)
+    pub fn has_transparency(&self) -> bool {
+        self.0 & Self::TRANSPARENCY == Self::TRANSPARENCY
+    }
+}
+
+impl fmt::Debug for TransparencyFlags {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "TransparencyFlags [{:b}]", self.0)
     }
 }
 
@@ -64,20 +71,20 @@ pub struct MaterialFragment {
     pub flags: u32,
 
     /// Most flags are _unknown_, however:
-    /// * bit 0 - It seems like this must be set if the texture is not transparent.
-    /// * bit 1 - Set if the texture is masked (e.g. tree leaves).
-    /// * bit 2 - Set if the texture is semi-transparent but not masked.
-    /// * bit 3 - Set if the texture is masked and semi-transparent.
-    /// * bit 4 Set if the texture is masked but not semi-transparent.
-    /// * bit 31 - It seems like this must be set if the texture is not transparent.
+    // Bit 0 ........ Apparently must be 1 if the texture isn’t transparent.
+    // Bit 1 ........ Set to 1 if the texture is masked (e.g. tree leaves).
+    // Bit 2 ........ Set to 1 if the texture is semi-transparent but not masked.
+    // Bit 3 ........ Set to 1 if the texture is masked and semi-transparent.
+    // Bit 4 ........ Set to 1 if the texture is masked but not semi-transparent.
+    // Bit 31 ...... Apparently must be 1 if the texture isn’t transparent.
     pub transparency_flags: TransparencyFlags,
 
     /// This typically contains 0x004E4E4E but has also bee known to contain 0xB2B2B2.
     /// Could this be an RGB reflectivity value?
     pub params2: u32,
 
-    /// _Unknown_ - Usually contains 0.
-    pub params3: (f32, f32),
+    /// Coordinate in the texture with the mask color
+    pub mask_color_coord: (f32, f32),
 
     /// A reference to a [TextureReferenceFragment] fragment.
     pub reference: FragmentRef<TextureReferenceFragment>,
@@ -93,7 +100,7 @@ impl FragmentParser for MaterialFragment {
     const TYPE_NAME: &'static str = "Material";
 
     fn parse(input: &[u8]) -> IResult<&[u8], MaterialFragment> {
-        let (i, (name_reference, flags, transparency_flags, params2, params3, reference)) =
+        let (i, (name_reference, flags, transparency_flags, params2, mask_color_coord, reference)) =
             tuple((
                 StringReference::parse,
                 le_u32,
@@ -116,7 +123,7 @@ impl FragmentParser for MaterialFragment {
                 flags,
                 transparency_flags,
                 params2,
-                params3,
+                mask_color_coord,
                 reference,
                 pair,
             },
@@ -131,8 +138,8 @@ impl Fragment for MaterialFragment {
             &self.flags.to_le_bytes()[..],
             &self.transparency_flags.serialize()[..],
             &self.params2.to_le_bytes()[..],
-            &self.params3.0.to_le_bytes()[..],
-            &self.params3.1.to_le_bytes()[..],
+            &self.mask_color_coord.0.to_le_bytes()[..],
+            &self.mask_color_coord.1.to_le_bytes()[..],
             &self.reference.serialize()[..],
             &self
                 .pair
@@ -163,7 +170,7 @@ mod tests {
         assert_eq!(frag.flags, 0x02);
         assert_eq!(frag.transparency_flags, 0x80000001);
         assert_eq!(frag.params2, 0x4e4e4e);
-        assert_eq!(frag.params3, (0.0, 0.75));
+        assert_eq!(frag.mask_color_coord, (0.0, 0.75));
         assert_eq!(frag.reference, FragmentRef::new(4));
         assert_eq!(frag.pair, Some((0, 0.0)));
     }
