@@ -41,8 +41,8 @@
 pub mod parser;
 
 use parser::{
-    MaterialFragment, MeshFragment, MeshFragmentPolygonEntry, ObjectLocationFragment,
-    TextureFragment, TransparencyFlags, WldDoc,
+    FragmentRef, MaterialFragment, MeshFragment, MeshFragmentPolygonEntry, MeshReferenceFragment,
+    ModelFragment, ObjectLocationFragment, TextureFragment, TransparencyFlags, WldDoc,
 };
 use std::error::Error;
 
@@ -89,6 +89,16 @@ impl Wld {
         self.0
             .fragment_iter::<ObjectLocationFragment>()
             .map(move |fragment| ObjectLocation {
+                doc: &self.0,
+                fragment,
+            })
+    }
+
+    /// Iterate over all the objects in the wld file.
+    pub fn models(&self) -> impl Iterator<Item = Model> + '_ {
+        self.0
+            .fragment_iter::<ModelFragment>()
+            .map(move |fragment| Model {
                 doc: &self.0,
                 fragment,
             })
@@ -350,6 +360,42 @@ impl<'a> ObjectLocation<'a> {
     /// The scale of the object.  Note that X and Z are always scaled the same.
     pub fn scale(&self) -> (f32, f32) {
         (self.fragment.scale_x, self.fragment.scale_y)
+    }
+}
+
+#[derive(Debug)]
+pub struct Model<'a> {
+    doc: &'a WldDoc,
+    fragment: &'a ModelFragment,
+}
+
+impl<'a> Model<'a> {
+    pub fn name(&self) -> Option<&str> {
+        self.doc.get_string(self.fragment.name_reference)
+    }
+    /// Get the 'type' of model ("FLYCAMCALLBACK" or "SPRITECALLBACK" usually)
+    pub fn type_name(&self) -> Option<&'a str> {
+        self.doc.get_string(self.fragment.name_fragment)
+    }
+
+    // FIXME: My assumption is that there arent any models with multiple meshes, but my assumption might be wrong.
+    /// Get the mesh that this model uses, if any.
+    pub fn mesh(&self) -> Option<Mesh> {
+        let fragment = self.get_mesh_fragment()?;
+        Some(Mesh {
+            doc: &self.doc,
+            fragment,
+        })
+    }
+
+    // FIXME: I think casting the fragments to MeshFragment can be done in some better way, but this works for me at the moment.
+    /// Follow the fragment reference to find the MeshFragment
+    fn get_mesh_fragment(&self) -> Option<&MeshFragment> {
+        let fragment_ref = *self.fragment.fragments.first()?;
+        let fragment_ref: FragmentRef<MeshReferenceFragment> =
+            FragmentRef::new(fragment_ref as i32);
+        let fragment = self.doc.get(&fragment_ref)?;
+        self.doc.get(&fragment.reference)
     }
 }
 

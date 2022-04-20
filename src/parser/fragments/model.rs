@@ -26,7 +26,7 @@ pub struct ModelFragment {
     /// the string is “SPRITECALLBACK”. When creating a 0x14 fragment this is currently
     /// accomplished by creating a fragment reference, setting the fragment to null, and
     /// setting the reference name to the magic string.
-    pub name_fragment: u32,
+    pub name_fragment: StringReference,
 
     /// Tells how many entries there are.
     pub unknown_params2_count: u32,
@@ -86,7 +86,7 @@ impl FragmentParser for ModelFragment {
         ) = tuple((
             StringReference::parse,
             le_u32,
-            le_u32,
+            StringReference::parse,
             le_u32,
             le_u32,
             le_u32,
@@ -141,7 +141,7 @@ impl Fragment for ModelFragment {
         [
             &self.name_reference.serialize()[..],
             &self.flags.to_le_bytes()[..],
-            &self.name_fragment.to_le_bytes()[..],
+            &self.name_fragment.serialize()[..],
             &self.unknown_params2_count.to_le_bytes()[..],
             &self.fragment_count.to_le_bytes()[..],
             &self.unknown_fragment.to_le_bytes()[..],
