@@ -200,7 +200,7 @@ mod tests {
         assert_eq!(frag.scale_y, 0.0);
         assert_eq!(frag.scale_x, 0.5);
         assert_eq!(frag.fragment2, 1056964608);
-        assert_eq!(frag.params2, 0);
+        assert_eq!(frag.params2, Some(0));
     }
 
     #[test]
