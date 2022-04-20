@@ -1,8 +1,8 @@
 use std::cmp;
 
-use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
+use termion::event::Key;
 
-use crate::app::{ActiveBlock, App, Route, RouteId};
+use crate::app::{ActiveBlock, App, RouteId};
 
 const HALF_PAGE_STEP: usize = 25;
 
@@ -38,9 +38,9 @@ pub fn handle_app(key: Key, app: &mut App) {
         // Move down
         Key::Down | Key::Char('j') => match app.route.id {
             RouteId::Main => {
-                let fragment_header_len = app.wld_doc.fragments.len();
+                let fragment_count = app.wld_doc.fragment_count();
                 app.selected_fragment_idx = Some(match app.selected_fragment_idx {
-                    Some(i) => cmp::min(i + 1, fragment_header_len - 1),
+                    Some(i) => cmp::min(i + 1, fragment_count - 1),
                     None => 0,
                 });
             }
@@ -48,7 +48,6 @@ pub fn handle_app(key: Key, app: &mut App) {
         // Move up
         Key::Up | Key::Char('k') => match app.route.id {
             RouteId::Main => {
-                let fragment_header_len = app.wld_doc.fragments.len();
                 app.selected_fragment_idx = Some(match app.selected_fragment_idx {
                     Some(i) => cmp::max(i as i32 - 1, 0 as i32) as usize,
                     None => 0,
@@ -58,9 +57,9 @@ pub fn handle_app(key: Key, app: &mut App) {
         // Half page down
         Key::Ctrl('d') => match app.route.id {
             RouteId::Main => {
-                let fragment_header_len = app.wld_doc.fragments.len();
+                let fragment_count = app.wld_doc.fragment_count();
                 app.selected_fragment_idx = Some(match app.selected_fragment_idx {
-                    Some(i) => cmp::min(i + HALF_PAGE_STEP, fragment_header_len - 1),
+                    Some(i) => cmp::min(i + HALF_PAGE_STEP, fragment_count - 1),
                     None => 0,
                 });
             }
@@ -76,8 +75,8 @@ pub fn handle_app(key: Key, app: &mut App) {
         },
         Key::Char('G') => match app.route.id {
             RouteId::Main => {
-                let fragment_header_len = app.wld_doc.fragments.len();
-                app.selected_fragment_idx = Some(fragment_header_len - 1);
+                let fragment_count = app.wld_doc.fragment_count();
+                app.selected_fragment_idx = Some(fragment_count - 1);
             }
         },
         _ => {}

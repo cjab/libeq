@@ -1,15 +1,24 @@
 use std::collections::HashMap;
 
-#[derive(Clone, Copy, Debug)]
-pub struct StringReference(usize);
+use encoding_rs::WINDOWS_1252;
+use nom::number::complete::le_i32;
+use nom::IResult;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct StringReference(i32);
 
 impl StringReference {
-    pub fn new(idx: i32) -> Option<StringReference> {
-        if idx.is_negative() {
-            Some(StringReference(idx.abs() as usize))
-        } else {
-            None
-        }
+    pub fn new(idx: i32) -> Self {
+        Self(idx)
+    }
+
+    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+        let (remaining, idx) = le_i32(input)?;
+        Ok((remaining, Self::new(idx)))
+    }
+
+    pub fn serialize(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
     }
 }
 
@@ -19,16 +28,22 @@ pub struct StringHash(HashMap<usize, String>);
 const XOR_KEY: [u8; 8] = [0x95, 0x3a, 0xc5, 0x2a, 0x95, 0x7a, 0x95, 0x6a];
 
 pub fn decode_string(encoded_data: &[u8]) -> String {
-    String::from_utf8(
-        encoded_data
-            .iter()
-            .zip(XOR_KEY.iter().cycle())
-            .map(|(encoded_char, key_char)| encoded_char ^ key_char)
-            .collect(),
-    )
-    .expect("Invalid data in encoded string")
-    .trim_end_matches('\u{0}')
-    .to_string()
+    let data: Vec<u8> = encoded_data
+        .iter()
+        .zip(XOR_KEY.iter().cycle())
+        .map(|(encoded_char, key_char)| encoded_char ^ key_char)
+        .collect();
+    let (cow, _, _) = WINDOWS_1252.decode(&data);
+    cow.into_owned().trim_end_matches('\u{0}').to_string()
+}
+
+pub fn encode_string(decoded_data: &str) -> Vec<u8> {
+    let (windows_string, _, _) = WINDOWS_1252.encode(decoded_data);
+    windows_string
+        .iter()
+        .zip(XOR_KEY.iter().cycle())
+        .map(|(encoded_char, key_char)| encoded_char ^ key_char)
+        .collect()
 }
 
 impl StringHash {
@@ -49,7 +64,14 @@ impl StringHash {
         )
     }
 
+    pub fn serialize(&self) -> Vec<u8> {
+        let decoded_string: String = self.0.iter().map(|(_, string)| string.clone()).collect();
+        encode_string(&decoded_string)
+    }
+
     pub fn get(&self, string_reference: StringReference) -> Option<&str> {
-        self.0.get(&string_reference.0).map(|s| s.as_ref())
+        self.0
+            .get(&(string_reference.0.abs() as usize))
+            .map(|s| s.as_ref())
     }
 }
