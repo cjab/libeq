@@ -193,7 +193,7 @@ mod tests {
 
         assert_eq!(frag.name_reference, StringReference::new(-52594));
         assert_eq!(frag.flags, 0);
-        assert_eq!(frag.name_fragment, 4294914717);
+        assert_eq!(frag.name_fragment, StringReference::new(-52579));
         assert_eq!(frag.unknown_params2_count, 1);
         assert_eq!(frag.fragment_count, 1);
         assert_eq!(frag.unknown_fragment, 0);
