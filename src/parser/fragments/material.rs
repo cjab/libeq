@@ -168,7 +168,7 @@ mod tests {
 
         assert_eq!(frag.name_reference, StringReference::new(-22));
         assert_eq!(frag.flags, 0x02);
-        assert_eq!(frag.transparency_flags, 0x80000001);
+        assert_eq!(frag.transparency_flags.0, 0x80000001);
         assert_eq!(frag.params2, 0x4e4e4e);
         assert_eq!(frag.mask_color_coord, (0.0, 0.75));
         assert_eq!(frag.reference, FragmentRef::new(4));
