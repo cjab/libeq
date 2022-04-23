@@ -92,9 +92,9 @@ impl FragmentParser for LightSourceFragment {
 }
 
 impl Fragment for LightSourceFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.params2.to_le_bytes()[..],
             &self.params3a.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
@@ -141,6 +141,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1728-0x1b.frag")[..];
         let frag = LightSourceFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

@@ -35,9 +35,9 @@ impl FragmentParser for ZoneUnknownFragment {
 }
 
 impl Fragment for ZoneUnknownFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.unknown.to_le_bytes()[..],
         ]
         .concat()
@@ -69,6 +69,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4640-0x16.frag")[..];
         let frag = ZoneUnknownFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

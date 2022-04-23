@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentParser, MeshFragment, StringReference};
+use super::{Fragment, FragmentParser, FragmentRef, MeshFragment, StringReference};
 
 use nom::combinator::map;
 use nom::multi::count;
@@ -166,11 +166,11 @@ impl FragmentParser for BspRegionFragment {
 }
 
 impl Fragment for BspRegionFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
-            &self.fragment1.serialize()[..],
+            &self.fragment1.into_bytes()[..],
             &self.size1.to_le_bytes()[..],
             &self.size2.to_le_bytes()[..],
             &self.params1.to_le_bytes()[..],
@@ -183,30 +183,30 @@ impl Fragment for BspRegionFragment {
             &self
                 .data3
                 .iter()
-                .flat_map(|d| d.serialize())
+                .flat_map(|d| d.into_bytes())
                 .collect::<Vec<_>>()[..],
             &self
                 .data4
                 .iter()
-                .flat_map(|d| d.serialize())
+                .flat_map(|d| d.into_bytes())
                 .collect::<Vec<_>>()[..],
             &self
                 .data5
                 .iter()
-                .flat_map(|d| d.serialize())
+                .flat_map(|d| d.into_bytes())
                 .collect::<Vec<_>>()[..],
             &self
                 .pvs
                 .iter()
-                .flat_map(|p| p.serialize())
+                .flat_map(|p| p.into_bytes())
                 .collect::<Vec<_>>()[..],
             &self.size7.to_le_bytes()[..],
             &self.name7,
-            &self.fragment2.serialize()[..],
+            &self.fragment2.into_bytes()[..],
             &self
                 .mesh_reference
                 .as_ref()
-                .map_or(vec![], |m| m.serialize())[..],
+                .map_or(vec![], |m| m.into_bytes())[..],
         ]
         .concat()
     }
@@ -267,7 +267,7 @@ impl BspRegionFragmentData3Entry {
         ))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.flags.to_le_bytes()[..],
             &self.size1.to_le_bytes()[..],
@@ -348,7 +348,7 @@ impl BspRegionFragmentData4Entry {
         ))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.flags.to_le_bytes()[..],
             &self.params1.to_le_bytes()[..],
@@ -403,7 +403,7 @@ impl BspRegionFragmentData5Entry {
         ))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.params1.0.to_le_bytes()[..],
             &self.params1.1.to_le_bytes()[..],
@@ -470,7 +470,7 @@ impl BspRegionFragmentPVS {
         Ok((remaining, BspRegionFragmentPVS { size, data }))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [&self.size.to_le_bytes()[..], &self.data[..]].concat()
     }
 }
@@ -525,6 +525,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1731-0x22.frag")[..];
         let frag = BspRegionFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

@@ -17,7 +17,7 @@ impl StringReference {
         Ok((remaining, Self::new(idx)))
     }
 
-    pub fn serialize(&self) -> Vec<u8> {
+    pub fn into_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 }
@@ -64,7 +64,7 @@ impl StringHash {
         )
     }
 
-    pub fn serialize(&self) -> Vec<u8> {
+    pub fn into_bytes(&self) -> Vec<u8> {
         let decoded_string: String = self.0.iter().map(|(_, string)| string.clone()).collect();
         encode_string(&decoded_string)
     }

@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{CameraFragment, Fragment, FragmentRef, FragmentParser, StringReference};
+use super::{CameraFragment, Fragment, FragmentParser, FragmentRef, StringReference};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -41,10 +41,10 @@ impl FragmentParser for CameraReferenceFragment {
 }
 
 impl Fragment for CameraReferenceFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
-            &self.reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
+            &self.reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
         ]
         .concat()
@@ -78,6 +78,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4638-0x09.frag")[..];
         let frag = CameraReferenceFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

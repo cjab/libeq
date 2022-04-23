@@ -137,11 +137,11 @@ impl FragmentParser for ModelFragment {
 }
 
 impl Fragment for ModelFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
-            &self.name_fragment.serialize()[..],
+            &self.name_fragment.into_bytes()[..],
             &self.unknown_params2_count.to_le_bytes()[..],
             &self.fragment_count.to_le_bytes()[..],
             &self.unknown_fragment.to_le_bytes()[..],
@@ -211,6 +211,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4639-0x14.frag")[..];
         let frag = ModelFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

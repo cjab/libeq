@@ -76,9 +76,9 @@ impl FragmentParser for VertexColorFragment {
 }
 
 impl Fragment for VertexColorFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.data1.to_le_bytes()[..],
             &self.vertex_color_count.to_le_bytes()[..],
             &self.data2.to_le_bytes()[..],
@@ -126,6 +126,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/objects/0000-0x32.frag")[..];
         let frag = VertexColorFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

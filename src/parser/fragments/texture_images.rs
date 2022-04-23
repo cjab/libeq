@@ -53,15 +53,15 @@ impl FragmentParser for TextureImagesFragment {
 }
 
 impl Fragment for TextureImagesFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         let padding = vec![0; 4 - (self.size() % 4)];
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.size1.to_le_bytes()[..],
             &self
                 .entries
                 .iter()
-                .flat_map(|e| e.serialize())
+                .flat_map(|e| e.into_bytes())
                 .collect::<Vec<_>>()[..],
             &padding[..],
         ]
@@ -112,7 +112,7 @@ impl TextureImagesFragmentEntry {
         mem::size_of::<u16>() + self.file_name.len() + 1
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_length.to_le_bytes()[..],
             &encode_string(&format!("{}{}", &self.file_name, "\0"))[..],
@@ -144,6 +144,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0029-0x03.frag")[..];
         let frag = TextureImagesFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

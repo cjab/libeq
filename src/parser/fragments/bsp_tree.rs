@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{BspRegionFragment, Fragment, FragmentRef, FragmentParser, StringReference};
+use super::{BspRegionFragment, Fragment, FragmentParser, FragmentRef, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
@@ -44,14 +44,14 @@ impl FragmentParser for BspTreeFragment {
 }
 
 impl Fragment for BspTreeFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.size1.to_le_bytes()[..],
             &self
                 .entries
                 .iter()
-                .flat_map(|e| e.serialize())
+                .flat_map(|e| e.into_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
@@ -108,15 +108,15 @@ impl BspTreeFragmentEntry {
         ))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.normal.0.to_le_bytes()[..],
             &self.normal.1.to_le_bytes()[..],
             &self.normal.2.to_le_bytes()[..],
             &self.split_distance.to_le_bytes()[..],
-            &self.region.serialize()[..],
-            &self.nodes.0.serialize()[..],
-            &self.nodes.1.serialize()[..],
+            &self.region.into_bytes()[..],
+            &self.nodes.0.into_bytes()[..],
+            &self.nodes.1.into_bytes()[..],
         ]
         .concat()
     }
@@ -148,6 +148,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
         let frag = BspTreeFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

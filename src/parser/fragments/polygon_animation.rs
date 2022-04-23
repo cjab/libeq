@@ -90,9 +90,9 @@ impl FragmentParser for PolygonAnimationFragment {
 }
 
 impl Fragment for PolygonAnimationFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.params1.to_le_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.size1.to_le_bytes()[..],
@@ -155,6 +155,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/1417-0x17.frag")[..];
         let frag = PolygonAnimationFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentParser, StringReference, TextureImagesFragment};
+use super::{Fragment, FragmentParser, FragmentRef, StringReference, TextureImagesFragment};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -68,10 +68,10 @@ impl FragmentParser for TextureFragment {
 }
 
 impl Fragment for TextureFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
-            &self.flags.serialize()[..],
+            &self.name_reference.into_bytes()[..],
+            &self.flags.into_bytes()[..],
             &self.frame_count.to_le_bytes()[..],
             &self
                 .current_frame
@@ -80,7 +80,7 @@ impl Fragment for TextureFragment {
             &self
                 .frame_references
                 .iter()
-                .flat_map(|f| f.serialize())
+                .flat_map(|f| f.into_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
@@ -109,7 +109,7 @@ impl TextureFragmentFlags {
         Ok((remaining, TextureFragmentFlags(raw_flags)))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -159,6 +159,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0002-0x04.frag")[..];
         let frag = TextureFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

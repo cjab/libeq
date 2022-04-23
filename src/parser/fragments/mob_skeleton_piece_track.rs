@@ -167,9 +167,9 @@ impl FragmentParser for MobSkeletonPieceTrackFragment {
 }
 
 impl Fragment for MobSkeletonPieceTrackFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.size.to_le_bytes()[..],
             &self.rotate_denominator.to_le_bytes()[..],
@@ -222,6 +222,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
         let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

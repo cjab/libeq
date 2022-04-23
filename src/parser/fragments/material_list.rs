@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentParser, MaterialFragment, StringReference};
+use super::{Fragment, FragmentParser, FragmentRef, MaterialFragment, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -46,15 +46,15 @@ impl FragmentParser for MaterialListFragment {
 }
 
 impl Fragment for MaterialListFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.size1.to_le_bytes()[..],
             &self
                 .fragments
                 .iter()
-                .flat_map(|f| f.serialize())
+                .flat_map(|f| f.into_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
@@ -91,6 +91,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0130-0x31.frag")[..];
         let frag = MaterialListFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

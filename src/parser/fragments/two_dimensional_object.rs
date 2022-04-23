@@ -263,10 +263,10 @@ impl FragmentParser for TwoDimensionalObjectFragment {
 }
 
 impl Fragment for TwoDimensionalObjectFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
-            &self.flags.serialize()[..],
+            &self.name_reference.into_bytes()[..],
+            &self.flags.into_bytes()[..],
             &self.num_frames.to_le_bytes()[..],
             &self.num_pitches.to_le_bytes()[..],
             &self.sprite_size.0.to_le_bytes()[..],
@@ -288,10 +288,10 @@ impl Fragment for TwoDimensionalObjectFragment {
             &self
                 .pitches
                 .iter()
-                .flat_map(|p| p.serialize())
+                .flat_map(|p| p.into_bytes())
                 .collect::<Vec<_>>()[..],
-            &self.render_method.serialize()[..],
-            &self.render_flags.serialize()[..],
+            &self.render_method.into_bytes()[..],
+            &self.render_flags.into_bytes()[..],
             &self.pen.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
             &self.brightness.map_or(vec![], |b| b.to_le_bytes().to_vec())[..],
             &self
@@ -300,7 +300,7 @@ impl Fragment for TwoDimensionalObjectFragment {
             &self
                 .params7_fragment
                 .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
-            &self.uv_info.as_ref().map_or(vec![], |u| u.serialize())[..],
+            &self.uv_info.as_ref().map_or(vec![], |u| u.into_bytes())[..],
             &self
                 .params7_size
                 .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
@@ -345,7 +345,7 @@ impl UvInfo {
         ))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.uv_origin.0.to_le_bytes()[..],
             &self.uv_origin.1.to_le_bytes()[..],
@@ -377,7 +377,7 @@ impl SpriteFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -415,7 +415,7 @@ impl RenderMethod {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -516,7 +516,7 @@ impl RenderFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -587,14 +587,14 @@ impl SpritePitch {
         ))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.pitch_cap.to_le_bytes()[..],
             &self.num_headings.to_le_bytes()[..],
             &self
                 .headings
                 .iter()
-                .flat_map(|h| h.serialize())
+                .flat_map(|h| h.into_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
@@ -630,7 +630,7 @@ impl SpriteHeading {
         ))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.heading_cap.to_le_bytes()[..],
             &self
@@ -698,6 +698,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
         let frag = TwoDimensionalObjectFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }
