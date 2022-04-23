@@ -123,11 +123,11 @@ impl WldDoc {
         self.fragments.len()
     }
 
-    pub fn serialize(&self) -> Vec<u8> {
+    pub fn into_bytes(&self) -> Vec<u8> {
         [
-            self.header.serialize(),
-            self.strings.serialize(),
-            self.fragments.iter().flat_map(|f| f.serialize()).collect(),
+            self.header.into_bytes(),
+            self.strings.into_bytes(),
+            self.fragments.iter().flat_map(|f| f.into_bytes()).collect(),
         ]
         .concat()
     }
@@ -181,7 +181,7 @@ impl WldHeader {
         ))
     }
 
-    pub fn serialize(&self) -> Vec<u8> {
+    pub fn into_bytes(&self) -> Vec<u8> {
         [
             &self.magic.to_le_bytes()[..],
             &self.version.to_le_bytes()[..],
@@ -379,7 +379,7 @@ impl<'a> FragmentHeader<'a> {
         }
     }
 
-    pub fn serialize(&self) -> Vec<u8> {
+    pub fn into_bytes(&self) -> Vec<u8> {
         [
             &self.size.to_le_bytes()[..],
             &self.fragment_type.to_le_bytes()[..],

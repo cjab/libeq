@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentParser, StringReference, TextureFragment};
+use super::{Fragment, FragmentParser, FragmentRef, StringReference, TextureFragment};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -41,10 +41,10 @@ impl FragmentParser for TextureReferenceFragment {
 }
 
 impl Fragment for TextureReferenceFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
-            &self.reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
+            &self.reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
         ]
         .concat()
@@ -78,6 +78,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0003-0x05.frag")[..];
         let frag = TextureReferenceFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

@@ -1,6 +1,8 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentParser, MobSkeletonPieceTrackFragment, StringReference};
+use super::{
+    Fragment, FragmentParser, FragmentRef, MobSkeletonPieceTrackFragment, StringReference,
+};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -54,10 +56,10 @@ impl FragmentParser for MobSkeletonPieceTrackReferenceFragment {
 }
 
 impl Fragment for MobSkeletonPieceTrackReferenceFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
-            &self.reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
+            &self.reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.params1.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
         ]
@@ -97,6 +99,6 @@ mod tests {
             .unwrap()
             .1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

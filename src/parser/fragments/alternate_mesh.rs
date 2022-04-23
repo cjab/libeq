@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentParser, MaterialListFragment, StringReference};
+use super::{Fragment, FragmentParser, FragmentRef, MaterialListFragment, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_u16, le_u32};
@@ -233,7 +233,7 @@ impl FragmentParser for AlternateMeshFragment {
 }
 
 impl Fragment for AlternateMeshFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         let vertices = self
             .vertices
             .iter()
@@ -255,12 +255,12 @@ impl Fragment for AlternateMeshFragment {
         let polygons = self
             .polygons
             .iter()
-            .flat_map(|p| p.serialize())
+            .flat_map(|p| p.into_bytes())
             .collect::<Vec<_>>();
         let data6 = self
             .data6
             .iter()
-            .flat_map(|d| d.serialize())
+            .flat_map(|d| d.into_bytes())
             .collect::<Vec<_>>();
         let vertex_pieces = self
             .vertex_pieces
@@ -283,7 +283,7 @@ impl Fragment for AlternateMeshFragment {
             .collect::<Vec<_>>();
 
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.vertex_count.to_le_bytes()[..],
             &self.tex_coords_count.to_le_bytes()[..],
@@ -291,7 +291,7 @@ impl Fragment for AlternateMeshFragment {
             &self.polygon_count.to_le_bytes()[..],
             &self.size6.to_le_bytes()[..],
             &self.vertex_piece_count.to_le_bytes()[..],
-            &self.fragment1.serialize()[..],
+            &self.fragment1.into_bytes()[..],
             &self.fragment2.to_le_bytes()[..],
             &self.fragment3.to_le_bytes()[..],
             &self.center.0.to_le_bytes()[..],
@@ -344,7 +344,7 @@ pub struct AlternateMeshFragmentPolygonEntry {
 }
 
 impl AlternateMeshFragmentPolygonEntry {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.flags.to_le_bytes()[..],
             &self.data.0.to_le_bytes()[..],
@@ -402,7 +402,7 @@ pub struct AlternateMeshFragmentData6Entry {
 }
 
 impl AlternateMeshFragmentData6Entry {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self._type.to_le_bytes()[..],
             &self.vertex_index.to_le_bytes()[..],
@@ -480,6 +480,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
         let frag = AlternateMeshFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

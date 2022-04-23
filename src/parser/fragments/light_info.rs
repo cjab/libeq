@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentParser, LightSourceReferenceFragment, StringReference};
+use super::{Fragment, FragmentParser, FragmentRef, LightSourceReferenceFragment, StringReference};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
@@ -64,10 +64,10 @@ impl FragmentParser for LightInfoFragment {
 }
 
 impl Fragment for LightInfoFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
-            &self.reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
+            &self.reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.x.to_le_bytes()[..],
             &self.y.to_le_bytes()[..],
@@ -109,6 +109,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/lights/0002-0x28.frag")[..];
         let frag = LightInfoFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

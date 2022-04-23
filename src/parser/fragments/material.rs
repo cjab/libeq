@@ -24,7 +24,7 @@ impl TransparencyFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -136,15 +136,15 @@ impl FragmentParser for MaterialFragment {
 }
 
 impl Fragment for MaterialFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
-            &self.transparency_flags.serialize()[..],
+            &self.transparency_flags.into_bytes()[..],
             &self.params2.to_le_bytes()[..],
             &self.mask_color_coord.0.to_le_bytes()[..],
             &self.mask_color_coord.1.to_le_bytes()[..],
-            &self.reference.serialize()[..],
+            &self.reference.into_bytes()[..],
             &self
                 .pair
                 .map_or(vec![], |p| [p.0.to_le_bytes(), p.1.to_le_bytes()].concat())[..],
@@ -184,6 +184,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0004-0x30.frag")[..];
         let frag = MaterialFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

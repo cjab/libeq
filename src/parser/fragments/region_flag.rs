@@ -79,9 +79,9 @@ impl FragmentParser for RegionFlagFragment {
 }
 
 impl Fragment for RegionFlagFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.region_count.to_le_bytes()[..],
             &self
@@ -130,6 +130,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
         let frag = RegionFlagFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

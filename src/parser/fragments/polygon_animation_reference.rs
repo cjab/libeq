@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentParser, PolygonAnimationFragment, StringReference};
+use super::{Fragment, FragmentParser, FragmentRef, PolygonAnimationFragment, StringReference};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
@@ -53,10 +53,10 @@ impl FragmentParser for PolygonAnimationReferenceFragment {
 }
 
 impl Fragment for PolygonAnimationReferenceFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
-            &self.reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
+            &self.reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.params1.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
         ]
@@ -92,6 +92,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/1418-0x18.frag")[..];
         let frag = PolygonAnimationReferenceFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

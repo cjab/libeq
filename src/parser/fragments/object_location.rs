@@ -148,10 +148,10 @@ impl FragmentParser for ObjectLocationFragment {
 }
 
 impl Fragment for ObjectLocationFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
-            &self.reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
+            &self.reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.fragment1.to_le_bytes()[..],
             &self.x.to_le_bytes()[..],
@@ -208,6 +208,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4641-0x15.frag")[..];
         let frag = ObjectLocationFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

@@ -194,9 +194,9 @@ impl FragmentParser for CameraFragment {
 }
 
 impl Fragment for CameraFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.params0.to_le_bytes()[..],
             &self.params1.to_le_bytes()[..],
             &self.params2.to_le_bytes()[..],
@@ -279,6 +279,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1729-0x08.frag")[..];
         let frag = CameraFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

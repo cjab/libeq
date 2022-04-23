@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentRef, FragmentParser, LightSourceReferenceFragment, StringReference};
+use super::{Fragment, FragmentParser, FragmentRef, LightSourceReferenceFragment, StringReference};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -56,10 +56,10 @@ impl FragmentParser for AmbientLightFragment {
 }
 
 impl Fragment for AmbientLightFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
-            &self.reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
+            &self.reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.region_count.to_le_bytes()[..],
             &self
@@ -101,6 +101,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4637-0x2a.frag")[..];
         let frag = AmbientLightFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

@@ -190,7 +190,7 @@ impl SkeletonTrackSetFragmentEntry {
         ))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.to_le_bytes()[..],
             &self.flags.to_le_bytes()[..],
@@ -208,9 +208,9 @@ impl SkeletonTrackSetFragmentEntry {
 }
 
 impl Fragment for SkeletonTrackSetFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.entry_count.to_le_bytes()[..],
             &self.fragment.to_le_bytes()[..],
@@ -223,7 +223,7 @@ impl Fragment for SkeletonTrackSetFragment {
             &self
                 .entries
                 .iter()
-                .flat_map(|e| e.serialize())
+                .flat_map(|e| e.into_bytes())
                 .collect::<Vec<_>>()[..],
             &self.size2.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
             &self
@@ -279,6 +279,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0013-0x10.frag")[..];
         let frag = SkeletonTrackSetFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

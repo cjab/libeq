@@ -24,8 +24,8 @@ impl FragmentParser for FirstFragment {
 }
 
 impl Fragment for FirstFragment {
-    fn serialize(&self) -> Vec<u8> {
-        [&self.name_reference.serialize()[..]].concat()
+    fn into_bytes(&self) -> Vec<u8> {
+        [&self.name_reference.into_bytes()[..]].concat()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -55,6 +55,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0000-0x35.frag")[..];
         let frag = FirstFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }

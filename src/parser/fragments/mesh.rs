@@ -302,14 +302,14 @@ impl FragmentParser for MeshFragment {
 }
 
 impl Fragment for MeshFragment {
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.serialize()[..],
+            &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
-            &self.material_list_ref.serialize()[..],
-            &self.animation_ref.serialize()[..],
-            &self.fragment3.serialize()[..],
-            &self.fragment4.serialize()[..],
+            &self.material_list_ref.into_bytes()[..],
+            &self.animation_ref.into_bytes()[..],
+            &self.fragment3.into_bytes()[..],
+            &self.fragment4.into_bytes()[..],
             &self.center.0.to_le_bytes()[..],
             &self.center.1.to_le_bytes()[..],
             &self.center.2.to_le_bytes()[..],
@@ -356,7 +356,7 @@ impl Fragment for MeshFragment {
             &self
                 .polygons
                 .iter()
-                .flat_map(|p| p.serialize())
+                .flat_map(|p| p.into_bytes())
                 .collect::<Vec<_>>()[..],
             &self
                 .vertex_pieces
@@ -376,7 +376,7 @@ impl Fragment for MeshFragment {
             &self
                 .data9
                 .iter()
-                .flat_map(|d| d.serialize())
+                .flat_map(|d| d.into_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
@@ -416,7 +416,7 @@ impl MeshFragmentPolygonEntry {
         ))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.flags.to_le_bytes()[..],
             &self.vertex_indexes.0.to_le_bytes()[..],
@@ -472,7 +472,7 @@ impl MeshFragmentData9Entry {
         ))
     }
 
-    fn serialize(&self) -> Vec<u8> {
+    fn into_bytes(&self) -> Vec<u8> {
         [
             &self.index1.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
             &self.index2.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
@@ -538,6 +538,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
         let frag = MeshFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.serialize()[..], data);
+        assert_eq!(&frag.into_bytes()[..], data);
     }
 }
