@@ -8,6 +8,10 @@ use nom::multi::count;
 use nom::number::complete::{le_u16, le_u32, le_u8};
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// This fragment references one or more texture filenames. So far all known textures
 /// reference a single filename.
@@ -77,6 +81,7 @@ impl Fragment for TextureImagesFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// Bitmap filename entries within the [TextureImagesFragment] fragment.
 pub struct TextureImagesFragmentEntry {

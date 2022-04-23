@@ -7,6 +7,10 @@ use nom::number::complete::le_u32;
 use nom::sequence::tuple;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// This fragment represents an entire texture rather than merely a bitmap used by that
 /// texture. The conceptual difference from [TextureImagesFragment] fragments is that textures
@@ -95,6 +99,7 @@ impl Fragment for TextureFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 pub struct TextureFragmentFlags(pub u32);
 

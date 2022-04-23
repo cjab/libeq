@@ -7,6 +7,10 @@ use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// A map's BSP Tree.
 ///
@@ -66,6 +70,7 @@ impl Fragment for BspTreeFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// Entries in the map's [BspTreeFragment]
 pub struct BspTreeFragmentEntry {

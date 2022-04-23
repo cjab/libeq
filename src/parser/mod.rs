@@ -9,9 +9,13 @@ use nom::number::complete::le_u32;
 use nom::sequence::tuple;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 pub use fragments::*;
 use strings::{StringHash, StringReference};
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub struct WldDoc {
     header: WldHeader,
@@ -134,6 +138,7 @@ impl WldDoc {
 }
 
 /// This header is present at the beginning of every .wld file.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 struct WldHeader {
     /// The file signature that signals that this is a .wld file.
@@ -197,6 +202,7 @@ impl WldHeader {
 
 type FragmentTypeId = u32;
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 /// All fragments begin with the following header
 pub struct FragmentHeader<'a> {

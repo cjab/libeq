@@ -6,6 +6,10 @@ use nom::number::complete::le_u32;
 use nom::sequence::tuple;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// A reference to a [LightSourceFragment].
 ///

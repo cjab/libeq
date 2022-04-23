@@ -8,6 +8,10 @@ use nom::number::complete::{le_u16, le_u32, le_u8};
 use nom::sequence::tuple;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// A region within a map's BSP Tree.
 ///
@@ -220,6 +224,7 @@ impl Fragment for BspRegionFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// _Unknown_
 pub struct BspRegionFragmentData3Entry {
@@ -285,6 +290,7 @@ impl BspRegionFragmentData3Entry {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// _Unknown_
 pub struct BspRegionFragmentData4Entry {
@@ -362,6 +368,7 @@ impl BspRegionFragmentData4Entry {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// _Unknown_
 pub struct BspRegionFragmentData5Entry {
@@ -417,6 +424,7 @@ impl BspRegionFragmentData5Entry {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// A potentially visible set (PVS) of regions
 pub struct BspRegionFragmentPVS {
