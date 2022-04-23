@@ -52,6 +52,10 @@ impl TransparencyFlags {
     pub fn has_transparency(&self) -> bool {
         self.0 & Self::TRANSPARENCY == Self::TRANSPARENCY
     }
+
+    pub fn to_u32(&self) -> u32 {
+        self.0
+    }
 }
 
 impl fmt::Debug for TransparencyFlags {

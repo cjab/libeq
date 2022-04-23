@@ -369,9 +369,13 @@ pub fn draw_material_fragment<B>(
     B: Backend,
 {
     let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let params1 = format!("0x{:x}  (b{:0>32b})", fragment.params1, fragment.params1);
+    let transparency_flags = format!(
+        "0x{:x}  (b{:0>32b})",
+        fragment.transparency_flags.to_u32(),
+        fragment.transparency_flags.to_u32()
+    );
     let params2 = format!("0x{:x}  (b{:0>32b})", fragment.params2, fragment.params2);
-    let params3 = match fragment.params3 {
+    let mask_color_coord = match fragment.mask_color_coord {
         (p1, p2) => format!("(0x{:x}, 0x{:x})", p1 as u32, p2 as u32),
     };
     let reference = format!("{:?}", fragment.reference);
@@ -385,9 +389,9 @@ pub fn draw_material_fragment<B>(
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Params1", &params1]),
+        Row::new(vec!["Transparency flags", &transparency_flags]),
         Row::new(vec!["Params2", &params2]),
-        Row::new(vec!["Params3", &params3]),
+        Row::new(vec!["Mask color coord", &mask_color_coord]),
         Row::new(vec!["Reference", &reference]),
         Row::new(vec!["Pair", &pair]),
     ])
@@ -538,7 +542,7 @@ pub fn draw_object_location_fragment<B>(
     let scale_y = format!("{}", fragment.scale_y);
     let scale_x = format!("{}", fragment.scale_x);
     let fragment2 = format!("{}", fragment.fragment2);
-    let params2 = format!("{}", fragment.params2);
+    let params2 = format!("{:?}", fragment.params2);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
