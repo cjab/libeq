@@ -5,6 +5,10 @@ use super::{Fragment, FragmentParser, StringReference};
 use nom::number::complete::le_i32;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 /// _Unknown_
 ///

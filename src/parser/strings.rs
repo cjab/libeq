@@ -4,6 +4,10 @@ use encoding_rs::WINDOWS_1252;
 use nom::number::complete::le_i32;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct StringReference(i32);
 
@@ -22,6 +26,7 @@ impl StringReference {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub struct StringHash(HashMap<usize, String>);
 

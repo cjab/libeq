@@ -39,6 +39,9 @@ use std::ops::Deref;
 use nom::number::complete::le_i32;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use super::StringReference;
 
 pub use alternate_mesh::*;
@@ -75,6 +78,7 @@ pub use vertex_color::*;
 pub use vertex_color_reference::*;
 pub use zone_unknown::*;
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FragmentRef<T> {
     Name(StringReference, PhantomData<T>),
@@ -117,6 +121,7 @@ pub trait FragmentParser {
     fn parse(input: &[u8]) -> IResult<&[u8], Self::T>;
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub enum FragmentType {
     AlternateMesh(AlternateMeshFragment),

@@ -7,6 +7,10 @@ use nom::number::complete::{le_f32, le_i16, le_u16, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 /// This fragment is rarely seen. It is very similar to the 0x36 [MeshFragment].
 /// I believe that this might have been the original type and was later replaced
@@ -330,6 +334,7 @@ impl Fragment for AlternateMeshFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 /// Represents a polygon within a [AlternativeMeshFragment].
 pub struct AlternateMeshFragmentPolygonEntry {
@@ -377,6 +382,7 @@ impl AlternateMeshFragmentPolygonEntry {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 /// Represents a polygon within a [AlternativeMeshFragment].
 pub struct AlternateMeshFragmentData6Entry {

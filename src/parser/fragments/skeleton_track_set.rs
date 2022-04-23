@@ -7,6 +7,10 @@ use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// This fragment describes a skeleton for an entire animated model, and is used for mob
 /// models. The overall skeleton is contained in a 0x10 [SkeletonTrackSetFragment] and
@@ -114,6 +118,7 @@ impl FragmentParser for SkeletonTrackSetFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// Entries in the map's [SkeletonTrackSetFragment]
 pub struct SkeletonTrackSetFragmentEntry {

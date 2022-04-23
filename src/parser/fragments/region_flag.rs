@@ -7,6 +7,10 @@ use nom::number::complete::{le_u32, le_u8};
 use nom::sequence::tuple;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 /// This fragment lets you flag certain regions (as defined by 0x22 BSP Region fragments)
 /// in a particular way. The flagging is done by setting the name of this fragment to a

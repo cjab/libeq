@@ -7,6 +7,10 @@ use nom::number::complete::{le_f32, le_i32, le_u32, le_u8};
 use nom::sequence::tuple;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 /// Static or animated model reference or player info.
 ///

@@ -10,6 +10,10 @@ use nom::number::complete::{le_f32, le_i32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// This fragment is rarely used. It describes objects that are purely two-dimensional
 /// in nature. Examples are coins and blood spatters.
@@ -320,6 +324,7 @@ impl Fragment for TwoDimensionalObjectFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 pub struct UvInfo {
     pub uv_origin: (f32, f32, f32),
@@ -361,6 +366,7 @@ impl UvInfo {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 pub struct SpriteFlags(u32);
 
@@ -406,6 +412,7 @@ impl SpriteFlags {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 pub struct RenderMethod(u32);
 
@@ -452,6 +459,7 @@ impl RenderMethod {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, FromPrimitive, PartialEq)]
 pub enum DrawStyle {
     Transparent = 0x0,
@@ -460,6 +468,7 @@ pub enum DrawStyle {
     Solid = 0x3,
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, FromPrimitive, PartialEq)]
 pub enum Lighting {
     ZeroIntensity = 0x0,
@@ -472,6 +481,7 @@ pub enum Lighting {
     Invalid = 0x7,
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, FromPrimitive, PartialEq)]
 pub enum Shading {
     None1 = 0x0,
@@ -480,6 +490,7 @@ pub enum Shading {
     Gouraud2 = 0x3,
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, FromPrimitive, PartialEq)]
 pub enum TextureStyle {
     None = 0x0,
@@ -499,6 +510,7 @@ pub enum TextureStyle {
     XXXXX = 0xf,
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 pub struct RenderFlags(u32);
 
@@ -545,6 +557,7 @@ impl RenderFlags {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// `pitches` entries in the [TwoDimensionalObjectFragment]
 pub struct SpritePitch {
@@ -601,6 +614,7 @@ impl SpritePitch {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// `headings` entries in [SpritePitch]
 pub struct SpriteHeading {

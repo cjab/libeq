@@ -4,6 +4,10 @@ use super::{Fragment, FragmentParser, StringReference};
 
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 /// The first fragment has a single field. A name reference
 /// that always has a value of 0xff000000.

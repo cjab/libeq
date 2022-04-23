@@ -6,6 +6,10 @@ use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// This fragment is poorly understood. It seems to contain 26 parameters, some of which
 /// are DWORDS (32-bit integers) and some of which are FLOATS (32-bit floating-point values).
