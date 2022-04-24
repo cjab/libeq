@@ -11,7 +11,7 @@ use nom::IResult;
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 pub struct TransparencyFlags(u32);
 
 impl TransparencyFlags {
@@ -65,6 +65,12 @@ impl TransparencyFlags {
 impl fmt::Debug for TransparencyFlags {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "TransparencyFlags [{:b}]", self.0)
+    }
+}
+
+impl From<TransparencyFlags> for u32 {
+    fn from(value: TransparencyFlags) -> Self {
+        value.0
     }
 }
 

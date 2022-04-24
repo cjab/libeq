@@ -135,7 +135,7 @@ pub fn draw_raw_fragment_data<B>(
     let mut hex = vec![];
     let mut hex_printer = Printer::new(&mut hex, true, BorderStyle::Unicode, true);
     hex_printer
-        .print_all(&fragment.serialize()[..])
+        .print_all(&fragment.into_bytes()[..])
         .expect("Error printing hex");
 
     let lines: Vec<u8> = hex
@@ -371,8 +371,8 @@ pub fn draw_material_fragment<B>(
     let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
     let transparency_flags = format!(
         "0x{:x}  (b{:0>32b})",
-        fragment.transparency_flags.to_u32(),
-        fragment.transparency_flags.to_u32()
+        Into::<u32>::into(fragment.transparency_flags),
+        Into::<u32>::into(fragment.transparency_flags),
     );
     let params2 = format!("0x{:x}  (b{:0>32b})", fragment.params2, fragment.params2);
     let mask_color_coord = match fragment.mask_color_coord {
