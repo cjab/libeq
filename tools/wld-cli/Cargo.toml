@@ -12,7 +12,7 @@ test = false
 [dependencies]
 eq_wld = { path = "../..", features = ["serde"] }
 eq_archive = { git = "https://github.com/cjab/eq_archive" }
-clap = "2.33.3"
+clap = "3.1.12"
 colorful = "0.2.1"
 tui = "0.16"
 termion = "1.5"
