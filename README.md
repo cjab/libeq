@@ -40,7 +40,11 @@ for material in wld.materials() {
 This workspace also includes a tool for viewing fragments within a file. It's even more of a work in progress.
 Given a world file you're interested in you can view the fragments with:
 ```
-cargo run -p wld-cli -- gfaydark.wld
+cargo run -p wld-cli -- explore gfaydark.wld
+```
+Or to extract to raw fragment data files:
+```
+cargo run -p wld-cli -- extract gfaydark.wld destination/
 ```
 
 ## Acknowledgements
