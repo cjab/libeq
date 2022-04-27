@@ -37,19 +37,6 @@ impl WldDoc {
             count(FragmentHeader::parse, header.fragment_count as usize),
         ))(i)?;
         let strings = StringHash::new(string_hash_data);
-
-        //use std::fs::File;
-        //use std::io::prelude::*;
-
-        //for (i, header) in fragment_headers.iter().enumerate() {
-        //    let mut file = File::create(format!(
-        //        "fixtures/fragments/gfaydark_obj/{:04}-{:#04x}.frag",
-        //        i, header.fragment_type
-        //    ))
-        //    .unwrap();
-        //    file.write_all(header.field_data).unwrap();
-        //}
-
         let fragments = fragment_headers.iter().map(|h| h.parse_body()).collect();
 
         Ok((
@@ -60,6 +47,15 @@ impl WldDoc {
                 fragments,
             },
         ))
+    }
+
+    pub fn dump_raw_fragments(input: &[u8]) -> IResult<&[u8], Vec<FragmentHeader>> {
+        let (i, header) = WldHeader::parse(input)?;
+        let (i, _) = take(header.string_hash_size)(i)?;
+        let (i, fragment_headers) =
+            count(FragmentHeader::parse, header.fragment_count as usize)(i)?;
+
+        Ok((i, fragment_headers))
     }
 
     /// Get a string given a string reference

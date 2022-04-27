@@ -5,17 +5,17 @@ mod event;
 mod handlers;
 mod ui;
 
-use std::collections::HashMap;
 use std::fs::File;
-use std::io::Read;
+use std::io::{prelude::*, Read};
+use std::path::Path;
 use std::{error::Error, io};
 
-use clap::{arg, Arg, Command};
+use clap::{arg, Command};
 use termion::{input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{backend::TermionBackend, Terminal};
 
 use crate::{app::App, event::Events};
-use eq_wld::parser::{self, Fragment, WldDoc};
+use eq_wld::parser::{self, WldDoc};
 
 fn cli() -> Command<'static> {
     Command::new("wld-cli")
@@ -80,7 +80,8 @@ fn explore(wld_filename: &str) -> Result<(), Box<dyn Error>> {
 
     let events = Events::new();
 
-    let wld_doc = open_wld_file(wld_filename)?;
+    let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
+    let (_, wld_doc) = parser::WldDoc::parse(&wld_data).expect("Could not read wld file");
     let mut app = App::new(wld_doc);
 
     loop {
@@ -97,12 +98,23 @@ fn explore(wld_filename: &str) -> Result<(), Box<dyn Error>> {
 }
 
 fn extract(wld_filename: &str, destination: &str) -> Result<(), Box<dyn Error>> {
-    let wld_doc = open_wld_file(wld_filename)?;
+    let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
+    let (_, raw_fragments) =
+        WldDoc::dump_raw_fragments(&wld_data).expect("Could not read wld file");
+
+    for (i, fragment_header) in raw_fragments.iter().enumerate() {
+        let filename = format!("{:04}-{:#04x}.frag", i, fragment_header.fragment_type);
+        let dest = Path::new(destination).join(filename);
+        let mut file = File::create(&dest).expect(&format!("Failed to create file: {:?}", dest));
+        file.write_all(fragment_header.field_data).unwrap();
+    }
+
     Ok(())
 }
 
 fn stats(wld_filename: &str) -> Result<(), Box<dyn Error>> {
-    let wld_doc = open_wld_file(wld_filename);
+    //    let wld_doc = open_wld_file(wld_filename);
+    let (_, wld_doc) = parser::WldDoc::parse(&read_wld_file(wld_filename)?).unwrap();
     //let stats = wld_doc
     //    .fragment_iter()
     //    .fold(HashMap::new(), |mut map, fragment| {
@@ -120,10 +132,9 @@ fn stats(wld_filename: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn open_wld_file(filename: &str) -> Result<WldDoc, Box<dyn Error>> {
+fn read_wld_file(filename: &str) -> Result<Vec<u8>, Box<dyn Error>> {
     let mut file = File::open(filename)?;
     let mut wld_data = Vec::new();
     file.read_to_end(&mut wld_data)?;
-    let (_, wld_doc) = parser::WldDoc::parse(&wld_data).unwrap();
-    Ok(wld_doc)
+    Ok(wld_data)
 }
