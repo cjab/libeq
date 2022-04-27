@@ -5,67 +5,73 @@ mod event;
 mod handlers;
 mod ui;
 
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::{error::Error, io};
 
-use clap::{App as Clapp, Arg};
+use clap::{arg, Arg, Command};
 use termion::{input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{backend::TermionBackend, Terminal};
 
 use crate::{app::App, event::Events};
-use eq_wld::parser;
+use eq_wld::parser::{self, Fragment, WldDoc};
+
+fn cli() -> Command<'static> {
+    Command::new("wld-cli")
+        .version("0.1.0")
+        .author("Chad Jablonski <chad@jablonski.xyz>")
+        .about("Work with data from EverQuest .wld files")
+        .arg_required_else_help(true)
+        .subcommand(
+            Command::new("explore")
+                .about("Display a TUI interface listing all fragments in the file")
+                .arg_required_else_help(true)
+                .arg(arg!(<WLD_FILE> "The wld file to explore")),
+        )
+        .subcommand(
+            Command::new("extract")
+                .about("Extract fragments from the wld file")
+                .arg_required_else_help(true)
+                .arg(arg!(<WLD_FILE> "The source wld file"))
+                .arg(arg!(<DESTINATION> "The target destination")),
+        )
+        .subcommand(
+            Command::new("stats")
+                .about("Display stats about the wld file")
+                .arg_required_else_help(true)
+                .arg(arg!(<WLD_FILE> "The wld file")),
+        )
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
 
-    let matches = Clapp::new("wld-cli")
-        .version("0.1.0")
-        .author("Chad Jablonski <chad@jablonski.xyz>")
-        .about("Extract data from EverQuest .wld files")
-        .arg(
-            Arg::with_name("WLD_FILE")
-                .help("The s3d archive to extract from")
-                .required(true)
-                .index(1),
-        )
-        .arg(
-            Arg::with_name("stats")
-                .short("s")
-                .long("stats")
-                .help("Get file stats")
-                .takes_value(false),
-        )
-        .get_matches();
+    match cli().get_matches().subcommand() {
+        Some(("explore", sub_matches)) => {
+            let wld_file = sub_matches.value_of("WLD_FILE").expect("required");
+            println!("EXPLORE: {:?}", wld_file);
+            explore(wld_file)?;
+        }
+        Some(("extract", sub_matches)) => {
+            let wld_file = sub_matches.value_of("WLD_FILE").expect("required");
+            let destination = sub_matches.value_of("DESTINATION").expect("required");
+            println!("EXTRACT: {:?} -> {:?}", wld_file, destination);
+            extract(wld_file, destination)?;
+        }
+        Some(("stats", sub_matches)) => {
+            let wld_file = sub_matches.value_of("WLD_FILE").expect("required");
+            println!("STATS: {:?}", wld_file);
+            stats(wld_file)?;
+        }
+        Some(_) => (),
+        None => (),
+    }
 
-    let wld_filename = matches.value_of("WLD_FILE").unwrap();
+    Ok(())
+}
 
-    let mut file = File::open(wld_filename)?;
-    let mut wld_data = Vec::new();
-    file.read_to_end(&mut wld_data)?;
-
-    let (_, wld_doc) = parser::WldDoc::parse(&wld_data).unwrap();
-
-    let show_stats = matches.is_present("stats");
-
-    //if show_stats {
-    //    let stats = wld_doc
-    //        .fragments
-    //        .iter()
-    //        .fold(HashMap::new(), |mut map, header| {
-    //            map.entry(header.fragment_type)
-    //                .or_insert_with(|| Vec::new())
-    //                .push(header);
-    //            map
-    //        });
-    //    let mut sorted_keys: Vec<_> = stats.keys().collect();
-    //    sorted_keys.sort();
-    //    for k in sorted_keys {
-    //        println!("0x{:02x?}: {}", k, stats[k].len());
-    //    }
-    //    return Ok(());
-    //}
-
+fn explore(wld_filename: &str) -> Result<(), Box<dyn Error>> {
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
     let stdout = AlternateScreen::from(stdout);
@@ -74,6 +80,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let events = Events::new();
 
+    let wld_doc = open_wld_file(wld_filename)?;
     let mut app = App::new(wld_doc);
 
     loop {
@@ -87,4 +94,36 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
+}
+
+fn extract(wld_filename: &str, destination: &str) -> Result<(), Box<dyn Error>> {
+    let wld_doc = open_wld_file(wld_filename)?;
+    Ok(())
+}
+
+fn stats(wld_filename: &str) -> Result<(), Box<dyn Error>> {
+    let wld_doc = open_wld_file(wld_filename);
+    //let stats = wld_doc
+    //    .fragment_iter()
+    //    .fold(HashMap::new(), |mut map, fragment| {
+    //        map.entry(header.fragment_type)
+    //            .or_insert_with(|| Vec::new())
+    //            .push(header);
+    //        map
+    //    });
+    //let mut sorted_keys: Vec<_> = stats.keys().collect();
+    //sorted_keys.sort();
+    //for k in sorted_keys {
+    //    println!("0x{:02x?}: {}", k, stats[k].len());
+    //}
+
+    Ok(())
+}
+
+fn open_wld_file(filename: &str) -> Result<WldDoc, Box<dyn Error>> {
+    let mut file = File::open(filename)?;
+    let mut wld_data = Vec::new();
+    file.read_to_end(&mut wld_data)?;
+    let (_, wld_doc) = parser::WldDoc::parse(&wld_data).unwrap();
+    Ok(wld_doc)
 }
