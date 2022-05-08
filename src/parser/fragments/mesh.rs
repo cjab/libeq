@@ -1,6 +1,9 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, MaterialListFragment, StringReference};
+use super::{
+    Fragment, FragmentParser, FragmentRef, MaterialListFragment,
+    MeshAnimatedVerticesReferenceFragment, StringReference,
+};
 
 use nom::combinator::map;
 use nom::multi::count;
@@ -39,7 +42,7 @@ pub struct MeshFragment {
 
     /// A reference to a [MeshAnimatedVerticesReferenceFragment]. This is set for non-character
     /// animated meshes. For example swaying flags and trees.
-    pub animation_ref: FragmentRef<i32>,
+    pub animation_ref: FragmentRef<MeshAnimatedVerticesReferenceFragment>,
 
     /// _Unknown_ - Usually empty
     pub fragment3: FragmentRef<i32>,
