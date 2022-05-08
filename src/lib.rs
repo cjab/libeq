@@ -41,8 +41,9 @@
 pub mod parser;
 
 use parser::{
-    FragmentRef, MaterialFragment, MeshFragment, MeshFragmentPolygonEntry, MeshReferenceFragment,
-    ModelFragment, ObjectLocationFragment, TextureFragment, TransparencyFlags, WldDoc,
+    FragmentRef, MaterialFragment, MeshAnimatedVerticesFragment, MeshFragment,
+    MeshFragmentPolygonEntry, MeshReferenceFragment, ModelFragment, ObjectLocationFragment,
+    TextureFragment, TransparencyFlags, WldDoc,
 };
 use std::error::Error;
 
@@ -106,9 +107,37 @@ impl Wld {
 }
 
 #[derive(Debug)]
+pub struct MeshAnimatedVertices<'a> {
+    doc: &'a WldDoc,
+    pub fragment: &'a MeshAnimatedVerticesFragment,
+}
+
+impl<'a> MeshAnimatedVertices<'a> {
+    /// The name of the mesh
+    pub fn name(&self) -> Option<&str> {
+        self.doc.get_string(self.fragment.name_reference)
+    }
+
+    /// The "frames" of the animated mesh; each being an array of new vertex positions
+    pub fn frames(&self) -> Vec<Vec<[f32; 3]>> {
+        let scale = 1.0 / (1 << self.fragment.scale) as f32;
+        self.fragment
+            .frames
+            .iter()
+            .map(|vertices| {
+                vertices
+                    .iter()
+                    .map(|v| [v.0 as f32 * scale, v.2 as f32 * scale, v.1 as f32 * scale])
+                    .collect()
+            })
+            .collect()
+    }
+}
+
+#[derive(Debug)]
 pub struct Mesh<'a> {
     doc: &'a WldDoc,
-    fragment: &'a MeshFragment,
+    pub fragment: &'a MeshFragment,
 }
 
 impl<'a> Mesh<'a> {
@@ -235,6 +264,18 @@ impl<'a> Mesh<'a> {
                 }
             })
             .collect()
+    }
+
+    /// Animated vertices for the mesh
+    pub fn animated_vertices(&self) -> Option<MeshAnimatedVertices> {
+        let fragment_ref = &self.fragment.animation_ref;
+        let fragment = self.doc.get(&fragment_ref)?;
+        let fragment = self.doc.get(&fragment.reference)?;
+
+        Some(MeshAnimatedVertices {
+            doc: &self.doc,
+            fragment,
+        })
     }
 }
 
