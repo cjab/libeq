@@ -16,8 +16,8 @@ use serde::{Deserialize, Serialize};
 pub struct PolygonAnimationFragment {
     pub name_reference: StringReference,
 
-    /// _Unknown_ - Usually contains 0.1
-    pub params1: f32,
+    /// _Unknown_ - Usually contains 0.1 // NOTE: WLD ref lists a float here, but I think it was a typo.
+    //pub params1: f32,
 
     /// _Unknown_
     /// * bit 0 - If unset `params2` must be 1.0
@@ -30,14 +30,13 @@ pub struct PolygonAnimationFragment {
     pub size2: u32,
 
     /// _Unknown_
-    pub params2: f32,
+    pub params1: f32,
 
     /// _Unknown_ - Usually contains 1.0
-    pub params3: f32,
+    pub params2: f32,
 
     /// _Unknown_ - There are size1 of these.
     pub entries1: Vec<(f32, f32, f32)>,
-
     /// _Unknown_ - There are size2 of these.
     ///
     /// Tuple is as follows:
@@ -54,16 +53,17 @@ impl FragmentParser for PolygonAnimationFragment {
     const TYPE_NAME: &'static str = "PolygonAnimation";
 
     fn parse(input: &[u8]) -> IResult<&[u8], PolygonAnimationFragment> {
-        let (i, (name_reference, params1, flags, size1, size2, params2, params3)) =
-            tuple((
-                StringReference::parse,
-                le_f32,
-                le_u32,
-                le_u32,
-                le_u32,
-                le_f32,
-                le_f32,
-            ))(input)?;
+        let (i, (name_reference, flags, size1, size2, params1, params2)) = tuple((
+            StringReference::parse,
+            //le_f32,
+            le_u32,
+            le_u32,
+            le_u32,
+            le_f32,
+            le_f32,
+        ))(input)?;
+
+        let (i, entries1) = count(tuple((le_f32, le_f32, le_f32)), size1 as usize)(i)?;
 
         let entry2 = |input| {
             let (i, entry_size) = le_u32(input)?;
@@ -71,21 +71,17 @@ impl FragmentParser for PolygonAnimationFragment {
             Ok((i, (entry_size, entries)))
         };
 
-        let (remaining, (entries1, entries2)) = tuple((
-            count(tuple((le_f32, le_f32, le_f32)), size1 as usize),
-            count(entry2, size2 as usize),
-        ))(i)?;
+        let (remaining, entries2) = count(entry2, size2 as usize)(i)?;
 
         Ok((
             remaining,
             PolygonAnimationFragment {
                 name_reference,
-                params1,
                 flags,
                 size1,
                 size2,
+                params1,
                 params2,
-                params3,
                 entries1,
                 entries2,
             },
@@ -97,12 +93,12 @@ impl Fragment for PolygonAnimationFragment {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
-            &self.params1.to_le_bytes()[..],
+            // &self.params1.to_le_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.size1.to_le_bytes()[..],
             &self.size2.to_le_bytes()[..],
+            &self.params1.to_le_bytes()[..],
             &self.params2.to_le_bytes()[..],
-            &self.params3.to_le_bytes()[..],
             &self
                 .entries1
                 .iter()
@@ -142,16 +138,15 @@ mod tests {
         let frag = PolygonAnimationFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-14003));
-        assert_eq!(frag.params1, 1.0);
-        assert_eq!(frag.flags, 0x8);
-        assert_eq!(frag.size1, 6);
-        assert_eq!(frag.size2, 0);
-        assert_eq!(frag.params2, 0.0);
-        assert_eq!(frag.params3, 0.0);
-        assert_eq!(frag.entries1.len(), 0);
-        assert_eq!(frag.entries1[0], (0.0, 0.0, 0.0));
-        assert_eq!(frag.entries2.len(), 0);
-        assert_eq!(frag.entries2[0], (0, vec![]));
+        assert_eq!(frag.flags, 0x1);
+        assert_eq!(frag.size1, 8);
+        assert_eq!(frag.size2, 6);
+        assert_eq!(frag.params1, 8.902873);
+        assert_eq!(frag.params2, 1.0);
+        assert_eq!(frag.entries1.len(), 8);
+        assert_eq!(frag.entries1[0], (-0.06475502, -1.2741688, -6.6802998));
+        assert_eq!(frag.entries2.len(), 6);
+        assert_eq!(frag.entries2[0], (4, vec![3, 2, 0, 1]));
     }
 
     #[test]
