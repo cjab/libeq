@@ -109,7 +109,7 @@ impl Wld {
 #[derive(Debug)]
 pub struct MeshAnimatedVertices<'a> {
     doc: &'a WldDoc,
-    pub fragment: &'a MeshAnimatedVerticesFragment,
+    fragment: &'a MeshAnimatedVerticesFragment,
 }
 
 impl<'a> MeshAnimatedVertices<'a> {
@@ -137,7 +137,7 @@ impl<'a> MeshAnimatedVertices<'a> {
 #[derive(Debug)]
 pub struct Mesh<'a> {
     doc: &'a WldDoc,
-    pub fragment: &'a MeshFragment,
+    fragment: &'a MeshFragment,
 }
 
 impl<'a> Mesh<'a> {
