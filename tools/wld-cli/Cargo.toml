@@ -10,8 +10,8 @@ path = "src/main.rs"
 test = false
 
 [dependencies]
-eq_wld = { path = "../..", features = ["serde"] }
-eq_archive = { git = "https://github.com/cjab/eq_archive" }
+libeq_wld = { path = "../../crates/libeq_wld", features = ["serde"] }
+libeq_archive = { path = "../../crates/libeq_archive" }
 clap = "3.1.12"
 colorful = "0.2.1"
 tui = "0.16"

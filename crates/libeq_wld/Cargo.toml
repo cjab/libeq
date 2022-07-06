@@ -1,18 +1,23 @@
 [package]
-name = "libeq"
-version = "0.0.1"
+name = "libeq_wld"
+version = "0.2.1"
 authors = ["Chad Jablonski <chad@jablonski.xyz>"]
 edition = "2018"
-description = "Libraries and tools for working with EverQuest game data"
+description = "An Everquest .wld file loader"
 repository = "https://github.com/cjab/eq_wld"
 readme = "README.md"
 keywords = ["everquest", "eq", "wld", "loader"]
 categories = ["game-development", "graphics", "parsing", "rendering::data-formats"]
 license = "MIT"
 
-[workspace]
-members = ["crates/*", "tools/*"]
-
 [dependencies]
-libeq_wld = { path = "crates/libeq_wld" }
-libeq_archive = { path = "crates/libeq_archive" }
+log = "0.4.14"
+env_logger = "0.9"
+nom = "5.1.2"
+num-traits = "0.2"
+num-derive = "0.3"
+encoding_rs = "0.8"
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+serde = ["dep:serde"]
