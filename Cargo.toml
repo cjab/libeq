@@ -2,7 +2,7 @@
 name = "libeq"
 version = "0.0.1"
 authors = ["Chad Jablonski <chad@jablonski.xyz>"]
-edition = "2018"
+edition = "2021"
 description = "Libraries and tools for working with EverQuest game data"
 repository = "https://github.com/cjab/eq_wld"
 readme = "README.md"
