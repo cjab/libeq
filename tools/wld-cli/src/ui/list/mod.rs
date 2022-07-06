@@ -1,4 +1,4 @@
-use eq_wld::parser::{fragments::*, FragmentType};
+use libeq_wld::parser::{fragments::*, FragmentType};
 use tui::{
     backend::Backend,
     layout::Rect,

@@ -15,7 +15,7 @@ use termion::{input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{backend::TermionBackend, Terminal};
 
 use crate::{app::App, event::Events};
-use eq_wld::parser::{self, WldDoc};
+use libeq_wld::parser::{self, WldDoc};
 
 fn cli() -> Command<'static> {
     Command::new("wld-cli")

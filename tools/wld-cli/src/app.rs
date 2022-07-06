@@ -4,7 +4,7 @@ use termion::event::Key;
 
 use crate::handlers::handle_app;
 use crate::{event::Event, event::Events};
-use eq_wld::parser::WldDoc;
+use libeq_wld::parser::WldDoc;
 
 pub struct App {
     pub wld_doc: WldDoc,

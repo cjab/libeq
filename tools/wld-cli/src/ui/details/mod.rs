@@ -1,6 +1,6 @@
 use ansi_to_tui::ansi_to_text;
-use eq_wld::parser::{fragments, FragmentType};
 use hexyl::{BorderStyle, Printer};
+use libeq_wld::parser::{fragments, FragmentType};
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
