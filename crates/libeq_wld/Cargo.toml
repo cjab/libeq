@@ -2,7 +2,7 @@
 name = "libeq_wld"
 version = "0.2.1"
 authors = ["Chad Jablonski <chad@jablonski.xyz>"]
-edition = "2018"
+edition = "2021"
 description = "An Everquest .wld file loader"
 repository = "https://github.com/cjab/eq_wld"
 readme = "README.md"
