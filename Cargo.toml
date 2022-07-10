@@ -16,3 +16,6 @@ members = ["crates/*", "tools/*"]
 [dependencies]
 libeq_wld = { path = "crates/libeq_wld" }
 libeq_archive = { path = "crates/libeq_archive" }
+
+[badges]
+maintenance = { status = "actively-developed" }

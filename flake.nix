@@ -60,7 +60,16 @@
           # Configuration for the non-Rust dependencies
           buildInputs = with pkgs; [
           ];
-          nativeBuildInputs = with pkgs; [ rustc cargo pkgconfig nixpkgs-fmt rust-analyzer perf-tools cargo-flamegraph ];
+          nativeBuildInputs = with pkgs; [
+            rustc
+            cargo
+            pkgconfig
+            nixpkgs-fmt
+            rust-analyzer
+            perf-tools
+            cargo-flamegraph
+            cargo-readme
+          ];
           buildEnvVars = { };
         in
         rec {
