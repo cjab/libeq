@@ -48,7 +48,9 @@ impl EqArchive {
         let mut file = File::open(filename)?;
         let mut buffer = Vec::new();
         file.read_to_end(&mut buffer)?;
-        let archive = Archive::parse(&buffer[..])?.1;
+        let mut archive = Archive::parse(&buffer[..])?.1;
+
+        archive.index_entries.sort_by_key(|e| e.data_offset);
 
         let files = archive
             .filenames()
