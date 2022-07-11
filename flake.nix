@@ -59,6 +59,8 @@
 
           # Configuration for the non-Rust dependencies
           buildInputs = with pkgs; [
+            pkg-config
+            openssl
           ];
           nativeBuildInputs = with pkgs; [
             rustc
