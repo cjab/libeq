@@ -243,7 +243,7 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "libeq"
-version = "0.0.1"
+version = "0.3.0"
 dependencies = [
  "libeq_archive",
  "libeq_wld",
@@ -251,7 +251,7 @@ dependencies = [
 
 [[package]]
 name = "libeq_archive"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "env_logger 0.7.1",
  "flate2",
@@ -261,7 +261,7 @@ dependencies = [
 
 [[package]]
 name = "libeq_wld"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "encoding_rs",
  "env_logger 0.9.0",
@@ -563,7 +563,7 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "wld-cli"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "ansi-to-tui",
  "clap 3.2.8",
