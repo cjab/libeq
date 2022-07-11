@@ -1,6 +1,6 @@
 [package]
 name = "wld-cli"
-version = "0.1.0"
+version = "0.3.0"
 authors = ["Chad Jablonski <chad@jablonski.xyz>"]
 edition = "2021"
 
@@ -10,8 +10,8 @@ path = "src/main.rs"
 test = false
 
 [dependencies]
-libeq_wld = { path = "../../crates/libeq_wld", version = "0.2.1", features = ["serde"] }
-libeq_archive = { path = "../../crates/libeq_archive", version = "0.1.0" }
+libeq_wld = { path = "../../crates/libeq_wld", version = "0.3.0", features = ["serde"] }
+libeq_archive = { path = "../../crates/libeq_archive", version = "0.3.0" }
 clap = "3.1.12"
 colorful = "0.2.1"
 tui = "0.16"
