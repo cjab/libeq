@@ -36,17 +36,6 @@ for material in wld.materials() {
 }
 ```
 
-## Tools
-This workspace also includes a tool for viewing fragments within a file. It's even more of a work in progress.
-Given a world file you're interested in you can view the fragments with:
-```
-cargo run -p wld-cli -- explore gfaydark.wld
-```
-Or to extract to raw fragment data files:
-```
-cargo run -p wld-cli -- extract gfaydark.wld destination/
-```
-
 ## Acknowledgements
 This project wouldn't have been possible without Windcatcher's [WLD File Reference](https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md).
 
