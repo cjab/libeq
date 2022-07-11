@@ -14,8 +14,13 @@ license = "MIT"
 members = ["crates/*", "tools/*"]
 
 [dependencies]
-libeq_wld = { path = "crates/libeq_wld" }
-libeq_archive = { path = "crates/libeq_archive" }
+libeq_wld = { path = "crates/libeq_wld", optional = true }
+libeq_archive = { path = "crates/libeq_archive", optional = true }
+
+[features]
+default = ["wld", "archive"]
+wld = ["libeq_wld"]
+archive = ["libeq_archive"]
 
 [badges]
 maintenance = { status = "actively-developed" }
