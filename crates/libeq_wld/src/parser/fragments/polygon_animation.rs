@@ -134,7 +134,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/1417-0x17.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/1417-0x17.frag")[..];
         let frag = PolygonAnimationFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-14003));
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/1417-0x17.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/1417-0x17.frag")[..];
         let frag = PolygonAnimationFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);

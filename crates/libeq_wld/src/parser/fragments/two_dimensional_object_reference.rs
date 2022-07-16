@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/2224-0x07.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/2224-0x07.frag")[..];
         let frag = TwoDimensionalObjectReferenceFragment::parse(data)
             .unwrap()
             .1;
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/2224-0x07.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/2224-0x07.frag")[..];
         let frag = TwoDimensionalObjectReferenceFragment::parse(data)
             .unwrap()
             .1;

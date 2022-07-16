@@ -463,7 +463,7 @@ mod tests {
 
     #[test]
     fn it_builds_meshes() {
-        let wld_data = &include_bytes!("../fixtures/gfaydark.wld")[..];
+        let wld_data = &include_bytes!("../../../fixtures/gfaydark.wld")[..];
         let wld = Wld::load(wld_data);
         let meshes = wld.meshes().collect::<Vec<_>>();
 
@@ -482,7 +482,7 @@ mod tests {
 
     #[test]
     fn it_builds_materials() {
-        let wld_data = &include_bytes!("../fixtures/gfaydark.wld")[..];
+        let wld_data = &include_bytes!("../../../fixtures/gfaydark.wld")[..];
         let wld = Wld::load(wld_data);
         let materials = wld.materials().collect::<Vec<_>>();
 

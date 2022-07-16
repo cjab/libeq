@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0632-0x2f.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark_obj/0632-0x2f.frag")[..];
         let frag = MeshAnimatedVerticesReferenceFragment::parse(data)
             .unwrap()
             .1;
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0632-0x2f.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark_obj/0632-0x2f.frag")[..];
         let frag = MeshAnimatedVerticesReferenceFragment::parse(data)
             .unwrap()
             .1;

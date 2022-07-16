@@ -133,7 +133,7 @@ mod tests {
     #[test]
     fn it_parses() {
         #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0001-0x03.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/0001-0x03.frag")[..];
         let frag = TextureImagesFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0xffffffff));
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0029-0x03.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/0029-0x03.frag")[..];
         let frag = TextureImagesFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);

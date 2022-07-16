@@ -500,7 +500,7 @@ mod tests {
     #[test]
     fn it_parses() {
         #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
         let frag = MeshFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-1134));
@@ -544,7 +544,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
         let frag = MeshFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);

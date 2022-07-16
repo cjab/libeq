@@ -443,7 +443,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
         let frag = AlternateMeshFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-44));
@@ -483,7 +483,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
         let frag = AlternateMeshFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);

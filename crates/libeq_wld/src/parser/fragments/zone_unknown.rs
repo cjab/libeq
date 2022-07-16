@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4640-0x16.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/4640-0x16.frag")[..];
         let frag = ZoneUnknownFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4640-0x16.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/4640-0x16.frag")[..];
         let frag = ZoneUnknownFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);

@@ -48,7 +48,7 @@ mod tests {
     #[test]
     fn it_has_a_known_name_reference() {
         #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0000-0x35.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/0000-0x35.frag")[..];
         let frag = FirstFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0xff000000));
@@ -56,7 +56,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0000-0x35.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/0000-0x35.frag")[..];
         let frag = FirstFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);

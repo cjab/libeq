@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/objects/0000-0x32.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/objects/0000-0x32.frag")[..];
         let frag = VertexColorFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-1));
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/objects/0000-0x32.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/objects/0000-0x32.frag")[..];
         let frag = VertexColorFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);

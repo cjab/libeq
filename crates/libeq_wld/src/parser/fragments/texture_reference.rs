@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0003-0x05.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/0003-0x05.frag")[..];
         let frag = TextureReferenceFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0x0));
@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0003-0x05.frag")[..];
+        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/0003-0x05.frag")[..];
         let frag = TextureReferenceFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
