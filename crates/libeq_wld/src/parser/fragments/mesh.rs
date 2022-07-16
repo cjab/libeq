@@ -7,7 +7,7 @@ use super::{
 
 use nom::combinator::map;
 use nom::multi::count;
-use nom::number::complete::{le_f32, le_i16, le_i8, le_u16, le_u32};
+use nom::number::complete::{le_f32, le_i16, le_i8, le_u16, le_u32, le_u8};
 use nom::sequence::tuple;
 use nom::IResult;
 
@@ -452,25 +452,38 @@ pub struct MeshFragmentData9Entry {
     pub offset: Option<f32>,
 
     /// _Unknown_ - It seems to only contain values in the range 0-2.
-    pub param1: u16,
+    pub param1: u8,
 
     /// _Unknown_ - It seems to control whether `index1`, `index2`, and `offset` exist. It can only
     /// contain values in the range 1-4. It looks like the [MeshFragmentData9Entry]s are broken up into
     /// blocks, where each block is terminated by an entry where `type_field` is 4.
-    pub type_field: u16,
+    pub type_field: u8,
 }
 
 impl MeshFragmentData9Entry {
     fn parse(input: &[u8]) -> IResult<&[u8], MeshFragmentData9Entry> {
-        let (remaining, (index1, index2, offset, param1, type_field)) = tuple((
-            map(le_u16, Some),
-            map(le_u16, Some),
-            map(le_f32, Some),
-            le_u16,
-            le_u16,
+        let _unknown_data = &input[0..4];
+        let input = &input[4..];
+
+        let (i, (param1, type_field)) = tuple((
+            le_u8,
+            le_u8,
         ))(input)?;
+
+        let (_unknown_data, offset) = if type_field == 4 {
+            le_f32(_unknown_data).map(|(i, offset)| (i, Some(offset)))?
+        } else {
+            (_unknown_data, None)
+        };
+
+        let (_unknown_data, (index1, index2)) = if type_field != 4 {
+            tuple((le_u16, le_u16))(_unknown_data).map(|(i, (index1, index2))| (i, (Some(index1), Some(index2))))?
+        } else {
+            (_unknown_data, (None, None))
+        };
+
         Ok((
-            remaining,
+            i,
             MeshFragmentData9Entry {
                 index1,
                 index2,
@@ -540,6 +553,29 @@ mod tests {
         assert_eq!(frag.vertex_materials.len(), 1);
         assert_eq!(frag.vertex_materials[0], (8, 0));
         assert_eq!(frag.data9.len(), 0);
+    }
+
+    #[test]
+    fn it_parses_data9() {
+        #![allow(overflowing_literals)]
+        let data = &include_bytes!("../../../../../fixtures/fragments/global_chr/0177-0x36.frag")[..];
+        let frag = MeshFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.size9, 1387);
+        assert_eq!(frag.data9.len(), 1387);
+
+        for item in frag.data9.iter() {
+            assert!(item.type_field <= 4);
+        }
+
+        assert_eq!(frag.data9[0].type_field, 2);
+        assert_eq!(frag.data9[0].index1.unwrap(), 4);
+        assert_eq!(frag.data9[0].index2.unwrap(), 0);
+
+        assert_eq!(frag.data9[1].type_field, 3);
+
+        assert_eq!(frag.data9[5].type_field, 4);
+        assert_eq!(frag.data9[5].offset.unwrap(), 1.0);
     }
 
     #[test]
