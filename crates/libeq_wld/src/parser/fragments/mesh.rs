@@ -558,7 +558,7 @@ mod tests {
     #[test]
     fn it_parses_data9() {
         #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../../../fixtures/fragments/global_chr/0177-0x36.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/global_chr/0177-0x36.frag")[..];
         let frag = MeshFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.size9, 1387);
