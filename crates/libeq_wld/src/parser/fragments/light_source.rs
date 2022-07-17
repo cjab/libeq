@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/1728-0x1b.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1728-0x1b.frag")[..];
         let frag = LightSourceFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-29288));
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/1728-0x1b.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1728-0x1b.frag")[..];
         let frag = LightSourceFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);

@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
         let frag = MobSkeletonPieceTrackReferenceFragment::parse(data)
             .unwrap()
             .1;
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
         let frag = MobSkeletonPieceTrackReferenceFragment::parse(data)
             .unwrap()
             .1;

@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
         let frag = RegionFlagFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-52603));
@@ -131,7 +131,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
         let frag = RegionFlagFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);

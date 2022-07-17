@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
         let frag = BspTreeFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0x0));
@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
         let frag = BspTreeFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);

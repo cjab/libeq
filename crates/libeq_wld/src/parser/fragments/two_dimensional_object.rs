@@ -663,7 +663,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
         let frag = TwoDimensionalObjectFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-18282));
@@ -709,7 +709,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
         let frag = TwoDimensionalObjectFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);

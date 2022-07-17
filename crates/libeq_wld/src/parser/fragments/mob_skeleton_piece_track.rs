@@ -204,7 +204,7 @@ mod tests {
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
         let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-61));
@@ -223,7 +223,7 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
         let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
