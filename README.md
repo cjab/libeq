@@ -40,10 +40,10 @@ fn main() {
 create EverQuest .s3d archives.
 
 ```bash
-# To extract files from an .s3d archive
+# To extract files from an archive
 cargo run -p eq-archive -- -x fixtures/gfaydark.s3d gfaydark
 
-# To create a .s3d archive from a directory
+# To create an archive from a directory
 cargo run -p eq-archive -- -c gfaydark gfaydark.s3d
 ```
 
