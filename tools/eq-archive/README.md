@@ -4,7 +4,7 @@ eq-archive
 A tool for working with EverQuest .s3d archives.
 
 ## Use
-```
+```bash
 # To extract files from an .s3d archive
 cargo run -- -x fixtures/gfaydark.s3d gfaydark
 
