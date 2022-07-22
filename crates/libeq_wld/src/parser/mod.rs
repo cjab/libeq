@@ -123,6 +123,14 @@ impl WldDoc {
         self.fragments.len()
     }
 
+    pub fn header_bytes(&self) -> Vec<u8> {
+        self.header.into_bytes()
+    }
+
+    pub fn strings_bytes(&self) -> Vec<u8> {
+        self.strings.into_bytes()
+    }
+
     pub fn into_bytes(&self) -> Vec<u8> {
         [
             self.header.into_bytes(),
