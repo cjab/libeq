@@ -194,12 +194,6 @@ impl Archive {
                     .map(|entry| entry.decompress(&self.blocks))
             })
     }
-
-    fn files(self) -> impl Iterator<Item = (String, IndexEntry)> {
-        self.filenames()
-            .into_iter()
-            .zip(self.index_entries.into_iter().map(|entry| entry))
-    }
 }
 
 impl IndexEntry {
