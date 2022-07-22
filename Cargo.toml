@@ -1,6 +1,6 @@
 [package]
 name = "libeq"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Chad Jablonski <chad@jablonski.xyz>"]
 edition = "2021"
 description = "Libraries and tools for working with EverQuest game data"
@@ -15,7 +15,7 @@ members = ["crates/*", "tools/*"]
 
 [dependencies]
 libeq_wld = { path = "crates/libeq_wld", version = "0.3.0", optional = true }
-libeq_archive = { path = "crates/libeq_archive", version = "0.3.0", optional = true }
+libeq_archive = { path = "crates/libeq_archive", version = "0.4.0", optional = true }
 
 [features]
 default = ["wld", "archive"]
