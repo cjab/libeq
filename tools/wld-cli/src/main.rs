@@ -5,7 +5,7 @@ mod event;
 mod handlers;
 mod ui;
 
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{prelude::*, Read};
 use std::path::Path;
 use std::{error::Error, io};
@@ -101,6 +101,18 @@ fn extract(wld_filename: &str, destination: &str) -> Result<(), Box<dyn Error>> 
     let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
     let (_, raw_fragments) =
         WldDoc::dump_raw_fragments(&wld_data).expect("Could not read wld file");
+
+    fs::create_dir_all(&destination).expect("Could not create destination directory");
+
+    let (_, wld) = WldDoc::parse(&wld_data).unwrap();
+
+    let header_path = Path::new(destination).join("0000--header.bin");
+    let mut file = File::create(&header_path).expect(&format!("Failed to create header file"));
+    file.write_all(&wld.header_bytes()).unwrap();
+
+    let strings_path = Path::new(destination).join("0000--strings.bin");
+    let mut file = File::create(&strings_path).expect(&format!("Failed to create strings file"));
+    file.write_all(&wld.strings_bytes()).unwrap();
 
     for (i, fragment_header) in raw_fragments.iter().enumerate() {
         let filename = format!("{:04}-{:#04x}.frag", i, fragment_header.fragment_type);
