@@ -8,6 +8,8 @@ use clap::{ArgGroup, CommandFactory, ErrorKind, Parser};
 
 use libeq_archive::EqArchive;
 
+const SUPPORTED_EXTS: [&str; 2] = ["s3d", "pfs"];
+
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 #[clap(group(
@@ -66,10 +68,14 @@ enum CliError {
 }
 
 fn extract(source: PathBuf, destination: PathBuf) -> Result<(), CliError> {
-    if source.is_dir() || source.extension() != Some(OsStr::new("s3d")) {
-        return Err(CliError::InvalidArgument(
-            "SOURCE must be an .s3d file when using --extract".into(),
-        ));
+    let has_supported_ext = SUPPORTED_EXTS
+        .iter()
+        .any(|ext| source.extension() == Some(OsStr::new(*ext)));
+    if source.is_dir() || !has_supported_ext {
+        return Err(CliError::InvalidArgument(format!(
+            "SOURCE must be have one of the following as an extension when using --extract: {:?}",
+            SUPPORTED_EXTS
+        )));
     }
 
     fs::create_dir_all(&destination).map_err(|err| CliError::Destination(err))?;
