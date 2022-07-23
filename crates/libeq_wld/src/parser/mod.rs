@@ -13,7 +13,7 @@ use nom::IResult;
 use serde::{Deserialize, Serialize};
 
 pub use fragments::*;
-use strings::{StringHash, StringReference};
+pub use strings::{StringHash, StringReference};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
@@ -143,8 +143,8 @@ impl WldDoc {
 
 /// This header is present at the beginning of every .wld file.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug)]
-struct WldHeader {
+#[derive(Debug, PartialEq)]
+pub struct WldHeader {
     /// The file signature that signals that this is a .wld file.
     magic: u32,
 
@@ -171,7 +171,7 @@ struct WldHeader {
 }
 
 impl WldHeader {
-    fn parse(input: &[u8]) -> IResult<&[u8], WldHeader> {
+    pub fn parse(input: &[u8]) -> IResult<&[u8], WldHeader> {
         let (
             remaining,
             (magic, version, fragment_count, header_3, header_4, string_hash_size, header_6),
@@ -396,4 +396,57 @@ impl<'a> FragmentHeader<'a> {
         ]
         .concat()
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::File;
+    use std::io::prelude::*;
+
+    use nom::bytes::complete::take;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../fixtures/gfaydark.wld")[..];
+        let wld_doc = WldDoc::parse(data).unwrap().1;
+        assert_eq!(wld_doc.header.magic, 1414544642);
+        assert_eq!(wld_doc.header.version, 0x00015500);
+        assert_eq!(wld_doc.header.fragment_count, 4646);
+        assert_eq!(wld_doc.header.header_3, 2905);
+        assert_eq!(wld_doc.header.header_4, 162660);
+        assert_eq!(wld_doc.header.string_hash_size, 52692);
+        assert_eq!(wld_doc.header.header_6, 4609);
+    }
+
+    //#[test]
+    //fn it_serializes() {
+    //    let data = &include_bytes!("../../fixtures/gfaydark.wld")[..];
+    //    let wld_doc = WldDoc::parse(data).unwrap().1;
+
+    //    let data = &include_bytes!("../../serialized_data.bin")[..];
+    //    let (i, header) = WldHeader::parse(&data).unwrap();
+    //    //        println!("{:?}", header);
+
+    //    let (i, string_hash_data) =
+    //        take::<_, _, nom::error::Error<_>>(header.string_hash_size)(i).unwrap();
+    //    //        println!("{:?}", string_hash_data == wld_doc.strings_bytes());
+    //    assert_eq!(string_hash_data.len(), wld_doc.strings_bytes().len());
+
+    //    //let (remaining, (string_hash_data, fragment_headers)) = tuple((
+    //    //    take(header.string_hash_size),
+    //    //    count(FragmentHeader::parse, header.fragment_count as usize),
+    //    //))(i)
+    //    //.unwrap();
+    //    //let wld_doc = WldDoc::parse(data).unwrap().1;
+
+    //    //let serialized_data = wld_doc.into_bytes();
+    //    //let mut file = File::create("serialized_data.bin").unwrap();
+    //    //file.write_all(&serialized_data).unwrap();
+    //    //let result = WldDoc::parse(&serialized_data);
+    //    //println!("{:?}", result);
+    //    //let deserialized_wld_doc = WldDoc::parse(&serialized_data).unwrap().1;
+
+    //    //assert_eq!(deserialized_wld_doc.header, wld_doc.header);
+    //}
 }
