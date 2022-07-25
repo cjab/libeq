@@ -135,7 +135,22 @@ impl WldDoc {
         [
             self.header.into_bytes(),
             self.strings.into_bytes(),
-            self.fragments.iter().flat_map(|f| f.into_bytes()).collect(),
+            self.fragments
+                .iter()
+                .flat_map(|f| {
+                    let mut field_data = f.into_bytes();
+                    let size = field_data.len();
+                    // Field data must be padded so that it aligns on 4 bytes
+                    let padding = if size % 4 > 0 { 4 - (size % 4) } else { 0 };
+                    field_data.resize(size + padding, 0);
+                    FragmentHeader {
+                        size: field_data.len() as u32,
+                        fragment_type: f.type_id(),
+                        field_data: &field_data[..],
+                    }
+                    .into_bytes()
+                })
+                .collect(),
         ]
         .concat()
     }
