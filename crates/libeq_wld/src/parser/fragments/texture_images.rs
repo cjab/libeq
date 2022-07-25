@@ -44,7 +44,8 @@ impl FragmentParser for TextureImagesFragment {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, size1) = le_u32(i)?;
         // TODO: This is hardcoded to one entry, is this all we need?
-        let (remaining, entries) = count(TextureImagesFragmentEntry::parse, 1 as usize)(i)?;
+        let (remaining, entries) =
+            count(TextureImagesFragmentEntry::parse, (size1 + 1) as usize)(i)?;
         Ok((
             remaining,
             TextureImagesFragment {
@@ -58,7 +59,6 @@ impl FragmentParser for TextureImagesFragment {
 
 impl Fragment for TextureImagesFragment {
     fn into_bytes(&self) -> Vec<u8> {
-        let padding = vec![0; 4 - (self.size() % 4)];
         [
             &self.name_reference.into_bytes()[..],
             &self.size1.to_le_bytes()[..],
@@ -67,7 +67,6 @@ impl Fragment for TextureImagesFragment {
                 .iter()
                 .flat_map(|e| e.into_bytes())
                 .collect::<Vec<_>>()[..],
-            &padding[..],
         ]
         .concat()
     }
