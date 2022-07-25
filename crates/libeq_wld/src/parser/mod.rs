@@ -417,10 +417,6 @@ impl<'a> FragmentHeader<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::File;
-    use std::io::prelude::*;
-
-    use nom::bytes::complete::take;
 
     #[test]
     fn it_parses() {
@@ -433,36 +429,30 @@ mod tests {
         assert_eq!(wld_doc.header.header_4, 162660);
         assert_eq!(wld_doc.header.string_hash_size, 52692);
         assert_eq!(wld_doc.header.header_6, 4609);
+        assert_eq!(wld_doc.fragments.len(), 4646);
+        assert_eq!(wld_doc.strings.get(StringReference::new(0)), Some(""));
+        assert_eq!(wld_doc.strings.get(StringReference::new(1)), Some("SGRASS"));
+        assert_eq!(wld_doc.strings.get(StringReference::new(2)), None);
     }
 
-    //#[test]
-    //fn it_serializes() {
-    //    let data = &include_bytes!("../../fixtures/gfaydark.wld")[..];
-    //    let wld_doc = WldDoc::parse(data).unwrap().1;
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../fixtures/gfaydark.wld")[..];
+        let wld_doc = WldDoc::parse(data).unwrap().1;
 
-    //    let data = &include_bytes!("../../serialized_data.bin")[..];
-    //    let (i, header) = WldHeader::parse(&data).unwrap();
-    //    //        println!("{:?}", header);
+        let serialized_data = wld_doc.into_bytes();
+        let deserialized_doc = WldDoc::parse(&serialized_data).unwrap().1;
 
-    //    let (i, string_hash_data) =
-    //        take::<_, _, nom::error::Error<_>>(header.string_hash_size)(i).unwrap();
-    //    //        println!("{:?}", string_hash_data == wld_doc.strings_bytes());
-    //    assert_eq!(string_hash_data.len(), wld_doc.strings_bytes().len());
-
-    //    //let (remaining, (string_hash_data, fragment_headers)) = tuple((
-    //    //    take(header.string_hash_size),
-    //    //    count(FragmentHeader::parse, header.fragment_count as usize),
-    //    //))(i)
-    //    //.unwrap();
-    //    //let wld_doc = WldDoc::parse(data).unwrap().1;
-
-    //    //let serialized_data = wld_doc.into_bytes();
-    //    //let mut file = File::create("serialized_data.bin").unwrap();
-    //    //file.write_all(&serialized_data).unwrap();
-    //    //let result = WldDoc::parse(&serialized_data);
-    //    //println!("{:?}", result);
-    //    //let deserialized_wld_doc = WldDoc::parse(&serialized_data).unwrap().1;
-
-    //    //assert_eq!(deserialized_wld_doc.header, wld_doc.header);
-    //}
+        assert_eq!(wld_doc.header, deserialized_doc.header);
+        assert_eq!(wld_doc.strings, deserialized_doc.strings);
+        assert_eq!(wld_doc.fragments.len(), deserialized_doc.fragments.len());
+        assert_eq!(
+            wld_doc.fragments.first().unwrap().into_bytes(),
+            deserialized_doc.fragments.first().unwrap().into_bytes()
+        );
+        assert_eq!(
+            wld_doc.fragments.last().unwrap().into_bytes(),
+            deserialized_doc.fragments.last().unwrap().into_bytes()
+        );
+    }
 }
