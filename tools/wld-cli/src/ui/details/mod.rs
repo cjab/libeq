@@ -854,24 +854,24 @@ pub fn draw_light_source_fragment<B>(
 ) where
     B: Backend,
 {
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let params2 = format!("{:?}", fragment.params2);
-    let params3a = format!("{:?}", fragment.params3a);
-    let params3b = format!("{:?}", fragment.params3b);
-    let params4 = format!("{:?}", fragment.params4);
-    let red = format!("{:?}", fragment.red);
-    let green = format!("{:?}", fragment.green);
-    let blue = format!("{:?}", fragment.blue);
+    let flags = format!(
+        "0x{:x}  (b{:0>32b})",
+        fragment.flags.to_u32(),
+        fragment.flags.to_u32()
+    );
+    let frame_count = format!("{:?}", fragment.frame_count);
+    let current_frame = format!("{:?}", fragment.current_frame);
+    let sleep = format!("{:?}", fragment.sleep);
+    let light_levels = format!("{:?}", fragment.light_levels);
+    let colors = format!("{:?}", fragment.colors);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Params2", &params2]),
-        Row::new(vec!["Params3a", &params3a]),
-        Row::new(vec!["Params3b", &params3b]),
-        Row::new(vec!["Params4", &params4]),
-        Row::new(vec!["Red", &red]),
-        Row::new(vec!["Green", &green]),
-        Row::new(vec!["Blue", &blue]),
+        Row::new(vec!["Frame count", &frame_count]),
+        Row::new(vec!["Current frame", &current_frame]),
+        Row::new(vec!["Sleep", &sleep]),
+        Row::new(vec!["Light levels", &light_levels]),
+        Row::new(vec!["Colors", &colors]),
     ])
     .block(
         Block::default()
