@@ -104,6 +104,10 @@ impl Fragment for VertexColorFragment {
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
     }
+
+    fn type_id(&self) -> u32 {
+        Self::TYPE_ID
+    }
 }
 
 #[cfg(test)]
