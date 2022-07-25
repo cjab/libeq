@@ -268,139 +268,174 @@ impl<'a> FragmentHeader<'a> {
     }
 
     fn parse_body(&self) -> Box<FragmentType> {
+        let debug_msg = &format!("{:02x?}", self);
         match self.fragment_type {
             AlternateMeshFragment::TYPE_ID => Box::new(FragmentType::AlternateMesh(
-                AlternateMeshFragment::parse(&self.field_data).unwrap().1,
+                AlternateMeshFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             VertexColorReferenceFragment::TYPE_ID => Box::new(FragmentType::VertexColorReference(
                 VertexColorReferenceFragment::parse(&self.field_data)
-                    .unwrap()
+                    .expect(debug_msg)
                     .1,
             )),
             VertexColorFragment::TYPE_ID => Box::new(FragmentType::VertexColor(
-                VertexColorFragment::parse(&self.field_data).unwrap().1,
+                VertexColorFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             MeshAnimatedVerticesFragment::TYPE_ID => Box::new(FragmentType::MeshAnimatedVertices(
                 MeshAnimatedVerticesFragment::parse(&self.field_data)
-                    .unwrap()
+                    .expect(debug_msg)
                     .1,
             )),
             MeshAnimatedVerticesReferenceFragment::TYPE_ID => {
                 Box::new(FragmentType::MeshAnimatedVerticesReference(
                     MeshAnimatedVerticesReferenceFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             AmbientLightFragment::TYPE_ID => Box::new(FragmentType::AmbientLight(
-                AmbientLightFragment::parse(&self.field_data).unwrap().1,
+                AmbientLightFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             RegionFlagFragment::TYPE_ID => Box::new(FragmentType::RegionFlag(
-                RegionFlagFragment::parse(&self.field_data).unwrap().1,
+                RegionFlagFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             LightInfoFragment::TYPE_ID => Box::new(FragmentType::LightInfo(
-                LightInfoFragment::parse(&self.field_data).unwrap().1,
+                LightInfoFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             LightSourceReferenceFragment::TYPE_ID => Box::new(FragmentType::LightSourceReference(
                 LightSourceReferenceFragment::parse(&self.field_data)
-                    .unwrap()
+                    .expect(debug_msg)
                     .1,
             )),
             LightSourceFragment::TYPE_ID => Box::new(FragmentType::LightSource(
-                LightSourceFragment::parse(&self.field_data).unwrap().1,
+                LightSourceFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             PolygonAnimationReferenceFragment::TYPE_ID => {
                 Box::new(FragmentType::PolygonAnimationReference(
                     PolygonAnimationReferenceFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             PolygonAnimationFragment::TYPE_ID => Box::new(FragmentType::PolygonAnimation(
-                PolygonAnimationFragment::parse(&self.field_data).unwrap().1,
+                PolygonAnimationFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             FirstFragment::TYPE_ID => Box::new(FragmentType::First(
-                FirstFragment::parse(&self.field_data).unwrap().1,
+                FirstFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             ZoneUnknownFragment::TYPE_ID => Box::new(FragmentType::ZoneUnknown(
-                ZoneUnknownFragment::parse(&self.field_data).unwrap().1,
+                ZoneUnknownFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             SkeletonTrackSetReferenceFragment::TYPE_ID => {
                 Box::new(FragmentType::SkeletonTrackSetReference(
                     SkeletonTrackSetReferenceFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             CameraReferenceFragment::TYPE_ID => Box::new(FragmentType::CameraReference(
-                CameraReferenceFragment::parse(&self.field_data).unwrap().1,
+                CameraReferenceFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             CameraFragment::TYPE_ID => Box::new(FragmentType::Camera(
-                CameraFragment::parse(&self.field_data).unwrap().1,
+                CameraFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             TwoDimensionalObjectReferenceFragment::TYPE_ID => {
                 Box::new(FragmentType::TwoDimensionalObjectReference(
                     TwoDimensionalObjectReferenceFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             TwoDimensionalObjectFragment::TYPE_ID => Box::new(FragmentType::TwoDimensionalObject(
                 TwoDimensionalObjectFragment::parse(&self.field_data)
-                    .unwrap()
+                    .expect(debug_msg)
                     .1,
             )),
             ObjectLocationFragment::TYPE_ID => Box::new(FragmentType::ObjectLocation(
-                ObjectLocationFragment::parse(&self.field_data).unwrap().1,
+                ObjectLocationFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             MobSkeletonPieceTrackReferenceFragment::TYPE_ID => {
                 Box::new(FragmentType::MobSkeletonPieceTrackReference(
                     MobSkeletonPieceTrackReferenceFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             MobSkeletonPieceTrackFragment::TYPE_ID => {
                 Box::new(FragmentType::MobSkeletonPieceTrack(
                     MobSkeletonPieceTrackFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             SkeletonTrackSetFragment::TYPE_ID => Box::new(FragmentType::SkeletonTrackSet(
-                SkeletonTrackSetFragment::parse(&self.field_data).unwrap().1,
+                SkeletonTrackSetFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             ModelFragment::TYPE_ID => Box::new(FragmentType::Model(
-                ModelFragment::parse(&self.field_data).unwrap().1,
+                ModelFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             BspTreeFragment::TYPE_ID => Box::new(FragmentType::BspTree(
-                BspTreeFragment::parse(&self.field_data).unwrap().1,
+                BspTreeFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             BspRegionFragment::TYPE_ID => Box::new(FragmentType::BspRegion(
-                BspRegionFragment::parse(&self.field_data).unwrap().1,
+                BspRegionFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             MeshFragment::TYPE_ID => Box::new(FragmentType::Mesh(
-                MeshFragment::parse(&self.field_data).unwrap().1,
+                MeshFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             MaterialListFragment::TYPE_ID => Box::new(FragmentType::MaterialList(
-                MaterialListFragment::parse(&self.field_data).unwrap().1,
+                MaterialListFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             MaterialFragment::TYPE_ID => Box::new(FragmentType::Material(
-                MaterialFragment::parse(&self.field_data).unwrap().1,
+                MaterialFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             TextureReferenceFragment::TYPE_ID => Box::new(FragmentType::TextureReference(
-                TextureReferenceFragment::parse(&self.field_data).unwrap().1,
+                TextureReferenceFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             MeshReferenceFragment::TYPE_ID => Box::new(FragmentType::MeshReference(
-                MeshReferenceFragment::parse(&self.field_data).unwrap().1,
+                MeshReferenceFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             TextureFragment::TYPE_ID => Box::new(FragmentType::Texture(
-                TextureFragment::parse(&self.field_data).unwrap().1,
+                TextureFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             TextureImagesFragment::TYPE_ID => Box::new(FragmentType::TextureImages(
-                TextureImagesFragment::parse(&self.field_data).unwrap().1,
+                TextureImagesFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
-            _ => panic!("Unknown fragment type"),
+            _ => panic!("Unknown fragment type: {}", self.fragment_type),
         }
     }
 
