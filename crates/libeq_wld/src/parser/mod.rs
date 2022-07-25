@@ -408,6 +408,7 @@ impl<'a> FragmentHeader<'a> {
         [
             &self.size.to_le_bytes()[..],
             &self.fragment_type.to_le_bytes()[..],
+            &self.field_data,
         ]
         .concat()
     }
