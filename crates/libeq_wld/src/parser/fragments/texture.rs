@@ -52,9 +52,22 @@ impl FragmentParser for TextureFragment {
         let (i, (name_reference, flags, frame_count)) =
             tuple((StringReference::parse, TextureFragmentFlags::parse, le_u32))(input)?;
 
-        // TODO: Do these fields even really exist?
+        //TODO: Is this a thing? Find an example.
+        let (i, current_frame) = if flags.has_current_frame() {
+            let (i, current_frame) = le_u32(i)?;
+            (i, Some(current_frame))
+        } else {
+            (i, None)
+        };
         let current_frame = None;
-        let sleep = None;
+
+        let (i, sleep) = if flags.is_animated() && flags.has_sleep() {
+            let (i, sleep) = le_u32(i)?;
+            (i, Some(sleep))
+        } else {
+            (i, None)
+        };
+
         let (remaining, frame_references) = count(FragmentRef::parse, frame_count as usize)(i)?;
 
         Ok((
