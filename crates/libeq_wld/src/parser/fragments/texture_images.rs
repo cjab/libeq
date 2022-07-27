@@ -111,7 +111,7 @@ impl TextureImagesFragmentEntry {
             remaining,
             TextureImagesFragmentEntry {
                 name_length,
-                file_name: decode_string(&file_name),
+                file_name: decode_string(&file_name).trim_end_matches("\0").to_string(),
             },
         ))
     }
@@ -152,6 +152,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0029-0x03.frag")[..];
         let frag = TextureImagesFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!([frag.into_bytes(), vec![0]].concat(), data);
     }
 }
