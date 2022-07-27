@@ -55,6 +55,14 @@ and extracting fragments from .wld files.
 # To view fragments
 cargo run -p wld-cli -- explore gfaydark.wld
 
-# Or to extract to raw fragment data files:
+# Extract to raw fragment data files:
 cargo run -p wld-cli -- extract gfaydark.wld destination/
+
+# Extract and create to/from RON:
+cargo run -p wld-cli -- extract --format ron gfaydark.wld gfaydark.ron
+cargo run -p wld-cli -- create --format ron gfaydark.ron gfaydark.wld
+
+# Extract and create to/from JSON:
+cargo run -p wld-cli -- extract --format ron gfaydark.wld gfaydark.json
+cargo run -p wld-cli -- create --format ron gfaydark.json gfaydark.wld
 ```
