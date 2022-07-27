@@ -123,7 +123,7 @@ pub struct TextureFragmentFlags(pub u32);
 impl TextureFragmentFlags {
     const SKIP_FRAMES: u32 = 0x02;
     const IS_ANIMATED: u32 = 0x08;
-    const HAS_SLEEP: u32 = 0x10; //FIXME: This seems wrong
+    const HAS_SLEEP: u32 = 0x10;
     const HAS_CURRENT_FRAME: u32 = 0x20;
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureFragmentFlags> {
