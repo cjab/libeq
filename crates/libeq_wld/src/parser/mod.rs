@@ -152,6 +152,8 @@ impl WldDoc {
                     .into_bytes()
                 })
                 .collect(),
+            // What is this?
+            vec![0xff, 0xff, 0xff, 0xff],
         ]
         .concat()
     }
