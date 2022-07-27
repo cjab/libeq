@@ -10,12 +10,19 @@ use std::io::{prelude::*, Read};
 use std::path::Path;
 use std::{error::Error, io};
 
-use clap::{arg, Command};
+use clap::{arg, value_parser, Command, ValueEnum};
 use termion::{input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{backend::TermionBackend, Terminal};
 
 use crate::{app::App, event::Events};
 use libeq_wld::parser::{self, WldDoc};
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum Format {
+    Raw,
+    Json,
+    Ron,
+}
 
 fn cli() -> Command<'static> {
     Command::new("wld-cli")
@@ -26,21 +33,26 @@ fn cli() -> Command<'static> {
         .subcommand(
             Command::new("explore")
                 .about("Display a TUI interface listing all fragments in the file")
-                .arg_required_else_help(true)
-                .arg(arg!(<WLD_FILE> "The wld file to explore")),
+                .arg(arg!(<WLD_FILE> "The wld file to explore").required(true)),
         )
         .subcommand(
             Command::new("extract")
                 .about("Extract fragments from the wld file")
-                .arg_required_else_help(true)
-                .arg(arg!(<WLD_FILE> "The source wld file"))
-                .arg(arg!(<DESTINATION> "The target destination")),
+                .arg(arg!(-f --format <FORMAT> "Format to extract to").value_parser(value_parser!(Format)).default_value("raw").required(false))
+                .arg(arg!(<WLD_FILE> "The source wld file").required(true))
+                .arg(arg!(<DESTINATION> "The target destination").required(true))
+        )
+        .subcommand(
+            Command::new("create")
+                .about("Create a wld file from a source directory of fragments")
+                .arg(arg!(-f --format <FORMAT> "Format to extract to").value_parser(value_parser!(Format)).default_value("raw").required(false))
+                .arg(arg!(<SOURCE> "The source directory containing a header, strings, and fragment files").required(true))
+                .arg(arg!(<WLD_FILE> "The destination .wld file").required(true)),
         )
         .subcommand(
             Command::new("stats")
                 .about("Display stats about the wld file")
-                .arg_required_else_help(true)
-                .arg(arg!(<WLD_FILE> "The wld file")),
+                .arg(arg!(<WLD_FILE> "The wld file").required(true)),
         )
 }
 
@@ -56,12 +68,22 @@ fn main() -> Result<(), Box<dyn Error>> {
         Some(("extract", sub_matches)) => {
             let wld_file = sub_matches.value_of("WLD_FILE").expect("required");
             let destination = sub_matches.value_of("DESTINATION").expect("required");
-            println!("EXTRACT: {:?} -> {:?}", wld_file, destination);
-            extract(wld_file, destination)?;
+            let format = sub_matches.get_one::<Format>("format").expect("required");
+            println!(
+                "EXTRACT: {:?} -> {:?} -- FORMAT {:?}",
+                wld_file, destination, format
+            );
+            extract(wld_file, destination, format);
+        }
+        Some(("create", sub_matches)) => {
+            let source = sub_matches.value_of("SOURCE").expect("required");
+            let wld_file = sub_matches.value_of("WLD_FILE").expect("required");
+            let format = sub_matches.get_one::<Format>("format").expect("required");
+            println!("CREATE: {:?} -> {:?}", source, wld_file);
+            create(source, wld_file, format);
         }
         Some(("stats", sub_matches)) => {
             let wld_file = sub_matches.value_of("WLD_FILE").expect("required");
-            println!("STATS: {:?}", wld_file);
             stats(wld_file)?;
         }
         Some(_) => (),
@@ -97,13 +119,34 @@ fn explore(wld_filename: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn extract(wld_filename: &str, destination: &str) -> Result<(), Box<dyn Error>> {
+fn extract(wld_filename: &str, destination: &str, format: &Format) {
+    let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
+    let wld_doc = WldDoc::parse(&wld_data)
+        .expect("Could not parse wld file")
+        .1;
+    match format {
+        Format::Raw => extract_raw(wld_filename, destination),
+        Format::Json => {
+            let out = fs::File::create(destination).expect("Could not create destination file");
+            serde_json::to_writer_pretty(out, &wld_doc).expect("Could not serialize to json")
+        }
+        Format::Ron => {
+            let out = fs::File::create(destination).expect("Could not create destination file");
+            ron::ser::to_writer_pretty(out, &wld_doc, ron::ser::PrettyConfig::new())
+                .expect("Could not serialize to json")
+        }
+    }
+}
+
+fn extract_raw(wld_filename: &str, destination: &str) {
+    fs::create_dir_all(&destination).expect(&format!(
+        "Could not create destination directory: {}",
+        destination
+    ));
+
     let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
     let (_, raw_fragments) =
         WldDoc::dump_raw_fragments(&wld_data).expect("Could not read wld file");
-
-    fs::create_dir_all(&destination).expect("Could not create destination directory");
-
     let (_, wld) = WldDoc::parse(&wld_data).unwrap();
 
     let header_path = Path::new(destination).join("0000--header.bin");
@@ -120,27 +163,37 @@ fn extract(wld_filename: &str, destination: &str) -> Result<(), Box<dyn Error>> 
         let mut file = File::create(&dest).expect(&format!("Failed to create file: {:?}", dest));
         file.write_all(fragment_header.field_data).unwrap();
     }
+}
 
-    Ok(())
+fn create(source: &str, wld_filename: &str, format: &Format) {
+    let mut reader = File::open(source).expect(&format!("Could not open source file: {}", source));
+    let wld_doc: WldDoc = match format {
+        Format::Raw => {
+            let mut buff = vec![];
+            reader
+                .read_to_end(&mut buff)
+                .expect("Could not read source file");
+            WldDoc::parse(&buff).unwrap().1;
+            todo!("Implement create from raw")
+        }
+        Format::Json => serde_json::from_reader(reader).expect("Could not deserialize from json"),
+        Format::Ron => ron::de::from_reader(reader).expect("Could not deserialize from ron"),
+    };
+    let mut out = File::create(wld_filename).expect("Could not create wld file");
+    out.write_all(&wld_doc.into_bytes())
+        .expect("Failed to write to wld file");
 }
 
 fn stats(wld_filename: &str) -> Result<(), Box<dyn Error>> {
-    //    let wld_doc = open_wld_file(wld_filename);
-    let (_, wld_doc) = parser::WldDoc::parse(&read_wld_file(wld_filename)?).unwrap();
-    //let stats = wld_doc
-    //    .fragment_iter()
-    //    .fold(HashMap::new(), |mut map, fragment| {
-    //        map.entry(header.fragment_type)
-    //            .or_insert_with(|| Vec::new())
-    //            .push(header);
-    //        map
-    //    });
-    //let mut sorted_keys: Vec<_> = stats.keys().collect();
-    //sorted_keys.sort();
-    //for k in sorted_keys {
-    //    println!("0x{:02x?}: {}", k, stats[k].len());
-    //}
-
+    let file = read_wld_file(wld_filename)?;
+    let fragment_headers = parser::WldDoc::fragment_headers_by_offset(&file);
+    println!("Index, Offset, Type, Size");
+    for (idx, (k, v)) in fragment_headers.iter().enumerate() {
+        println!(
+            "{}, {:#010x}, {:#04x}, {:#010x}",
+            idx, k, v.fragment_type, v.size
+        );
+    }
     Ok(())
 }
 
