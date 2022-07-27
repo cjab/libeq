@@ -2,6 +2,7 @@ pub mod fragments;
 mod strings;
 
 use core::fmt::{Debug, Error, Formatter};
+use std::collections::BTreeMap;
 
 use nom::bytes::complete::take;
 use nom::multi::count;
@@ -47,6 +48,30 @@ impl WldDoc {
                 fragments,
             },
         ))
+    }
+
+    pub fn fragment_headers_by_offset(input: &[u8]) -> BTreeMap<usize, FragmentHeader> {
+        let (i, header) = WldHeader::parse(input)
+            .expect(&format!("{:?}", &input[..std::mem::size_of::<WldHeader>()]));
+        let (_, i) = i.split_at(header.string_hash_size as usize);
+
+        //let (i, _): (&[u8], &[u8]) =
+        //    take::<u32, &[u8], nom::error::Error<&[u8]>>(header.string_hash_size)(i).unwrap();
+
+        let mut fragment_headers = BTreeMap::new();
+        let mut remaining = i;
+        for idx in (0..header.fragment_count).into_iter() {
+            let offset = input.len() - remaining.len();
+            println!("Parsing fragment header {} at offset {:#10x}", idx, offset);
+
+            let (x, fragment_header) = FragmentHeader::parse(remaining).expect(&format!(
+                "Failed to parse fragment header {} at offset {:#10x}",
+                idx, offset
+            ));
+            fragment_headers.insert(offset, fragment_header);
+            remaining = x;
+        }
+        fragment_headers
     }
 
     pub fn dump_raw_fragments(input: &[u8]) -> IResult<&[u8], Vec<FragmentHeader>> {
