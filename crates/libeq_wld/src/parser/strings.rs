@@ -15,7 +15,6 @@ impl StringReference {
     pub fn new(idx: i32) -> Self {
         Self(idx)
     }
-
     pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
         let (remaining, idx) = le_i32(input)?;
         Ok((remaining, Self::new(idx)))
@@ -39,7 +38,7 @@ pub fn decode_string(encoded_data: &[u8]) -> String {
         .map(|(encoded_char, key_char)| encoded_char ^ key_char)
         .collect();
     let (cow, _, _) = WINDOWS_1252.decode(&data);
-    cow.into_owned().trim_end_matches('\u{0}').to_string()
+    cow.into_owned().to_string()
 }
 
 pub fn encode_string(decoded_data: &str) -> Vec<u8> {
@@ -71,8 +70,12 @@ impl StringHash {
     pub fn into_bytes(&self) -> Vec<u8> {
         let decoded_string: String = self.0.values().cloned().map(|s| s + "\0").collect();
         let mut encoded_string = encode_string(&decoded_string);
-        // The String section is terminated with a null byte
-        encoded_string.push(0);
+        let size = encoded_string.len();
+        // String data must be padded so that it aligns on 4 bytes
+        if (size % 4) > 0 {
+            let padding = 4 - (size % 4);
+            encoded_string.resize(size + padding, 0);
+        }
         encoded_string
     }
 
