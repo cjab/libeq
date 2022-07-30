@@ -405,8 +405,7 @@ mod tests {
         assert_eq!(frag.render_info.scaled_ambient, Some(1.0));
         assert_eq!(frag.render_info.simple_sprite_reference, None);
         assert_eq!(frag.render_info.uv_info, None);
-        assert_eq!(frag.render_info.params7_size, None);
-        assert_eq!(frag.render_info.params7_data, None);
+        assert_eq!(frag.render_info.uv_map, None);
     }
 
     #[test]

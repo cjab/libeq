@@ -1281,8 +1281,7 @@ pub fn draw_two_dimensional_object_fragment<B>(
     let brightness = format!("{:?}", fragment.render_info.brightness);
     let scaled_ambient = format!("{:?}", fragment.render_info.scaled_ambient);
     let uv_info = format!("{:?}", fragment.render_info.uv_info);
-    let params7_size = format!("{:?}", fragment.render_info.params7_size);
-    let params7_data = format!("{:?}", fragment.render_info.params7_data);
+    let uv_map = format!("{:?}", fragment.render_info.uv_map);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
@@ -1302,8 +1301,7 @@ pub fn draw_two_dimensional_object_fragment<B>(
         Row::new(vec!["Brightness", &brightness]),
         Row::new(vec!["Scaled Ambient", &scaled_ambient]),
         Row::new(vec!["UV Info", &uv_info]),
-        Row::new(vec!["Params7 Size", &params7_size]),
-        Row::new(vec!["Params7 Data", &params7_data]),
+        Row::new(vec!["UV Map", &uv_map]),
     ])
     .block(
         Block::default()
