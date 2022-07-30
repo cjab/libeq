@@ -1169,13 +1169,13 @@ pub fn draw_mob_skeleton_piece_track_reference_fragment<B>(
     B: Backend,
 {
     let reference = format!("{:?}", fragment.reference);
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let params1 = format!("{:?}", fragment.params1);
+    let flags = format!("{:?}", fragment.flags);
+    let sleep = format!("{:?}", fragment.sleep);
 
     let table = Table::new(vec![
         Row::new(vec!["Reference", &reference]),
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Params1", &params1]),
+        Row::new(vec!["Sleep", &sleep]),
     ])
     .block(
         Block::default()
