@@ -1,5 +1,4 @@
 use std::any::Any;
-use std::mem;
 
 use super::{Fragment, FragmentParser, StringReference};
 use crate::parser::strings::{decode_string, encode_string};
@@ -24,14 +23,6 @@ pub struct TextureImagesFragment {
 
     /// Bitmap filename entries
     pub entries: Vec<TextureImagesFragmentEntry>,
-}
-
-impl TextureImagesFragment {
-    fn size(&self) -> usize {
-        mem::size_of::<StringReference>()
-            + mem::size_of::<u32>()
-            + self.entries.iter().map(|e| e.size()).sum::<usize>()
-    }
 }
 
 impl FragmentParser for TextureImagesFragment {
@@ -114,10 +105,6 @@ impl TextureImagesFragmentEntry {
                 file_name: decode_string(&file_name).trim_end_matches("\0").to_string(),
             },
         ))
-    }
-
-    fn size(&self) -> usize {
-        mem::size_of::<u16>() + self.file_name.len() + 1
     }
 
     fn into_bytes(&self) -> Vec<u8> {

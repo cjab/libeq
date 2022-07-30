@@ -4,6 +4,7 @@ mod bsp_region;
 mod bsp_tree;
 mod camera;
 mod camera_reference;
+mod common;
 mod first;
 mod light_info;
 mod light_source;

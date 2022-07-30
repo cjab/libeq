@@ -53,7 +53,7 @@ impl FragmentParser for TextureFragment {
             tuple((StringReference::parse, TextureFragmentFlags::parse, le_u32))(input)?;
 
         //TODO: Is this a thing? Find an example.
-        let (i, current_frame) = if flags.has_current_frame() {
+        let (i, _current_frame) = if flags.has_current_frame() {
             let (i, current_frame) = le_u32(i)?;
             (i, Some(current_frame))
         } else {

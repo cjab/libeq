@@ -1,7 +1,9 @@
 use std::any::Any;
 
+use super::common::{RenderInfo, RenderMethod};
 use super::{Fragment, FragmentParser, StringReference};
 
+use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
@@ -22,83 +24,28 @@ use serde::{Deserialize, Serialize};
 pub struct CameraFragment {
     pub name_reference: StringReference,
 
-    /// _Unknown_ - Usually 0
-    pub params0: u32,
+    pub flags: ThreeDSpriteFlags,
 
-    /// _Unknown_ - Usually 0
-    pub params1: u32,
+    /// NUMVERTICES
+    pub vertex_count: u32,
 
-    /// _Unknown_ - Usually 1
-    pub params2: f32,
+    /// NUMBSPNODES
+    pub bsp_node_count: u32,
 
-    /// _Unknown_ - Usually 0
-    pub params3: u32,
+    /// SPHERELIST
+    pub sphere_list_reference: u32,
 
-    /// _Unknown_ - Usually 0
-    pub params4: u32,
+    /// CENTEROFFSET %f %f %f
+    pub center_offset: Option<(f32, f32, f32)>,
 
-    /// _Unknown_ - Usually -1.0
-    pub params5: f32,
+    /// BOUNDINGRADIUS %f
+    pub bounding_radius: Option<f32>,
 
-    /// _Unknown_ - Usually 1.0
-    pub params6: f32,
+    /// XYZ %f %f %f
+    pub vertices: Vec<(f32, f32, f32)>,
 
-    /// _Unknown_ - Usually 0
-    pub params7: u32,
-
-    /// _Unknown_ - Usually 1.0
-    pub params8: f32,
-
-    /// _Unknown_ - Usually 1.0
-    pub params9: f32,
-
-    /// _Unknown_ - Usually 0
-    pub params10: u32,
-
-    /// _Unknown_ - Usually 1.0
-    pub params11: f32,
-
-    /// _Unknown_ - Usually -1.0
-    pub params12: f32,
-
-    /// _Unknown_ - Usually 0
-    pub params13: u32,
-
-    /// _Unknown_ - Usually -1.0
-    pub params14: f32,
-
-    /// _Unknown_ - Usually -1.0
-    pub params15: f32,
-
-    /// _Unknown_ - Usually 4
-    pub params16: u32,
-
-    /// _Unknown_ - Usually 0
-    pub params17: u32,
-
-    /// _Unknown_ - Usually 0
-    pub params18: u32,
-
-    /// _Unknown_ - Usually 0
-    pub params19: u32,
-
-    /// _Unknown_ - Usually 1
-    pub params20: u32,
-
-    /// _Unknown_ - Usually 2
-    pub params21: u32,
-
-    /// _Unknown_ - Usually 3
-    pub params22: u32,
-
-    /// _Unknown_ - Usually 0
-    pub params23: u32,
-
-    /// _Unknown_ - Usually 1
-    pub params24: u32,
-
-    /// _Unknown_ - Usually 11
-    pub params25: u32,
+    // BSPNODE
+    pub bsp_nodes: Vec<BspNodeEntry>,
 }
 
 impl FragmentParser for CameraFragment {
@@ -108,90 +55,36 @@ impl FragmentParser for CameraFragment {
     const TYPE_NAME: &'static str = "Camera";
 
     fn parse(input: &[u8]) -> IResult<&[u8], CameraFragment> {
-        let (
-            i,
-            (
-                name_reference,
-                params0,
-                params1,
-                params2,
-                params3,
-                params4,
-                params5,
-                params6,
-                params7,
-                params8,
-                params9,
-            ),
-        ) = tuple((
-            StringReference::parse,
-            le_u32,
-            le_u32,
-            le_f32,
-            le_u32,
-            le_u32,
-            le_f32,
-            le_f32,
-            le_u32,
-            le_f32,
-            le_f32,
-        ))(input)?;
-
-        let (
-            remaining,
-            (
-                params10,
-                params11,
-                params12,
-                params13,
-                params14,
-                params15,
-                params16,
-                params17,
-                params18,
-                params19,
-                params20,
-                params21,
-                params22,
-                params23,
-                params24,
-                params25,
-            ),
-        ) = tuple((
-            le_u32, le_f32, le_f32, le_u32, le_f32, le_f32, le_u32, le_u32, le_u32, le_u32, le_u32,
-            le_u32, le_u32, le_u32, le_u32, le_u32,
-        ))(i)?;
+        let (i, name_reference) = StringReference::parse(input)?;
+        let (i, flags) = ThreeDSpriteFlags::parse(i)?;
+        let (i, vertex_count) = le_u32(i)?;
+        let (i, bsp_node_count) = le_u32(i)?;
+        let (i, sphere_list_reference) = le_u32(i)?;
+        let (i, center_offset) = if flags.has_center_offset() {
+            tuple((le_f32, le_f32, le_f32))(i).map(|(i, b)| (i, Some(b)))?
+        } else {
+            (i, None)
+        };
+        let (i, bounding_radius) = if flags.has_bounding_radius() {
+            le_f32(i).map(|(i, b)| (i, Some(b)))?
+        } else {
+            (i, None)
+        };
+        let (i, vertices) = count(tuple((le_f32, le_f32, le_f32)), vertex_count as usize)(i)?;
+        let (i, bsp_nodes) = count(BspNodeEntry::parse, bsp_node_count as usize)(i)?;
 
         Ok((
-            remaining,
+            i,
             CameraFragment {
                 name_reference,
-                params0,
-                params1,
-                params2,
-                params3,
-                params4,
-                params5,
-                params6,
-                params7,
-                params8,
-                params9,
-                params10,
-                params11,
-                params12,
-                params13,
-                params14,
-                params15,
-                params16,
-                params17,
-                params18,
-                params19,
-                params20,
-                params21,
-                params22,
-                params23,
-                params24,
-                params25,
+                flags,
+                vertex_count,
+                bsp_node_count,
+                sphere_list_reference,
+                center_offset,
+                bounding_radius,
+                vertices,
+                bsp_nodes,
             },
         ))
     }
@@ -201,32 +94,26 @@ impl Fragment for CameraFragment {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
-            &self.params0.to_le_bytes()[..],
-            &self.params1.to_le_bytes()[..],
-            &self.params2.to_le_bytes()[..],
-            &self.params3.to_le_bytes()[..],
-            &self.params4.to_le_bytes()[..],
-            &self.params5.to_le_bytes()[..],
-            &self.params6.to_le_bytes()[..],
-            &self.params7.to_le_bytes()[..],
-            &self.params8.to_le_bytes()[..],
-            &self.params9.to_le_bytes()[..],
-            &self.params10.to_le_bytes()[..],
-            &self.params11.to_le_bytes()[..],
-            &self.params12.to_le_bytes()[..],
-            &self.params13.to_le_bytes()[..],
-            &self.params14.to_le_bytes()[..],
-            &self.params15.to_le_bytes()[..],
-            &self.params16.to_le_bytes()[..],
-            &self.params17.to_le_bytes()[..],
-            &self.params18.to_le_bytes()[..],
-            &self.params19.to_le_bytes()[..],
-            &self.params20.to_le_bytes()[..],
-            &self.params21.to_le_bytes()[..],
-            &self.params22.to_le_bytes()[..],
-            &self.params23.to_le_bytes()[..],
-            &self.params24.to_le_bytes()[..],
-            &self.params25.to_le_bytes()[..],
+            &self.flags.into_bytes()[..],
+            &self.vertex_count.to_le_bytes()[..],
+            &self.bsp_node_count.to_le_bytes()[..],
+            &self.sphere_list_reference.to_le_bytes()[..],
+            &self.center_offset.map_or(vec![], |c| {
+                [c.0.to_le_bytes(), c.1.to_le_bytes(), c.2.to_le_bytes()].concat()
+            })[..],
+            &self
+                .bounding_radius
+                .map_or(vec![], |b| b.to_le_bytes().to_vec())[..],
+            &self
+                .vertices
+                .iter()
+                .flat_map(|(x, y, z)| [x.to_le_bytes(), y.to_le_bytes(), z.to_le_bytes()].concat())
+                .collect::<Vec<_>>()[..],
+            &self
+                .bsp_nodes
+                .iter()
+                .flat_map(|node| node.into_bytes())
+                .collect::<Vec<_>>()[..],
         ]
         .concat()
     }
@@ -244,6 +131,88 @@ impl Fragment for CameraFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+pub struct BspNodeEntry {
+    /// The number of vertex indices in this entry
+    pub vertex_count: u32,
+
+    pub front_tree: u32,
+
+    pub back_tree: u32,
+
+    pub vertex_indices: Vec<u32>,
+
+    pub render_method: RenderMethod,
+
+    pub render_info: RenderInfo,
+}
+
+impl BspNodeEntry {
+    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+        let (i, vertex_count) = le_u32(input)?;
+        let (i, front_tree) = le_u32(i)?;
+        let (i, back_tree) = le_u32(i)?;
+        let (i, vertex_indices) = count(le_u32, vertex_count as usize)(i)?;
+        let (i, render_method) = RenderMethod::parse(i)?;
+        let (i, render_info) = RenderInfo::parse(i)?;
+
+        Ok((
+            i,
+            Self {
+                vertex_count,
+                front_tree,
+                back_tree,
+                vertex_indices,
+                render_method,
+                render_info,
+            },
+        ))
+    }
+
+    fn into_bytes(&self) -> Vec<u8> {
+        [
+            &self.vertex_count.to_le_bytes()[..],
+            &self.front_tree.to_le_bytes()[..],
+            &self.back_tree.to_le_bytes()[..],
+            &self
+                .vertex_indices
+                .iter()
+                .flat_map(|idx| idx.to_le_bytes())
+                .collect::<Vec<_>>()[..],
+            &self.render_method.into_bytes()[..],
+            &self.render_info.into_bytes()[..],
+        ]
+        .concat()
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+pub struct ThreeDSpriteFlags(u32);
+
+impl ThreeDSpriteFlags {
+    const HAS_CENTER_OFFSET: u32 = 0x01;
+    const HAS_BOUNDING_RADIUS: u32 = 0x02;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+        let (remaining, raw_flags) = le_u32(input)?;
+        Ok((remaining, Self(raw_flags)))
+    }
+
+    fn into_bytes(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
+    }
+
+    pub fn has_center_offset(&self) -> bool {
+        self.0 & Self::HAS_CENTER_OFFSET == Self::HAS_CENTER_OFFSET
+    }
+
+    pub fn has_bounding_radius(&self) -> bool {
+        self.0 & Self::HAS_BOUNDING_RADIUS == Self::HAS_BOUNDING_RADIUS
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -251,35 +220,45 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1729-0x08.frag")[..];
-        let frag = CameraFragment::parse(data).unwrap().1;
+        let (remaining, frag) = CameraFragment::parse(data).unwrap();
+
+        assert_eq!(remaining.len(), 0);
 
         assert_eq!(frag.name_reference, StringReference::new(-29305));
-        assert_eq!(frag.params0, 0);
-        assert_eq!(frag.params1, 4);
-        assert_eq!(frag.params2, 1e-45);
-        assert_eq!(frag.params3, 0);
-        assert_eq!(frag.params4, 0);
-        assert_eq!(frag.params5, -1.0);
-        assert_eq!(frag.params6, 1.0);
-        assert_eq!(frag.params7, 0);
-        assert_eq!(frag.params8, 1.0);
-        assert_eq!(frag.params9, 1.0);
-        assert_eq!(frag.params10, 0);
-        assert_eq!(frag.params11, 1.0);
-        assert_eq!(frag.params12, -1.0);
-        assert_eq!(frag.params13, 0);
-        assert_eq!(frag.params14, -1.0);
-        assert_eq!(frag.params15, -1.0);
-        assert_eq!(frag.params16, 4);
-        assert_eq!(frag.params17, 0);
-        assert_eq!(frag.params18, 0);
-        assert_eq!(frag.params19, 0);
-        assert_eq!(frag.params20, 1);
-        assert_eq!(frag.params21, 2);
-        assert_eq!(frag.params22, 3);
-        assert_eq!(frag.params23, 0);
-        assert_eq!(frag.params24, 1);
-        assert_eq!(frag.params25, 11);
+        assert_eq!(frag.flags, ThreeDSpriteFlags(0));
+        assert_eq!(frag.vertex_count, 4);
+        assert_eq!(frag.bsp_node_count, 1);
+        assert_eq!(frag.sphere_list_reference, 0);
+        assert_eq!(frag.center_offset, None);
+        assert_eq!(frag.bounding_radius, None);
+        assert_eq!(
+            frag.vertices,
+            vec![
+                (0.0, -1.0, 1.0),
+                (0.0, 1.0, 1.0),
+                (0.0, 1.0, -1.0),
+                (0.0, -1.0, -1.0)
+            ]
+        );
+        assert_eq!(frag.bsp_nodes.len(), 1);
+        assert_eq!(frag.bsp_nodes[0].vertex_count, 4);
+        assert_eq!(frag.bsp_nodes[0].render_method, RenderMethod::new(0));
+        assert_eq!(frag.bsp_nodes[0].render_info.flags.has_pen(), true);
+        assert_eq!(frag.bsp_nodes[0].render_info.flags.has_brightness(), false);
+        assert_eq!(
+            frag.bsp_nodes[0].render_info.flags.has_scaled_ambient(),
+            false
+        );
+        assert_eq!(
+            frag.bsp_nodes[0].render_info.flags.has_simple_sprite(),
+            false
+        );
+        assert_eq!(frag.bsp_nodes[0].render_info.flags.is_two_sided(), false);
+        assert_eq!(frag.bsp_nodes[0].render_info.pen, Some(11));
+        assert_eq!(frag.bsp_nodes[0].render_info.flags.has_uv_info(), false);
+        assert_eq!(frag.bsp_nodes[0].front_tree, 0);
+        assert_eq!(frag.bsp_nodes[0].back_tree, 0);
+        assert_eq!(frag.bsp_nodes[0].vertex_indices, vec![0, 1, 2, 3]);
     }
 
     #[test]
