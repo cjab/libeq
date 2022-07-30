@@ -740,12 +740,12 @@ pub fn draw_bsp_tree_fragment<B>(
 ) where
     B: Backend,
 {
-    let size1 = format!("{:?}", fragment.size1);
-    let entries = format!("{:?}", fragment.entries);
+    let world_node_count = format!("{:?}", fragment.world_node_count);
+    let world_nodes = format!("{:?}", fragment.world_nodes);
 
     let table = Table::new(vec![
-        Row::new(vec!["Size1", &size1]),
-        Row::new(vec!["Entries", &entries]),
+        Row::new(vec!["World node count", &world_node_count]),
+        Row::new(vec!["World nodes", &world_nodes]),
     ])
     .block(
         Block::default()
