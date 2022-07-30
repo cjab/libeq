@@ -1132,28 +1132,14 @@ pub fn draw_mob_skeleton_piece_track_fragment<B>(
     B: Backend,
 {
     let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let size = format!("{:?}", fragment.size);
-    let rotate_denominator = format!("{:?}", fragment.rotate_denominator);
-    let rotate_x_numerator = format!("{:?}", fragment.rotate_x_numerator);
-    let rotate_y_numerator = format!("{:?}", fragment.rotate_y_numerator);
-    let rotate_z_numerator = format!("{:?}", fragment.rotate_z_numerator);
-    let shift_x_numerator = format!("{:?}", fragment.shift_x_numerator);
-    let shift_y_numerator = format!("{:?}", fragment.shift_y_numerator);
-    let shift_z_numerator = format!("{:?}", fragment.shift_z_numerator);
-    let shift_denominator = format!("{:?}", fragment.shift_denominator);
+    let frame_count = format!("{:?}", fragment.frame_count);
+    let frame_transforms = format!("{:?}", fragment.frame_transforms);
     let data2 = format!("{:?}", fragment.data2);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Size", &size]),
-        Row::new(vec!["Rotate Denominator", &rotate_denominator]),
-        Row::new(vec!["Rotate X Numerator", &rotate_x_numerator]),
-        Row::new(vec!["Rotate Y Numerator", &rotate_y_numerator]),
-        Row::new(vec!["Rotate Z Numerator", &rotate_z_numerator]),
-        Row::new(vec!["Shift X Numerator", &shift_x_numerator]),
-        Row::new(vec!["Shift Y Numerator", &shift_y_numerator]),
-        Row::new(vec!["Shift Z Numerator", &shift_z_numerator]),
-        Row::new(vec!["Shift Denominator", &shift_denominator]),
+        Row::new(vec!["Frame count", &frame_count]),
+        Row::new(vec!["Frame transforms", &frame_transforms]),
         Row::new(vec!["Data2", &data2]),
     ])
     .block(
