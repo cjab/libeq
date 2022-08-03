@@ -433,7 +433,7 @@ impl<'a> Model<'a> {
     }
     /// Get the 'type' of model ("FLYCAMCALLBACK" or "SPRITECALLBACK" usually)
     pub fn type_name(&self) -> Option<&'a str> {
-        self.doc.get_string(self.fragment.name_fragment)
+        self.doc.get_string(self.fragment.callback_name_reference)
     }
 
     // FIXME: My assumption is that there arent any models with multiple meshes, but my assumption might be wrong.
@@ -449,7 +449,7 @@ impl<'a> Model<'a> {
     // FIXME: I think casting the fragments to MeshFragment can be done in some better way, but this works for me at the moment.
     /// Follow the fragment reference to find the MeshFragment
     fn get_mesh_fragment(&self) -> Option<&MeshFragment> {
-        let fragment_ref = *self.fragment.fragments.first()?;
+        let fragment_ref = *self.fragment.fragment_references.first()?;
         let fragment_ref: FragmentRef<MeshReferenceFragment> =
             FragmentRef::new(fragment_ref as i32);
         let fragment = self.doc.get(&fragment_ref)?;

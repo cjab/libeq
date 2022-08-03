@@ -687,32 +687,28 @@ pub fn draw_model_reference_player_info_fragment<B>(
 ) where
     B: Backend,
 {
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let name_fragment = format!("{:?}", fragment.name_fragment);
-    let unknown_params2_count = format!("{:?}", fragment.unknown_params2_count);
-    let fragment_count = format!("{:?}", fragment.fragment_count);
-    let unknown_fragment = format!("{:?}", fragment.unknown_fragment);
-    let unknown_params1 = format!("{:?}", fragment.unknown_params1);
-    let unknown_params2 = format!("{:?}", fragment.unknown_params2);
-    let unknown_data_count = format!("{:?}", fragment.unknown_data_count);
-    let unknown_data = format!("{:?}", fragment.unknown_data);
-    let fragments = format!("{:?}", fragment.fragments);
-    let name_size = format!("{:?}", fragment.name_size);
-    let name = format!("{:?}", fragment.name);
+    let flags = format!("{:?}", fragment.flags);
+    let callback_name_reference = format!("{:?}", fragment.callback_name_reference);
+    let action_count = format!("{:?}", fragment.action_count);
+    let fragment_reference_count = format!("{:?}", fragment.fragment_reference_count);
+    let bounds_reference = format!("{:?}", fragment.bounds_reference);
+    let current_action = format!("{:?}", fragment.current_action);
+    let location = format!("{:?}", fragment.location);
+    let actions = format!("{:?}", fragment.actions);
+    let fragment_references = format!("{:?}", fragment.fragment_references);
+    let unknown = format!("{:?}", fragment.unknown);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Name Fragment", &name_fragment]),
-        Row::new(vec!["Params2 Count", &unknown_params2_count]),
-        Row::new(vec!["Fragment Count", &fragment_count]),
-        Row::new(vec!["Fragment", &unknown_fragment]),
-        Row::new(vec!["Params1", &unknown_params1]),
-        Row::new(vec!["Params2", &unknown_params2]),
-        Row::new(vec!["Data Count", &unknown_data_count]),
-        Row::new(vec!["Data", &unknown_data]),
-        Row::new(vec!["Fragments", &fragments]),
-        Row::new(vec!["Name Size", &name_size]),
-        Row::new(vec!["Name", &name]),
+        Row::new(vec!["Callback name reference", &callback_name_reference]),
+        Row::new(vec!["Action Count", &action_count]),
+        Row::new(vec!["Fragment Ref Count", &fragment_reference_count]),
+        Row::new(vec!["Bounds ref", &bounds_reference]),
+        Row::new(vec!["Current Action", &current_action]),
+        Row::new(vec!["Location", &location]),
+        Row::new(vec!["Actions", &actions]),
+        Row::new(vec!["Fragment references", &fragment_references]),
+        Row::new(vec!["Unknown", &unknown]),
     ])
     .block(
         Block::default()
@@ -1060,10 +1056,11 @@ pub fn draw_light_info_fragment<B>(
     B: Backend,
 {
     let reference = format!("{:?}", fragment.reference);
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
+    let flags = format!("{:?}", fragment.flags);
     let x = format!("{:?}", fragment.x);
     let y = format!("{:?}", fragment.y);
     let z = format!("{:?}", fragment.z);
+    let radius = format!("{:?}", fragment.radius);
 
     let table = Table::new(vec![
         Row::new(vec!["Reference", &reference]),
@@ -1071,6 +1068,7 @@ pub fn draw_light_info_fragment<B>(
         Row::new(vec!["X", &x]),
         Row::new(vec!["Y", &y]),
         Row::new(vec!["Z", &z]),
+        Row::new(vec!["Radius", &radius]),
     ])
     .block(
         Block::default()
