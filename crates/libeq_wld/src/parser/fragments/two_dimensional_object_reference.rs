@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, StringReference};
+use super::{Fragment, FragmentParser, FragmentRef, StringReference, TwoDimensionalObjectFragment};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -18,7 +18,7 @@ pub struct TwoDimensionalObjectReferenceFragment {
     pub name_reference: StringReference,
 
     /// The [TwoDimensionalObjectFragment] reference.
-    pub reference: FragmentRef<TwoDimensionalObjectReferenceFragment>,
+    pub reference: FragmentRef<TwoDimensionalObjectFragment>,
 
     /// _Unknown_ Seems to always contain 0.
     pub flags: u32,
