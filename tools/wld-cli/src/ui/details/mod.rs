@@ -530,34 +530,26 @@ pub fn draw_object_location_fragment<B>(
 ) where
     B: Backend,
 {
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let fragment1 = format!("{}", fragment.fragment1);
-    let x = format!("{}", fragment.x);
-    let y = format!("{}", fragment.y);
-    let z = format!("{}", fragment.z);
-    let rotate_z = format!("{}", fragment.rotate_z);
-    let rotate_y = format!("{}", fragment.rotate_y);
-    let rotate_x = format!("{}", fragment.rotate_x);
-    let params1 = format!("{}", fragment.params1);
-    let scale_y = format!("{}", fragment.scale_y);
-    let scale_x = format!("{}", fragment.scale_x);
-    let fragment2 = format!("{}", fragment.fragment2);
-    let params2 = format!("{:?}", fragment.params2);
+    let actor_def_reference = format!("{:?}", fragment.actor_def_reference);
+    let flags = format!("{:?}", fragment.flags);
+    let sphere_reference = format!("{}", fragment.sphere_reference);
+    let current_action = format!("{:?}", fragment.current_action);
+    let location = format!("{:?}", fragment.location);
+    let bounding_radius = format!("{:?}", fragment.bounding_radius);
+    let scale_factor = format!("{:?}", fragment.scale_factor);
+    let sound_name_reference = format!("{:?}", fragment.sound_name_reference);
+    let unknown = format!("{}", fragment.unknown);
 
     let table = Table::new(vec![
+        Row::new(vec!["ACTORDEF reference", &actor_def_reference]),
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Fragment1", &fragment1]),
-        Row::new(vec!["X", &x]),
-        Row::new(vec!["Y", &y]),
-        Row::new(vec!["Z", &z]),
-        Row::new(vec!["Rotate Z", &rotate_z]),
-        Row::new(vec!["Rotate Y", &rotate_y]),
-        Row::new(vec!["Rotate X", &rotate_x]),
-        Row::new(vec!["Params1", &params1]),
-        Row::new(vec!["Scale Y", &scale_y]),
-        Row::new(vec!["Scale X", &scale_x]),
-        Row::new(vec!["Fragment2", &fragment2]),
-        Row::new(vec!["Params2", &params2]),
+        Row::new(vec!["SPHERE reference", &sphere_reference]),
+        Row::new(vec!["Current action", &current_action]),
+        Row::new(vec!["Location", &location]),
+        Row::new(vec!["Bounding radius", &bounding_radius]),
+        Row::new(vec!["Scale factor", &scale_factor]),
+        Row::new(vec!["Sound name ref", &sound_name_reference]),
+        Row::new(vec!["Unknown", &unknown]),
     ])
     .block(
         Block::default()

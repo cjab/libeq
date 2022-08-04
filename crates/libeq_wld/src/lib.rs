@@ -398,26 +398,66 @@ pub struct ObjectLocation<'a> {
 
 impl<'a> ObjectLocation<'a> {
     pub fn model_name(&self) -> Option<&str> {
-        self.doc.get_string(self.fragment.reference)
+        self.doc.get_string(self.fragment.actor_def_reference)
     }
 
     /// The world position of the object.  This must be combined with the offset of the mesh itself.
     pub fn center(&self) -> (f32, f32, f32) {
-        (self.fragment.x, self.fragment.z, self.fragment.y)
+        (
+            self.fragment
+                .location
+                .as_ref()
+                .map(|l| l.x)
+                .unwrap_or_default(),
+            self.fragment
+                .location
+                .as_ref()
+                .map(|l| l.z)
+                .unwrap_or_default(),
+            self.fragment
+                .location
+                .as_ref()
+                .map(|l| l.y)
+                .unwrap_or_default(),
+        )
     }
 
     /// The euler rotation, degrees -360 to 0.  Note that this rotation should be applied after offseting the mesh.
     pub fn rotation(&self) -> (f32, f32, f32) {
         (
-            (self.fragment.rotate_y / 512.0) * -360.0,
-            (self.fragment.rotate_z / 512.0) * -360.0,
-            (self.fragment.rotate_x / 512.0) * -360.0,
+            (self
+                .fragment
+                .location
+                .as_ref()
+                .map(|l| l.rotate_y)
+                .unwrap_or_default()
+                / 512.0)
+                * -360.0,
+            (self
+                .fragment
+                .location
+                .as_ref()
+                .map(|l| l.rotate_z)
+                .unwrap_or_default()
+                / 512.0)
+                * -360.0,
+            (self
+                .fragment
+                .location
+                .as_ref()
+                .map(|l| l.rotate_x)
+                .unwrap_or_default()
+                / 512.0)
+                * -360.0,
         )
     }
 
     /// The scale of the object.  Note that X and Z are always scaled the same.
     pub fn scale(&self) -> (f32, f32) {
-        (self.fragment.scale_x, self.fragment.scale_y)
+        (
+            self.fragment.bounding_radius.unwrap_or_default(),
+            self.fragment.scale_factor.unwrap_or_default(),
+        )
     }
 }
 
