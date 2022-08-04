@@ -1,5 +1,6 @@
 use std::any::Any;
 
+use super::common::Location;
 use super::{Fragment, FragmentParser, StringReference};
 
 use nom::multi::count;
@@ -175,59 +176,6 @@ impl ActorDefFlags {
 
     pub fn has_current_action(&self) -> bool {
         self.0 & Self::HAS_CURRENT_ACTION == Self::HAS_CURRENT_ACTION
-    }
-}
-
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
-/// Represents LOCATION within an ACTORDEF.
-pub struct Location {
-    /// LOCATION   %d   %f   %f   %f   %d   %d   %d
-    /// LOCATION loc6 loc0 loc1 loc2 loc3 loc4 loc5
-    pub loc0: f32,
-    pub loc1: f32,
-    pub loc2: f32,
-    pub loc3: f32,
-    pub loc4: f32,
-    pub loc5: f32,
-    pub loc6: u32,
-}
-
-impl Location {
-    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
-        let (i, loc0) = le_f32(input)?;
-        let (i, loc1) = le_f32(i)?;
-        let (i, loc2) = le_f32(i)?;
-        let (i, loc3) = le_f32(i)?;
-        let (i, loc4) = le_f32(i)?;
-        let (i, loc5) = le_f32(i)?;
-        let (i, loc6) = le_u32(i)?;
-
-        Ok((
-            i,
-            Self {
-                loc0,
-                loc1,
-                loc2,
-                loc3,
-                loc4,
-                loc5,
-                loc6,
-            },
-        ))
-    }
-
-    pub fn into_bytes(&self) -> Vec<u8> {
-        [
-            &self.loc0.to_le_bytes()[..],
-            &self.loc1.to_le_bytes()[..],
-            &self.loc2.to_le_bytes()[..],
-            &self.loc3.to_le_bytes()[..],
-            &self.loc4.to_le_bytes()[..],
-            &self.loc5.to_le_bytes()[..],
-            &self.loc6.to_le_bytes()[..],
-        ]
-        .concat()
     }
 }
 

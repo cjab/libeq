@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct StringReference(i32);
+pub struct StringReference(pub i32);
 
 impl StringReference {
     pub fn new(idx: i32) -> Self {
