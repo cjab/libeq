@@ -494,15 +494,15 @@ pub fn draw_region_flag_fragment<B>(
     let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
     let region_count = format!("{}", fragment.region_count);
     let region_ids = format!("{:?}", fragment.regions);
-    let size2 = format!("{:?}", fragment.size2);
-    let data2 = format!("{:?}", fragment.data2);
+    let user_data_size = format!("{:?}", fragment.user_data_size);
+    let user_data = format!("{:?}", fragment.user_data);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
         Row::new(vec!["Region Count", &region_count]),
         Row::new(vec!["Region Ids", &region_ids]),
-        Row::new(vec!["Size2", &size2]),
-        Row::new(vec!["Data2", &data2]),
+        Row::new(vec!["User data size", &user_data_size]),
+        Row::new(vec!["User data", &user_data]),
     ])
     .block(
         Block::default()
