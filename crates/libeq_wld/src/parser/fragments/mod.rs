@@ -4,6 +4,7 @@ mod bsp_region;
 mod bsp_tree;
 mod camera;
 mod camera_reference;
+mod common;
 mod first;
 mod light_info;
 mod light_source;
@@ -112,6 +113,7 @@ pub trait Fragment {
     fn into_bytes(&self) -> Vec<u8>;
     fn as_any(&self) -> &dyn Any;
     fn name_ref(&self) -> &StringReference;
+    fn type_id(&self) -> u32;
 }
 
 pub trait FragmentParser {

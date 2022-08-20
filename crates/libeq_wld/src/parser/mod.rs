@@ -2,6 +2,7 @@ pub mod fragments;
 mod strings;
 
 use core::fmt::{Debug, Error, Formatter};
+use std::collections::BTreeMap;
 
 use nom::bytes::complete::take;
 use nom::multi::count;
@@ -13,7 +14,7 @@ use nom::IResult;
 use serde::{Deserialize, Serialize};
 
 pub use fragments::*;
-use strings::{StringHash, StringReference};
+pub use strings::{StringHash, StringReference};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
@@ -47,6 +48,30 @@ impl WldDoc {
                 fragments,
             },
         ))
+    }
+
+    pub fn fragment_headers_by_offset(input: &[u8]) -> BTreeMap<usize, FragmentHeader> {
+        let (i, header) = WldHeader::parse(input)
+            .expect(&format!("{:?}", &input[..std::mem::size_of::<WldHeader>()]));
+        let (_, i) = i.split_at(header.string_hash_size as usize);
+
+        //let (i, _): (&[u8], &[u8]) =
+        //    take::<u32, &[u8], nom::error::Error<&[u8]>>(header.string_hash_size)(i).unwrap();
+
+        let mut fragment_headers = BTreeMap::new();
+        let mut remaining = i;
+        for idx in (0..header.fragment_count).into_iter() {
+            let offset = input.len() - remaining.len();
+            println!("Parsing fragment header {} at offset {:#10x}", idx, offset);
+
+            let (x, fragment_header) = FragmentHeader::parse(remaining).expect(&format!(
+                "Failed to parse fragment header {} at offset {:#10x}",
+                idx, offset
+            ));
+            fragment_headers.insert(offset, fragment_header);
+            remaining = x;
+        }
+        fragment_headers
     }
 
     pub fn dump_raw_fragments(input: &[u8]) -> IResult<&[u8], Vec<FragmentHeader>> {
@@ -123,11 +148,37 @@ impl WldDoc {
         self.fragments.len()
     }
 
+    pub fn header_bytes(&self) -> Vec<u8> {
+        self.header.into_bytes()
+    }
+
+    pub fn strings_bytes(&self) -> Vec<u8> {
+        self.strings.into_bytes()
+    }
+
     pub fn into_bytes(&self) -> Vec<u8> {
         [
             self.header.into_bytes(),
             self.strings.into_bytes(),
-            self.fragments.iter().flat_map(|f| f.into_bytes()).collect(),
+            self.fragments
+                .iter()
+                .flat_map(|f| {
+                    let mut field_data = f.into_bytes();
+                    let size = field_data.len();
+                    // Field data must be padded so that it aligns on 4 bytes
+                    if (size % 4) > 0 {
+                        field_data.resize(size + (4 - (size % 4)), 0);
+                    }
+                    FragmentHeader {
+                        size: field_data.len() as u32,
+                        fragment_type: f.type_id(),
+                        field_data: &field_data[..],
+                    }
+                    .into_bytes()
+                })
+                .collect(),
+            // What is this?
+            vec![0xff, 0xff, 0xff, 0xff],
         ]
         .concat()
     }
@@ -135,8 +186,8 @@ impl WldDoc {
 
 /// This header is present at the beginning of every .wld file.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug)]
-struct WldHeader {
+#[derive(Debug, PartialEq)]
+pub struct WldHeader {
     /// The file signature that signals that this is a .wld file.
     magic: u32,
 
@@ -163,7 +214,7 @@ struct WldHeader {
 }
 
 impl WldHeader {
-    fn parse(input: &[u8]) -> IResult<&[u8], WldHeader> {
+    pub fn parse(input: &[u8]) -> IResult<&[u8], WldHeader> {
         let (
             remaining,
             (magic, version, fragment_count, header_3, header_4, string_hash_size, header_6),
@@ -245,139 +296,174 @@ impl<'a> FragmentHeader<'a> {
     }
 
     fn parse_body(&self) -> Box<FragmentType> {
+        let debug_msg = &format!("{:02x?}", self);
         match self.fragment_type {
             AlternateMeshFragment::TYPE_ID => Box::new(FragmentType::AlternateMesh(
-                AlternateMeshFragment::parse(&self.field_data).unwrap().1,
+                AlternateMeshFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             VertexColorReferenceFragment::TYPE_ID => Box::new(FragmentType::VertexColorReference(
                 VertexColorReferenceFragment::parse(&self.field_data)
-                    .unwrap()
+                    .expect(debug_msg)
                     .1,
             )),
             VertexColorFragment::TYPE_ID => Box::new(FragmentType::VertexColor(
-                VertexColorFragment::parse(&self.field_data).unwrap().1,
+                VertexColorFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             MeshAnimatedVerticesFragment::TYPE_ID => Box::new(FragmentType::MeshAnimatedVertices(
                 MeshAnimatedVerticesFragment::parse(&self.field_data)
-                    .unwrap()
+                    .expect(debug_msg)
                     .1,
             )),
             MeshAnimatedVerticesReferenceFragment::TYPE_ID => {
                 Box::new(FragmentType::MeshAnimatedVerticesReference(
                     MeshAnimatedVerticesReferenceFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             AmbientLightFragment::TYPE_ID => Box::new(FragmentType::AmbientLight(
-                AmbientLightFragment::parse(&self.field_data).unwrap().1,
+                AmbientLightFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             RegionFlagFragment::TYPE_ID => Box::new(FragmentType::RegionFlag(
-                RegionFlagFragment::parse(&self.field_data).unwrap().1,
+                RegionFlagFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             LightInfoFragment::TYPE_ID => Box::new(FragmentType::LightInfo(
-                LightInfoFragment::parse(&self.field_data).unwrap().1,
+                LightInfoFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             LightSourceReferenceFragment::TYPE_ID => Box::new(FragmentType::LightSourceReference(
                 LightSourceReferenceFragment::parse(&self.field_data)
-                    .unwrap()
+                    .expect(debug_msg)
                     .1,
             )),
             LightSourceFragment::TYPE_ID => Box::new(FragmentType::LightSource(
-                LightSourceFragment::parse(&self.field_data).unwrap().1,
+                LightSourceFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             PolygonAnimationReferenceFragment::TYPE_ID => {
                 Box::new(FragmentType::PolygonAnimationReference(
                     PolygonAnimationReferenceFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             PolygonAnimationFragment::TYPE_ID => Box::new(FragmentType::PolygonAnimation(
-                PolygonAnimationFragment::parse(&self.field_data).unwrap().1,
+                PolygonAnimationFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             FirstFragment::TYPE_ID => Box::new(FragmentType::First(
-                FirstFragment::parse(&self.field_data).unwrap().1,
+                FirstFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             ZoneUnknownFragment::TYPE_ID => Box::new(FragmentType::ZoneUnknown(
-                ZoneUnknownFragment::parse(&self.field_data).unwrap().1,
+                ZoneUnknownFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             SkeletonTrackSetReferenceFragment::TYPE_ID => {
                 Box::new(FragmentType::SkeletonTrackSetReference(
                     SkeletonTrackSetReferenceFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             CameraReferenceFragment::TYPE_ID => Box::new(FragmentType::CameraReference(
-                CameraReferenceFragment::parse(&self.field_data).unwrap().1,
+                CameraReferenceFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             CameraFragment::TYPE_ID => Box::new(FragmentType::Camera(
-                CameraFragment::parse(&self.field_data).unwrap().1,
+                CameraFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             TwoDimensionalObjectReferenceFragment::TYPE_ID => {
                 Box::new(FragmentType::TwoDimensionalObjectReference(
                     TwoDimensionalObjectReferenceFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             TwoDimensionalObjectFragment::TYPE_ID => Box::new(FragmentType::TwoDimensionalObject(
                 TwoDimensionalObjectFragment::parse(&self.field_data)
-                    .unwrap()
+                    .expect(debug_msg)
                     .1,
             )),
             ObjectLocationFragment::TYPE_ID => Box::new(FragmentType::ObjectLocation(
-                ObjectLocationFragment::parse(&self.field_data).unwrap().1,
+                ObjectLocationFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             MobSkeletonPieceTrackReferenceFragment::TYPE_ID => {
                 Box::new(FragmentType::MobSkeletonPieceTrackReference(
                     MobSkeletonPieceTrackReferenceFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             MobSkeletonPieceTrackFragment::TYPE_ID => {
                 Box::new(FragmentType::MobSkeletonPieceTrack(
                     MobSkeletonPieceTrackFragment::parse(&self.field_data)
-                        .unwrap()
+                        .expect(debug_msg)
                         .1,
                 ))
             }
             SkeletonTrackSetFragment::TYPE_ID => Box::new(FragmentType::SkeletonTrackSet(
-                SkeletonTrackSetFragment::parse(&self.field_data).unwrap().1,
+                SkeletonTrackSetFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             ModelFragment::TYPE_ID => Box::new(FragmentType::Model(
-                ModelFragment::parse(&self.field_data).unwrap().1,
+                ModelFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             BspTreeFragment::TYPE_ID => Box::new(FragmentType::BspTree(
-                BspTreeFragment::parse(&self.field_data).unwrap().1,
+                BspTreeFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             BspRegionFragment::TYPE_ID => Box::new(FragmentType::BspRegion(
-                BspRegionFragment::parse(&self.field_data).unwrap().1,
+                BspRegionFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             MeshFragment::TYPE_ID => Box::new(FragmentType::Mesh(
-                MeshFragment::parse(&self.field_data).unwrap().1,
+                MeshFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             MaterialListFragment::TYPE_ID => Box::new(FragmentType::MaterialList(
-                MaterialListFragment::parse(&self.field_data).unwrap().1,
+                MaterialListFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             MaterialFragment::TYPE_ID => Box::new(FragmentType::Material(
-                MaterialFragment::parse(&self.field_data).unwrap().1,
+                MaterialFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             TextureReferenceFragment::TYPE_ID => Box::new(FragmentType::TextureReference(
-                TextureReferenceFragment::parse(&self.field_data).unwrap().1,
+                TextureReferenceFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             MeshReferenceFragment::TYPE_ID => Box::new(FragmentType::MeshReference(
-                MeshReferenceFragment::parse(&self.field_data).unwrap().1,
+                MeshReferenceFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
             TextureFragment::TYPE_ID => Box::new(FragmentType::Texture(
-                TextureFragment::parse(&self.field_data).unwrap().1,
+                TextureFragment::parse(&self.field_data).expect(debug_msg).1,
             )),
             TextureImagesFragment::TYPE_ID => Box::new(FragmentType::TextureImages(
-                TextureImagesFragment::parse(&self.field_data).unwrap().1,
+                TextureImagesFragment::parse(&self.field_data)
+                    .expect(debug_msg)
+                    .1,
             )),
-            _ => panic!("Unknown fragment type"),
+            _ => panic!("Unknown fragment type: {}", self.fragment_type),
         }
     }
 
@@ -385,7 +471,51 @@ impl<'a> FragmentHeader<'a> {
         [
             &self.size.to_le_bytes()[..],
             &self.fragment_type.to_le_bytes()[..],
+            &self.field_data,
         ]
         .concat()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses() {
+        let data = &include_bytes!("../../fixtures/gfaydark.wld")[..];
+        let wld_doc = WldDoc::parse(data).unwrap().1;
+        assert_eq!(wld_doc.header.magic, 1414544642);
+        assert_eq!(wld_doc.header.version, 0x00015500);
+        assert_eq!(wld_doc.header.fragment_count, 4646);
+        assert_eq!(wld_doc.header.header_3, 2905);
+        assert_eq!(wld_doc.header.header_4, 162660);
+        assert_eq!(wld_doc.header.string_hash_size, 52692);
+        assert_eq!(wld_doc.header.header_6, 4609);
+        assert_eq!(wld_doc.fragments.len(), 4646);
+        assert_eq!(wld_doc.strings.get(StringReference::new(0)), Some(""));
+        assert_eq!(wld_doc.strings.get(StringReference::new(1)), Some("SGRASS"));
+        assert_eq!(wld_doc.strings.get(StringReference::new(2)), None);
+    }
+
+    #[test]
+    fn it_serializes() {
+        let data = &include_bytes!("../../fixtures/gfaydark.wld")[..];
+        let wld_doc = WldDoc::parse(data).unwrap().1;
+
+        let serialized_data = wld_doc.into_bytes();
+        let deserialized_doc = WldDoc::parse(&serialized_data).unwrap().1;
+
+        assert_eq!(wld_doc.header, deserialized_doc.header);
+        assert_eq!(wld_doc.strings, deserialized_doc.strings);
+        assert_eq!(wld_doc.fragments.len(), deserialized_doc.fragments.len());
+        assert_eq!(
+            wld_doc.fragments.first().unwrap().into_bytes(),
+            deserialized_doc.fragments.first().unwrap().into_bytes()
+        );
+        assert_eq!(
+            wld_doc.fragments.last().unwrap().into_bytes(),
+            deserialized_doc.fragments.last().unwrap().into_bytes()
+        );
     }
 }

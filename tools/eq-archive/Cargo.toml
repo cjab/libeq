@@ -1,24 +1,18 @@
 [package]
-name = "wld-cli"
+name = "eq-archive"
 version = "0.4.0"
 authors = ["Chad Jablonski <chad@jablonski.xyz>"]
 edition = "2021"
+description = "Create and extract EverQuest .s3d archives"
 
 [[bin]]
-name = "wld-cli"
+name = "eq-archive"
 path = "src/main.rs"
 test = false
 
 [dependencies]
-libeq_wld = { path = "../../crates/libeq_wld", version = "0.3.0", features = ["serde"] }
 libeq_archive = { path = "../../crates/libeq_archive", version = "0.4.0" }
 clap = { version = "3.2.12", features = ["derive"] }
 colorful = "0.2.1"
-tui = "0.16"
-termion = "1.5"
-hexyl = "0.8.0"
 log = "0.4"
 env_logger = "0.8"
-ansi-to-tui = "0.4.1"
-serde_json = "1.0"
-ron = "0.7"

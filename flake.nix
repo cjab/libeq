@@ -17,7 +17,7 @@
 
   outputs = { self, nixpkgs, utils, rust-overlay, crate2nix, ... }:
     let
-      name = "eq_wld";
+      name = "libeq";
     in
     utils.lib.eachDefaultSystem
       (system:

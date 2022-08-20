@@ -52,9 +52,22 @@ impl FragmentParser for TextureFragment {
         let (i, (name_reference, flags, frame_count)) =
             tuple((StringReference::parse, TextureFragmentFlags::parse, le_u32))(input)?;
 
-        // TODO: Do these fields even really exist?
+        //TODO: Is this a thing? Find an example.
+        let (i, _current_frame) = if flags.has_current_frame() {
+            let (i, current_frame) = le_u32(i)?;
+            (i, Some(current_frame))
+        } else {
+            (i, None)
+        };
         let current_frame = None;
-        let sleep = None;
+
+        let (i, sleep) = if flags.is_animated() && flags.has_sleep() {
+            let (i, sleep) = le_u32(i)?;
+            (i, Some(sleep))
+        } else {
+            (i, None)
+        };
+
         let (remaining, frame_references) = count(FragmentRef::parse, frame_count as usize)(i)?;
 
         Ok((
@@ -97,6 +110,10 @@ impl Fragment for TextureFragment {
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
     }
+
+    fn type_id(&self) -> u32 {
+        Self::TYPE_ID
+    }
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -106,7 +123,7 @@ pub struct TextureFragmentFlags(pub u32);
 impl TextureFragmentFlags {
     const SKIP_FRAMES: u32 = 0x02;
     const IS_ANIMATED: u32 = 0x08;
-    const HAS_SLEEP: u32 = 0x10; //FIXME: This seems wrong
+    const HAS_SLEEP: u32 = 0x10;
     const HAS_CURRENT_FRAME: u32 = 0x20;
 
     fn parse(input: &[u8]) -> IResult<&[u8], TextureFragmentFlags> {

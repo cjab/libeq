@@ -16,11 +16,9 @@
 //
 // ```
 //
-
 mod parser;
 
 use std::collections::BTreeMap;
-use std::fs::File;
 use std::io::{self, Read, Write};
 use std::ops::ControlFlow;
 
@@ -44,10 +42,9 @@ impl EqArchive {
         EqArchive::default()
     }
 
-    pub fn read(filename: &str) -> Result<EqArchive, Error> {
-        let mut file = File::open(filename)?;
+    pub fn read<R: Read>(mut reader: R) -> Result<EqArchive, Error> {
         let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer)?;
+        reader.read_to_end(&mut buffer)?;
         let mut archive = Archive::parse(&buffer[..])?.1;
 
         archive.index_entries.sort_by_key(|e| e.data_offset);
@@ -197,12 +194,6 @@ impl Archive {
                     .map(|entry| entry.decompress(&self.blocks))
             })
     }
-
-    fn files(self) -> impl Iterator<Item = (String, IndexEntry)> {
-        self.filenames()
-            .into_iter()
-            .zip(self.index_entries.into_iter().map(|entry| entry))
-    }
 }
 
 impl IndexEntry {
@@ -324,6 +315,7 @@ const fn build_crc_table() -> [u32; 256] {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs::File;
 
     #[test]
     fn it_works() {
@@ -340,12 +332,10 @@ mod tests {
 
     #[test]
     fn read_archive() {
-        let original = EqArchive::read("fixtures/gfaydark.s3d").unwrap();
+        let file = File::open("fixtures/gfaydark.s3d").unwrap();
+        let original = EqArchive::read(file).unwrap();
 
-        let mut file = File::create("out.s3d").unwrap();
-        file.write_all(&original.to_bytes().unwrap()[..]).unwrap();
-
-        let loaded = EqArchive::read("out.s3d").unwrap();
+        let loaded = EqArchive::read(&original.to_bytes().unwrap()[..]).unwrap();
 
         let original_filenames: Vec<_> = original
             .files

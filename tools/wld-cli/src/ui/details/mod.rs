@@ -773,60 +773,24 @@ pub fn draw_camera_fragment<B>(
 ) where
     B: Backend,
 {
-    let params0 = format!("{:?}", fragment.params0);
-    let params1 = format!("{:?}", fragment.params1);
-    let params2 = format!("{:?}", fragment.params2);
-    let params3 = format!("{:?}", fragment.params3);
-    let params4 = format!("{:?}", fragment.params4);
-    let params5 = format!("{:?}", fragment.params5);
-    let params6 = format!("{:?}", fragment.params6);
-    let params7 = format!("{:?}", fragment.params7);
-    let params8 = format!("{:?}", fragment.params8);
-    let params9 = format!("{:?}", fragment.params9);
-    let params10 = format!("{:?}", fragment.params10);
-    let params11 = format!("{:?}", fragment.params11);
-    let params12 = format!("{:?}", fragment.params12);
-    let params13 = format!("{:?}", fragment.params13);
-    let params14 = format!("{:?}", fragment.params14);
-    let params15 = format!("{:?}", fragment.params15);
-    let params16 = format!("{:?}", fragment.params16);
-    let params17 = format!("{:?}", fragment.params17);
-    let params18 = format!("{:?}", fragment.params18);
-    let params19 = format!("{:?}", fragment.params19);
-    let params20 = format!("{:?}", fragment.params20);
-    let params21 = format!("{:?}", fragment.params21);
-    let params22 = format!("{:?}", fragment.params22);
-    let params23 = format!("{:?}", fragment.params23);
-    let params24 = format!("{:?}", fragment.params24);
-    let params25 = format!("{:?}", fragment.params25);
+    let flags = format!("{:?}", fragment.flags);
+    let vertex_count = format!("{:?}", fragment.vertex_count);
+    let bsp_node_count = format!("{:?}", fragment.bsp_node_count);
+    let sphere_list_reference = format!("{:?}", fragment.sphere_list_reference);
+    let center_offset = format!("{:?}", fragment.center_offset);
+    let bounding_radius = format!("{:?}", fragment.bounding_radius);
+    let vertices = format!("{:?}", fragment.vertices);
+    let bsp_node_entries = format!("{:?}", fragment.bsp_nodes);
 
     let table = Table::new(vec![
-        Row::new(vec!["Params0", &params0]),
-        Row::new(vec!["Params1", &params1]),
-        Row::new(vec!["Params2", &params2]),
-        Row::new(vec!["Params3", &params3]),
-        Row::new(vec!["Params4", &params4]),
-        Row::new(vec!["Params5", &params5]),
-        Row::new(vec!["Params6", &params6]),
-        Row::new(vec!["Params7", &params7]),
-        Row::new(vec!["Params8", &params8]),
-        Row::new(vec!["Params9", &params9]),
-        Row::new(vec!["Params10", &params10]),
-        Row::new(vec!["Params11", &params11]),
-        Row::new(vec!["Params12", &params12]),
-        Row::new(vec!["Params13", &params13]),
-        Row::new(vec!["Params14", &params14]),
-        Row::new(vec!["Params15", &params15]),
-        Row::new(vec!["Params16", &params16]),
-        Row::new(vec!["Params17", &params17]),
-        Row::new(vec!["Params18", &params18]),
-        Row::new(vec!["Params19", &params19]),
-        Row::new(vec!["Params20", &params20]),
-        Row::new(vec!["Params21", &params21]),
-        Row::new(vec!["Params22", &params22]),
-        Row::new(vec!["Params23", &params23]),
-        Row::new(vec!["Params24", &params24]),
-        Row::new(vec!["Params25", &params25]),
+        Row::new(vec!["Flags", &flags]),
+        Row::new(vec!["Vertex count", &vertex_count]),
+        Row::new(vec!["Bsp node count", &bsp_node_count]),
+        Row::new(vec!["Sphere list reference", &sphere_list_reference]),
+        Row::new(vec!["Center offset", &center_offset]),
+        Row::new(vec!["Bounding radius", &bounding_radius]),
+        Row::new(vec!["Vertices", &vertices]),
+        Row::new(vec!["Bsp nodes", &bsp_node_entries]),
     ])
     .block(
         Block::default()
@@ -854,24 +818,24 @@ pub fn draw_light_source_fragment<B>(
 ) where
     B: Backend,
 {
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let params2 = format!("{:?}", fragment.params2);
-    let params3a = format!("{:?}", fragment.params3a);
-    let params3b = format!("{:?}", fragment.params3b);
-    let params4 = format!("{:?}", fragment.params4);
-    let red = format!("{:?}", fragment.red);
-    let green = format!("{:?}", fragment.green);
-    let blue = format!("{:?}", fragment.blue);
+    let flags = format!(
+        "0x{:x}  (b{:0>32b})",
+        fragment.flags.to_u32(),
+        fragment.flags.to_u32()
+    );
+    let frame_count = format!("{:?}", fragment.frame_count);
+    let current_frame = format!("{:?}", fragment.current_frame);
+    let sleep = format!("{:?}", fragment.sleep);
+    let light_levels = format!("{:?}", fragment.light_levels);
+    let colors = format!("{:?}", fragment.colors);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Params2", &params2]),
-        Row::new(vec!["Params3a", &params3a]),
-        Row::new(vec!["Params3b", &params3b]),
-        Row::new(vec!["Params4", &params4]),
-        Row::new(vec!["Red", &red]),
-        Row::new(vec!["Green", &green]),
-        Row::new(vec!["Blue", &blue]),
+        Row::new(vec!["Frame count", &frame_count]),
+        Row::new(vec!["Current frame", &current_frame]),
+        Row::new(vec!["Sleep", &sleep]),
+        Row::new(vec!["Light levels", &light_levels]),
+        Row::new(vec!["Colors", &colors]),
     ])
     .block(
         Block::default()
@@ -1312,14 +1276,13 @@ pub fn draw_two_dimensional_object_fragment<B>(
     let sleep = format!("{:?}", fragment.sleep);
     let pitches = format!("{:?}", fragment.pitches);
     let render_method = format!("{:?}", fragment.render_method);
-    let render_flags = format!("{:?}", fragment.render_flags);
-    let pen = format!("{:?}", fragment.pen);
-    let brightness = format!("{:?}", fragment.brightness);
-    let scaled_ambient = format!("{:?}", fragment.scaled_ambient);
-    let params7_fragment = format!("{:?}", fragment.params7_fragment);
-    let uv_info = format!("{:?}", fragment.uv_info);
-    let params7_size = format!("{:?}", fragment.params7_size);
-    let params7_data = format!("{:?}", fragment.params7_data);
+    let render_flags = format!("{:?}", fragment.render_info.flags);
+    let pen = format!("{:?}", fragment.render_info.pen);
+    let brightness = format!("{:?}", fragment.render_info.brightness);
+    let scaled_ambient = format!("{:?}", fragment.render_info.scaled_ambient);
+    let uv_info = format!("{:?}", fragment.render_info.uv_info);
+    let params7_size = format!("{:?}", fragment.render_info.params7_size);
+    let params7_data = format!("{:?}", fragment.render_info.params7_data);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
@@ -1329,8 +1292,8 @@ pub fn draw_two_dimensional_object_fragment<B>(
         Row::new(vec!["Sphere Fragment", &sphere_fragment]),
         Row::new(vec!["Depth Scale", &depth_scale]),
         Row::new(vec!["Center Offset", &center_offset]),
-        Row::new(vec!["Params 4", &bounding_radius]),
-        Row::new(vec!["Params 5", &current_frame]),
+        Row::new(vec!["Bounding radius", &bounding_radius]),
+        Row::new(vec!["Current frame", &current_frame]),
         Row::new(vec!["Sleep", &sleep]),
         Row::new(vec!["Pitches", &pitches]),
         Row::new(vec!["Render Method", &render_method]),
@@ -1338,7 +1301,6 @@ pub fn draw_two_dimensional_object_fragment<B>(
         Row::new(vec!["Pen", &pen]),
         Row::new(vec!["Brightness", &brightness]),
         Row::new(vec!["Scaled Ambient", &scaled_ambient]),
-        Row::new(vec!["Params7 Fragment", &params7_fragment]),
         Row::new(vec!["UV Info", &uv_info]),
         Row::new(vec!["Params7 Size", &params7_size]),
         Row::new(vec!["Params7 Data", &params7_data]),

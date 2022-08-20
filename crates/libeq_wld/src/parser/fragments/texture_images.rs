@@ -1,5 +1,4 @@
 use std::any::Any;
-use std::mem;
 
 use super::{Fragment, FragmentParser, StringReference};
 use crate::parser::strings::{decode_string, encode_string};
@@ -26,14 +25,6 @@ pub struct TextureImagesFragment {
     pub entries: Vec<TextureImagesFragmentEntry>,
 }
 
-impl TextureImagesFragment {
-    fn size(&self) -> usize {
-        mem::size_of::<StringReference>()
-            + mem::size_of::<u32>()
-            + self.entries.iter().map(|e| e.size()).sum::<usize>()
-    }
-}
-
 impl FragmentParser for TextureImagesFragment {
     type T = Self;
 
@@ -44,7 +35,8 @@ impl FragmentParser for TextureImagesFragment {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, size1) = le_u32(i)?;
         // TODO: This is hardcoded to one entry, is this all we need?
-        let (remaining, entries) = count(TextureImagesFragmentEntry::parse, 1 as usize)(i)?;
+        let (remaining, entries) =
+            count(TextureImagesFragmentEntry::parse, (size1 + 1) as usize)(i)?;
         Ok((
             remaining,
             TextureImagesFragment {
@@ -58,7 +50,6 @@ impl FragmentParser for TextureImagesFragment {
 
 impl Fragment for TextureImagesFragment {
     fn into_bytes(&self) -> Vec<u8> {
-        let padding = vec![0; 4 - (self.size() % 4)];
         [
             &self.name_reference.into_bytes()[..],
             &self.size1.to_le_bytes()[..],
@@ -67,7 +58,6 @@ impl Fragment for TextureImagesFragment {
                 .iter()
                 .flat_map(|e| e.into_bytes())
                 .collect::<Vec<_>>()[..],
-            &padding[..],
         ]
         .concat()
     }
@@ -78,6 +68,10 @@ impl Fragment for TextureImagesFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+
+    fn type_id(&self) -> u32 {
+        Self::TYPE_ID
     }
 }
 
@@ -108,13 +102,9 @@ impl TextureImagesFragmentEntry {
             remaining,
             TextureImagesFragmentEntry {
                 name_length,
-                file_name: decode_string(&file_name),
+                file_name: decode_string(&file_name).trim_end_matches("\0").to_string(),
             },
         ))
-    }
-
-    fn size(&self) -> usize {
-        mem::size_of::<u16>() + self.file_name.len() + 1
     }
 
     fn into_bytes(&self) -> Vec<u8> {
@@ -149,6 +139,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0029-0x03.frag")[..];
         let frag = TextureImagesFragment::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!([frag.into_bytes(), vec![0]].concat(), data);
     }
 }

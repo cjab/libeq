@@ -1,8 +1,10 @@
 use std::any::Any;
+use std::fmt;
 
 use super::{Fragment, FragmentParser, StringReference};
 
-use nom::number::complete::{le_f32, le_u32, le_u8};
+use nom::multi::count;
+use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 use nom::IResult;
 
@@ -15,6 +17,7 @@ use serde::{Deserialize, Serialize};
 pub struct LightSourceFragment {
     pub name_reference: StringReference,
 
+    /// Windcatcher:
     /// _Unknown_
     /// * bit 1 - Usually 1 when dealing with placed light sources.
     /// * bit 2 - Usually 1.
@@ -25,28 +28,34 @@ pub struct LightSourceFragment {
     ///           Otherwise, `params3a` doesn't exist but `params3b` and `red`, `green` and `blue` do exist.
     ///           This flag seems to determine whether the light is just a simple white light
     ///           or a light with its own color values.
-    pub flags: u32,
+    pub flags: LightSourceFlags,
 
+    /// Windcatcher:
     /// _Unknown_ - Usually contains 1
-    pub params2: u32,
+    /// NEW:
+    /// Corresponds to FRAMECOUNT in LIGHTDEFINITION.
+    pub frame_count: u32,
 
-    /// _Unknown_ - Usually contains 1
-    pub params3a: Option<f32>,
-
-    /// _Unknown_ - Usually contains 200 (attenuation?).
-    pub params3b: Option<u32>,
-
+    /// Windcatcher:
     /// _Unknown_ - Usually contains 1.
-    pub params4: Option<u8>,
+    /// NEW:
+    /// Corresponds to CURRENTFRAME in LIGHTDEFINITION.
+    pub current_frame: Option<u32>,
 
-    /// Red component, scaled from 0 (no red component) to 1 (100% red).
-    pub red: Option<u8>,
+    /// Windcatcher:
+    /// _Unknown_ - Usually contains 1
+    /// NEW:
+    /// Corresponds to SLEEP in LIGHTDEFINITION.
+    pub sleep: Option<u32>,
 
-    /// Green component, scaled from 0 (no green component) to 1 (100% green).
-    pub green: Option<u8>,
+    /// Windcatcher:
+    /// _Unknown_ - Usually contains 200 (attenuation?).
+    /// NEW:
+    /// Corresponds to LIGHTLEVELS in LIGHTDEFINITION.
+    pub light_levels: Option<Vec<f32>>,
 
-    /// Blue component, scaled from 0 (no blue component) to 1 (100% blue).
-    pub blue: Option<u8>,
+    /// Red, Green, Blue components, scaled from 0 to 1.
+    pub colors: Option<Vec<(f32, f32, f32)>>,
 }
 
 impl FragmentParser for LightSourceFragment {
@@ -56,26 +65,33 @@ impl FragmentParser for LightSourceFragment {
     const TYPE_NAME: &'static str = "LightSource";
 
     fn parse(input: &[u8]) -> IResult<&[u8], LightSourceFragment> {
-        let (i, (name_reference, flags, params2)) =
-            tuple((StringReference::parse, le_u32, le_u32))(input)?;
+        let (i, (name_reference, flags, frame_count)) =
+            tuple((StringReference::parse, LightSourceFlags::parse, le_u32))(input)?;
 
-        let (i, params3a) = if flags & 0x10 == 0x00 {
-            le_f32(i).map(|(i, params3a)| (i, Some(params3a)))?
+        let (i, current_frame) = if flags.has_current_frame() {
+            le_u32(i).map(|(i, flags)| (i, Some(flags)))?
         } else {
             (i, None)
         };
 
-        let (i, params3b) = if flags & 0x18 == 0x18 {
-            le_u32(i).map(|(i, params3b)| (i, Some(params3b)))?
+        let (i, sleep) = if flags.has_sleep() {
+            le_u32(i).map(|(i, sleep)| (i, Some(sleep)))?
         } else {
             (i, None)
         };
 
-        let (remaining, (params4, red, green, blue)) = if flags & 0x10 == 0x10 {
-            tuple((le_u8, le_u8, le_u8, le_u8))(i)
-                .map(|(i, (p4, r, g, b))| (i, (Some(p4), Some(r), Some(g), Some(b))))?
+        let (i, light_levels) = if flags.has_light_levels() {
+            count(le_f32, frame_count as usize)(i)
+                .map(|(i, light_levels)| (i, Some(light_levels)))?
         } else {
-            (i, (None, None, None, None))
+            (i, None)
+        };
+
+        let (remaining, colors) = if flags.has_color() {
+            count(tuple((le_f32, le_f32, le_f32)), frame_count as usize)(i)
+                .map(|(i, colors)| (i, Some(colors)))?
+        } else {
+            (i, None)
         };
 
         Ok((
@@ -83,13 +99,11 @@ impl FragmentParser for LightSourceFragment {
             LightSourceFragment {
                 name_reference,
                 flags,
-                params2,
-                params3a,
-                params3b,
-                params4,
-                red,
-                green,
-                blue,
+                frame_count,
+                current_frame,
+                sleep,
+                light_levels,
+                colors,
             },
         ))
     }
@@ -99,14 +113,22 @@ impl Fragment for LightSourceFragment {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
-            &self.flags.to_le_bytes()[..],
-            &self.params2.to_le_bytes()[..],
-            &self.params3a.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
-            &self.params3b.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
-            &self.params4.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
-            &self.red.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
-            &self.green.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
-            &self.blue.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.flags.into_bytes()[..],
+            &self.frame_count.to_le_bytes()[..],
+            &self
+                .current_frame
+                .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.sleep.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.light_levels.as_ref().map_or(vec![], |p| {
+                p.iter().flat_map(|x| x.to_le_bytes().to_vec()).collect()
+            })[..],
+            &self.colors.as_ref().map_or(vec![], |p| {
+                p.iter()
+                    .flat_map(|(r, g, b)| {
+                        [r.to_le_bytes(), g.to_le_bytes(), b.to_le_bytes()].concat()
+                    })
+                    .collect()
+            })[..],
         ]
         .concat()
     }
@@ -117,6 +139,67 @@ impl Fragment for LightSourceFragment {
 
     fn name_ref(&self) -> &StringReference {
         &self.name_reference
+    }
+
+    fn type_id(&self) -> u32 {
+        Self::TYPE_ID
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(PartialEq)]
+pub struct LightSourceFlags(u32);
+
+impl LightSourceFlags {
+    const HAS_CURRENT_FRAME: u32 = 0x01;
+    const HAS_SLEEP: u32 = 0x02;
+    const HAS_LIGHT_LEVELS: u32 = 0x04;
+    const SKIP_FRAMES: u32 = 0x08;
+    const HAS_COLOR: u32 = 0x10;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+        let (remaining, raw_flags) = le_u32(input)?;
+        Ok((remaining, Self(raw_flags)))
+    }
+
+    fn into_bytes(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
+    }
+
+    pub fn has_current_frame(&self) -> bool {
+        self.0 & Self::HAS_CURRENT_FRAME == Self::HAS_CURRENT_FRAME
+    }
+
+    pub fn has_sleep(&self) -> bool {
+        self.0 & Self::HAS_SLEEP == Self::HAS_SLEEP
+    }
+
+    pub fn has_light_levels(&self) -> bool {
+        self.0 & Self::HAS_LIGHT_LEVELS == Self::HAS_LIGHT_LEVELS
+    }
+
+    pub fn skip_frames(&self) -> bool {
+        self.0 & Self::SKIP_FRAMES == Self::SKIP_FRAMES
+    }
+
+    pub fn has_color(&self) -> bool {
+        self.0 & Self::HAS_COLOR == Self::HAS_COLOR
+    }
+
+    pub fn to_u32(&self) -> u32 {
+        self.0
+    }
+}
+
+impl fmt::Debug for LightSourceFlags {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "LightSourceFlags [{:b}]", self.0)
+    }
+}
+
+impl From<LightSourceFlags> for u32 {
+    fn from(value: LightSourceFlags) -> Self {
+        value.0
     }
 }
 
@@ -130,14 +213,12 @@ mod tests {
         let frag = LightSourceFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-29288));
-        assert_eq!(frag.flags, 0x04);
-        assert_eq!(frag.params2, 1);
-        assert_eq!(frag.params3a, Some(1.0));
-        assert_eq!(frag.params3b, None);
-        assert_eq!(frag.params4, None);
-        assert_eq!(frag.red, None);
-        assert_eq!(frag.green, None);
-        assert_eq!(frag.blue, None);
+        assert_eq!(frag.flags.0, 0x04);
+        assert_eq!(frag.frame_count, 1);
+        assert_eq!(frag.current_frame, None);
+        assert_eq!(frag.sleep, None);
+        assert_eq!(frag.light_levels, Some(vec![1.0]));
+        assert_eq!(frag.colors, None);
     }
 
     #[test]
