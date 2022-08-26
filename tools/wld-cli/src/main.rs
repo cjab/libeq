@@ -182,7 +182,13 @@ fn explore(wld_filename: &str) -> Result<(), Box<dyn Error>> {
 
 fn extract(wld_filename: &str, destination: &str, format: &Format) {
     let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
-    let wld_doc = WldDoc::parse(&wld_data).expect("Could not parse wld file");
+    let wld_doc = parser::WldDoc::parse(&wld_data)
+        .map_err(|e| {
+            for error in e.iter() {
+                print_error(error).unwrap();
+            }
+        })
+        .expect("Could not read wld file");
     match format {
         Format::Raw => extract_raw(wld_filename, destination),
         Format::Json => {
@@ -206,7 +212,13 @@ fn extract_raw(wld_filename: &str, destination: &str) {
     let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
     let (_, raw_fragments) =
         WldDoc::dump_raw_fragments(&wld_data).expect("Could not read wld file");
-    let wld = WldDoc::parse(&wld_data).unwrap();
+    let wld = parser::WldDoc::parse(&wld_data)
+        .map_err(|e| {
+            for error in e.iter() {
+                print_error(error).unwrap();
+            }
+        })
+        .expect("Could not read wld file");
 
     let header_path = Path::new(destination).join("0000--header.bin");
     let mut file = File::create(&header_path).expect(&format!("Failed to create header file"));
@@ -232,7 +244,13 @@ fn create(source: &str, wld_filename: &str, format: &Format) {
             reader
                 .read_to_end(&mut buff)
                 .expect("Could not read source file");
-            WldDoc::parse(&buff).unwrap();
+            parser::WldDoc::parse(&buff)
+                .map_err(|e| {
+                    for error in e.iter() {
+                        print_error(error).unwrap();
+                    }
+                })
+                .expect("Could not read wld file");
             todo!("Implement create from raw")
         }
         Format::Json => serde_json::from_reader(reader).expect("Could not deserialize from json"),
