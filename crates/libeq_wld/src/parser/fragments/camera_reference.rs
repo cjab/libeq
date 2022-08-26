@@ -1,10 +1,9 @@
 use std::any::Any;
 
-use super::{CameraFragment, Fragment, FragmentParser, FragmentRef, StringReference};
+use super::{CameraFragment, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -30,7 +29,7 @@ impl FragmentParser for CameraReferenceFragment {
     const TYPE_ID: u32 = 0x09;
     const TYPE_NAME: &'static str = "CameraReference";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], CameraReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<CameraReferenceFragment> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((

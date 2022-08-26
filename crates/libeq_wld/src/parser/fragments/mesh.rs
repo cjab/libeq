@@ -2,14 +2,13 @@ use std::any::Any;
 
 use super::{
     Fragment, FragmentParser, FragmentRef, MaterialListFragment,
-    MeshAnimatedVerticesReferenceFragment, StringReference,
+    MeshAnimatedVerticesReferenceFragment, StringReference, WResult,
 };
 
 use nom::combinator::map;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_i8, le_u16, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -195,7 +194,7 @@ impl FragmentParser for MeshFragment {
     const TYPE_ID: u32 = 0x36;
     const TYPE_NAME: &'static str = "Mesh";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], MeshFragment> {
+    fn parse(input: &[u8]) -> WResult<MeshFragment> {
         let (
             i,
             (
@@ -416,7 +415,7 @@ pub struct MeshFragmentPolygonEntry {
 }
 
 impl MeshFragmentPolygonEntry {
-    fn parse(input: &[u8]) -> IResult<&[u8], MeshFragmentPolygonEntry> {
+    fn parse(input: &[u8]) -> WResult<MeshFragmentPolygonEntry> {
         let (remaining, (flags, vertex_indexes)) =
             tuple((le_u16, tuple((le_u16, le_u16, le_u16))))(input)?;
         Ok((
@@ -465,7 +464,7 @@ pub struct MeshFragmentData9Entry {
 }
 
 impl MeshFragmentData9Entry {
-    fn parse(input: &[u8]) -> IResult<&[u8], MeshFragmentData9Entry> {
+    fn parse(input: &[u8]) -> WResult<MeshFragmentData9Entry> {
         let (remaining, (index1, index2, offset, param1, type_field)) = tuple((
             map(le_u16, Some),
             map(le_u16, Some),

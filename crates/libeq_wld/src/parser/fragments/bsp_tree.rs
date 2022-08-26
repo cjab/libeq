@@ -1,11 +1,10 @@
 use std::any::Any;
 
-use super::{BspRegionFragment, Fragment, FragmentParser, FragmentRef, StringReference};
+use super::{BspRegionFragment, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -31,7 +30,7 @@ impl FragmentParser for BspTreeFragment {
     const TYPE_ID: u32 = 0x21;
     const TYPE_NAME: &'static str = "BspTree";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, world_node_count) = le_u32(i)?;
         let (i, world_nodes) = count(WorldNode::parse, world_node_count as usize)(i)?;
@@ -96,7 +95,7 @@ pub struct WorldNode {
 }
 
 impl WorldNode {
-    fn parse(input: &[u8]) -> IResult<&[u8], WorldNode> {
+    fn parse(input: &[u8]) -> WResult<WorldNode> {
         let (i, normal) = tuple((le_f32, le_f32, le_f32))(input)?;
         let (i, split_distance) = le_f32(i)?;
         let (i, region) = FragmentRef::parse(i)?;

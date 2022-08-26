@@ -1,11 +1,12 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, LightSourceReferenceFragment, StringReference};
+use super::{
+    Fragment, FragmentParser, FragmentRef, LightSourceReferenceFragment, StringReference, WResult,
+};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -41,7 +42,7 @@ impl FragmentParser for AmbientLightFragment {
     const TYPE_ID: u32 = 0x2a;
     const TYPE_NAME: &'static str = "AmbientLight";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], AmbientLightFragment> {
+    fn parse(input: &[u8]) -> WResult<AmbientLightFragment> {
         let (i, (name_reference, reference, flags, region_count)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32, le_u32))(input)?;
         let (remaining, regions) = count(le_u32, region_count as usize)(i)?;

@@ -1,10 +1,9 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, LightSourceFragment, StringReference};
+use super::{Fragment, FragmentParser, FragmentRef, LightSourceFragment, StringReference, WResult};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -30,7 +29,7 @@ impl FragmentParser for LightSourceReferenceFragment {
     const TYPE_ID: u32 = 0x1c;
     const TYPE_NAME: &'static str = "LightSource";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], LightSourceReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<LightSourceReferenceFragment> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
