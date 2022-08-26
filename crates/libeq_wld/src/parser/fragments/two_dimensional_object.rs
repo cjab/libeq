@@ -3,13 +3,12 @@ use std::any::Any;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i32, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use super::common::{RenderInfo, RenderMethod};
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
@@ -94,7 +93,7 @@ impl FragmentParser for TwoDimensionalObjectFragment {
     const TYPE_ID: u32 = 0x06;
     const TYPE_NAME: &'static str = "TwoDimensionalObject";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], TwoDimensionalObjectFragment> {
+    fn parse(input: &[u8]) -> WResult<TwoDimensionalObjectFragment> {
         let (i, (name_reference, flags, num_frames, num_pitches, sprite_size, sphere_fragment)) =
             tuple((
                 StringReference::parse,
@@ -224,7 +223,7 @@ impl SpriteFlags {
     const SKIP_FRAMES: u32 = 0x40;
     const HAS_DEPTH_SCALE: u32 = 0x80;
 
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }
@@ -284,7 +283,7 @@ pub struct SpritePitch {
 }
 
 impl SpritePitch {
-    fn parse(num_frames: u32, input: &[u8]) -> IResult<&[u8], SpritePitch> {
+    fn parse(num_frames: u32, input: &[u8]) -> WResult<SpritePitch> {
         let (i, (pitch_cap, num_headings)) = tuple((le_i32, le_u32))(input)?;
         let (remaining, headings) = count(
             |input| SpriteHeading::parse(num_frames, input),
@@ -333,7 +332,7 @@ pub struct SpriteHeading {
 }
 
 impl SpriteHeading {
-    fn parse(num_frames: u32, input: &[u8]) -> IResult<&[u8], SpriteHeading> {
+    fn parse(num_frames: u32, input: &[u8]) -> WResult<SpriteHeading> {
         let (remaining, (heading_cap, frames)) =
             tuple((le_u32, count(le_u32, num_frames as usize)))(input)?;
         Ok((

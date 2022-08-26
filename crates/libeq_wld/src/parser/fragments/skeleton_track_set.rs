@@ -1,11 +1,10 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -68,7 +67,7 @@ impl FragmentParser for SkeletonTrackSetFragment {
     const TYPE_ID: u32 = 0x10;
     const TYPE_NAME: &'static str = "SkeletonTrackSet";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], SkeletonTrackSetFragment> {
+    fn parse(input: &[u8]) -> WResult<SkeletonTrackSetFragment> {
         let (i, (name_reference, flags, entry_count, fragment)) =
             tuple((StringReference::parse, le_u32, le_u32, le_u32))(input)?;
 
@@ -176,7 +175,7 @@ pub struct SkeletonTrackSetFragmentEntry {
 }
 
 impl SkeletonTrackSetFragmentEntry {
-    fn parse(input: &[u8]) -> IResult<&[u8], SkeletonTrackSetFragmentEntry> {
+    fn parse(input: &[u8]) -> WResult<SkeletonTrackSetFragmentEntry> {
         let (i, (name_reference, flags, fragment1, fragment2, data_entry_count)) =
             tuple((le_u32, le_u32, le_u32, le_u32, le_u32))(input)?;
 

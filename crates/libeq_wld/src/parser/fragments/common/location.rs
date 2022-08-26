@@ -1,5 +1,6 @@
+use super::WResult;
+
 use nom::number::complete::{le_f32, le_u32};
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -45,7 +46,7 @@ pub struct Location {
 }
 
 impl Location {
-    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    pub fn parse(input: &[u8]) -> WResult<Self> {
         let (i, x) = le_f32(input)?;
         let (i, y) = le_f32(i)?;
         let (i, z) = le_f32(i)?;

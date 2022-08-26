@@ -1,11 +1,10 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 use crate::parser::strings::{decode_string, encode_string};
 
 use nom::multi::count;
 use nom::number::complete::{le_u16, le_u32, le_u8};
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -31,7 +30,7 @@ impl FragmentParser for TextureImagesFragment {
     const TYPE_ID: u32 = 0x03;
     const TYPE_NAME: &'static str = "TextureImages";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], TextureImagesFragment> {
+    fn parse(input: &[u8]) -> WResult<TextureImagesFragment> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, size1) = le_u32(i)?;
         // TODO: This is hardcoded to one entry, is this all we need?
@@ -95,7 +94,7 @@ pub struct TextureImagesFragmentEntry {
 }
 
 impl TextureImagesFragmentEntry {
-    fn parse(input: &[u8]) -> IResult<&[u8], TextureImagesFragmentEntry> {
+    fn parse(input: &[u8]) -> WResult<TextureImagesFragmentEntry> {
         let (i, name_length) = le_u16(input)?;
         let (remaining, file_name) = count(le_u8, name_length as usize)(i)?;
         Ok((

@@ -1,9 +1,8 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::number::complete::le_f32;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -25,7 +24,7 @@ impl FragmentParser for ZoneUnknownFragment {
     const TYPE_ID: u32 = 0x16;
     const TYPE_NAME: &'static str = "ZoneUnknown";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (remaining, radius) = le_f32(i)?;
 

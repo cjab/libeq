@@ -17,6 +17,7 @@ nom = "7.1.1"
 num-traits = "0.2"
 num-derive = "0.3"
 encoding_rs = "0.8"
+itertools = "0.10.3"
 serde = { version = "1", features = ["derive"], optional = true }
 
 [features]

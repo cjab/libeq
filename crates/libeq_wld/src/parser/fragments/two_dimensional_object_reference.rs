@@ -1,10 +1,11 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, StringReference, TwoDimensionalObjectFragment};
+use super::{
+    Fragment, FragmentParser, FragmentRef, StringReference, TwoDimensionalObjectFragment, WResult,
+};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -30,7 +31,7 @@ impl FragmentParser for TwoDimensionalObjectReferenceFragment {
     const TYPE_ID: u32 = 0x07;
     const TYPE_NAME: &'static str = "TwoDimensionalObjectReference";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], TwoDimensionalObjectReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<TwoDimensionalObjectReferenceFragment> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((

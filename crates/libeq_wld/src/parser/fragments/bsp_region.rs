@@ -1,12 +1,11 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, MeshFragment, StringReference};
+use super::{Fragment, FragmentParser, FragmentRef, MeshFragment, StringReference, WResult};
 
 use nom::combinator::map;
 use nom::multi::count;
 use nom::number::complete::{le_u16, le_u32, le_u8};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -94,7 +93,7 @@ impl FragmentParser for BspRegionFragment {
     const TYPE_ID: u32 = 0x22;
     const TYPE_NAME: &'static str = "BspRegion";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragment> {
+    fn parse(input: &[u8]) -> WResult<BspRegionFragment> {
         let (
             i,
             (
@@ -250,7 +249,7 @@ pub struct BspRegionFragmentData3Entry {
 }
 
 impl BspRegionFragmentData3Entry {
-    fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentData3Entry> {
+    fn parse(input: &[u8]) -> WResult<BspRegionFragmentData3Entry> {
         let (i, (flags, size1)) = tuple((le_u32, le_u32))(input)?;
         let (i, data1) = count(le_u32, size1 as usize)(i)?;
 
@@ -325,7 +324,7 @@ pub struct BspRegionFragmentData4Entry {
 }
 
 impl BspRegionFragmentData4Entry {
-    fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentData4Entry> {
+    fn parse(input: &[u8]) -> WResult<BspRegionFragmentData4Entry> {
         let (i, (flags, params1, type_field)) = tuple((le_u32, le_u32, le_u32))(input)?;
 
         let (i, params2a) = if type_field > 7 {
@@ -393,7 +392,7 @@ pub struct BspRegionFragmentData5Entry {
 }
 
 impl BspRegionFragmentData5Entry {
-    fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentData5Entry> {
+    fn parse(input: &[u8]) -> WResult<BspRegionFragmentData5Entry> {
         let (remaining, (params1, params2, params3, params4, params5)) = tuple((
             tuple((le_u32, le_u32, le_u32)),
             le_u32,
@@ -475,7 +474,7 @@ pub struct BspRegionFragmentPVS {
 }
 
 impl BspRegionFragmentPVS {
-    fn parse(input: &[u8]) -> IResult<&[u8], BspRegionFragmentPVS> {
+    fn parse(input: &[u8]) -> WResult<BspRegionFragmentPVS> {
         let (i, size) = le_u16(input)?;
         let (remaining, data) = count(le_u8, size as usize)(i)?;
 

@@ -1,9 +1,10 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, LightSourceReferenceFragment, StringReference};
+use super::{
+    Fragment, FragmentParser, FragmentRef, LightSourceReferenceFragment, StringReference, WResult,
+};
 
 use nom::number::complete::{le_f32, le_u32};
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -41,7 +42,7 @@ impl FragmentParser for LightInfoFragment {
     const TYPE_ID: u32 = 0x28;
     const TYPE_NAME: &'static str = "LightInfo";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, reference) = FragmentRef::parse(i)?;
         let (i, flags) = PointLightFlags::parse(i)?;
@@ -101,7 +102,7 @@ impl PointLightFlags {
     const STATIC_INFLUENCE: u32 = 0x40;
     const HAS_REGIONS: u32 = 0x80;
 
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

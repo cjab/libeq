@@ -1,11 +1,12 @@
 use std::any::Any;
 use std::fmt;
 
-use super::{Fragment, FragmentParser, FragmentRef, StringReference, TextureReferenceFragment};
+use super::{
+    Fragment, FragmentParser, FragmentRef, StringReference, TextureReferenceFragment, WResult,
+};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -23,7 +24,7 @@ impl TransparencyFlags {
     /// Found on materials using 'stumpbark' texture - unknown meaning
     /// const UNKNOWN_STUMP_BARK: u32 = 0x540;
 
-    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    pub fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }
@@ -114,7 +115,7 @@ impl FragmentParser for MaterialFragment {
     const TYPE_ID: u32 = 0x30;
     const TYPE_NAME: &'static str = "Material";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], MaterialFragment> {
+    fn parse(input: &[u8]) -> WResult<MaterialFragment> {
         let (i, (name_reference, flags, transparency_flags, params2, mask_color_coord, reference)) =
             tuple((
                 StringReference::parse,

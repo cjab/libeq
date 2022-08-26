@@ -1,7 +1,8 @@
+use super::WResult;
+
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
@@ -51,7 +52,7 @@ pub struct RenderInfo {
 }
 
 impl RenderInfo {
-    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    pub fn parse(input: &[u8]) -> WResult<Self> {
         let (i, flags) = RenderInfoFlags::parse(input)?;
         let (i, pen) = if flags.has_pen() {
             le_u32(i).map(|(i, p2)| (i, Some(p2)))?
@@ -133,7 +134,7 @@ impl RenderInfoFlags {
         Self(flags)
     }
 
-    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    pub fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }
@@ -180,7 +181,7 @@ pub struct UvInfo {
 }
 
 impl UvInfo {
-    fn parse(input: &[u8]) -> IResult<&[u8], UvInfo> {
+    fn parse(input: &[u8]) -> WResult<UvInfo> {
         let (i, uv_origin) = tuple((le_f32, le_f32, le_f32))(input)?;
         let (i, u_axis) = tuple((le_f32, le_f32, le_f32))(i)?;
         let (i, v_axis) = tuple((le_f32, le_f32, le_f32))(i)?;
@@ -219,7 +220,7 @@ pub struct UvMap {
 }
 
 impl UvMap {
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (i, entry_count) = le_u32(input)?;
         let (i, entries) = count(tuple((le_f32, le_f32)), entry_count as usize)(i)?;
 
@@ -254,7 +255,7 @@ impl RenderMethod {
         Self(flags)
     }
 
-    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    pub fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

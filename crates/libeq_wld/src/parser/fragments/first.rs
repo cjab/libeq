@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, StringReference};
-
-use nom::IResult;
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -21,7 +19,7 @@ impl FragmentParser for FirstFragment {
     const TYPE_ID: u32 = 0x35;
     const TYPE_NAME: &'static str = "First";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], FirstFragment> {
+    fn parse(input: &[u8]) -> WResult<FirstFragment> {
         let (remainder, name_reference) = StringReference::parse(input)?;
         Ok((remainder, FirstFragment { name_reference }))
     }
