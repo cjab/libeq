@@ -1,11 +1,10 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, MobSkeletonPieceTrackFragment, StringReference,
+    Fragment, FragmentParser, FragmentRef, MobSkeletonPieceTrackFragment, StringReference, WResult,
 };
 
 use nom::number::complete::le_u32;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -33,7 +32,7 @@ impl FragmentParser for MobSkeletonPieceTrackReferenceFragment {
     const TYPE_ID: u32 = 0x13;
     const TYPE_NAME: &'static str = "MobSkeletonPieceTrackReference";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], MobSkeletonPieceTrackReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<MobSkeletonPieceTrackReferenceFragment> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, reference) = FragmentRef::parse(i)?;
         let (i, flags) = TrackInstanceFlags::parse(i)?;
@@ -88,7 +87,7 @@ impl TrackInstanceFlags {
     const REVERSE: u32 = 0x02;
     const INTERPOLATE: u32 = 0x04;
 
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

@@ -11,11 +11,14 @@ use std::path::Path;
 use std::{error::Error, io};
 
 use clap::{arg, value_parser, Command, ValueEnum};
+use colorful::Color;
+use colorful::Colorful;
+use hexyl::Printer;
 use termion::{input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{backend::TermionBackend, Terminal};
 
 use crate::{app::App, event::Events};
-use libeq_wld::parser::{self, WldDoc};
+use libeq_wld::parser::{self, WldDoc, WldDocError};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 enum Format {
@@ -93,7 +96,67 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn print_error(error: &WldDocError) -> Result<(), std::io::Error> {
+    let mut out = io::stdout();
+    match error {
+        WldDocError::Parse { message, .. } => {
+            write!(out, "{}", message)?;
+        }
+        WldDocError::ParseFragment {
+            index,
+            offset,
+            header,
+            message,
+        } => {
+            write!(out, "\n{}\n", "Failed Fragment".color(Color::Red))?;
+            write!(out, "{}", message.clone().color(Color::LightPink1))?;
+            write!(
+                out,
+                "\n{} 0x{:02x}, {} {}\n",
+                "type:".color(Color::Grey54),
+                header.fragment_type,
+                "index:".color(Color::Grey54),
+                index
+            )?;
+            let hex_offset = format!("0x{:02x}", offset).color(Color::DarkSeaGreen2);
+            let dec_offset = format!("{}", offset).color(Color::DarkSeaGreen2);
+            write!(
+                out,
+                "encountered at body offset: {} ({})\n",
+                hex_offset, dec_offset
+            )?;
+            write!(out, "Dumping fragment body...\n")?;
+            let mut hex_printer = Printer::new(&mut out, true, hexyl::BorderStyle::Unicode, true);
+            hex_printer.print_all(header.field_data).unwrap();
+        }
+        WldDocError::UnknownFragment { index, header } => {
+            write!(out, "\n{}\n", "Unknown Fragment".color(Color::Yellow))?;
+            write!(
+                out,
+                "{} 0x{:02x}, {} {}\n",
+                "type:".color(Color::Grey54),
+                header.fragment_type,
+                "index:".color(Color::Grey54),
+                index
+            )?;
+            write!(out, "Dumping fragment body...\n")?;
+            let mut hex_printer = Printer::new(&mut out, true, hexyl::BorderStyle::Unicode, true);
+            hex_printer.print_all(header.field_data).unwrap();
+        }
+    }
+    Ok(())
+}
+
 fn explore(wld_filename: &str) -> Result<(), Box<dyn Error>> {
+    let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
+    let wld_doc = parser::WldDoc::parse(&wld_data)
+        .map_err(|e| {
+            for error in e.iter() {
+                print_error(error).unwrap();
+            }
+        })
+        .expect("Could not read wld file");
+
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
     let stdout = AlternateScreen::from(stdout);
@@ -102,8 +165,6 @@ fn explore(wld_filename: &str) -> Result<(), Box<dyn Error>> {
 
     let events = Events::new();
 
-    let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
-    let (_, wld_doc) = parser::WldDoc::parse(&wld_data).expect("Could not read wld file");
     let mut app = App::new(wld_doc);
 
     loop {
@@ -121,9 +182,7 @@ fn explore(wld_filename: &str) -> Result<(), Box<dyn Error>> {
 
 fn extract(wld_filename: &str, destination: &str, format: &Format) {
     let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
-    let wld_doc = WldDoc::parse(&wld_data)
-        .expect("Could not parse wld file")
-        .1;
+    let wld_doc = WldDoc::parse(&wld_data).expect("Could not parse wld file");
     match format {
         Format::Raw => extract_raw(wld_filename, destination),
         Format::Json => {
@@ -147,7 +206,7 @@ fn extract_raw(wld_filename: &str, destination: &str) {
     let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
     let (_, raw_fragments) =
         WldDoc::dump_raw_fragments(&wld_data).expect("Could not read wld file");
-    let (_, wld) = WldDoc::parse(&wld_data).unwrap();
+    let wld = WldDoc::parse(&wld_data).unwrap();
 
     let header_path = Path::new(destination).join("0000--header.bin");
     let mut file = File::create(&header_path).expect(&format!("Failed to create header file"));
@@ -173,7 +232,7 @@ fn create(source: &str, wld_filename: &str, format: &Format) {
             reader
                 .read_to_end(&mut buff)
                 .expect("Could not read source file");
-            WldDoc::parse(&buff).unwrap().1;
+            WldDoc::parse(&buff).unwrap();
             todo!("Implement create from raw")
         }
         Format::Json => serde_json::from_reader(reader).expect("Could not deserialize from json"),

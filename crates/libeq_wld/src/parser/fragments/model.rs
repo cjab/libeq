@@ -1,11 +1,10 @@
 use std::any::Any;
 
 use super::common::Location;
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -62,7 +61,7 @@ impl FragmentParser for ModelFragment {
     const TYPE_ID: u32 = 0x14;
     const TYPE_NAME: &'static str = "Model";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], ModelFragment> {
+    fn parse(input: &[u8]) -> WResult<ModelFragment> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = ActorDefFlags::parse(i)?;
         let (i, callback_name_reference) = StringReference::parse(i)?;
@@ -153,7 +152,7 @@ impl ActorDefFlags {
     const ACTIVE_GEOMETRY: u32 = 0x40;
     const SPRITE_VOLUME_ONLY: u32 = 0x80;
 
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }
@@ -192,7 +191,7 @@ pub struct Action {
 }
 
 impl Action {
-    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    pub fn parse(input: &[u8]) -> WResult<Self> {
         let (i, levels_of_detail_count) = le_u32(input)?;
         let (i, unknown) = le_u32(i)?;
         let (i, levels_of_detail_distances) = count(le_f32, levels_of_detail_count as usize)(i)?;

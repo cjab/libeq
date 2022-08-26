@@ -1,9 +1,10 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, PolygonAnimationFragment, StringReference};
+use super::{
+    Fragment, FragmentParser, FragmentRef, PolygonAnimationFragment, StringReference, WResult,
+};
 
 use nom::number::complete::{le_f32, le_u32};
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -33,7 +34,7 @@ impl FragmentParser for PolygonAnimationReferenceFragment {
     const TYPE_ID: u32 = 0x18;
     const TYPE_NAME: &'static str = "PolygonAnimationReference";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], PolygonAnimationReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<PolygonAnimationReferenceFragment> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, reference) = FragmentRef::parse(i)?;
         let (i, flags) = PolyhedronFlags::parse(i)?;
@@ -88,7 +89,7 @@ pub struct PolyhedronFlags(u32);
 impl PolyhedronFlags {
     const HAS_SCALE_FACTOR: u32 = 0x01;
 
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

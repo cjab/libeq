@@ -1,12 +1,11 @@
 use std::any::Any;
 use std::fmt;
 
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -64,7 +63,7 @@ impl FragmentParser for LightSourceFragment {
     const TYPE_ID: u32 = 0x1b;
     const TYPE_NAME: &'static str = "LightSource";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], LightSourceFragment> {
+    fn parse(input: &[u8]) -> WResult<LightSourceFragment> {
         let (i, (name_reference, flags, frame_count)) =
             tuple((StringReference::parse, LightSourceFlags::parse, le_u32))(input)?;
 
@@ -157,7 +156,7 @@ impl LightSourceFlags {
     const SKIP_FRAMES: u32 = 0x08;
     const HAS_COLOR: u32 = 0x10;
 
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

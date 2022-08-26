@@ -1,12 +1,11 @@
 use std::any::Any;
 
 use super::common::{RenderInfo, RenderMethod};
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -54,7 +53,7 @@ impl FragmentParser for CameraFragment {
     const TYPE_ID: u32 = 0x08;
     const TYPE_NAME: &'static str = "Camera";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], CameraFragment> {
+    fn parse(input: &[u8]) -> WResult<CameraFragment> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = ThreeDSpriteFlags::parse(i)?;
         let (i, vertex_count) = le_u32(i)?;
@@ -149,7 +148,7 @@ pub struct BspNodeEntry {
 }
 
 impl BspNodeEntry {
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (i, vertex_count) = le_u32(input)?;
         let (i, front_tree) = le_u32(i)?;
         let (i, back_tree) = le_u32(i)?;
@@ -195,7 +194,7 @@ impl ThreeDSpriteFlags {
     const HAS_CENTER_OFFSET: u32 = 0x01;
     const HAS_BOUNDING_RADIUS: u32 = 0x02;
 
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

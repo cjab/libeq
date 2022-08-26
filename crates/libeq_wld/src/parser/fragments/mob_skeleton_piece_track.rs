@@ -1,10 +1,9 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_i16, le_u32};
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -76,7 +75,7 @@ impl FragmentParser for MobSkeletonPieceTrackFragment {
     const TYPE_ID: u32 = 0x12;
     const TYPE_NAME: &'static str = "MobSkeletonPieceTrack";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], MobSkeletonPieceTrackFragment> {
+    fn parse(input: &[u8]) -> WResult<MobSkeletonPieceTrackFragment> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, frame_count) = le_u32(i)?;
@@ -177,7 +176,7 @@ pub struct FrameTransform {
 }
 
 impl FrameTransform {
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (i, rotate_denominator) = le_i16(input)?;
         let (i, rotate_x_numerator) = le_i16(i)?;
         let (i, rotate_y_numerator) = le_i16(i)?;

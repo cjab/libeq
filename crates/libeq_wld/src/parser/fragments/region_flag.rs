@@ -1,11 +1,10 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_u32, le_u8};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -59,7 +58,7 @@ impl FragmentParser for RegionFlagFragment {
     const TYPE_ID: u32 = 0x29;
     const TYPE_NAME: &'static str = "RegionFlag";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], RegionFlagFragment> {
+    fn parse(input: &[u8]) -> WResult<RegionFlagFragment> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, region_count) = le_u32(i)?;
