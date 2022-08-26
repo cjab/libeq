@@ -3,7 +3,6 @@ use std::any::Any;
 use super::{Fragment, FragmentParser, FragmentRef, PolygonAnimationFragment, StringReference};
 
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 use nom::IResult;
 
 #[cfg(feature = "serde")]
@@ -22,10 +21,10 @@ pub struct PolygonAnimationReferenceFragment {
 
     /// _Unknown_
     /// * bit 0 - If set `params1` exists.
-    pub flags: u32,
+    pub flags: PolyhedronFlags,
 
     /// _Unknown_
-    pub params1: Option<f32>,
+    pub scale_factor: Option<f32>,
 }
 
 impl FragmentParser for PolygonAnimationReferenceFragment {
@@ -35,22 +34,22 @@ impl FragmentParser for PolygonAnimationReferenceFragment {
     const TYPE_NAME: &'static str = "PolygonAnimationReference";
 
     fn parse(input: &[u8]) -> IResult<&[u8], PolygonAnimationReferenceFragment> {
-        let (i, (name_reference, reference, flags)) =
-            tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
-
-        let (remaining, params1) = if (flags & 0x1) == 0x1 {
-            le_f32(i).map(|(rem, f)| (rem, Some(f)))?
+        let (i, name_reference) = StringReference::parse(input)?;
+        let (i, reference) = FragmentRef::parse(i)?;
+        let (i, flags) = PolyhedronFlags::parse(i)?;
+        let (i, scale_factor) = if flags.has_scale_factor() {
+            le_f32(i).map(|(i, s)| (i, Some(s)))?
         } else {
             (i, None)
         };
 
         Ok((
-            remaining,
-            PolygonAnimationReferenceFragment {
+            i,
+            Self {
                 name_reference,
                 reference,
                 flags,
-                params1,
+                scale_factor,
             },
         ))
     }
@@ -61,8 +60,10 @@ impl Fragment for PolygonAnimationReferenceFragment {
         [
             &self.name_reference.into_bytes()[..],
             &self.reference.into_bytes()[..],
-            &self.flags.to_le_bytes()[..],
-            &self.params1.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self.flags.into_bytes()[..],
+            &self
+                .scale_factor
+                .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
         ]
         .concat()
     }
@@ -80,6 +81,27 @@ impl Fragment for PolygonAnimationReferenceFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+pub struct PolyhedronFlags(u32);
+
+impl PolyhedronFlags {
+    const HAS_SCALE_FACTOR: u32 = 0x01;
+
+    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+        let (remaining, raw_flags) = le_u32(input)?;
+        Ok((remaining, Self(raw_flags)))
+    }
+
+    fn into_bytes(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
+    }
+
+    pub fn has_scale_factor(&self) -> bool {
+        self.0 & Self::HAS_SCALE_FACTOR == Self::HAS_SCALE_FACTOR
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -91,8 +113,8 @@ mod tests {
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(0x058a));
-        assert_eq!(frag.flags, 0);
-        assert_eq!(frag.params1, None);
+        assert_eq!(frag.flags, PolyhedronFlags(0));
+        assert_eq!(frag.scale_factor, None);
     }
 
     #[test]

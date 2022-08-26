@@ -43,14 +43,14 @@ pub struct RegionFlagFragment {
     pub regions: Vec<u32>,
 
     /// The number of bytes following in the `data2` field.
-    pub size2: u32,
+    pub user_data_size: u32,
 
     /// An encoded string. An alternate way of using this fragment is to call this fragment
     /// Z####_ZONE, where #### is a four- digit number starting with zero. Then Data2 would
     /// contain a “magic” string that told the client what was special about the included
     /// regions (e.g. WTN__01521000000000000000000000___000000000000). This field is padded
     /// with nulls to make it end on a DWORD boundary.
-    pub data2: Vec<u8>,
+    pub user_data: Vec<u8>,
 }
 
 impl FragmentParser for RegionFlagFragment {
@@ -60,23 +60,24 @@ impl FragmentParser for RegionFlagFragment {
     const TYPE_NAME: &'static str = "RegionFlag";
 
     fn parse(input: &[u8]) -> IResult<&[u8], RegionFlagFragment> {
-        let (i, (name_reference, flags, region_count)) =
-            tuple((StringReference::parse, le_u32, le_u32))(input)?;
-        let (i, (regions, size2)) = tuple((count(le_u32, region_count as usize), le_u32))(i)?;
-
-        let padding = (4 - size2 % 4) % 4;
-        let size2_with_padding = size2 + padding;
-        let (remaining, data2) = count(le_u8, size2_with_padding as usize)(i)?;
+        let (i, name_reference) = StringReference::parse(input)?;
+        let (i, flags) = le_u32(i)?;
+        let (i, region_count) = le_u32(i)?;
+        let (i, regions) = count(le_u32, region_count as usize)(i)?;
+        let (i, user_data_size) = le_u32(i)?;
+        let padding = (4 - user_data_size % 4) % 4;
+        let user_data_size_with_padding = user_data_size + padding;
+        let (i, user_data) = count(le_u8, user_data_size_with_padding as usize)(i)?;
 
         Ok((
-            remaining,
+            i,
             RegionFlagFragment {
                 name_reference,
                 flags,
                 region_count,
                 regions,
-                size2,
-                data2,
+                user_data_size,
+                user_data,
             },
         ))
     }
@@ -93,9 +94,9 @@ impl Fragment for RegionFlagFragment {
                 .iter()
                 .flat_map(|r| r.to_le_bytes())
                 .collect::<Vec<_>>()[..],
-            &self.size2.to_le_bytes()[..],
+            &self.user_data_size.to_le_bytes()[..],
             &self
-                .data2
+                .user_data
                 .iter()
                 .flat_map(|d| d.to_le_bytes())
                 .collect::<Vec<_>>()[..],
@@ -129,8 +130,8 @@ mod tests {
         assert_eq!(frag.flags, 0x0);
         assert_eq!(frag.region_count, 2);
         assert_eq!(frag.regions, vec![2859, 2865]);
-        assert_eq!(frag.size2, 0);
-        assert_eq!(frag.data2, vec![]);
+        assert_eq!(frag.user_data_size, 0);
+        assert_eq!(frag.user_data, vec![]);
     }
 
     #[test]

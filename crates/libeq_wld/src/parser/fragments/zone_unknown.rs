@@ -2,7 +2,7 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, StringReference};
 
-use nom::number::complete::le_i32;
+use nom::number::complete::le_f32;
 use nom::IResult;
 
 #[cfg(feature = "serde")]
@@ -10,13 +10,13 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-/// _Unknown_
+/// SPHERE fragment
 ///
 /// **Type ID:** 0x16
 pub struct ZoneUnknownFragment {
     pub name_reference: StringReference,
 
-    pub unknown: i32,
+    pub radius: f32,
 }
 
 impl FragmentParser for ZoneUnknownFragment {
@@ -25,14 +25,15 @@ impl FragmentParser for ZoneUnknownFragment {
     const TYPE_ID: u32 = 0x16;
     const TYPE_NAME: &'static str = "ZoneUnknown";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], ZoneUnknownFragment> {
+    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
         let (i, name_reference) = StringReference::parse(input)?;
-        let (remaining, unknown) = le_i32(i)?;
+        let (remaining, radius) = le_f32(i)?;
+
         Ok((
             remaining,
-            ZoneUnknownFragment {
+            Self {
                 name_reference,
-                unknown,
+                radius,
             },
         ))
     }
@@ -42,7 +43,7 @@ impl Fragment for ZoneUnknownFragment {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
-            &self.unknown.to_le_bytes()[..],
+            &self.radius.to_le_bytes()[..],
         ]
         .concat()
     }

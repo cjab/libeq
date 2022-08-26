@@ -43,12 +43,11 @@ pub struct RenderInfo {
     /// Corresponds to UVORIGIN, UAXIS, and VAXIS in RENDERINFO
     pub uv_info: Option<UvInfo>,
 
+    /// Windcatcher:
     /// _Unknown_ - Only exists if bit 5 of `renderinfo_flags` is set.
-    pub params7_size: Option<u32>,
-
-    /// _Unknown_ - Only exists if bit 5 of `renderinfo_flags` is set.
-    /// `params7_size` * 2 entries.
-    pub params7_data: Option<Vec<u32>>,
+    /// NEW:
+    /// Corresponds to UV entries in RENDERINFO
+    pub uv_map: Option<UvMap>,
 }
 
 impl RenderInfo {
@@ -79,22 +78,10 @@ impl RenderInfo {
         } else {
             (i, None)
         };
-        // TODO: This seems wrong.
-        let (i, params7_size) = if flags.unknown_flag() {
-            le_u32(i).map(|(i, s)| (i, Some(s)))?
+        let (i, uv_map) = if flags.has_uv_map() {
+            UvMap::parse(i).map(|(i, s)| (i, Some(s)))?
         } else {
             (i, None)
-        };
-        // TODO: This seems wrong.
-        let (i, params7_data) = match params7_size {
-            Some(size) => {
-                if flags.is_two_sided() && params7_size.is_some() {
-                    count(le_u32, (size * 2) as usize)(i).map(|(i, d)| (i, Some(d)))?
-                } else {
-                    (i, None)
-                }
-            }
-            _ => (i, None),
         };
 
         Ok((
@@ -106,8 +93,7 @@ impl RenderInfo {
                 scaled_ambient,
                 simple_sprite_reference,
                 uv_info,
-                params7_size,
-                params7_data,
+                uv_map,
             },
         ))
     }
@@ -124,12 +110,7 @@ impl RenderInfo {
                 .simple_sprite_reference
                 .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
             &self.uv_info.as_ref().map_or(vec![], |u| u.into_bytes())[..],
-            &self
-                .params7_size
-                .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
-            &self.params7_data.as_ref().map_or(vec![], |p| {
-                p.iter().flat_map(|x| x.to_le_bytes().to_vec()).collect()
-            })[..],
+            &self.uv_map.as_ref().map_or(vec![], |u| u.into_bytes())[..],
         ]
         .concat()
     }
@@ -145,7 +126,7 @@ impl RenderInfoFlags {
     const HAS_SCALED_AMBIENT: u32 = 0x04;
     const HAS_SIMPLE_SPRITE: u32 = 0x08;
     const HAS_UV_INFO: u32 = 0x10;
-    const UNKNOWN: u32 = 0x20;
+    const HAS_UV_MAP: u32 = 0x20;
     const IS_TWO_SIDED: u32 = 0x40;
 
     pub fn new(flags: u32) -> Self {
@@ -181,8 +162,8 @@ impl RenderInfoFlags {
         self.0 & Self::HAS_UV_INFO == Self::HAS_UV_INFO
     }
 
-    pub fn unknown_flag(&self) -> bool {
-        self.0 & Self::UNKNOWN == Self::UNKNOWN
+    pub fn has_uv_map(&self) -> bool {
+        self.0 & Self::HAS_UV_MAP == Self::HAS_UV_MAP
     }
 
     pub fn is_two_sided(&self) -> bool {
@@ -225,6 +206,40 @@ impl UvInfo {
             &self.v_axis.0.to_le_bytes()[..],
             &self.v_axis.1.to_le_bytes()[..],
             &self.v_axis.2.to_le_bytes()[..],
+        ]
+        .concat()
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+pub struct UvMap {
+    pub entry_count: u32,
+    pub entries: Vec<(f32, f32)>,
+}
+
+impl UvMap {
+    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+        let (i, entry_count) = le_u32(input)?;
+        let (i, entries) = count(tuple((le_f32, le_f32)), entry_count as usize)(i)?;
+
+        Ok((
+            i,
+            UvMap {
+                entry_count,
+                entries,
+            },
+        ))
+    }
+
+    fn into_bytes(&self) -> Vec<u8> {
+        [
+            &self.entry_count.to_le_bytes()[..],
+            &self
+                .entries
+                .iter()
+                .flat_map(|(u, v)| [u.to_le_bytes(), v.to_le_bytes()].concat())
+                .collect::<Vec<_>>()[..],
         ]
         .concat()
     }
