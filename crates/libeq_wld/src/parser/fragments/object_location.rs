@@ -1,10 +1,9 @@
 use std::any::Any;
 
 use super::common::Location;
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::number::complete::{le_f32, le_i32, le_u32};
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -65,7 +64,7 @@ impl FragmentParser for ObjectLocationFragment {
     const TYPE_ID: u32 = 0x15;
     const TYPE_NAME: &'static str = "ObjectLocation";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], ObjectLocationFragment> {
+    fn parse(input: &[u8]) -> WResult<ObjectLocationFragment> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, actor_def_reference) = StringReference::parse(i)?;
         let (i, flags) = ActorInstFlags::parse(i)?;
@@ -164,7 +163,7 @@ impl ActorInstFlags {
     const ACTIVE: u32 = 0x20;
     const SPRITE_VOLUME_ONLY: u32 = 0x80;
 
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

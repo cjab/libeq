@@ -1,10 +1,9 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, StringReference, TextureFragment};
+use super::{Fragment, FragmentParser, FragmentRef, StringReference, TextureFragment, WResult};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -30,7 +29,7 @@ impl FragmentParser for TextureReferenceFragment {
     const TYPE_ID: u32 = 0x05;
     const TYPE_NAME: &'static str = "TextureReference";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], TextureReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<TextureReferenceFragment> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((

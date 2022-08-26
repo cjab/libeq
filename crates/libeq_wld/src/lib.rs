@@ -60,7 +60,7 @@ impl Wld {
     // FIXME: Handle errors, do not panic!
     fn load(data: &[u8]) -> Wld {
         match WldDoc::parse(&data[..]) {
-            Ok((_, wld_doc)) => Wld(wld_doc),
+            Ok(wld_doc) => Wld(wld_doc),
             Err(err) => panic!("Failed to parse Wld: {:?}", err),
         }
     }

@@ -1,11 +1,10 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_i16, le_u16, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -58,7 +57,7 @@ impl FragmentParser for MeshAnimatedVerticesFragment {
     const TYPE_ID: u32 = 0x37;
     const TYPE_NAME: &'static str = "MeshAnimatedVertices";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], MeshAnimatedVerticesFragment> {
+    fn parse(input: &[u8]) -> WResult<MeshAnimatedVerticesFragment> {
         let (i, (name_reference, flags, vertex_count, frame_count, param1, param2, scale)) =
             tuple((
                 StringReference::parse,

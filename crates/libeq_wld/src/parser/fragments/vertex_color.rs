@@ -1,11 +1,10 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -52,7 +51,7 @@ impl FragmentParser for VertexColorFragment {
     const TYPE_ID: u32 = 0x32;
     const TYPE_NAME: &'static str = "VertexColor";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], VertexColorFragment> {
+    fn parse(input: &[u8]) -> WResult<VertexColorFragment> {
         let (i, (name_reference, data1, vertex_color_count, data2, data3, data4)) =
             tuple((
                 StringReference::parse,

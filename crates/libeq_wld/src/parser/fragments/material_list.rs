@@ -1,11 +1,10 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, MaterialFragment, StringReference};
+use super::{Fragment, FragmentParser, FragmentRef, MaterialFragment, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -33,7 +32,7 @@ impl FragmentParser for MaterialListFragment {
     const TYPE_ID: u32 = 0x31;
     const TYPE_NAME: &'static str = "MaterialList";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], MaterialListFragment> {
+    fn parse(input: &[u8]) -> WResult<MaterialListFragment> {
         let (i, (name_reference, flags, size1)) =
             tuple((StringReference::parse, le_u32, le_u32))(input)?;
         let (remaining, fragments) = count(FragmentRef::parse, size1 as usize)(i)?;
