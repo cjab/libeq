@@ -32,7 +32,8 @@ pub struct Archive {
     pub header: Header,
     pub blocks: BTreeMap<usize, Block>,
     pub index_entries: Vec<IndexEntry>,
-    pub footer: Footer,
+    /// The footer does not seem to be present in all files (global_chr1.s3d for example).
+    pub footer: Option<Footer>,
 }
 
 impl Archive {
@@ -41,7 +42,12 @@ impl Archive {
         let (i, all_block_data) = take(header.index_offset - Header::SIZE as u32)(i)?;
         let (i, index_entry_count) = le_u32(i)?;
         let (i, index_entries) = count(IndexEntry::parse, index_entry_count as usize)(i)?;
-        let (i, footer) = Footer::parse(i)?;
+
+        let (i, footer) = if i.len() > 0 {
+            Footer::parse(i).map(|(i, f)| (i, Some(f)))?
+        } else {
+            (i, None)
+        };
 
         let (_, (_, blocks)) = fold_many0(
             Block::parse,
@@ -78,7 +84,7 @@ impl Archive {
             &block_bytes,
             &index_entry_count_bytes,
             &index_entry_bytes,
-            &self.footer.to_bytes(),
+            &self.footer.as_ref().map_or(vec![], |f| f.to_bytes())[..],
         ]
         .concat()
     }
@@ -114,10 +120,10 @@ mod tests {
         assert_eq!(archive.index_entries.len(), 41);
         assert_eq!(
             archive.footer,
-            Footer {
+            Some(Footer {
                 footer_string: b"STEVE".to_vec(),
                 timestamp: 0x5b28ad36,
-            },
+            }),
         );
     }
 
