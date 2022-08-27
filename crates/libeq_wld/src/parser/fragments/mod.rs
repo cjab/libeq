@@ -31,6 +31,7 @@ mod texture_images;
 mod texture_reference;
 mod two_dimensional_object;
 mod two_dimensional_object_reference;
+mod unknown_0x34;
 mod vertex_color;
 mod vertex_color_reference;
 mod zone_unknown;
@@ -78,6 +79,7 @@ pub use texture_images::*;
 pub use texture_reference::*;
 pub use two_dimensional_object::*;
 pub use two_dimensional_object_reference::*;
+pub use unknown_0x34::*;
 pub use vertex_color::*;
 pub use vertex_color_reference::*;
 pub use zone_unknown::*;
@@ -161,6 +163,7 @@ pub enum FragmentType {
     TextureReference(TextureReferenceFragment),
     TwoDimensionalObject(TwoDimensionalObjectFragment),
     TwoDimensionalObjectReference(TwoDimensionalObjectReferenceFragment),
+    Unknown0x34(Unknown0x34Fragment),
     VertexColor(VertexColorFragment),
     VertexColorReference(VertexColorReferenceFragment),
     ZoneUnknown(ZoneUnknownFragment),
@@ -203,6 +206,7 @@ impl Deref for FragmentType {
             Self::TextureReference(x) => x,
             Self::TwoDimensionalObject(x) => x,
             Self::TwoDimensionalObjectReference(x) => x,
+            Self::Unknown0x34(x) => x,
             Self::VertexColor(x) => x,
             Self::VertexColorReference(x) => x,
             Self::ZoneUnknown(x) => x,
