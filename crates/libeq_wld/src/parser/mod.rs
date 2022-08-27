@@ -447,6 +447,10 @@ impl<'a> FragmentHeader<'a> {
                 TextureImagesFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::TextureImages(f.1))),
             ),
+            Unknown0x34Fragment::TYPE_ID => Some(
+                Unknown0x34Fragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Unknown0x34(f.1))),
+            ),
             _ => None,
         };
 

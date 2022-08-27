@@ -117,6 +117,9 @@ fn draw_fragment<'a>(app: &'a App, fragment_type: &FragmentType) -> ListItem<'a>
             TwoDimensionalObjectFragment::TYPE_NAME,
             Color::Rgb(0x80, 0x80, 0x00),
         ),
+        FragmentType::Unknown0x34(_) => {
+            (Unknown0x34Fragment::TYPE_NAME, Color::Rgb(0x80, 0x50, 0x05))
+        }
         FragmentType::VertexColor(_) => {
             (VertexColorFragment::TYPE_NAME, Color::Rgb(0xdd, 0xa0, 0xdd))
         }
