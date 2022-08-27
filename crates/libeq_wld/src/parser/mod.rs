@@ -317,6 +317,14 @@ impl<'a> FragmentHeader<'a> {
                 AlternateMeshFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::AlternateMesh(f.1))),
             ),
+            BlitSpriteDefinitionFragment::TYPE_ID => Some(
+                BlitSpriteDefinitionFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::BlitSpriteDefinition(f.1))),
+            ),
+            BlitSpriteReferenceFragment::TYPE_ID => Some(
+                BlitSpriteReferenceFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::BlitSpriteReference(f.1))),
+            ),
             VertexColorReferenceFragment::TYPE_ID => Some(
                 VertexColorReferenceFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::VertexColorReference(f.1))),

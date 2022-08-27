@@ -1,5 +1,7 @@
 mod alternate_mesh;
 mod ambient_light;
+mod blit_sprite_definition;
+mod blit_sprite_reference;
 mod bsp_region;
 mod bsp_tree;
 mod camera;
@@ -46,6 +48,8 @@ use super::{StringReference, WResult};
 
 pub use alternate_mesh::*;
 pub use ambient_light::*;
+pub use blit_sprite_definition::*;
+pub use blit_sprite_reference::*;
 pub use bsp_region::*;
 pub use bsp_tree::*;
 pub use camera::*;
@@ -127,6 +131,8 @@ pub trait FragmentParser {
 pub enum FragmentType {
     AlternateMesh(AlternateMeshFragment),
     AmbientLight(AmbientLightFragment),
+    BlitSpriteDefinition(BlitSpriteDefinitionFragment),
+    BlitSpriteReference(BlitSpriteReferenceFragment),
     BspRegion(BspRegionFragment),
     BspTree(BspTreeFragment),
     Camera(CameraFragment),
@@ -167,6 +173,8 @@ impl Deref for FragmentType {
         match self {
             Self::AlternateMesh(x) => x,
             Self::AmbientLight(x) => x,
+            Self::BlitSpriteDefinition(x) => x,
+            Self::BlitSpriteReference(x) => x,
             Self::BspRegion(x) => x,
             Self::BspTree(x) => x,
             Self::Camera(x) => x,
