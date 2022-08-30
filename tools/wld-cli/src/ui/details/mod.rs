@@ -241,7 +241,42 @@ pub fn draw_fragment_fields<B>(
         FragmentType::TwoDimensionalObject(frag) => {
             draw_two_dimensional_object_fragment(f, app, layout_chunk, &frag);
         }
-        _ => {}
+        FragmentType::Unknown0x34(frag) => {
+            draw_unknown_0x34_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::BlitSpriteDefinition(frag) => {
+            draw_blit_sprite_definition_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::BlitSpriteReference(frag) => {
+            draw_blit_sprite_reference_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::AlternateMesh(frag) => {
+            draw_alternate_mesh_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::MeshAnimatedVertices(frag) => {
+            draw_mesh_animated_vertices_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::MeshAnimatedVerticesReference(frag) => {
+            draw_mesh_animated_vertices_reference_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::PolygonAnimation(frag) => {
+            draw_polygon_animation_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::PolygonAnimationReference(frag) => {
+            draw_polygon_animation_reference_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::First(frag) => {
+            draw_first_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::SkeletonTrackSetReference(frag) => {
+            draw_skeleton_track_set_reference_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::TwoDimensionalObjectReference(frag) => {
+            draw_two_dimensional_object_reference_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::ZoneUnknown(frag) => {
+            draw_zone_unknown_fragment(f, app, layout_chunk, &frag);
+        }
     }
 }
 
@@ -1278,6 +1313,425 @@ pub fn draw_two_dimensional_object_fragment<B>(
         Row::new(vec!["Scaled Ambient", &scaled_ambient]),
         Row::new(vec!["UV Info", &uv_info]),
         Row::new(vec!["UV Map", &uv_map]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_unknown_0x34_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::Unknown0x34Fragment,
+) where
+    B: Backend,
+{
+    let unknown_1 = format!("{}", fragment.unknown_1);
+    let unknown_2 = format!("{}", fragment.unknown_2);
+    let unknown_3 = format!("{}", fragment.unknown_3);
+    let unknown_4 = format!("{}", fragment.unknown_4);
+    let unknown_5 = format!("{}", fragment.unknown_5);
+    let unknown_6 = format!("{}", fragment.unknown_6);
+    let unknown_7 = format!("{}", fragment.unknown_7);
+    let unknown_8 = format!("{}", fragment.unknown_8);
+    let unknown_9 = format!("{}", fragment.unknown_9);
+    let unknown_10 = format!("{}", fragment.unknown_10);
+    let unknown_11 = format!("{}", fragment.unknown_11);
+    let unknown_12 = format!("{}", fragment.unknown_12);
+    let unknown_13 = format!("{}", fragment.unknown_13);
+    let unknown_14 = format!("{}", fragment.unknown_14);
+    let unknown_15 = format!("{}", fragment.unknown_15);
+    let unknown_16 = format!("{}", fragment.unknown_16);
+    let unknown_17 = format!("{}", fragment.unknown_17);
+    let unknown_18 = format!("{}", fragment.unknown_18);
+    let unknown_19 = format!("{}", fragment.unknown_19);
+    let unknown_20 = format!("{}", fragment.unknown_20);
+    let unknown_21 = format!("{}", fragment.unknown_21);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Unknown 1", &unknown_1]),
+        Row::new(vec!["Unknown 2", &unknown_2]),
+        Row::new(vec!["Unknown 3", &unknown_3]),
+        Row::new(vec!["Unknown 4", &unknown_4]),
+        Row::new(vec!["Unknown 5", &unknown_5]),
+        Row::new(vec!["Unknown 6", &unknown_6]),
+        Row::new(vec!["Unknown 7", &unknown_7]),
+        Row::new(vec!["Unknown 8", &unknown_8]),
+        Row::new(vec!["Unknown 9", &unknown_9]),
+        Row::new(vec!["Unknown 10", &unknown_10]),
+        Row::new(vec!["Unknown 11", &unknown_11]),
+        Row::new(vec!["Unknown 12", &unknown_12]),
+        Row::new(vec!["Unknown 13", &unknown_13]),
+        Row::new(vec!["Unknown 14", &unknown_14]),
+        Row::new(vec!["Unknown 15", &unknown_15]),
+        Row::new(vec!["Unknown 16", &unknown_16]),
+        Row::new(vec!["Unknown 17", &unknown_17]),
+        Row::new(vec!["Unknown 18", &unknown_18]),
+        Row::new(vec!["Unknown 19", &unknown_19]),
+        Row::new(vec!["Unknown 20", &unknown_20]),
+        Row::new(vec!["Unknown 21", &unknown_21]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_blit_sprite_definition_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::BlitSpriteDefinitionFragment,
+) where
+    B: Backend,
+{
+    let flags = format!("{:?}", fragment.flags);
+    let reference = format!("{:?}", fragment.blit_sprite_reference);
+    let unknown = format!("{}", fragment.unknown);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Flags", &flags]),
+        Row::new(vec!["Blit sprite ref", &reference]),
+        Row::new(vec!["Unknown", &unknown]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_blit_sprite_reference_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::BlitSpriteReferenceFragment,
+) where
+    B: Backend,
+{
+    let reference = format!("{:?}", fragment.blit_sprite_reference);
+    let unknown = format!("{}", fragment.unknown);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Blit sprite ref", &reference]),
+        Row::new(vec!["Unknown", &unknown]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+/// TODO: Incomplete
+pub fn draw_alternate_mesh_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::AlternateMeshFragment,
+) where
+    B: Backend,
+{
+    let flags = format!("{:?}", fragment.flags);
+
+    let table = Table::new(vec![Row::new(vec!["flags", &flags])])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default()),
+        )
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .widths(&TABLE_WIDTHS)
+        .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+/// TODO: Incomplete
+pub fn draw_mesh_animated_vertices_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::MeshAnimatedVerticesFragment,
+) where
+    B: Backend,
+{
+    let flags = format!("{:?}", fragment.flags);
+
+    let table = Table::new(vec![Row::new(vec!["flags", &flags])])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default()),
+        )
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .widths(&TABLE_WIDTHS)
+        .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_mesh_animated_vertices_reference_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::MeshAnimatedVerticesReferenceFragment,
+) where
+    B: Backend,
+{
+    let reference = format!("{:?}", fragment.reference);
+    let flags = format!("{:?}", fragment.flags);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Reference", &reference]),
+        Row::new(vec!["Flags", &flags]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+/// TODO: Incomplete
+pub fn draw_polygon_animation_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::PolygonAnimationFragment,
+) where
+    B: Backend,
+{
+    let flags = format!("{:?}", fragment.flags);
+
+    let table = Table::new(vec![Row::new(vec!["Flags", &flags])])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default()),
+        )
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .widths(&TABLE_WIDTHS)
+        .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_polygon_animation_reference_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::PolygonAnimationReferenceFragment,
+) where
+    B: Backend,
+{
+    let reference = format!("{:?}", fragment.reference);
+    let flags = format!("{:?}", fragment.flags);
+    let scale_factor = format!("{:?}", fragment.scale_factor);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Reference", &reference]),
+        Row::new(vec!["Flags", &flags]),
+        Row::new(vec!["Scale factor", &scale_factor]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_first_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::FirstFragment,
+) where
+    B: Backend,
+{
+    let table = Table::new(vec![])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default()),
+        )
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .widths(&TABLE_WIDTHS)
+        .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_skeleton_track_set_reference_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::SkeletonTrackSetReferenceFragment,
+) where
+    B: Backend,
+{
+    let reference = format!("{:?}", fragment.reference);
+    let params1 = format!("{:?}", fragment.params1);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Reference", &reference]),
+        Row::new(vec!["Params 1", &params1]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_zone_unknown_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::ZoneUnknownFragment,
+) where
+    B: Backend,
+{
+    let radius = format!("{:?}", fragment.radius);
+
+    let table = Table::new(vec![Row::new(vec!["Radius", &radius])])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default()),
+        )
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .widths(&TABLE_WIDTHS)
+        .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_two_dimensional_object_reference_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::TwoDimensionalObjectReferenceFragment,
+) where
+    B: Backend,
+{
+    let reference = format!("{:?}", fragment.reference);
+    let flags = format!("{:?}", fragment.flags);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Reference", &reference]),
+        Row::new(vec!["Flags", &flags]),
     ])
     .block(
         Block::default()
