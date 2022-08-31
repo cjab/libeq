@@ -1,11 +1,10 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, StringReference};
+use super::common::Location;
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
-use nom::number::complete::{le_f32, le_i32, le_u32, le_u8};
-use nom::sequence::tuple;
-use nom::IResult;
+use nom::number::complete::{le_f32, le_u32};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -18,56 +17,42 @@ use serde::{Deserialize, Serialize};
 pub struct ModelFragment {
     pub name_reference: StringReference,
 
-    /// Most flags are _unknown_.
-    /// * bit 0 - If set then `unknown_params1` exists.
-    /// * bit 1 - If set then `unknown_params2` exists.
-    /// * bit 7 - If unset then `unknown_fragment` must contain 0.
-    pub flags: u32,
+    pub flags: ActorDefFlags,
 
+    /// Windcatcher:
     /// This isn’t really a fragment reference but a string reference.
     /// It points to a “magic” string. When this fragment is used in main zone
     /// files the string is “FLYCAMCALLBACK”. When used as a placeable object reference,
     /// the string is “SPRITECALLBACK”. When creating a 0x14 fragment this is currently
     /// accomplished by creating a fragment reference, setting the fragment to null, and
     /// setting the reference name to the magic string.
-    pub name_fragment: StringReference,
+    pub callback_name_reference: StringReference,
 
-    /// Tells how many entries there are.
-    pub unknown_params2_count: u32,
+    /// Tells how many action entries there are.
+    pub action_count: u32,
 
     /// Tells how many fragment entries there are.
-    pub fragment_count: u32,
+    pub fragment_reference_count: u32,
 
-    /// _Unknown_
-    pub unknown_fragment: u32,
+    /// SPHERE, SPHERELIST, or POLYHEDRON reference (possibly others!)
+    pub bounds_reference: u32,
 
-    /// This seems to always contain 0. It seems to only be used in main zone files.
-    pub unknown_params1: Option<u32>,
+    pub current_action: Option<u32>,
 
-    /// These seem to always contain zeroes. They seem to only be used in main zone files.
-    /// There are `unknown_params2_count` of these.
-    pub unknown_params2: Option<Vec<u32>>,
+    pub location: Option<Location>,
 
-    /// Tells how many `unknown_data` pairs there are.
-    pub unknown_data_count: u32,
+    pub actions: Vec<Action>,
 
-    /// _Unknown_. There are `unknown_data_count` of these.
-    pub unknown_data: Vec<(i32, f32)>,
-
-    /// There are `fragment_count` fragment references here. These references can point to several different
+    /// There are `fragment_reference_count` fragment references here. These references can point to several different
     /// kinds of fragments. In main zone files, there seems to be only one entry, which points to
     /// a 0x09 Camera Reference fragment. When this is instead a static object reference, the entry
     /// points to either a 0x2D Mesh Reference fragment. If this is an animated (mob) object
     /// reference, it points to a 0x11 Skeleton Track Set Reference fragment.
     /// This also has been seen to point to a 0x07 Two-dimensional Object Reference fragment
     /// (e.g. coins and blood spots).
-    pub fragments: Vec<u32>,
+    pub fragment_references: Vec<u32>,
 
-    /// The number of bytes in the name field.
-    pub name_size: u32,
-
-    /// An encoded string. It's purpose and possible values are unknown.
-    pub name: Vec<u8>,
+    pub unknown: u32,
 }
 
 impl FragmentParser for ModelFragment {
@@ -76,65 +61,41 @@ impl FragmentParser for ModelFragment {
     const TYPE_ID: u32 = 0x14;
     const TYPE_NAME: &'static str = "Model";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], ModelFragment> {
-        let (
-            i,
-            (
-                name_reference,
-                flags,
-                name_fragment,
-                unknown_params2_count,
-                fragment_count,
-                unknown_fragment,
-            ),
-        ) = tuple((
-            StringReference::parse,
-            le_u32,
-            StringReference::parse,
-            le_u32,
-            le_u32,
-            le_u32,
-        ))(input)?;
-
-        let (i, unknown_params1) = if flags & 0x01 == 0x01 {
-            le_u32(i).map(|(i, params1)| (i, Some(params1)))?
+    fn parse(input: &[u8]) -> WResult<ModelFragment> {
+        let (i, name_reference) = StringReference::parse(input)?;
+        let (i, flags) = ActorDefFlags::parse(i)?;
+        let (i, callback_name_reference) = StringReference::parse(i)?;
+        let (i, action_count) = le_u32(i)?;
+        let (i, fragment_reference_count) = le_u32(i)?;
+        let (i, bounds_reference) = le_u32(i)?;
+        let (i, current_action) = if flags.has_current_action() {
+            le_u32(i).map(|(i, c)| (i, Some(c)))?
         } else {
             (i, None)
         };
-
-        let (i, unknown_params2) = if flags & 0x02 == 0x02 {
-            count(le_u32, unknown_params2_count as usize)(i)
-                .map(|(i, params2)| (i, Some(params2)))?
+        let (i, location) = if flags.has_location() {
+            Location::parse(i).map(|(i, l)| (i, Some(l)))?
         } else {
             (i, None)
         };
-
-        let (i, unknown_data_count) = le_u32(i)?;
-
-        let (i, (unknown_data, fragments, name_size)) = tuple((
-            count(tuple((le_i32, le_f32)), unknown_data_count as usize),
-            count(le_u32, fragment_count as usize),
-            le_u32,
-        ))(i)?;
-
-        let (remaining, name) = count(le_u8, name_size as usize)(i)?;
+        let (i, actions) = count(Action::parse, action_count as usize)(i)?;
+        let (i, fragment_references) = count(le_u32, fragment_reference_count as usize)(i)?;
+        let (i, unknown) = le_u32(i)?;
 
         Ok((
-            remaining,
-            ModelFragment {
+            i,
+            Self {
                 name_reference,
                 flags,
-                name_fragment,
-                unknown_params2_count,
-                fragment_count,
-                unknown_fragment,
-                unknown_params1,
-                unknown_params2,
-                unknown_data_count,
-                unknown_data,
-                fragments,
-                name_size,
-                name,
+                callback_name_reference,
+                action_count,
+                fragment_reference_count,
+                bounds_reference,
+                current_action,
+                location,
+                actions,
+                fragment_references,
+                unknown,
             },
         ))
     }
@@ -144,35 +105,26 @@ impl Fragment for ModelFragment {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
-            &self.flags.to_le_bytes()[..],
-            &self.name_fragment.into_bytes()[..],
-            &self.unknown_params2_count.to_le_bytes()[..],
-            &self.fragment_count.to_le_bytes()[..],
-            &self.unknown_fragment.to_le_bytes()[..],
+            &self.flags.into_bytes()[..],
+            &self.callback_name_reference.into_bytes()[..],
+            &self.action_count.to_le_bytes()[..],
+            &self.fragment_reference_count.to_le_bytes()[..],
+            &self.bounds_reference.to_le_bytes()[..],
             &self
-                .unknown_params1
-                .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+                .current_action
+                .map_or(vec![], |c| c.to_le_bytes().to_vec())[..],
+            &self.location.as_ref().map_or(vec![], |l| l.into_bytes())[..],
             &self
-                .unknown_params2
-                .as_ref()
-                .map_or(vec![], |p| p.iter().flat_map(|x| x.to_le_bytes()).collect())[..],
-            &self.unknown_data_count.to_le_bytes()[..],
-            &self
-                .unknown_data
+                .actions
                 .iter()
-                .flat_map(|d| [d.0.to_le_bytes(), d.1.to_le_bytes()].concat())
+                .flat_map(|a| a.into_bytes())
                 .collect::<Vec<_>>()[..],
             &self
-                .fragments
+                .fragment_references
                 .iter()
                 .flat_map(|f| f.to_le_bytes())
                 .collect::<Vec<_>>()[..],
-            &self.name_size.to_le_bytes()[..],
-            &self
-                .name
-                .iter()
-                .flat_map(|n| n.to_le_bytes())
-                .collect::<Vec<_>>()[..],
+            &self.unknown.to_le_bytes()[..],
         ]
         .concat()
     }
@@ -190,6 +142,84 @@ impl Fragment for ModelFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+pub struct ActorDefFlags(u32);
+
+impl ActorDefFlags {
+    const HAS_CURRENT_ACTION: u32 = 0x01;
+    const HAS_LOCATION: u32 = 0x02; //TODO:
+    const ACTIVE_GEOMETRY: u32 = 0x40;
+    const SPRITE_VOLUME_ONLY: u32 = 0x80;
+
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (remaining, raw_flags) = le_u32(input)?;
+        Ok((remaining, Self(raw_flags)))
+    }
+
+    fn into_bytes(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
+    }
+
+    pub fn sprite_volume_only(&self) -> bool {
+        self.0 & Self::SPRITE_VOLUME_ONLY == Self::SPRITE_VOLUME_ONLY
+    }
+
+    pub fn active_geometry(&self) -> bool {
+        self.0 & Self::ACTIVE_GEOMETRY == Self::ACTIVE_GEOMETRY
+    }
+
+    pub fn has_location(&self) -> bool {
+        self.0 & Self::HAS_LOCATION == Self::HAS_LOCATION
+    }
+
+    pub fn has_current_action(&self) -> bool {
+        self.0 & Self::HAS_CURRENT_ACTION == Self::HAS_CURRENT_ACTION
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+/// Represents ACTION within an ACTORDEF.
+pub struct Action {
+    pub levels_of_detail_count: u32,
+    pub unknown: u32,
+    // This is a sequence of minimum distances and maximum distances for each level of detail.
+    // MINDISTANCE %f
+    // MAXDISTANCE %f
+    pub levels_of_detail_distances: Vec<f32>,
+}
+
+impl Action {
+    pub fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, levels_of_detail_count) = le_u32(input)?;
+        let (i, unknown) = le_u32(i)?;
+        let (i, levels_of_detail_distances) = count(le_f32, levels_of_detail_count as usize)(i)?;
+
+        Ok((
+            i,
+            Self {
+                levels_of_detail_count,
+                unknown,
+                levels_of_detail_distances,
+            },
+        ))
+    }
+
+    pub fn into_bytes(&self) -> Vec<u8> {
+        [
+            &self.levels_of_detail_count.to_le_bytes()[..],
+            &self.unknown.to_le_bytes()[..],
+            &self
+                .levels_of_detail_distances
+                .iter()
+                .flat_map(|d| d.to_le_bytes())
+                .collect::<Vec<_>>()[..],
+        ]
+        .concat()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -200,18 +230,23 @@ mod tests {
         let frag = ModelFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-52594));
-        assert_eq!(frag.flags, 0);
-        assert_eq!(frag.name_fragment, StringReference::new(-52579));
-        assert_eq!(frag.unknown_params2_count, 1);
-        assert_eq!(frag.fragment_count, 1);
-        assert_eq!(frag.unknown_fragment, 0);
-        assert_eq!(frag.unknown_params1, None);
-        assert_eq!(frag.unknown_params2, None);
-        assert_eq!(frag.unknown_data_count, 1);
-        assert_eq!(frag.unknown_data, vec![(0, 1e30)]);
-        assert_eq!(frag.fragments, vec![4639]);
-        assert_eq!(frag.name_size, 0);
-        assert_eq!(frag.name, vec![]);
+        assert_eq!(frag.flags, ActorDefFlags(0));
+        assert_eq!(frag.callback_name_reference, StringReference::new(-52579));
+        assert_eq!(frag.action_count, 1);
+        assert_eq!(frag.fragment_reference_count, 1);
+        assert_eq!(frag.bounds_reference, 0);
+        assert_eq!(frag.current_action, None);
+        assert_eq!(frag.location, None);
+        assert_eq!(
+            frag.actions,
+            vec![Action {
+                levels_of_detail_count: 1,
+                unknown: 0,
+                levels_of_detail_distances: vec![1e30]
+            }]
+        );
+        assert_eq!(frag.fragment_references, vec![4639]);
+        assert_eq!(frag.unknown, 0);
     }
 
     #[test]

@@ -1,10 +1,10 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, LightSourceReferenceFragment, StringReference};
+use super::{
+    Fragment, FragmentParser, FragmentRef, LightSourceReferenceFragment, StringReference, WResult,
+};
 
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,7 @@ pub struct LightInfoFragment {
     pub reference: FragmentRef<LightSourceReferenceFragment>,
 
     /// _Unknown_ - Usually contains 256 (0x100).
-    pub flags: u32,
+    pub flags: PointLightFlags,
 
     /// X component of the light location.
     pub x: f32,
@@ -42,19 +42,18 @@ impl FragmentParser for LightInfoFragment {
     const TYPE_ID: u32 = 0x28;
     const TYPE_NAME: &'static str = "LightInfo";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], LightInfoFragment> {
-        let (remaining, (name_reference, reference, flags, x, y, z, radius)) = tuple((
-            StringReference::parse,
-            FragmentRef::parse,
-            le_u32,
-            le_f32,
-            le_f32,
-            le_f32,
-            le_f32,
-        ))(input)?;
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, name_reference) = StringReference::parse(input)?;
+        let (i, reference) = FragmentRef::parse(i)?;
+        let (i, flags) = PointLightFlags::parse(i)?;
+        let (i, x) = le_f32(i)?;
+        let (i, y) = le_f32(i)?;
+        let (i, z) = le_f32(i)?;
+        let (i, radius) = le_f32(i)?;
+
         Ok((
-            remaining,
-            LightInfoFragment {
+            i,
+            Self {
                 name_reference,
                 reference,
                 flags,
@@ -72,7 +71,7 @@ impl Fragment for LightInfoFragment {
         [
             &self.name_reference.into_bytes()[..],
             &self.reference.into_bytes()[..],
-            &self.flags.to_le_bytes()[..],
+            &self.flags.into_bytes()[..],
             &self.x.to_le_bytes()[..],
             &self.y.to_le_bytes()[..],
             &self.z.to_le_bytes()[..],
@@ -94,6 +93,37 @@ impl Fragment for LightInfoFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+pub struct PointLightFlags(u32);
+
+impl PointLightFlags {
+    const IS_STATIC: u32 = 0x20;
+    const STATIC_INFLUENCE: u32 = 0x40;
+    const HAS_REGIONS: u32 = 0x80;
+
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (remaining, raw_flags) = le_u32(input)?;
+        Ok((remaining, Self(raw_flags)))
+    }
+
+    fn into_bytes(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
+    }
+
+    pub fn is_static(&self) -> bool {
+        self.0 & Self::IS_STATIC == Self::IS_STATIC
+    }
+
+    pub fn static_influene(&self) -> bool {
+        self.0 & Self::STATIC_INFLUENCE == Self::STATIC_INFLUENCE
+    }
+
+    pub fn has_regions(&self) -> bool {
+        self.0 & Self::HAS_REGIONS == Self::HAS_REGIONS
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -105,7 +135,7 @@ mod tests {
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(2));
-        assert_eq!(frag.flags, 0x100);
+        assert_eq!(frag.flags, PointLightFlags(0x100));
         assert_eq!(frag.x, -1980.6992);
         assert_eq!(frag.y, -2354.9412);
         assert_eq!(frag.z, 31.490416);

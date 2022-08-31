@@ -1,11 +1,10 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -52,7 +51,7 @@ impl FragmentParser for PolygonAnimationFragment {
     const TYPE_ID: u32 = 0x17;
     const TYPE_NAME: &'static str = "PolygonAnimation";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], PolygonAnimationFragment> {
+    fn parse(input: &[u8]) -> WResult<PolygonAnimationFragment> {
         let (i, (name_reference, flags, size1, size2, params1, params2)) = tuple((
             StringReference::parse,
             //le_f32,

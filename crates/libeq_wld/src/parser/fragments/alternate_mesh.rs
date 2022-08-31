@@ -1,9 +1,10 @@
 use std::any::Any;
-use super::{Fragment, FragmentParser, FragmentRef, MaterialListFragment, StringReference};
+
+use super::{Fragment, FragmentParser, FragmentRef, MaterialListFragment, StringReference, WResult};
+
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_u16, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -153,7 +154,7 @@ impl FragmentParser for AlternateMeshFragment {
     const TYPE_ID: u32 = 0x2c;
     const TYPE_NAME: &'static str = "AlternateMesh";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], AlternateMeshFragment> {
+    fn parse(input: &[u8]) -> WResult<AlternateMeshFragment> {
         let (
             i,
             (
@@ -444,7 +445,7 @@ impl AlternateMeshFragmentPolygonEntry {
 }
 
 impl AlternateMeshFragmentPolygonEntry {
-    fn parse(input: &[u8]) -> IResult<&[u8], AlternateMeshFragmentPolygonEntry> {
+    fn parse(input: &[u8]) -> WResult<AlternateMeshFragmentPolygonEntry> {
         let (remaining, (flags, data, vertex_indexes)) = tuple((
             le_u16,
             tuple((le_u16, le_u16, le_u16, le_u16)),
@@ -499,15 +500,14 @@ impl AlternateMeshFragmentData6Entry {
 }
 
 impl AlternateMeshFragmentData6Entry {
-    fn parse(input: &[u8]) -> IResult<&[u8], AlternateMeshFragmentData6Entry> {
-
+    fn parse(input: &[u8]) -> WResult<AlternateMeshFragmentData6Entry> {
         let (remaining, (data, param1, param2, type_field)) =
             tuple((le_u32, le_u16, le_u16, le_u32))(input)?;
         Ok((
             remaining,
             AlternateMeshFragmentData6Entry {
-                vertex_index: None,
-                offset: None,
+                vertex_index: None, // FIXME
+                offset: None, // FIXME
                 param1,
                 param2,
                 type_field

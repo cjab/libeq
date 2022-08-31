@@ -1,11 +1,10 @@
 use std::any::Any;
 
-use super::{BspRegionFragment, Fragment, FragmentParser, FragmentRef, StringReference};
+use super::{BspRegionFragment, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -18,11 +17,11 @@ use serde::{Deserialize, Serialize};
 pub struct BspTreeFragment {
     pub name_reference: StringReference,
 
-    /// The number of [BspTreeFragmentEntry]s in this tree.
-    pub size1: u32,
+    /// The number of [WorldNode]s in this tree.
+    pub world_node_count: u32,
 
-    /// The [BspTreeFragmentEntry]s
-    pub entries: Vec<BspTreeFragmentEntry>,
+    /// The [WorldNode]s
+    pub world_nodes: Vec<WorldNode>,
 }
 
 impl FragmentParser for BspTreeFragment {
@@ -31,17 +30,17 @@ impl FragmentParser for BspTreeFragment {
     const TYPE_ID: u32 = 0x21;
     const TYPE_NAME: &'static str = "BspTree";
 
-    fn parse(input: &[u8]) -> IResult<&[u8], BspTreeFragment> {
+    fn parse(input: &[u8]) -> WResult<Self> {
         let (i, name_reference) = StringReference::parse(input)?;
-        let (i, size1) = le_u32(i)?;
-        let (remaining, entries) = count(BspTreeFragmentEntry::parse, size1 as usize)(i)?;
+        let (i, world_node_count) = le_u32(i)?;
+        let (i, world_nodes) = count(WorldNode::parse, world_node_count as usize)(i)?;
 
         Ok((
-            remaining,
-            BspTreeFragment {
+            i,
+            Self {
                 name_reference,
-                size1,
-                entries,
+                world_node_count,
+                world_nodes,
             },
         ))
     }
@@ -51,9 +50,9 @@ impl Fragment for BspTreeFragment {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
-            &self.size1.to_le_bytes()[..],
+            &self.world_node_count.to_le_bytes()[..],
             &self
-                .entries
+                .world_nodes
                 .iter()
                 .flat_map(|e| e.into_bytes())
                 .collect::<Vec<_>>()[..],
@@ -77,7 +76,7 @@ impl Fragment for BspTreeFragment {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// Entries in the map's [BspTreeFragment]
-pub struct BspTreeFragmentEntry {
+pub struct WorldNode {
     /// The normal to the split plane.
     pub normal: (f32, f32, f32),
 
@@ -89,30 +88,28 @@ pub struct BspTreeFragmentEntry {
     /// refers to (with the lowest index being 1). Otherwise this will contain 0.
     pub region: FragmentRef<BspRegionFragment>,
 
-    /// If this is not a leaf node these are references to [BspTreeFragmentEntry] on either side of the
+    /// If this is not a leaf node these are references to [WorldNode] on either side of the
     /// splitting plane.
-    pub nodes: (
-        FragmentRef<BspTreeFragmentEntry>,
-        FragmentRef<BspTreeFragmentEntry>,
-    ),
+    pub front_tree: FragmentRef<WorldNode>,
+    pub back_tree: FragmentRef<WorldNode>,
 }
 
-impl BspTreeFragmentEntry {
-    fn parse(input: &[u8]) -> IResult<&[u8], BspTreeFragmentEntry> {
-        let (remaining, (normal, split_distance, region, nodes)) = tuple((
-            tuple((le_f32, le_f32, le_f32)),
-            le_f32,
-            FragmentRef::parse,
-            tuple((FragmentRef::parse, FragmentRef::parse)),
-        ))(input)?;
+impl WorldNode {
+    fn parse(input: &[u8]) -> WResult<WorldNode> {
+        let (i, normal) = tuple((le_f32, le_f32, le_f32))(input)?;
+        let (i, split_distance) = le_f32(i)?;
+        let (i, region) = FragmentRef::parse(i)?;
+        let (i, front_tree) = FragmentRef::parse(i)?;
+        let (i, back_tree) = FragmentRef::parse(i)?;
 
         Ok((
-            remaining,
-            BspTreeFragmentEntry {
+            i,
+            Self {
                 normal,
                 split_distance,
                 region,
-                nodes,
+                front_tree,
+                back_tree,
             },
         ))
     }
@@ -124,8 +121,8 @@ impl BspTreeFragmentEntry {
             &self.normal.2.to_le_bytes()[..],
             &self.split_distance.to_le_bytes()[..],
             &self.region.into_bytes()[..],
-            &self.nodes.0.into_bytes()[..],
-            &self.nodes.1.into_bytes()[..],
+            &self.front_tree.into_bytes()[..],
+            &self.back_tree.into_bytes()[..],
         ]
         .concat()
     }
@@ -141,15 +138,13 @@ mod tests {
         let frag = BspTreeFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0x0));
-        assert_eq!(frag.size1, 5809);
-        assert_eq!(frag.entries.len(), 5809);
-        assert_eq!(frag.entries[0].normal, (-1.0f32, 0.0f32, 0.0f32));
-        assert_eq!(frag.entries[0].split_distance, -187.8942f32);
-        assert_eq!(frag.entries[0].region, FragmentRef::new(0));
-        assert_eq!(
-            frag.entries[0].nodes,
-            (FragmentRef::new(2), FragmentRef::new(2507))
-        );
+        assert_eq!(frag.world_node_count, 5809);
+        assert_eq!(frag.world_nodes.len(), 5809);
+        assert_eq!(frag.world_nodes[0].normal, (-1.0f32, 0.0f32, 0.0f32));
+        assert_eq!(frag.world_nodes[0].split_distance, -187.8942f32);
+        assert_eq!(frag.world_nodes[0].region, FragmentRef::new(0));
+        assert_eq!(frag.world_nodes[0].front_tree, FragmentRef::new(2));
+        assert_eq!(frag.world_nodes[0].back_tree, FragmentRef::new(2507));
     }
 
     #[test]

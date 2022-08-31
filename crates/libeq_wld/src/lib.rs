@@ -60,7 +60,7 @@ impl Wld {
     // FIXME: Handle errors, do not panic!
     fn load(data: &[u8]) -> Wld {
         match WldDoc::parse(&data[..]) {
-            Ok((_, wld_doc)) => Wld(wld_doc),
+            Ok(wld_doc) => Wld(wld_doc),
             Err(err) => panic!("Failed to parse Wld: {:?}", err),
         }
     }
@@ -398,26 +398,66 @@ pub struct ObjectLocation<'a> {
 
 impl<'a> ObjectLocation<'a> {
     pub fn model_name(&self) -> Option<&str> {
-        self.doc.get_string(self.fragment.reference)
+        self.doc.get_string(self.fragment.actor_def_reference)
     }
 
     /// The world position of the object.  This must be combined with the offset of the mesh itself.
     pub fn center(&self) -> (f32, f32, f32) {
-        (self.fragment.x, self.fragment.z, self.fragment.y)
+        (
+            self.fragment
+                .location
+                .as_ref()
+                .map(|l| l.x)
+                .unwrap_or_default(),
+            self.fragment
+                .location
+                .as_ref()
+                .map(|l| l.z)
+                .unwrap_or_default(),
+            self.fragment
+                .location
+                .as_ref()
+                .map(|l| l.y)
+                .unwrap_or_default(),
+        )
     }
 
     /// The euler rotation, degrees -360 to 0.  Note that this rotation should be applied after offseting the mesh.
     pub fn rotation(&self) -> (f32, f32, f32) {
         (
-            (self.fragment.rotate_y / 512.0) * -360.0,
-            (self.fragment.rotate_z / 512.0) * -360.0,
-            (self.fragment.rotate_x / 512.0) * -360.0,
+            (self
+                .fragment
+                .location
+                .as_ref()
+                .map(|l| l.rotate_y)
+                .unwrap_or_default()
+                / 512.0)
+                * -360.0,
+            (self
+                .fragment
+                .location
+                .as_ref()
+                .map(|l| l.rotate_z)
+                .unwrap_or_default()
+                / 512.0)
+                * -360.0,
+            (self
+                .fragment
+                .location
+                .as_ref()
+                .map(|l| l.rotate_x)
+                .unwrap_or_default()
+                / 512.0)
+                * -360.0,
         )
     }
 
     /// The scale of the object.  Note that X and Z are always scaled the same.
     pub fn scale(&self) -> (f32, f32) {
-        (self.fragment.scale_x, self.fragment.scale_y)
+        (
+            self.fragment.bounding_radius.unwrap_or_default(),
+            self.fragment.scale_factor.unwrap_or_default(),
+        )
     }
 }
 
@@ -433,7 +473,7 @@ impl<'a> Model<'a> {
     }
     /// Get the 'type' of model ("FLYCAMCALLBACK" or "SPRITECALLBACK" usually)
     pub fn type_name(&self) -> Option<&'a str> {
-        self.doc.get_string(self.fragment.name_fragment)
+        self.doc.get_string(self.fragment.callback_name_reference)
     }
 
     // FIXME: My assumption is that there arent any models with multiple meshes, but my assumption might be wrong.
@@ -449,7 +489,7 @@ impl<'a> Model<'a> {
     // FIXME: I think casting the fragments to MeshFragment can be done in some better way, but this works for me at the moment.
     /// Follow the fragment reference to find the MeshFragment
     fn get_mesh_fragment(&self) -> Option<&MeshFragment> {
-        let fragment_ref = *self.fragment.fragments.first()?;
+        let fragment_ref = *self.fragment.fragment_references.first()?;
         let fragment_ref: FragmentRef<MeshReferenceFragment> =
             FragmentRef::new(fragment_ref as i32);
         let fragment = self.doc.get(&fragment_ref)?;

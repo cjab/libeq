@@ -1,10 +1,9 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, StringReference};
+use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::multi::count;
 use nom::number::complete::{le_i16, le_u32};
-use nom::sequence::tuple;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -57,9 +56,94 @@ pub struct MobSkeletonPieceTrackFragment {
     ///           shift entries are `u32`s or it could mean that they’re `f32`s.
     pub flags: u32,
 
-    /// The number of `data1` and `data2` entries there are.
-    pub size: u32,
+    /// The number of `FrameTransform`s and `data2` entries there are.
+    /// NUMFRAMES
+    pub frame_count: u32,
 
+    /// FRAMETRANSFORM
+    pub frame_transforms: Vec<FrameTransform>,
+
+    /// _Unknown_ - There are (4 x Size) DWORDs here. This field exists only if the proper bit
+    /// in Flags is set. It’s possible that this is a bogus field and really just represents
+    /// the above fields in some sort of 32-bit form
+    pub data2: Option<Vec<u8>>,
+}
+
+impl FragmentParser for MobSkeletonPieceTrackFragment {
+    type T = Self;
+
+    const TYPE_ID: u32 = 0x12;
+    const TYPE_NAME: &'static str = "MobSkeletonPieceTrack";
+
+    fn parse(input: &[u8]) -> WResult<MobSkeletonPieceTrackFragment> {
+        let (i, name_reference) = StringReference::parse(input)?;
+        let (i, flags) = le_u32(i)?;
+        let (i, frame_count) = le_u32(i)?;
+        let (i, frame_transforms) = count(FrameTransform::parse, frame_count as usize)(i)?;
+
+        let (i, data2) = if i.len() > 0 && (flags & 0x08 == 0x08) {
+            (&i[0..0], Some(i.to_vec()))
+        } else {
+            (i, None)
+        };
+        if i.len() > 0 {
+            panic!(
+                "Data2 of MobSkeletonPieceTrackFragment found - flags: {:?}, size: {:?}, len: {:?}, remaining: {:?}",
+                flags, frame_count, i.len(), i
+            );
+        }
+
+        //let (remaining, data2) = if flags & 0x08 == 0x08 {
+        //    count(le_i32, (size * 4) as usize)(i).map(|(i, data2)| (i, Some(data2)))?
+        //} else {
+        //    (i, None)
+        //};
+
+        Ok((
+            i,
+            MobSkeletonPieceTrackFragment {
+                name_reference,
+                flags,
+                frame_count,
+                frame_transforms,
+                data2,
+            },
+        ))
+    }
+}
+
+impl Fragment for MobSkeletonPieceTrackFragment {
+    fn into_bytes(&self) -> Vec<u8> {
+        [
+            &self.name_reference.into_bytes()[..],
+            &self.flags.to_le_bytes()[..],
+            &self.frame_count.to_le_bytes()[..],
+            &self
+                .frame_transforms
+                .iter()
+                .flat_map(|t| t.into_bytes())
+                .collect::<Vec<_>>()[..],
+            &self.data2.as_ref().map_or(vec![], |d| d.to_vec())[..],
+        ]
+        .concat()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn name_ref(&self) -> &StringReference {
+        &self.name_reference
+    }
+
+    fn type_id(&self) -> u32 {
+        Self::TYPE_ID
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+pub struct FrameTransform {
     /// This represents the denominator for the piece’s X, Y, and Z rotation values.
     /// It’s vital to note that it is possible to encounter situations where this value is zero.
     /// I have seen this for pieces with no vertices or polygons and in this case rotation should
@@ -89,73 +173,22 @@ pub struct MobSkeletonPieceTrackFragment {
     /// The denominator for the piece X, Y, and Z shift values. Like the rotation denominator,
     /// software should check to see if this is zero and ignore translation in that case.
     pub shift_denominator: i16,
-
-    /// _Unknown_ - There are (4 x Size) DWORDs here. This field exists only if the proper bit
-    /// in Flags is set. It’s possible that this is a bogus field and really just represents
-    /// the above fields in some sort of 32-bit form
-    pub data2: Option<Vec<u8>>,
 }
 
-impl FragmentParser for MobSkeletonPieceTrackFragment {
-    type T = Self;
-
-    const TYPE_ID: u32 = 0x12;
-    const TYPE_NAME: &'static str = "MobSkeletonPieceTrack";
-
-    fn parse(input: &[u8]) -> IResult<&[u8], MobSkeletonPieceTrackFragment> {
-        let (
-            i,
-            (
-                name_reference,
-                flags,
-                size,
-                rotate_denominator,
-                rotate_x_numerator,
-                rotate_y_numerator,
-                rotate_z_numerator,
-                shift_x_numerator,
-                shift_y_numerator,
-                shift_z_numerator,
-                shift_denominator,
-            ),
-        ) = tuple((
-            StringReference::parse,
-            le_u32,
-            le_u32,
-            le_i16,
-            le_i16,
-            le_i16,
-            le_i16,
-            le_i16,
-            le_i16,
-            le_i16,
-            le_i16,
-        ))(input)?;
-
-        let (remaining, data2) = if i.len() > 0 && (flags & 0x08 == 0x08) {
-            (&i[0..0], Some(i.to_vec()))
-        } else {
-            (i, None)
-        };
-        if remaining.len() > 0 {
-            panic!(
-                "Data2 of MobSkeletonPieceTrackFragment found - flags: {:?}, size: {:?}, len: {:?}, remaining: {:?}",
-                flags, size, remaining.len(), remaining
-            );
-        }
-
-        //let (remaining, data2) = if flags & 0x08 == 0x08 {
-        //    count(le_i32, (size * 4) as usize)(i).map(|(i, data2)| (i, Some(data2)))?
-        //} else {
-        //    (i, None)
-        //};
+impl FrameTransform {
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, rotate_denominator) = le_i16(input)?;
+        let (i, rotate_x_numerator) = le_i16(i)?;
+        let (i, rotate_y_numerator) = le_i16(i)?;
+        let (i, rotate_z_numerator) = le_i16(i)?;
+        let (i, shift_x_numerator) = le_i16(i)?;
+        let (i, shift_y_numerator) = le_i16(i)?;
+        let (i, shift_z_numerator) = le_i16(i)?;
+        let (i, shift_denominator) = le_i16(i)?;
 
         Ok((
-            remaining,
-            MobSkeletonPieceTrackFragment {
-                name_reference,
-                flags,
-                size,
+            i,
+            Self {
                 rotate_denominator,
                 rotate_x_numerator,
                 rotate_y_numerator,
@@ -164,18 +197,11 @@ impl FragmentParser for MobSkeletonPieceTrackFragment {
                 shift_y_numerator,
                 shift_z_numerator,
                 shift_denominator,
-                data2,
             },
         ))
     }
-}
-
-impl Fragment for MobSkeletonPieceTrackFragment {
     fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.flags.to_le_bytes()[..],
-            &self.size.to_le_bytes()[..],
             &self.rotate_denominator.to_le_bytes()[..],
             &self.rotate_x_numerator.to_le_bytes()[..],
             &self.rotate_y_numerator.to_le_bytes()[..],
@@ -184,21 +210,8 @@ impl Fragment for MobSkeletonPieceTrackFragment {
             &self.shift_y_numerator.to_le_bytes()[..],
             &self.shift_z_numerator.to_le_bytes()[..],
             &self.shift_denominator.to_le_bytes()[..],
-            &self.data2.as_ref().map_or(vec![], |d| d.to_vec())[..],
         ]
         .concat()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn name_ref(&self) -> &StringReference {
-        &self.name_reference
-    }
-
-    fn type_id(&self) -> u32 {
-        Self::TYPE_ID
     }
 }
 
@@ -213,15 +226,20 @@ mod tests {
 
         assert_eq!(frag.name_reference, StringReference::new(-61));
         assert_eq!(frag.flags, 0x8);
-        assert_eq!(frag.size, 1);
-        assert_eq!(frag.rotate_denominator, 16384);
-        assert_eq!(frag.rotate_x_numerator, 0);
-        assert_eq!(frag.rotate_y_numerator, 0);
-        assert_eq!(frag.rotate_z_numerator, 0);
-        assert_eq!(frag.shift_x_numerator, 0);
-        assert_eq!(frag.shift_y_numerator, 0);
-        assert_eq!(frag.shift_z_numerator, 0);
-        assert_eq!(frag.shift_denominator, 256);
+        assert_eq!(frag.frame_count, 1);
+        assert_eq!(
+            frag.frame_transforms,
+            vec![FrameTransform {
+                rotate_denominator: 16384,
+                rotate_x_numerator: 0,
+                rotate_y_numerator: 0,
+                rotate_z_numerator: 0,
+                shift_x_numerator: 0,
+                shift_y_numerator: 0,
+                shift_z_numerator: 0,
+                shift_denominator: 256,
+            }]
+        );
         assert_eq!(frag.data2, None);
     }
 

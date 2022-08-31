@@ -1,5 +1,7 @@
 mod alternate_mesh;
 mod ambient_light;
+mod blit_sprite_definition;
+mod blit_sprite_reference;
 mod bsp_region;
 mod bsp_tree;
 mod camera;
@@ -29,6 +31,7 @@ mod texture_images;
 mod texture_reference;
 mod two_dimensional_object;
 mod two_dimensional_object_reference;
+mod unknown_0x34;
 mod vertex_color;
 mod vertex_color_reference;
 mod zone_unknown;
@@ -38,15 +41,16 @@ use std::marker::PhantomData;
 use std::ops::Deref;
 
 use nom::number::complete::le_i32;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use super::StringReference;
+use super::{StringReference, WResult};
 
 pub use alternate_mesh::*;
 pub use ambient_light::*;
+pub use blit_sprite_definition::*;
+pub use blit_sprite_reference::*;
 pub use bsp_region::*;
 pub use bsp_tree::*;
 pub use camera::*;
@@ -75,6 +79,7 @@ pub use texture_images::*;
 pub use texture_reference::*;
 pub use two_dimensional_object::*;
 pub use two_dimensional_object_reference::*;
+pub use unknown_0x34::*;
 pub use vertex_color::*;
 pub use vertex_color_reference::*;
 pub use zone_unknown::*;
@@ -96,7 +101,7 @@ impl<T> FragmentRef<T> {
         }
     }
 
-    pub fn parse(input: &[u8]) -> IResult<&[u8], FragmentRef<T>> {
+    pub fn parse(input: &[u8]) -> WResult<FragmentRef<T>> {
         let (remaining, frag_ref_idx) = le_i32(input)?;
         Ok((remaining, FragmentRef::new(frag_ref_idx)))
     }
@@ -120,7 +125,7 @@ pub trait FragmentParser {
     type T;
     const TYPE_ID: u32;
     const TYPE_NAME: &'static str;
-    fn parse(input: &[u8]) -> IResult<&[u8], Self::T>;
+    fn parse(input: &[u8]) -> WResult<Self::T>;
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -128,6 +133,8 @@ pub trait FragmentParser {
 pub enum FragmentType {
     AlternateMesh(AlternateMeshFragment),
     AmbientLight(AmbientLightFragment),
+    BlitSpriteDefinition(BlitSpriteDefinitionFragment),
+    BlitSpriteReference(BlitSpriteReferenceFragment),
     BspRegion(BspRegionFragment),
     BspTree(BspTreeFragment),
     Camera(CameraFragment),
@@ -156,6 +163,7 @@ pub enum FragmentType {
     TextureReference(TextureReferenceFragment),
     TwoDimensionalObject(TwoDimensionalObjectFragment),
     TwoDimensionalObjectReference(TwoDimensionalObjectReferenceFragment),
+    Unknown0x34(Unknown0x34Fragment),
     VertexColor(VertexColorFragment),
     VertexColorReference(VertexColorReferenceFragment),
     ZoneUnknown(ZoneUnknownFragment),
@@ -168,6 +176,8 @@ impl Deref for FragmentType {
         match self {
             Self::AlternateMesh(x) => x,
             Self::AmbientLight(x) => x,
+            Self::BlitSpriteDefinition(x) => x,
+            Self::BlitSpriteReference(x) => x,
             Self::BspRegion(x) => x,
             Self::BspTree(x) => x,
             Self::Camera(x) => x,
@@ -196,6 +206,7 @@ impl Deref for FragmentType {
             Self::TextureReference(x) => x,
             Self::TwoDimensionalObject(x) => x,
             Self::TwoDimensionalObjectReference(x) => x,
+            Self::Unknown0x34(x) => x,
             Self::VertexColor(x) => x,
             Self::VertexColorReference(x) => x,
             Self::ZoneUnknown(x) => x,

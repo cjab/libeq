@@ -26,6 +26,14 @@ fn draw_fragment<'a>(app: &'a App, fragment_type: &FragmentType) -> ListItem<'a>
             AmbientLightFragment::TYPE_NAME,
             Color::Rgb(0xa0, 0x20, 0xf0),
         ),
+        FragmentType::BlitSpriteDefinition(_) => (
+            BlitSpriteDefinitionFragment::TYPE_NAME,
+            Color::Rgb(0x0f, 0xff, 0xff),
+        ),
+        FragmentType::BlitSpriteReference(_) => (
+            BlitSpriteReferenceFragment::TYPE_NAME,
+            Color::Rgb(0x0f, 0x2f, 0xff),
+        ),
         FragmentType::BspRegion(_) => (BspRegionFragment::TYPE_NAME, Color::Rgb(0x00, 0xff, 0xff)),
         FragmentType::BspTree(_) => (BspTreeFragment::TYPE_NAME, Color::Rgb(0x00, 0xfa, 0x9a)),
         FragmentType::Camera(_) => (CameraFragment::TYPE_NAME, Color::Rgb(0x48, 0x3d, 0x8b)),
@@ -109,6 +117,9 @@ fn draw_fragment<'a>(app: &'a App, fragment_type: &FragmentType) -> ListItem<'a>
             TwoDimensionalObjectFragment::TYPE_NAME,
             Color::Rgb(0x80, 0x80, 0x00),
         ),
+        FragmentType::Unknown0x34(_) => {
+            (Unknown0x34Fragment::TYPE_NAME, Color::Rgb(0x80, 0x50, 0x05))
+        }
         FragmentType::VertexColor(_) => {
             (VertexColorFragment::TYPE_NAME, Color::Rgb(0xdd, 0xa0, 0xdd))
         }

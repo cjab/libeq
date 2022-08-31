@@ -1,21 +1,21 @@
 use std::collections::BTreeMap;
 
+use super::WResult;
 use encoding_rs::WINDOWS_1252;
 use nom::number::complete::le_i32;
-use nom::IResult;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct StringReference(i32);
+pub struct StringReference(pub i32);
 
 impl StringReference {
     pub fn new(idx: i32) -> Self {
         Self(idx)
     }
-    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+    pub fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, idx) = le_i32(input)?;
         Ok((remaining, Self::new(idx)))
     }

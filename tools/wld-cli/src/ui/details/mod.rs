@@ -241,7 +241,42 @@ pub fn draw_fragment_fields<B>(
         FragmentType::TwoDimensionalObject(frag) => {
             draw_two_dimensional_object_fragment(f, app, layout_chunk, &frag);
         }
-        _ => {}
+        FragmentType::Unknown0x34(frag) => {
+            draw_unknown_0x34_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::BlitSpriteDefinition(frag) => {
+            draw_blit_sprite_definition_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::BlitSpriteReference(frag) => {
+            draw_blit_sprite_reference_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::AlternateMesh(frag) => {
+            draw_alternate_mesh_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::MeshAnimatedVertices(frag) => {
+            draw_mesh_animated_vertices_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::MeshAnimatedVerticesReference(frag) => {
+            draw_mesh_animated_vertices_reference_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::PolygonAnimation(frag) => {
+            draw_polygon_animation_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::PolygonAnimationReference(frag) => {
+            draw_polygon_animation_reference_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::First(frag) => {
+            draw_first_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::SkeletonTrackSetReference(frag) => {
+            draw_skeleton_track_set_reference_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::TwoDimensionalObjectReference(frag) => {
+            draw_two_dimensional_object_reference_fragment(f, app, layout_chunk, &frag);
+        }
+        FragmentType::ZoneUnknown(frag) => {
+            draw_zone_unknown_fragment(f, app, layout_chunk, &frag);
+        }
     }
 }
 
@@ -494,15 +529,15 @@ pub fn draw_region_flag_fragment<B>(
     let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
     let region_count = format!("{}", fragment.region_count);
     let region_ids = format!("{:?}", fragment.regions);
-    let size2 = format!("{:?}", fragment.size2);
-    let data2 = format!("{:?}", fragment.data2);
+    let user_data_size = format!("{:?}", fragment.user_data_size);
+    let user_data = format!("{:?}", fragment.user_data);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
         Row::new(vec!["Region Count", &region_count]),
         Row::new(vec!["Region Ids", &region_ids]),
-        Row::new(vec!["Size2", &size2]),
-        Row::new(vec!["Data2", &data2]),
+        Row::new(vec!["User data size", &user_data_size]),
+        Row::new(vec!["User data", &user_data]),
     ])
     .block(
         Block::default()
@@ -530,34 +565,26 @@ pub fn draw_object_location_fragment<B>(
 ) where
     B: Backend,
 {
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let fragment1 = format!("{}", fragment.fragment1);
-    let x = format!("{}", fragment.x);
-    let y = format!("{}", fragment.y);
-    let z = format!("{}", fragment.z);
-    let rotate_z = format!("{}", fragment.rotate_z);
-    let rotate_y = format!("{}", fragment.rotate_y);
-    let rotate_x = format!("{}", fragment.rotate_x);
-    let params1 = format!("{}", fragment.params1);
-    let scale_y = format!("{}", fragment.scale_y);
-    let scale_x = format!("{}", fragment.scale_x);
-    let fragment2 = format!("{}", fragment.fragment2);
-    let params2 = format!("{:?}", fragment.params2);
+    let actor_def_reference = format!("{:?}", fragment.actor_def_reference);
+    let flags = format!("{:?}", fragment.flags);
+    let sphere_reference = format!("{}", fragment.sphere_reference);
+    let current_action = format!("{:?}", fragment.current_action);
+    let location = format!("{:?}", fragment.location);
+    let bounding_radius = format!("{:?}", fragment.bounding_radius);
+    let scale_factor = format!("{:?}", fragment.scale_factor);
+    let sound_name_reference = format!("{:?}", fragment.sound_name_reference);
+    let unknown = format!("{}", fragment.unknown);
 
     let table = Table::new(vec![
+        Row::new(vec!["ACTORDEF reference", &actor_def_reference]),
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Fragment1", &fragment1]),
-        Row::new(vec!["X", &x]),
-        Row::new(vec!["Y", &y]),
-        Row::new(vec!["Z", &z]),
-        Row::new(vec!["Rotate Z", &rotate_z]),
-        Row::new(vec!["Rotate Y", &rotate_y]),
-        Row::new(vec!["Rotate X", &rotate_x]),
-        Row::new(vec!["Params1", &params1]),
-        Row::new(vec!["Scale Y", &scale_y]),
-        Row::new(vec!["Scale X", &scale_x]),
-        Row::new(vec!["Fragment2", &fragment2]),
-        Row::new(vec!["Params2", &params2]),
+        Row::new(vec!["SPHERE reference", &sphere_reference]),
+        Row::new(vec!["Current action", &current_action]),
+        Row::new(vec!["Location", &location]),
+        Row::new(vec!["Bounding radius", &bounding_radius]),
+        Row::new(vec!["Scale factor", &scale_factor]),
+        Row::new(vec!["Sound name ref", &sound_name_reference]),
+        Row::new(vec!["Unknown", &unknown]),
     ])
     .block(
         Block::default()
@@ -687,32 +714,28 @@ pub fn draw_model_reference_player_info_fragment<B>(
 ) where
     B: Backend,
 {
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let name_fragment = format!("{:?}", fragment.name_fragment);
-    let unknown_params2_count = format!("{:?}", fragment.unknown_params2_count);
-    let fragment_count = format!("{:?}", fragment.fragment_count);
-    let unknown_fragment = format!("{:?}", fragment.unknown_fragment);
-    let unknown_params1 = format!("{:?}", fragment.unknown_params1);
-    let unknown_params2 = format!("{:?}", fragment.unknown_params2);
-    let unknown_data_count = format!("{:?}", fragment.unknown_data_count);
-    let unknown_data = format!("{:?}", fragment.unknown_data);
-    let fragments = format!("{:?}", fragment.fragments);
-    let name_size = format!("{:?}", fragment.name_size);
-    let name = format!("{:?}", fragment.name);
+    let flags = format!("{:?}", fragment.flags);
+    let callback_name_reference = format!("{:?}", fragment.callback_name_reference);
+    let action_count = format!("{:?}", fragment.action_count);
+    let fragment_reference_count = format!("{:?}", fragment.fragment_reference_count);
+    let bounds_reference = format!("{:?}", fragment.bounds_reference);
+    let current_action = format!("{:?}", fragment.current_action);
+    let location = format!("{:?}", fragment.location);
+    let actions = format!("{:?}", fragment.actions);
+    let fragment_references = format!("{:?}", fragment.fragment_references);
+    let unknown = format!("{:?}", fragment.unknown);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Name Fragment", &name_fragment]),
-        Row::new(vec!["Params2 Count", &unknown_params2_count]),
-        Row::new(vec!["Fragment Count", &fragment_count]),
-        Row::new(vec!["Fragment", &unknown_fragment]),
-        Row::new(vec!["Params1", &unknown_params1]),
-        Row::new(vec!["Params2", &unknown_params2]),
-        Row::new(vec!["Data Count", &unknown_data_count]),
-        Row::new(vec!["Data", &unknown_data]),
-        Row::new(vec!["Fragments", &fragments]),
-        Row::new(vec!["Name Size", &name_size]),
-        Row::new(vec!["Name", &name]),
+        Row::new(vec!["Callback name reference", &callback_name_reference]),
+        Row::new(vec!["Action Count", &action_count]),
+        Row::new(vec!["Fragment Ref Count", &fragment_reference_count]),
+        Row::new(vec!["Bounds ref", &bounds_reference]),
+        Row::new(vec!["Current Action", &current_action]),
+        Row::new(vec!["Location", &location]),
+        Row::new(vec!["Actions", &actions]),
+        Row::new(vec!["Fragment references", &fragment_references]),
+        Row::new(vec!["Unknown", &unknown]),
     ])
     .block(
         Block::default()
@@ -740,12 +763,12 @@ pub fn draw_bsp_tree_fragment<B>(
 ) where
     B: Backend,
 {
-    let size1 = format!("{:?}", fragment.size1);
-    let entries = format!("{:?}", fragment.entries);
+    let world_node_count = format!("{:?}", fragment.world_node_count);
+    let world_nodes = format!("{:?}", fragment.world_nodes);
 
     let table = Table::new(vec![
-        Row::new(vec!["Size1", &size1]),
-        Row::new(vec!["Entries", &entries]),
+        Row::new(vec!["World node count", &world_node_count]),
+        Row::new(vec!["World nodes", &world_nodes]),
     ])
     .block(
         Block::default()
@@ -1060,10 +1083,11 @@ pub fn draw_light_info_fragment<B>(
     B: Backend,
 {
     let reference = format!("{:?}", fragment.reference);
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
+    let flags = format!("{:?}", fragment.flags);
     let x = format!("{:?}", fragment.x);
     let y = format!("{:?}", fragment.y);
     let z = format!("{:?}", fragment.z);
+    let radius = format!("{:?}", fragment.radius);
 
     let table = Table::new(vec![
         Row::new(vec!["Reference", &reference]),
@@ -1071,6 +1095,7 @@ pub fn draw_light_info_fragment<B>(
         Row::new(vec!["X", &x]),
         Row::new(vec!["Y", &y]),
         Row::new(vec!["Z", &z]),
+        Row::new(vec!["Radius", &radius]),
     ])
     .block(
         Block::default()
@@ -1132,28 +1157,14 @@ pub fn draw_mob_skeleton_piece_track_fragment<B>(
     B: Backend,
 {
     let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let size = format!("{:?}", fragment.size);
-    let rotate_denominator = format!("{:?}", fragment.rotate_denominator);
-    let rotate_x_numerator = format!("{:?}", fragment.rotate_x_numerator);
-    let rotate_y_numerator = format!("{:?}", fragment.rotate_y_numerator);
-    let rotate_z_numerator = format!("{:?}", fragment.rotate_z_numerator);
-    let shift_x_numerator = format!("{:?}", fragment.shift_x_numerator);
-    let shift_y_numerator = format!("{:?}", fragment.shift_y_numerator);
-    let shift_z_numerator = format!("{:?}", fragment.shift_z_numerator);
-    let shift_denominator = format!("{:?}", fragment.shift_denominator);
+    let frame_count = format!("{:?}", fragment.frame_count);
+    let frame_transforms = format!("{:?}", fragment.frame_transforms);
     let data2 = format!("{:?}", fragment.data2);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Size", &size]),
-        Row::new(vec!["Rotate Denominator", &rotate_denominator]),
-        Row::new(vec!["Rotate X Numerator", &rotate_x_numerator]),
-        Row::new(vec!["Rotate Y Numerator", &rotate_y_numerator]),
-        Row::new(vec!["Rotate Z Numerator", &rotate_z_numerator]),
-        Row::new(vec!["Shift X Numerator", &shift_x_numerator]),
-        Row::new(vec!["Shift Y Numerator", &shift_y_numerator]),
-        Row::new(vec!["Shift Z Numerator", &shift_z_numerator]),
-        Row::new(vec!["Shift Denominator", &shift_denominator]),
+        Row::new(vec!["Frame count", &frame_count]),
+        Row::new(vec!["Frame transforms", &frame_transforms]),
         Row::new(vec!["Data2", &data2]),
     ])
     .block(
@@ -1183,13 +1194,13 @@ pub fn draw_mob_skeleton_piece_track_reference_fragment<B>(
     B: Backend,
 {
     let reference = format!("{:?}", fragment.reference);
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let params1 = format!("{:?}", fragment.params1);
+    let flags = format!("{:?}", fragment.flags);
+    let sleep = format!("{:?}", fragment.sleep);
 
     let table = Table::new(vec![
         Row::new(vec!["Reference", &reference]),
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Params1", &params1]),
+        Row::new(vec!["Sleep", &sleep]),
     ])
     .block(
         Block::default()
@@ -1281,8 +1292,7 @@ pub fn draw_two_dimensional_object_fragment<B>(
     let brightness = format!("{:?}", fragment.render_info.brightness);
     let scaled_ambient = format!("{:?}", fragment.render_info.scaled_ambient);
     let uv_info = format!("{:?}", fragment.render_info.uv_info);
-    let params7_size = format!("{:?}", fragment.render_info.params7_size);
-    let params7_data = format!("{:?}", fragment.render_info.params7_data);
+    let uv_map = format!("{:?}", fragment.render_info.uv_map);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
@@ -1302,8 +1312,426 @@ pub fn draw_two_dimensional_object_fragment<B>(
         Row::new(vec!["Brightness", &brightness]),
         Row::new(vec!["Scaled Ambient", &scaled_ambient]),
         Row::new(vec!["UV Info", &uv_info]),
-        Row::new(vec!["Params7 Size", &params7_size]),
-        Row::new(vec!["Params7 Data", &params7_data]),
+        Row::new(vec!["UV Map", &uv_map]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_unknown_0x34_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::Unknown0x34Fragment,
+) where
+    B: Backend,
+{
+    let unknown_1 = format!("{}", fragment.unknown_1);
+    let unknown_2 = format!("{}", fragment.unknown_2);
+    let unknown_3 = format!("{}", fragment.unknown_3);
+    let unknown_4 = format!("{}", fragment.unknown_4);
+    let unknown_5 = format!("{}", fragment.unknown_5);
+    let unknown_6 = format!("{}", fragment.unknown_6);
+    let unknown_7 = format!("{}", fragment.unknown_7);
+    let unknown_8 = format!("{}", fragment.unknown_8);
+    let unknown_9 = format!("{}", fragment.unknown_9);
+    let unknown_10 = format!("{}", fragment.unknown_10);
+    let unknown_11 = format!("{}", fragment.unknown_11);
+    let unknown_12 = format!("{}", fragment.unknown_12);
+    let unknown_13 = format!("{}", fragment.unknown_13);
+    let unknown_14 = format!("{}", fragment.unknown_14);
+    let unknown_15 = format!("{}", fragment.unknown_15);
+    let unknown_16 = format!("{}", fragment.unknown_16);
+    let unknown_17 = format!("{}", fragment.unknown_17);
+    let unknown_18 = format!("{}", fragment.unknown_18);
+    let unknown_19 = format!("{}", fragment.unknown_19);
+    let unknown_20 = format!("{}", fragment.unknown_20);
+    let unknown_21 = format!("{}", fragment.unknown_21);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Unknown 1", &unknown_1]),
+        Row::new(vec!["Unknown 2", &unknown_2]),
+        Row::new(vec!["Unknown 3", &unknown_3]),
+        Row::new(vec!["Unknown 4", &unknown_4]),
+        Row::new(vec!["Unknown 5", &unknown_5]),
+        Row::new(vec!["Unknown 6", &unknown_6]),
+        Row::new(vec!["Unknown 7", &unknown_7]),
+        Row::new(vec!["Unknown 8", &unknown_8]),
+        Row::new(vec!["Unknown 9", &unknown_9]),
+        Row::new(vec!["Unknown 10", &unknown_10]),
+        Row::new(vec!["Unknown 11", &unknown_11]),
+        Row::new(vec!["Unknown 12", &unknown_12]),
+        Row::new(vec!["Unknown 13", &unknown_13]),
+        Row::new(vec!["Unknown 14", &unknown_14]),
+        Row::new(vec!["Unknown 15", &unknown_15]),
+        Row::new(vec!["Unknown 16", &unknown_16]),
+        Row::new(vec!["Unknown 17", &unknown_17]),
+        Row::new(vec!["Unknown 18", &unknown_18]),
+        Row::new(vec!["Unknown 19", &unknown_19]),
+        Row::new(vec!["Unknown 20", &unknown_20]),
+        Row::new(vec!["Unknown 21", &unknown_21]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_blit_sprite_definition_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::BlitSpriteDefinitionFragment,
+) where
+    B: Backend,
+{
+    let flags = format!("{:?}", fragment.flags);
+    let reference = format!("{:?}", fragment.blit_sprite_reference);
+    let unknown = format!("{}", fragment.unknown);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Flags", &flags]),
+        Row::new(vec!["Blit sprite ref", &reference]),
+        Row::new(vec!["Unknown", &unknown]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_blit_sprite_reference_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::BlitSpriteReferenceFragment,
+) where
+    B: Backend,
+{
+    let reference = format!("{:?}", fragment.blit_sprite_reference);
+    let unknown = format!("{}", fragment.unknown);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Blit sprite ref", &reference]),
+        Row::new(vec!["Unknown", &unknown]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+/// TODO: Incomplete
+pub fn draw_alternate_mesh_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::AlternateMeshFragment,
+) where
+    B: Backend,
+{
+    let flags = format!("{:?}", fragment.flags);
+
+    let table = Table::new(vec![Row::new(vec!["flags", &flags])])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default()),
+        )
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .widths(&TABLE_WIDTHS)
+        .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+/// TODO: Incomplete
+pub fn draw_mesh_animated_vertices_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::MeshAnimatedVerticesFragment,
+) where
+    B: Backend,
+{
+    let flags = format!("{:?}", fragment.flags);
+
+    let table = Table::new(vec![Row::new(vec!["flags", &flags])])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default()),
+        )
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .widths(&TABLE_WIDTHS)
+        .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_mesh_animated_vertices_reference_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::MeshAnimatedVerticesReferenceFragment,
+) where
+    B: Backend,
+{
+    let reference = format!("{:?}", fragment.reference);
+    let flags = format!("{:?}", fragment.flags);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Reference", &reference]),
+        Row::new(vec!["Flags", &flags]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+/// TODO: Incomplete
+pub fn draw_polygon_animation_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::PolygonAnimationFragment,
+) where
+    B: Backend,
+{
+    let flags = format!("{:?}", fragment.flags);
+
+    let table = Table::new(vec![Row::new(vec!["Flags", &flags])])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default()),
+        )
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .widths(&TABLE_WIDTHS)
+        .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_polygon_animation_reference_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::PolygonAnimationReferenceFragment,
+) where
+    B: Backend,
+{
+    let reference = format!("{:?}", fragment.reference);
+    let flags = format!("{:?}", fragment.flags);
+    let scale_factor = format!("{:?}", fragment.scale_factor);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Reference", &reference]),
+        Row::new(vec!["Flags", &flags]),
+        Row::new(vec!["Scale factor", &scale_factor]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_first_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::FirstFragment,
+) where
+    B: Backend,
+{
+    let table = Table::new(vec![])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default()),
+        )
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .widths(&TABLE_WIDTHS)
+        .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_skeleton_track_set_reference_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::SkeletonTrackSetReferenceFragment,
+) where
+    B: Backend,
+{
+    let reference = format!("{:?}", fragment.reference);
+    let params1 = format!("{:?}", fragment.params1);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Reference", &reference]),
+        Row::new(vec!["Params 1", &params1]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_zone_unknown_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::ZoneUnknownFragment,
+) where
+    B: Backend,
+{
+    let radius = format!("{:?}", fragment.radius);
+
+    let table = Table::new(vec![Row::new(vec!["Radius", &radius])])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default()),
+        )
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .widths(&TABLE_WIDTHS)
+        .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_two_dimensional_object_reference_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::TwoDimensionalObjectReferenceFragment,
+) where
+    B: Backend,
+{
+    let reference = format!("{:?}", fragment.reference);
+    let flags = format!("{:?}", fragment.flags);
+
+    let table = Table::new(vec![
+        Row::new(vec!["Reference", &reference]),
+        Row::new(vec!["Flags", &flags]),
     ])
     .block(
         Block::default()
