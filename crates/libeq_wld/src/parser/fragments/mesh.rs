@@ -465,7 +465,7 @@ pub struct MeshFragmentData9Entry {
 
 impl MeshFragmentData9Entry {
     fn parse(input: &[u8]) -> WResult<MeshFragmentData9Entry> {
-        let _unknown_data = &input[0..4];
+        let unknown_data = &input[0..4];
         let input = &input[4..];
 
         let (i, (param1, type_field)) = tuple((
@@ -473,16 +473,16 @@ impl MeshFragmentData9Entry {
             le_u8,
         ))(input)?;
 
-        let (_unknown_data, offset) = if type_field == 4 {
-            le_f32(_unknown_data).map(|(i, offset)| (i, Some(offset)))?
+        let (unknown_data, offset) = if type_field == 4 {
+            le_f32(unknown_data).map(|(i, offset)| (i, Some(offset)))?
         } else {
-            (_unknown_data, None)
+            (unknown_data, None)
         };
 
-        let (_unknown_data, (index1, index2)) = if type_field != 4 {
-            tuple((le_u16, le_u16))(_unknown_data).map(|(i, (index1, index2))| (i, (Some(index1), Some(index2))))?
+        let (_, (index1, index2)) = if type_field != 4 {
+            tuple((le_u16, le_u16))(unknown_data).map(|(i, (index1, index2))| (i, (Some(index1), Some(index2))))?
         } else {
-            (_unknown_data, (None, None))
+            (unknown_data, (None, None))
         };
 
         Ok((
