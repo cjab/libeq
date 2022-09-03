@@ -69,7 +69,8 @@ pub struct AlternateMeshFragment {
     /// uses. For zone meshes, a single 0x31 fragment should be built that contains all the
     /// textures used in the entire zone. For placeable objects, there should be a 0x31
     /// fragment that references only those textures used in that particular object.
-    pub fragment1: FragmentRef<MaterialListFragment>,
+    //pub fragment1: FragmentRef<MaterialListFragment>,
+    pub fragment1: u32,
 
     /// _Unknown_
     pub fragment2: u32,
@@ -118,7 +119,11 @@ pub struct AlternateMeshFragment {
     /// _Unknown_ - This only exists if bit 9 of `flags` is set. There are `size8` of these.
     pub data8: Option<Vec<u32>>,
 
-    // FIXME: There is some unknown data here of varying size.
+    /// _Unknown_
+    pub params4: Vec<u16>,
+    
+    /// _Unknown_ - There are 'fragment1' of these if Bit 0 is unset
+    pub data9: Vec<(u16,u16)>,
 
     /// Tells how many PolygonTex entries there are. Polygons are grouped together by texture and PolygonTex entries tell the client how many polygons there are that use a particular texture. This field only exists if bit 11 of Flags is 1.
     pub polygontex_count: Option<u32>,
@@ -183,7 +188,7 @@ impl FragmentParser for AlternateMeshFragment {
             le_u32,
             le_u16,
             le_i16,
-            FragmentRef::parse,
+            le_u32,
             le_u32,
             le_u32,
             tuple((le_f32, le_f32, le_f32)),
@@ -216,45 +221,43 @@ impl FragmentParser for AlternateMeshFragment {
             (i, None)
         };
 
-        // FIXME: There is some unknown data here of varying size.  I cannot find where its size is determined.  It appears to be a list of 2-tuple u16's where the second item in the tuple typically increments from 0.
+        let (i, params4) = count(le_u16, 4)(i)?;
 
-        // NOTE: The entries below seem correct if you skip the unknown data above.  I am commenting them out until the above issue is resolved.
+        let (i, data9) = if flags & 0x01 != 0x01 { // Bit 0 is unset
+            count(tuple((le_u16, le_u16)), fragment1 as usize)(i)?
+        } else {
+            (i, vec![])
+        };
 
-        let polygontex_count = None;
-        let polygontex_entries = None;
-        let vertex_material_count = None;
-        let vertex_materials = None;
-        let params3 = None;
-        
-        // let (i, polygontex_count) = if flags & 0x800 == 0x800 { // Bit 11 set
-        //     le_u32(i).map(|(i, polygontex_count)| (i, Some(polygontex_count)))?
-        // } else {
-        //     (i, None)
-        // };
+        let (i, polygontex_count) = if flags & 0x800 == 0x800 { // Bit 11 set
+            le_u32(i).map(|(i, polygontex_count)| (i, Some(polygontex_count)))?
+        } else {
+            (i, None)
+        };
 
-        // let (i, polygontex_entries) = if flags & 0x800 == 0x800 { // Bit 11 set
-        //     count(tuple((le_u16, le_u16)),  polygontex_count.unwrap() as usize)(i).map(|(i, polygontex_entries)| (i, Some(polygontex_entries)))?
-        // } else {
-        //     (i, None)
-        // };
+        let (i, polygontex_entries) = if flags & 0x800 == 0x800 { // Bit 11 set
+            count(tuple((le_u16, le_u16)),  polygontex_count.unwrap() as usize)(i).map(|(i, polygontex_entries)| (i, Some(polygontex_entries)))?
+        } else {
+            (i, None)
+        };
 
-        // let (i, vertex_material_count) = if flags & 0x1000 == 0x1000 { // Bit 12 set
-        //     le_u32(i).map(|(i, vertex_material_count)| (i, Some(vertex_material_count)))?
-        // } else {
-        //     (i, None)
-        // };
+        let (i, vertex_material_count) = if flags & 0x1000 == 0x1000 { // Bit 12 set
+            le_u32(i).map(|(i, vertex_material_count)| (i, Some(vertex_material_count)))?
+        } else {
+            (i, None)
+        };
 
-        // let (i, vertex_materials) = if flags & 0x1000 == 0x1000 { // Bit 12 set
-        //     count(tuple((le_u16, le_u16)),  vertex_material_count.unwrap() as usize)(i).map(|(i, vertex_materials)| (i, Some(vertex_materials)))?
-        // } else {
-        //     (i, None)
-        // };
+        let (i, vertex_materials) = if flags & 0x1000 == 0x1000 { // Bit 12 set
+            count(tuple((le_u16, le_u16)),  vertex_material_count.unwrap() as usize)(i).map(|(i, vertex_materials)| (i, Some(vertex_materials)))?
+        } else {
+            (i, None)
+        };
 
-        // let (i, params3) = if flags & 0x2000 == 0x2000 { // Bit 13 set
-        //     tuple((le_u32, le_u32, le_u32))(i).map(|(i, params3)| (i, Some(params3)))?
-        // } else {
-        //     (i, None)
-        // };
+        let (i, params3) = if flags & 0x2000 == 0x2000 { // Bit 13 set
+            tuple((le_u32, le_u32, le_u32))(i).map(|(i, params3)| (i, Some(params3)))?
+        } else {
+            (i, None)
+        };
 
         Ok((
             i,
@@ -282,6 +285,8 @@ impl FragmentParser for AlternateMeshFragment {
                 vertex_pieces,
                 size8,
                 data8,
+                params4,
+                data9,
                 polygontex_count,
                 polygontex_entries,
                 vertex_material_count,
@@ -324,10 +329,15 @@ impl Fragment for AlternateMeshFragment {
             .collect::<Vec<_>>();
 
         let data8 = self
-        .data8
-        .as_ref()
-        .map_or(vec![], |i| i.iter().flat_map(|d| d.to_le_bytes()).collect::<Vec<_>>());
+            .data8
+            .as_ref()
+            .map_or(vec![], |i| i.iter().flat_map(|d| d.to_le_bytes()).collect::<Vec<_>>());
 
+        let params4 = self
+            .params4
+            .iter()
+            .flat_map(|d| d.to_le_bytes())
+            .collect::<Vec<_>>();
 
         let vertex_pieces = self
             .vertex_pieces
@@ -366,11 +376,12 @@ impl Fragment for AlternateMeshFragment {
             &self.flags.to_le_bytes()[..],
             &self.vertex_count.to_le_bytes()[..],
             &self.tex_coords_count.to_le_bytes()[..],
+            &self.normals_count.to_le_bytes()[..],
             &self.size4.to_le_bytes()[..],
             &self.polygon_count.to_le_bytes()[..],
             &self.size6.to_le_bytes()[..],
             &self.vertex_piece_count.to_le_bytes()[..],
-            &self.fragment1.into_bytes()[..],
+            &self.fragment1.to_le_bytes()[..],
             &self.fragment2.to_le_bytes()[..],
             &self.fragment3.to_le_bytes()[..],
             &self.center.0.to_le_bytes()[..],
@@ -390,6 +401,12 @@ impl Fragment for AlternateMeshFragment {
             &vertex_pieces[..],
             &self.size8.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
             &data8[..],
+            &params4,
+            &self
+                .data9
+                .iter()
+                .flat_map(|d| [d.0.to_le_bytes(), d.1.to_le_bytes()].concat() )
+                .collect::<Vec<_>>()[..],
             &self.polygontex_count.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
             &polygontex_entries[..],
             &self.vertex_material_count.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
@@ -501,13 +518,30 @@ impl AlternateMeshFragmentData6Entry {
 
 impl AlternateMeshFragmentData6Entry {
     fn parse(input: &[u8]) -> WResult<AlternateMeshFragmentData6Entry> {
-        let (remaining, (data, param1, param2, type_field)) =
-            tuple((le_u32, le_u16, le_u16, le_u32))(input)?;
+        let unknown_data = &input[0..4];
+        let input = &input[4..];
+
+        let (remaining, (param1, param2, type_field)) =
+            tuple((le_u16, le_u16, le_u32))(input)?;
+        
+        let (unknown_data, offset) = if type_field == 4 {
+            le_f32(unknown_data).map(|(i, offset)| (i, Some(offset)))?
+        } else {
+            (unknown_data, None)
+        };
+
+        let (_, vertex_index) = if type_field != 4 {
+            le_u32(unknown_data).map(|(i, vertex_index)| (i, Some(vertex_index)))?
+        } else {
+            (unknown_data, None)
+        };
+
+
         Ok((
             remaining,
             AlternateMeshFragmentData6Entry {
-                vertex_index: None, // FIXME
-                offset: None, // FIXME
+                vertex_index,
+                offset,
                 param1,
                 param2,
                 type_field
@@ -534,7 +568,7 @@ mod tests {
         assert_eq!(frag.polygon_count, 12);
         assert_eq!(frag.size6, 64);
         assert_eq!(frag.vertex_piece_count, 0);
-        assert_eq!(frag.fragment1, FragmentRef::new(1)); // FIXME: Should test to make sure this actually links to a MaterialListFragment
+        assert_eq!(frag.fragment1, 1);
         assert_eq!(frag.fragment2, 5);
         assert_eq!(frag.fragment3, 0);
         assert_eq!(frag.center, (0.0, 0.0, 0.0));
