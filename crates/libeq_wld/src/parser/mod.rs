@@ -451,6 +451,10 @@ impl<'a> FragmentHeader<'a> {
                 Unknown0x34Fragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Unknown0x34(f.1))),
             ),
+            Unknown0x2eFragment::TYPE_ID => Some(
+                Unknown0x2eFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Unknown0x2e(f.1))),
+            ),
             _ => None,
         };
 
