@@ -609,6 +609,40 @@ mod tests {
     }
 
     #[test]
+    fn it_parses_with_bit14() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip_beta/0567-0x2c.frag")[..];
+        let frag = AlternateMeshFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-6091));
+        assert_eq!(frag.flags, 0x5803);
+        assert_eq!(frag.vertex_count, 56);
+        assert_eq!(frag.tex_coords_count, 56);
+        assert_eq!(frag.normals_count, 56);
+        assert_eq!(frag.size4, 0);
+        assert_eq!(frag.polygon_count, 28);
+        assert_eq!(frag.size6, 0);
+        assert_eq!(frag.vertex_piece_count, 0);
+        assert_eq!(frag.fragment1, 0);
+        assert_eq!(frag.fragment2, 567);
+        assert_eq!(frag.fragment3, 0);
+        assert_eq!(frag.center, (0.0, 0.0, 2.2031567));
+        assert_eq!(frag.params2, 3141746767); // FIXME: Doesn't seem like this should be a u32.  Could be a float.
+        assert_eq!(frag.vertices.len(), frag.vertex_count as usize);
+        assert_eq!(frag.texture_coords.len(), frag.tex_coords_count as usize);
+        assert_eq!(frag.normals.len(), frag.normals_count as usize);
+        assert_eq!(frag.data4.len(), frag.size4 as usize);
+        assert_eq!(frag.polygons.len(), frag.polygon_count as usize);
+        assert_eq!(frag.data6.len(), frag.size6 as usize);
+        assert_eq!(frag.vertex_pieces.len(), frag.vertex_piece_count as usize);
+        assert_eq!(frag.size8, None);
+        assert_eq!(frag.data8, None);
+        assert_eq!(frag.data9.len(), 0);
+        assert_eq!(frag.polygontex_count, Some(2));
+        assert_eq!(frag.vertex_material_count, Some(2));
+        assert_eq!(frag.params5.unwrap().0, 3224882372); // FIXME: This is probably either a float or color 
+    }
+
+    #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
         let frag = AlternateMeshFragment::parse(data).unwrap().1;
