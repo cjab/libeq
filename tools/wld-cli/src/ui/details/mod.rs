@@ -244,6 +244,9 @@ pub fn draw_fragment_fields<B>(
         FragmentType::Unknown0x34(frag) => {
             draw_unknown_0x34_fragment(f, app, layout_chunk, &frag);
         }
+        FragmentType::Unknown0x2e(frag) => {
+            draw_unknown_0x2e_fragment(f, app, layout_chunk, &frag);
+        }
         FragmentType::BlitSpriteDefinition(frag) => {
             draw_blit_sprite_definition_fragment(f, app, layout_chunk, &frag);
         }
@@ -1384,6 +1387,37 @@ pub fn draw_unknown_0x34_fragment<B>(
         Row::new(vec!["Unknown 19", &unknown_19]),
         Row::new(vec!["Unknown 20", &unknown_20]),
         Row::new(vec!["Unknown 21", &unknown_21]),
+    ])
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default()),
+    )
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    )
+    .highlight_symbol(">> ")
+    .widths(&TABLE_WIDTHS)
+    .column_spacing(1);
+
+    f.render_widget(table, layout_chunk);
+}
+
+pub fn draw_unknown_0x2e_fragment<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment: &fragments::Unknown0x2eFragment,
+) where
+    B: Backend,
+{
+    
+
+    let table = Table::new(vec![
+
     ])
     .block(
         Block::default()
