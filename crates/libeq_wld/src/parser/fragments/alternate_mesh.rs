@@ -28,6 +28,7 @@ pub struct AlternateMeshFragment {
     /// * bit 11 - If set then the `polygon_tex_count` field and `polygon_tex` entries exist.
     /// * bit 12 - If set then the `vertex_tex_count` field and `vertex_tex` entries exist.
     /// * bit 13 - If set then the `params_3[]` fields exist
+    /// * bit 14 - If set then the `params_4[]` fields exist
     pub flags: u32,
 
     /// Tells how many vertices there are in the mesh. Normally this is three times the number
@@ -150,7 +151,12 @@ pub struct AlternateMeshFragment {
     pub vertex_materials: Option<Vec<(u16, u16)>>,
     
     /// its purpose is unknown. This field only exists if bit 13 of Flags is 1.
-    pub params3: Option<(u32,u32,u32)>
+    pub params3: Option<(u32,u32,u32)>,
+
+    /// its purpose is unknown. This field only exists if bit 14 of Flags is 1.
+    pub params5: Option<(u32,u32,u32,u32,u32,u32)>
+
+
 }
 
 impl FragmentParser for AlternateMeshFragment {
@@ -252,9 +258,15 @@ impl FragmentParser for AlternateMeshFragment {
         } else {
             (i, None)
         };
-
+        
         let (i, params3) = if flags & 0x2000 == 0x2000 { // Bit 13 set
             tuple((le_u32, le_u32, le_u32))(i).map(|(i, params3)| (i, Some(params3)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, params5) = if flags & 0x4000 == 0x4000 { // Bit 14 set
+            tuple((le_u32, le_u32, le_u32, le_u32, le_u32, le_u32))(i).map(|(i, params5)| (i, Some(params5)))?
         } else {
             (i, None)
         };
@@ -291,7 +303,8 @@ impl FragmentParser for AlternateMeshFragment {
                 polygontex_entries,
                 vertex_material_count,
                 vertex_materials,
-                params3
+                params3,
+                params5
             },
         ))
     }
