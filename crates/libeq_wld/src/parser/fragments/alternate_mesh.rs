@@ -588,6 +588,7 @@ mod tests {
         assert_eq!(frag.vertex_pieces.len(), frag.vertex_piece_count as usize);
         assert_eq!(frag.size8, None);
         assert_eq!(frag.data8, None);
+        assert_eq!(frag.data9.len(), 1);
         assert_eq!(frag.polygontex_count, Some(1));
         assert_eq!(frag.polygontex_entries, Some(vec![(12, 0)]));
         assert_eq!(frag.vertex_material_count, Some(1));
