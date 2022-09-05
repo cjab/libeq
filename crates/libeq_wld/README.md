@@ -36,6 +36,10 @@ for material in wld.materials() {
 }
 ```
 
+## Additional Documentation
+
+Additional WLD file format documentation can be found in the [docs](docs/) directory.
+
 ## Acknowledgements
 This project wouldn't have been possible without Windcatcher's [WLD File Reference](https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md).
 
