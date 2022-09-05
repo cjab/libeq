@@ -12,7 +12,8 @@
 //!
 //! fn main() {
 //!     // Extract .wld data from an .s3d file
-//!     let archive = EqArchive::read("fixtures/gfaydark.s3d").unwrap();
+//!     let file = std::fs::File::open("fixtures/gfaydark.s3d").unwrap();
+//!     let archive = EqArchive::read(&file).unwrap();
 //!     let (_, data) = archive
 //!         .iter()
 //!         .find(|(name, _)| name == "gfaydark.wld")
