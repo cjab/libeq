@@ -17,7 +17,7 @@ pub struct MeshReferenceFragment {
     pub name_reference: StringReference,
 
     /// The [MeshFragment] reference.
-    pub reference: FragmentRef<MeshFragment>,
+    pub reference: FragmentRef<MeshFragment>, // FIXME: Can also be AlternateMesh
 
     /// _Unknown_ - Apparently must be zero.
     pub params: u32,
