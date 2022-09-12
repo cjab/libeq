@@ -1231,23 +1231,23 @@ pub fn draw_skeleton_track_set_fragment<B>(
 ) where
     B: Backend,
 {
-    let flags = format!("0x{:x}  (b{:0>32b})", fragment.flags, fragment.flags);
-    let entry_count = format!("{:?}", fragment.entry_count);
-    let fragment_ref = format!("{:?}", fragment.fragment);
-    let unknown_params1 = format!("{:?}", fragment.unknown_params1);
-    let unknown_params2 = format!("{:?}", fragment.unknown_params2);
-    let entries = format!("{:?}", fragment.entries);
+    let flags = format!("{:?}", fragment.flags);
+    let num_dags = format!("{:?}", fragment.num_dags);
+    let collision_volume_reference = format!("{:?}", fragment.collision_volume_reference);
+    let center_offset = format!("{:?}", fragment.center_offset);
+    let bounding_radius = format!("{:?}", fragment.bounding_radius);
+    let dags = format!("{:?}", fragment.dags);
     let size2 = format!("{:?}", fragment.size2);
     let fragment3 = format!("{:?}", fragment.fragment3);
     let data3 = format!("{:?}", fragment.data3);
 
     let table = Table::new(vec![
         Row::new(vec!["Flags", &flags]),
-        Row::new(vec!["Entry Count", &entry_count]),
-        Row::new(vec!["Fragment Ref", &fragment_ref]),
-        Row::new(vec!["Params1", &unknown_params1]),
-        Row::new(vec!["Params2", &unknown_params2]),
-        Row::new(vec!["Entries", &entries]),
+        Row::new(vec!["Num dags", &num_dags]),
+        Row::new(vec!["Collision volume ref", &collision_volume_reference]),
+        Row::new(vec!["Center offset", &center_offset]),
+        Row::new(vec!["Bounding radius", &bounding_radius]),
+        Row::new(vec!["Dags", &dags]),
         Row::new(vec!["Size2", &size2]),
         Row::new(vec!["Fragment3", &fragment3]),
         Row::new(vec!["Data3", &data3]),
@@ -1414,25 +1414,21 @@ pub fn draw_unknown_0x2e_fragment<B>(
 ) where
     B: Backend,
 {
-    
-
-    let table = Table::new(vec![
-
-    ])
-    .block(
-        Block::default()
-            .borders(Borders::ALL)
-            .border_style(Style::default()),
-    )
-    .style(Style::default().fg(Color::White))
-    .highlight_style(
-        Style::default()
-            .bg(Color::LightGreen)
-            .add_modifier(Modifier::BOLD),
-    )
-    .highlight_symbol(">> ")
-    .widths(&TABLE_WIDTHS)
-    .column_spacing(1);
+    let table = Table::new(vec![])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default()),
+        )
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .widths(&TABLE_WIDTHS)
+        .column_spacing(1);
 
     f.render_widget(table, layout_chunk);
 }

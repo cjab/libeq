@@ -28,25 +28,24 @@ pub struct SkeletonTrackSetFragment {
     pub name_reference: StringReference,
 
     /// Most flags are _unknown_.
-    /// * bit 0 - If set then `unknown_params1` exists.
-    /// * bit 1 - If set then `unknown_params2` exists.
+    /// * bit 0 - If set then `center_offset` exists.
+    /// * bit 1 - If set then `bounding_radius` exists.
     /// * bit 9 - If set then `size2`, `fragment3`, and `data3` exist.
-    pub flags: u32,
+    pub flags: SkeletonTrackSetFlags,
 
     /// The number of track reference entries
-    pub entry_count: u32,
+    pub num_dags: u32,
 
     /// Optionally points to a 0x18 [PolygonAnimationReferenceFragment]?
-    pub fragment: u32,
+    /// TODO: This still needs investigation
+    pub collision_volume_reference: u32,
 
-    /// _Unknown_
-    pub unknown_params1: Option<(u32, u32, u32)>,
+    pub center_offset: Option<(u32, u32, u32)>,
 
-    /// _Unknown_
-    pub unknown_params2: Option<f32>,
+    pub bounding_radius: Option<f32>,
 
-    /// There are `entry_count` entries.
-    pub entries: Vec<SkeletonTrackSetFragmentEntry>,
+    /// There are `num_dags` entries.
+    pub dags: Vec<Dag>,
 
     /// The number of fragment3 and data3 entries there are.
     pub size2: Option<u32>,
@@ -68,30 +67,32 @@ impl FragmentParser for SkeletonTrackSetFragment {
     const TYPE_NAME: &'static str = "SkeletonTrackSet";
 
     fn parse(input: &[u8]) -> WResult<SkeletonTrackSetFragment> {
-        let (i, (name_reference, flags, entry_count, fragment)) =
-            tuple((StringReference::parse, le_u32, le_u32, le_u32))(input)?;
+        let (i, name_reference) = StringReference::parse(input)?;
+        let (i, flags) = SkeletonTrackSetFlags::parse(i)?;
+        let (i, num_dags) = le_u32(i)?;
+        let (i, collision_volume_reference) = le_u32(i)?;
 
-        let (i, unknown_params1) = if flags & 0x01 == 0x01 {
+        let (i, center_offset) = if flags.has_center_offset() {
             tuple((le_u32, le_u32, le_u32))(i).map(|(i, p1)| (i, Some(p1)))?
         } else {
             (i, None)
         };
 
-        let (i, unknown_params2) = if flags & 0x02 == 0x02 {
+        let (i, bounding_radius) = if flags.has_bounding_radius() {
             le_f32(i).map(|(i, p2)| (i, Some(p2)))?
         } else {
             (i, None)
         };
 
-        let (i, entries) = count(SkeletonTrackSetFragmentEntry::parse, entry_count as usize)(i)?;
+        let (i, dags) = count(Dag::parse, num_dags as usize)(i)?;
 
-        let (i, size2) = if flags & 0x200 == 0x200 {
+        let (i, size2) = if flags.has_unknown_flag() {
             le_u32(i).map(|(i, size2)| (i, Some(size2)))?
         } else {
             (i, None)
         };
 
-        let (remaining, (fragment3, data3)) = if flags & 0x200 == 0x200 {
+        let (remaining, (fragment3, data3)) = if flags.has_unknown_flag() {
             let size = size2.unwrap_or(0) as usize;
             tuple((count(le_u32, size), count(le_u32, size)))(i)
                 .map(|(i, (f3, d3))| (i, (Some(f3), Some(d3))))?
@@ -104,11 +105,11 @@ impl FragmentParser for SkeletonTrackSetFragment {
             SkeletonTrackSetFragment {
                 name_reference,
                 flags,
-                entry_count,
-                fragment,
-                unknown_params1,
-                unknown_params2,
-                entries,
+                num_dags,
+                collision_volume_reference,
+                center_offset,
+                bounding_radius,
+                dags,
                 size2,
                 fragment3,
                 data3,
@@ -120,7 +121,7 @@ impl FragmentParser for SkeletonTrackSetFragment {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// Entries in the map's [SkeletonTrackSetFragment]
-pub struct SkeletonTrackSetFragmentEntry {
+pub struct Dag {
     /// This seems to refer to the name of either this or another 0x10 fragment.
     /// It seems that at least one name reference points to the name of this fragment.
     pub name_reference: u32,
@@ -144,13 +145,13 @@ pub struct SkeletonTrackSetFragmentEntry {
     /// generally immediately follow the 0x10 Skeleton Track Set fragment (with the
     /// 0x11 Skeleton Track Set Reference immediately following those). I don’t know
     /// if this is a necessary arrangement.
-    pub fragment1: u32,
+    pub track_reference: u32,
 
     /// Sometimes refers to a 0x2D Mesh Reference fragment.
-    pub fragment2: u32,
+    pub mesh_or_sprite_reference: u32,
 
     /// The number of data entries
-    pub data_entry_count: u32,
+    pub num_sub_dags: u32,
 
     /// Each of these contains the index of the next piece in the skeleton tree. A
     /// Skeleton Track Set is a hierarchical tree of pieces in the skeleton. It
@@ -171,25 +172,27 @@ pub struct SkeletonTrackSetFragmentEntry {
     /// for weapons and shields and are otherwise not meant to be rendered. These pieces are
     /// generally not referenced by the 0x36 Mesh fragments that the skeleton indirectly
     /// references (via 0x2D Mesh Reference fragments).
-    pub data_entries: Vec<u32>,
+    pub sub_dags: Vec<u32>,
 }
 
-impl SkeletonTrackSetFragmentEntry {
-    fn parse(input: &[u8]) -> WResult<SkeletonTrackSetFragmentEntry> {
-        let (i, (name_reference, flags, fragment1, fragment2, data_entry_count)) =
-            tuple((le_u32, le_u32, le_u32, le_u32, le_u32))(input)?;
-
-        let (remaining, data_entries) = count(le_u32, data_entry_count as usize)(i)?;
+impl Dag {
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, name_reference) = le_u32(input)?;
+        let (i, flags) = le_u32(i)?;
+        let (i, track_reference) = le_u32(i)?;
+        let (i, mesh_or_sprite_reference) = le_u32(i)?;
+        let (i, num_sub_dags) = le_u32(i)?;
+        let (remaining, sub_dags) = count(le_u32, num_sub_dags as usize)(i)?;
 
         Ok((
             remaining,
-            SkeletonTrackSetFragmentEntry {
+            Self {
                 name_reference,
                 flags,
-                fragment1,
-                fragment2,
-                data_entry_count,
-                data_entries,
+                track_reference,
+                mesh_or_sprite_reference,
+                num_sub_dags,
+                sub_dags,
             },
         ))
     }
@@ -198,11 +201,11 @@ impl SkeletonTrackSetFragmentEntry {
         [
             &self.name_reference.to_le_bytes()[..],
             &self.flags.to_le_bytes()[..],
-            &self.fragment1.to_le_bytes()[..],
-            &self.fragment2.to_le_bytes()[..],
-            &self.data_entry_count.to_le_bytes()[..],
+            &self.track_reference.to_le_bytes()[..],
+            &self.mesh_or_sprite_reference.to_le_bytes()[..],
+            &self.num_sub_dags.to_le_bytes()[..],
             &self
-                .data_entries
+                .sub_dags
                 .iter()
                 .flat_map(|d| d.to_le_bytes())
                 .collect::<Vec<_>>()[..],
@@ -215,17 +218,17 @@ impl Fragment for SkeletonTrackSetFragment {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
-            &self.flags.to_le_bytes()[..],
-            &self.entry_count.to_le_bytes()[..],
-            &self.fragment.to_le_bytes()[..],
-            &self.unknown_params1.map_or(vec![], |p| {
+            &self.flags.into_bytes()[..],
+            &self.num_dags.to_le_bytes()[..],
+            &self.collision_volume_reference.to_le_bytes()[..],
+            &self.center_offset.map_or(vec![], |p| {
                 [p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes()].concat()
             })[..],
             &self
-                .unknown_params2
+                .bounding_radius
                 .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
             &self
-                .entries
+                .dags
                 .iter()
                 .flat_map(|e| e.into_bytes())
                 .collect::<Vec<_>>()[..],
@@ -255,6 +258,37 @@ impl Fragment for SkeletonTrackSetFragment {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+pub struct SkeletonTrackSetFlags(u32);
+
+impl SkeletonTrackSetFlags {
+    const HAS_CENTER_OFFSET: u32 = 0x01;
+    const HAS_BOUNDING_RADIUS: u32 = 0x02;
+    const UNKNOWN_FLAG: u32 = 0x200;
+
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (remaining, raw_flags) = le_u32(input)?;
+        Ok((remaining, Self(raw_flags)))
+    }
+
+    fn into_bytes(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
+    }
+
+    pub fn has_center_offset(&self) -> bool {
+        self.0 & Self::HAS_CENTER_OFFSET == Self::HAS_CENTER_OFFSET
+    }
+
+    pub fn has_bounding_radius(&self) -> bool {
+        self.0 & Self::HAS_BOUNDING_RADIUS == Self::HAS_BOUNDING_RADIUS
+    }
+
+    pub fn has_unknown_flag(&self) -> bool {
+        self.0 & Self::UNKNOWN_FLAG == Self::UNKNOWN_FLAG
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -265,18 +299,18 @@ mod tests {
         let frag = SkeletonTrackSetFragment::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-211));
-        assert_eq!(frag.entry_count, 3);
-        assert_eq!(frag.fragment, 0);
-        assert_eq!(frag.unknown_params1, None);
-        assert_eq!(frag.unknown_params2, Some(0.81542796));
-        assert_eq!(frag.entries.len(), 3);
-        assert_eq!(frag.entries[0].name_reference, 4294967128);
-        assert_eq!(frag.entries[0].flags, 0);
-        assert_eq!(frag.entries[0].fragment1, 8);
-        assert_eq!(frag.entries[0].fragment2, 0);
-        assert_eq!(frag.entries[0].data_entry_count, 1);
-        assert_eq!(frag.entries[0].data_entries.len(), 1);
-        assert_eq!(frag.entries[0].data_entries[0], 1);
+        assert_eq!(frag.num_dags, 3);
+        assert_eq!(frag.collision_volume_reference, 0);
+        assert_eq!(frag.center_offset, None);
+        assert_eq!(frag.bounding_radius, Some(0.81542796));
+        assert_eq!(frag.dags.len(), 3);
+        assert_eq!(frag.dags[0].name_reference, 4294967128);
+        assert_eq!(frag.dags[0].flags, 0);
+        assert_eq!(frag.dags[0].track_reference, 8);
+        assert_eq!(frag.dags[0].mesh_or_sprite_reference, 0);
+        assert_eq!(frag.dags[0].num_sub_dags, 1);
+        assert_eq!(frag.dags[0].sub_dags.len(), 1);
+        assert_eq!(frag.dags[0].sub_dags[0], 1);
         assert_eq!(frag.size2, Some(1));
         assert_eq!(frag.fragment3.unwrap(), vec![13]);
         assert_eq!(frag.data3.unwrap(), vec![2]);
