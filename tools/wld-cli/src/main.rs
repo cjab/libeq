@@ -197,8 +197,12 @@ fn extract(wld_filename: &str, destination: &str, format: &Format) {
         }
         Format::Ron => {
             let out = fs::File::create(destination).expect("Could not create destination file");
-            ron::ser::to_writer_pretty(out, &wld_doc, ron::ser::PrettyConfig::new())
-                .expect("Could not serialize to json")
+            ron::ser::to_writer_pretty(
+                out,
+                &wld_doc,
+                ron::ser::PrettyConfig::new().enumerate_arrays(true),
+            )
+            .expect("Could not serialize to json")
         }
     }
 }
