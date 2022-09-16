@@ -3,7 +3,7 @@ use std::any::Any;
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
-use nom::number::complete::{le_f32, le_u32};
+use nom::number::complete::{le_f32, le_i32, le_u32};
 use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
@@ -124,7 +124,7 @@ impl FragmentParser for SkeletonTrackSetFragment {
 pub struct Dag {
     /// This seems to refer to the name of either this or another 0x10 fragment.
     /// It seems that at least one name reference points to the name of this fragment.
-    pub name_reference: u32,
+    pub name_reference: i32,
 
     /// _Unknown_ - Usually 0x0
     pub flags: u32,
@@ -177,7 +177,7 @@ pub struct Dag {
 
 impl Dag {
     fn parse(input: &[u8]) -> WResult<Self> {
-        let (i, name_reference) = le_u32(input)?;
+        let (i, name_reference) = le_i32(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, track_reference) = le_u32(i)?;
         let (i, mesh_or_sprite_reference) = le_u32(i)?;
@@ -304,7 +304,7 @@ mod tests {
         assert_eq!(frag.center_offset, None);
         assert_eq!(frag.bounding_radius, Some(0.81542796));
         assert_eq!(frag.dags.len(), 3);
-        assert_eq!(frag.dags[0].name_reference, 4294967128);
+        assert_eq!(frag.dags[0].name_reference, -168);
         assert_eq!(frag.dags[0].flags, 0);
         assert_eq!(frag.dags[0].track_reference, 8);
         assert_eq!(frag.dags[0].mesh_or_sprite_reference, 0);
