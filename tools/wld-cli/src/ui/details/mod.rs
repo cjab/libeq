@@ -5,12 +5,12 @@ use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::Spans,
+    text::{Span, Spans},
     widgets::{Block, Borders, Paragraph, Row, Table, Tabs},
     Frame,
 };
 
-use super::{ACTIVE_BLOCK_COLOR, INACTIVE_BLOCK_COLOR};
+use super::{get_frag_name_and_color, ACTIVE_BLOCK_COLOR, INACTIVE_BLOCK_COLOR};
 use crate::app::{ActiveBlock, App};
 
 const TABLE_WIDTHS: [Constraint; 2] = [Constraint::Length(10), Constraint::Length(100)];
@@ -26,7 +26,7 @@ where
 
     let layout = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(5), Constraint::Min(0)].as_ref())
+        .constraints([Constraint::Length(4), Constraint::Min(0)].as_ref())
         .split(layout_chunk);
 
     let fragment_idx = app.selected_fragment_idx.expect("No fragment selected");
@@ -52,15 +52,22 @@ pub fn draw_fragment_header<B>(
         ActiveBlock::FragmentDetails => ACTIVE_BLOCK_COLOR,
         _ => INACTIVE_BLOCK_COLOR,
     };
+    let name = app
+        .wld_doc
+        .get_string(*fragment.name_ref())
+        .map_or("".to_string(), |n| format!("{}", n));
+    let (frag_type_name, frag_color) = get_frag_name_and_color(fragment);
 
     let table = Table::new(vec![
-        Row::new(vec!["Size", "--"]),
-        Row::new(vec!["Type", "--"]),
-        Row::new(vec!["Name Ref", "--"]),
+        Row::new(vec![Span::styled(
+            format!("{}", frag_type_name),
+            Style::default().fg(frag_color),
+        )]),
+        Row::new(vec![name]),
     ])
     .block(
         Block::default()
-            .title(format!("Header - 0x{:x} ({})", fragment_idx, fragment_idx))
+            .title(format!("Header - {}", fragment_idx + 1))
             .borders(Borders::ALL)
             .border_style(Style::default().fg(border_color)),
     )
@@ -71,7 +78,7 @@ pub fn draw_fragment_header<B>(
             .add_modifier(Modifier::BOLD),
     )
     .highlight_symbol(">> ")
-    .widths(&TABLE_WIDTHS)
+    .widths(&[Constraint::Length(100), Constraint::Length(0)])
     .column_spacing(1);
 
     f.render_widget(table, layout_chunk);
