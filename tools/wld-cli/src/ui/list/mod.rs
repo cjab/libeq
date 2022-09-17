@@ -11,7 +11,7 @@ use tui::{
 use crate::app::{ActiveBlock, App};
 use crate::ui::{get_frag_name_and_color, ACTIVE_BLOCK_COLOR, INACTIVE_BLOCK_COLOR};
 
-fn draw_fragment<'a>(app: &'a App, fragment_type: &FragmentType) -> ListItem<'a> {
+fn draw_fragment<'a>(app: &'a App, idx: usize, fragment_type: &FragmentType) -> ListItem<'a> {
     let name = app
         .wld_doc
         .get_string(*fragment_type.name_ref())
@@ -19,10 +19,13 @@ fn draw_fragment<'a>(app: &'a App, fragment_type: &FragmentType) -> ListItem<'a>
 
     let (frag_type_name, color) = get_frag_name_and_color(fragment_type);
 
-    let lines = vec![Spans::from(vec![Span::styled(
-        format!("{}{}", frag_type_name, name),
-        Style::default().fg(color),
-    )])];
+    let lines = vec![Spans::from(vec![
+        Span::styled(format!("{:>5} ", idx + 1), Style::default()),
+        Span::styled(
+            format!("{}{}", frag_type_name, name),
+            Style::default().fg(color),
+        ),
+    ])];
     ListItem::new(lines).style(Style::default().fg(Color::White).bg(Color::Black))
 }
 
@@ -30,7 +33,12 @@ pub fn draw_fragment_list<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
 where
     B: Backend,
 {
-    let list_items: Vec<_> = app.wld_doc.iter().map(|f| draw_fragment(&app, f)).collect();
+    let list_items: Vec<_> = app
+        .wld_doc
+        .iter()
+        .enumerate()
+        .map(|(idx, f)| draw_fragment(&app, idx, f))
+        .collect();
 
     draw_selectable_list(
         f,
