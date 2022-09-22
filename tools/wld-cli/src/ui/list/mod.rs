@@ -20,7 +20,7 @@ fn draw_fragment<'a>(app: &'a App, idx: usize, fragment_type: &FragmentType) -> 
     let (frag_type_name, color) = get_frag_name_and_color(fragment_type);
 
     let lines = vec![Spans::from(vec![
-        Span::styled(format!("{:>5} ", idx + 1), Style::default()),
+        Span::styled(format!("{:>5} ", idx), Style::default()),
         Span::styled(
             format!("{}{}", frag_type_name, name),
             Style::default().fg(color),
