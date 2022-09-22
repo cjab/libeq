@@ -43,7 +43,7 @@ pub mod parser;
 use parser::{
     FragmentRef, MaterialFragment, MeshAnimatedVerticesFragment, MeshFragment,
     MeshFragmentPolygonEntry, MeshReferenceFragment, ModelFragment, ObjectLocationFragment,
-    TextureFragment, TransparencyFlags, WldDoc,
+    TextureFragment, TransparencyFlags, WldDoc, TextureFragmentFlags
 };
 use std::error::Error;
 
@@ -370,14 +370,19 @@ impl<'a> Texture<'a> {
         self.doc.get_string(self.fragment.name_reference)
     }
 
+
+    pub fn flags(&self) -> &TextureFragmentFlags {
+        &self.fragment.flags
+    }
+    
     /// The name of the source image used by this texture. Wld files in theory support multiple
     /// source images per texture but in practice only ever seem to have one.
-    pub fn source(&self) -> Option<String> {
+    pub fn iter_sources(&self) -> impl Iterator<Item=String> + '_ {
         self.fragment
             .frame_references
             .iter()
             // [TextureFragment]s reference a [TextureImagesFragment]
-            .map(|r| self.doc.get(&r))
+            .map(move |r| self.doc.get(&r))
             .flat_map(|image| match image {
                 // The [TextureImagesFragment] itself contains a collection of filenames. In
                 // practice this seems to always be just a single filename.
@@ -390,6 +395,12 @@ impl<'a> Texture<'a> {
                     .collect::<Vec<_>>(),
                 None => vec![],
             })
+    }
+
+    /// The name of the source image used by this texture. Wld files in theory support multiple
+    /// source images per texture but in practice only ever seem to have one.
+    pub fn source(&self) -> Option<String> {
+        self.iter_sources()
             .nth(0)
     }
 }
