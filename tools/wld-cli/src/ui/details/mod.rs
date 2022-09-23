@@ -48,10 +48,6 @@ pub fn draw_fragment_header<B>(
 ) where
     B: Backend,
 {
-    let border_color = match app.route.active_block {
-        ActiveBlock::FragmentDetails => ACTIVE_BLOCK_COLOR,
-        _ => INACTIVE_BLOCK_COLOR,
-    };
     let name = app
         .wld_doc
         .get_string(*fragment.name_ref())
@@ -69,7 +65,7 @@ pub fn draw_fragment_header<B>(
         Block::default()
             .title(format!("Header - {}", fragment_idx + 1))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(border_color)),
+            .border_style(Style::default().fg(INACTIVE_BLOCK_COLOR)),
     )
     .style(Style::default().fg(Color::White))
     .highlight_style(
@@ -175,13 +171,14 @@ pub fn draw_fragment_fields<B>(
         _ => INACTIVE_BLOCK_COLOR,
     };
 
-    let table = Paragraph::new(format!("{:#?}", fragment))
+    let fields = Paragraph::new(format!("{:#?}", fragment))
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default()),
+                .border_style(Style::default().fg(border_color)),
         )
-        .style(Style::default().fg(Color::White));
+        .style(Style::default().fg(Color::White))
+        .scroll(app.detail_scroll_pos);
 
-    f.render_widget(table, layout_chunk);
+    f.render_widget(fields, layout_chunk);
 }
