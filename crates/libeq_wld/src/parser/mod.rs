@@ -210,18 +210,17 @@ pub struct WldHeader {
     /// The number of fragments in the .wld file minus 1
     fragment_count: u32,
 
-    /// Believed to contain the number of 0x22 BSP region fragments in the file
-    header_3: u32,
+    /// The number of region fragments in the file
+    region_count: u32,
 
-    /// _Unknown_ - Usually contains `0x000680D4`.
-    header_4: u32,
+    /// The size of the largest fragment in the file
+    max_object_bytes: u32,
 
     /// The size of the string hash in bytes.
     string_hash_size: u32,
 
-    /// _Unknown_ - Possibly contains the number of fragments in the file minus the
-    /// number of 0x03 fragments, minus 6
-    header_6: u32,
+    /// The number of strings in the string hash
+    string_count: u32,
 }
 
 impl WldHeader {
@@ -229,10 +228,10 @@ impl WldHeader {
         let (i, magic) = le_u32(input)?;
         let (i, version) = le_u32(i)?;
         let (i, fragment_count) = le_u32(i)?;
-        let (i, header_3) = le_u32(i)?;
-        let (i, header_4) = le_u32(i)?;
+        let (i, region_count) = le_u32(i)?;
+        let (i, max_object_bytes) = le_u32(i)?;
         let (i, string_hash_size) = le_u32(i)?;
-        let (i, header_6) = le_u32(i)?;
+        let (i, string_count) = le_u32(i)?;
 
         Ok((
             i,
@@ -240,10 +239,10 @@ impl WldHeader {
                 magic,
                 version,
                 fragment_count,
-                header_3,
-                header_4,
+                region_count,
+                max_object_bytes,
                 string_hash_size,
-                header_6,
+                string_count,
             },
         ))
     }
@@ -253,10 +252,10 @@ impl WldHeader {
             &self.magic.to_le_bytes()[..],
             &self.version.to_le_bytes()[..],
             &self.fragment_count.to_le_bytes()[..],
-            &self.header_3.to_le_bytes()[..],
-            &self.header_4.to_le_bytes()[..],
+            &self.region_count.to_le_bytes()[..],
+            &self.max_object_bytes.to_le_bytes()[..],
             &self.string_hash_size.to_le_bytes()[..],
-            &self.header_6.to_le_bytes()[..],
+            &self.string_count.to_le_bytes()[..],
         ]
         .concat()
     }
@@ -451,6 +450,10 @@ impl<'a> FragmentHeader<'a> {
                 Unknown0x34Fragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Unknown0x34(f.1))),
             ),
+            Unknown0x2eFragment::TYPE_ID => Some(
+                Unknown0x2eFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Unknown0x2e(f.1))),
+            ),
             _ => None,
         };
 
@@ -497,10 +500,10 @@ mod tests {
         assert_eq!(wld_doc.header.magic, 1414544642);
         assert_eq!(wld_doc.header.version, 0x00015500);
         assert_eq!(wld_doc.header.fragment_count, 4646);
-        assert_eq!(wld_doc.header.header_3, 2905);
-        assert_eq!(wld_doc.header.header_4, 162660);
+        assert_eq!(wld_doc.header.region_count, 2905);
+        assert_eq!(wld_doc.header.max_object_bytes, 162660);
         assert_eq!(wld_doc.header.string_hash_size, 52692);
-        assert_eq!(wld_doc.header.header_6, 4609);
+        assert_eq!(wld_doc.header.string_count, 4609);
         assert_eq!(wld_doc.fragments.len(), 4646);
         assert_eq!(wld_doc.strings.get(StringReference::new(0)), Some(""));
         assert_eq!(wld_doc.strings.get(StringReference::new(1)), Some("SGRASS"));
