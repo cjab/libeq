@@ -65,7 +65,7 @@
           nativeBuildInputs = with pkgs; [
             rustc
             cargo
-            pkgconfig
+            pkg-config
             nixpkgs-fmt
             rust-analyzer
             perf-tools
