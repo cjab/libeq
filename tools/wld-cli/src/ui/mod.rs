@@ -148,7 +148,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Color::Rgb(0x00, 0x64, 0x00),
         ),
         FragmentType::TwoDimensionalObjectReference(_) => (
-            TwoDimensionalObjectFragment::TYPE_NAME,
+            TwoDimensionalObjectReferenceFragment::TYPE_NAME,
             Color::Rgb(0x80, 0x80, 0x00),
         ),
         FragmentType::Unknown0x34(_) => {
