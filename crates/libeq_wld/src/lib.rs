@@ -43,7 +43,7 @@ pub mod parser;
 use parser::{
     FragmentRef, MaterialFragment, MeshAnimatedVerticesFragment, MeshFragment,
     MeshFragmentPolygonEntry, MeshReferenceFragment, ModelFragment, ObjectLocationFragment,
-    TextureFragment, TransparencyFlags, WldDoc, TextureFragmentFlags
+    RenderMethod, TextureFragment, TextureFragmentFlags, WldDoc,
 };
 use std::error::Error;
 
@@ -349,12 +349,8 @@ impl<'a> Material<'a> {
             })
     }
 
-    pub fn transparency_flags(&self) -> &TransparencyFlags {
-        &self.fragment.transparency_flags
-    }
-
-    pub fn mask_color_coord(&self) -> &(f32, f32) {
-        &self.fragment.mask_color_coord
+    pub fn render_method(&self) -> &RenderMethod {
+        &self.fragment.render_method
     }
 }
 
@@ -370,14 +366,13 @@ impl<'a> Texture<'a> {
         self.doc.get_string(self.fragment.name_reference)
     }
 
-
     pub fn flags(&self) -> &TextureFragmentFlags {
         &self.fragment.flags
     }
-    
+
     /// The name of the source image used by this texture. Wld files in theory support multiple
     /// source images per texture but in practice only ever seem to have one.
-    pub fn iter_sources(&self) -> impl Iterator<Item=String> + '_ {
+    pub fn iter_sources(&self) -> impl Iterator<Item = String> + '_ {
         self.fragment
             .frame_references
             .iter()
@@ -400,8 +395,7 @@ impl<'a> Texture<'a> {
     /// The name of the source image used by this texture. Wld files in theory support multiple
     /// source images per texture but in practice only ever seem to have one.
     pub fn source(&self) -> Option<String> {
-        self.iter_sources()
-            .nth(0)
+        self.iter_sources().nth(0)
     }
 }
 
