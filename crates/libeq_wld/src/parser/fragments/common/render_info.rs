@@ -307,7 +307,7 @@ impl std::fmt::Debug for RenderMethod {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            r#"RenderMethod(0x{:x}) {{
+            r#"RenderMethod(0b{:b}) {{
     draw_style: {:?}
     lighting: {:?}
     shading: {:?}
