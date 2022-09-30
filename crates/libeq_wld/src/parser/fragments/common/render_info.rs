@@ -297,6 +297,12 @@ impl RenderMethod {
     }
 }
 
+impl From<RenderMethod> for u32 {
+    fn from(value: RenderMethod) -> Self {
+        value.0
+    }
+}
+
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, FromPrimitive, PartialEq)]
 pub enum DrawStyle {
