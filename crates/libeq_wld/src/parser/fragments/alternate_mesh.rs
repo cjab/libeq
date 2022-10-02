@@ -66,18 +66,16 @@ pub struct AlternateMeshFragment {
     /// to define attachment points for objects (e.g. weapons or shields).
     pub vertex_piece_count: i16,
 
+    pub size9: u32,
+
     /// References a 0x31 [MaterialListFragment]. It tells the client which textures this mesh
     /// uses. For zone meshes, a single 0x31 fragment should be built that contains all the
     /// textures used in the entire zone. For placeable objects, there should be a 0x31
     /// fragment that references only those textures used in that particular object.
-    //pub fragment1: FragmentRef<MaterialListFragment>,
-    pub fragment1: u32,
+    pub material_list_ref: FragmentRef<MaterialListFragment>,
 
     /// _Unknown_
     pub fragment2: u32,
-
-    /// _Unknown_
-    pub fragment3: u32,
 
     /// This seems to define the center of the model and is used for positioning (I think).
     pub center: (f32, f32, f32),
@@ -123,7 +121,7 @@ pub struct AlternateMeshFragment {
     /// _Unknown_
     pub params4: Vec<u16>,
     
-    /// _Unknown_ - There are 'fragment1' of these if Bit 0 is unset
+    /// _Unknown_ - There are 'size9' of these
     pub data9: Vec<(u16,u16)>,
 
     /// Tells how many PolygonTex entries there are. Polygons are grouped together by texture and PolygonTex entries tell the client how many polygons there are that use a particular texture. This field only exists if bit 11 of Flags is 1.
@@ -156,7 +154,6 @@ pub struct AlternateMeshFragment {
     /// its purpose is unknown. This field only exists if bit 14 of Flags is 1.
     pub params5: Option<(u32,u32,u32,u32,u32,u32)>
 
-
 }
 
 impl FragmentParser for AlternateMeshFragment {
@@ -178,9 +175,9 @@ impl FragmentParser for AlternateMeshFragment {
                 polygon_count,
                 size6,
                 vertex_piece_count,
-                fragment1,
+                size9,
+                material_list_ref,
                 fragment2,
-                fragment3,
                 center,
                 params2,
             ),
@@ -195,7 +192,7 @@ impl FragmentParser for AlternateMeshFragment {
             le_u16,
             le_i16,
             le_u32,
-            le_u32,
+            FragmentRef::parse,
             le_u32,
             tuple((le_f32, le_f32, le_f32)),
             le_u32,
@@ -229,11 +226,7 @@ impl FragmentParser for AlternateMeshFragment {
 
         let (i, params4) = count(le_u16, 4)(i)?;
 
-        let (i, data9) = if flags & 0x01 != 0x01 { // Bit 0 is unset
-            count(tuple((le_u16, le_u16)), fragment1 as usize)(i)?
-        } else {
-            (i, vec![])
-        };
+        let (i, data9) = count(tuple((le_u16, le_u16)), size9 as usize)(i)?;
 
         let (i, polygontex_count) = if flags & 0x800 == 0x800 { // Bit 11 set
             le_u32(i).map(|(i, polygontex_count)| (i, Some(polygontex_count)))?
@@ -283,9 +276,9 @@ impl FragmentParser for AlternateMeshFragment {
                 polygon_count,
                 size6,
                 vertex_piece_count,
-                fragment1,
+                size9,
+                material_list_ref,
                 fragment2,
-                fragment3,
                 center,
                 params2,
                 vertices,
@@ -394,9 +387,9 @@ impl Fragment for AlternateMeshFragment {
             &self.polygon_count.to_le_bytes()[..],
             &self.size6.to_le_bytes()[..],
             &self.vertex_piece_count.to_le_bytes()[..],
-            &self.fragment1.to_le_bytes()[..],
+            &self.size9.to_le_bytes()[..],
+            &self.material_list_ref.into_bytes()[..],
             &self.fragment2.to_le_bytes()[..],
-            &self.fragment3.to_le_bytes()[..],
             &self.center.0.to_le_bytes()[..],
             &self.center.1.to_le_bytes()[..],
             &self.center.2.to_le_bytes()[..],
@@ -581,9 +574,9 @@ mod tests {
         assert_eq!(frag.polygon_count, 12);
         assert_eq!(frag.size6, 64);
         assert_eq!(frag.vertex_piece_count, 0);
-        assert_eq!(frag.fragment1, 1);
-        assert_eq!(frag.fragment2, 5);
-        assert_eq!(frag.fragment3, 0);
+        assert_eq!(frag.size9, 1);
+        assert_eq!(frag.material_list_ref, FragmentRef::new(5));
+        assert_eq!(frag.fragment2, 0);
         assert_eq!(frag.center, (0.0, 0.0, 0.0));
         assert_eq!(frag.params2, 0);
         assert_eq!(frag.vertices.len(), frag.vertex_count as usize);
@@ -598,6 +591,9 @@ mod tests {
         assert_eq!(frag.polygons[0].data, (46010, 0, 49024, 75));
         assert_eq!(frag.polygons[0].vertex_indexes, (0, 0, 0));
         assert_eq!(frag.data6.len(), frag.size6 as usize);
+        assert_eq!(frag.data6[0].param1, 22);
+        assert_eq!(frag.data6[0].param2, 20);
+        assert_eq!(frag.data6[0].type_field, 2);
         assert_eq!(frag.vertex_pieces.len(), frag.vertex_piece_count as usize);
         assert_eq!(frag.size8, None);
         assert_eq!(frag.data8, None);
@@ -622,9 +618,9 @@ mod tests {
         assert_eq!(frag.polygon_count, 28);
         assert_eq!(frag.size6, 0);
         assert_eq!(frag.vertex_piece_count, 0);
-        assert_eq!(frag.fragment1, 0);
-        assert_eq!(frag.fragment2, 567);
-        assert_eq!(frag.fragment3, 0);
+        assert_eq!(frag.size9, 0);
+        assert_eq!(frag.material_list_ref, FragmentRef::new(567));
+        assert_eq!(frag.fragment2, 0);
         assert_eq!(frag.center, (0.0, 0.0, 2.2031567));
         assert_eq!(frag.params2, 3141746767); // FIXME: Doesn't seem like this should be a u32.  Could be a float.
         assert_eq!(frag.vertices.len(), frag.vertex_count as usize);
