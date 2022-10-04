@@ -74,14 +74,14 @@ pub struct MeshFragment {
     pub max: (f32, f32, f32),
 
     /// Tells how many vertices there are in the mesh. Normally this is three times
-    /// the number of polygons, but this is by no means necessary as polygons can
+    /// the number of faces, but this is by no means necessary as faces can
     /// share vertices. However, sharing vertices degrades the ability to use vertex
     /// normals to make a mesh look more rounded (with shading).
     pub position_count: u16,
 
     /// The number of texture coordinate pairs there are in the mesh. This should
     /// equal the number of vertices in the mesh. Presumably this could contain zero
-    /// if none of the polygons have textures mapped to them (but why would anyone do that?)
+    /// if none of the faces have textures mapped to them (but why would anyone do that?)
     pub texture_coordinate_count: u16,
 
     /// The number of vertex normal entries in the mesh. This should equal the number
@@ -93,24 +93,24 @@ pub struct MeshFragment {
     /// The number of vertex color entries in the mesh. This should equal the number
     /// of vertices in the mesh, or zero if there are no vertex color entries.
     /// Meshes do not require color entries to work. Color entries are used for
-    /// illuminating polygons when there is a nearby light source.
+    /// illuminating faces when there is a nearby light source.
     pub color_count: u16,
 
-    /// The number of polygons in the mesh.
-    pub polygon_count: u16,
+    /// The number of faces in the mesh.
+    pub face_count: u16,
 
     /// This seems to only be used when dealing with animated (mob) models.
     /// It contains the number of vertex piece entries. Vertices are grouped together by
     /// skeleton piece in this case and vertex piece entries tell the client how
     /// many vertices are in each piece. It’s possible that there could be more
     /// pieces in the skeleton than are in the meshes it references. Extra pieces have
-    /// no polygons or vertices and I suspect they are there to define attachment points for
+    /// no faces or vertices and I suspect they are there to define attachment points for
     /// objects (e.g. weapons or shields).
     pub vertex_piece_count: u16,
 
-    /// The number of polygon texture entries. Polygons are grouped together by
+    /// The number of polygon texture entries. faces are grouped together by
     /// material and polygon material entries. This tells the client the number of
-    /// polygons using a material.
+    /// faces using a material.
     pub polygon_material_count: u16,
 
     /// The number of vertex material entries. Vertices are grouped together
@@ -154,8 +154,8 @@ pub struct MeshFragment {
     /// most illuminated vertices.
     pub vertex_colors: Vec<u32>,
 
-    /// A collection of [MeshFragmentPolygonEntry]s used in this mesh.
-    pub polygons: Vec<MeshFragmentPolygonEntry>,
+    /// A collection of [MeshFragmentFaceEntry]s used in this mesh.
+    pub faces: Vec<MeshFragmentFaceEntry>,
 
     /// The first element of the tuple is the number of vertices in a skeleton piece.
     ///
@@ -163,19 +163,19 @@ pub struct MeshFragment {
     /// [SkeletonTrackSet] fragment. The very first piece (index 0) is usually not referenced here
     /// as it is usually jsut a "stem" starting point for the skeleton. Only those pieces
     /// referenced here in the mesh should actually be rendered. Any other pieces in the skeleton
-    /// contain no vertices or polygons And have other purposes.
+    /// contain no vertices or faces And have other purposes.
     pub vertex_pieces: Vec<(u16, u16)>,
 
-    /// The first element of the tuple is the number of polygons that use the same material. All
-    /// polygon entries are sorted by material index so that polygons use the same material are
+    /// The first element of the tuple is the number of faces that use the same material. All
+    /// polygon entries are sorted by material index so that faces use the same material are
     /// grouped together.
     ///
-    /// The second element of the tuple is the index of the material that the polygons use according
+    /// The second element of the tuple is the index of the material that the faces use according
     /// to the [MaterialListFragment] that this fragment references.
     pub polygon_materials: Vec<(u16, u16)>,
 
     /// The first element of the tuple is the number of vertices that use the same
-    /// material. Vertex materials, like polygons, are sorted by material index so
+    /// material. Vertex materials, like faces, are sorted by material index so
     /// that vertices that use the same material are together.
     ///
     /// The second element of the tuple is the index of the material that the
@@ -212,7 +212,7 @@ impl FragmentParser for MeshFragment {
                 texture_coordinate_count,
                 normal_count,
                 color_count,
-                polygon_count,
+                face_count,
                 vertex_piece_count,
                 polygon_material_count,
                 vertex_material_count,
@@ -250,7 +250,7 @@ impl FragmentParser for MeshFragment {
                 texture_coordinates,
                 vertex_normals,
                 vertex_colors,
-                polygons,
+                faces,
                 vertex_pieces,
                 polygon_materials,
                 vertex_materials,
@@ -261,7 +261,7 @@ impl FragmentParser for MeshFragment {
             count(tuple((le_i16, le_i16)), texture_coordinate_count as usize),
             count(tuple((le_i8, le_i8, le_i8)), normal_count as usize),
             count(le_u32, color_count as usize),
-            count(MeshFragmentPolygonEntry::parse, polygon_count as usize),
+            count(MeshFragmentFaceEntry::parse, face_count as usize),
             count(tuple((le_u16, le_u16)), vertex_piece_count as usize),
             count(tuple((le_u16, le_u16)), polygon_material_count as usize),
             count(tuple((le_u16, le_u16)), vertex_material_count as usize),
@@ -286,7 +286,7 @@ impl FragmentParser for MeshFragment {
                 texture_coordinate_count,
                 normal_count,
                 color_count,
-                polygon_count,
+                face_count,
                 vertex_piece_count,
                 polygon_material_count,
                 vertex_material_count,
@@ -296,7 +296,7 @@ impl FragmentParser for MeshFragment {
                 texture_coordinates,
                 vertex_normals,
                 vertex_colors,
-                polygons,
+                faces,
                 vertex_pieces,
                 polygon_materials,
                 vertex_materials,
@@ -332,7 +332,7 @@ impl Fragment for MeshFragment {
             &self.texture_coordinate_count.to_le_bytes()[..],
             &self.normal_count.to_le_bytes()[..],
             &self.color_count.to_le_bytes()[..],
-            &self.polygon_count.to_le_bytes()[..],
+            &self.face_count.to_le_bytes()[..],
             &self.vertex_piece_count.to_le_bytes()[..],
             &self.polygon_material_count.to_le_bytes()[..],
             &self.vertex_material_count.to_le_bytes()[..],
@@ -359,7 +359,7 @@ impl Fragment for MeshFragment {
                 .flat_map(|v| v.to_le_bytes())
                 .collect::<Vec<_>>()[..],
             &self
-                .polygons
+                .faces
                 .iter()
                 .flat_map(|p| p.into_bytes())
                 .collect::<Vec<_>>()[..],
@@ -403,9 +403,9 @@ impl Fragment for MeshFragment {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// Represents a polygon within a [MeshFragment].
-pub struct MeshFragmentPolygonEntry {
-    /// Most flags are _Unknown_. This usually contains 0x0 for polygons but
-    /// contains 0x0010 for polygons that the player can pass through (like water
+pub struct MeshFragmentFaceEntry {
+    /// Most flags are _Unknown_. This usually contains 0x0 for faces but
+    /// contains 0x0010 for faces that the player can pass through (like water
     /// and tree leaves).
     pub flags: u16,
 
@@ -413,13 +413,13 @@ pub struct MeshFragmentPolygonEntry {
     pub vertex_indexes: (u16, u16, u16),
 }
 
-impl MeshFragmentPolygonEntry {
-    fn parse(input: &[u8]) -> WResult<MeshFragmentPolygonEntry> {
+impl MeshFragmentFaceEntry {
+    fn parse(input: &[u8]) -> WResult<MeshFragmentFaceEntry> {
         let (remaining, (flags, vertex_indexes)) =
             tuple((le_u16, tuple((le_u16, le_u16, le_u16))))(input)?;
         Ok((
             remaining,
-            MeshFragmentPolygonEntry {
+            MeshFragmentFaceEntry {
                 flags,
                 vertex_indexes,
             },
@@ -530,7 +530,7 @@ mod tests {
         assert_eq!(frag.position_count, 8);
         assert_eq!(frag.texture_coordinate_count, 8);
         assert_eq!(frag.normal_count, 8);
-        assert_eq!(frag.polygon_count, 6);
+        assert_eq!(frag.face_count, 6);
         assert_eq!(frag.vertex_piece_count, 0);
         assert_eq!(frag.polygon_material_count, 1);
         assert_eq!(frag.vertex_material_count, 1);
@@ -544,9 +544,9 @@ mod tests {
         assert_eq!(frag.vertex_normals[0], (29, 31, 119));
         assert_eq!(frag.vertex_colors.len(), 8);
         assert_eq!(frag.vertex_colors[0], 4043374848);
-        assert_eq!(frag.polygons.len(), 6);
-        assert_eq!(frag.polygons[0].flags, 0);
-        assert_eq!(frag.polygons[0].vertex_indexes, (0, 1, 2));
+        assert_eq!(frag.faces.len(), 6);
+        assert_eq!(frag.faces[0].flags, 0);
+        assert_eq!(frag.faces[0].vertex_indexes, (0, 1, 2));
         assert_eq!(frag.vertex_pieces.len(), 0);
         assert_eq!(frag.polygon_materials.len(), 1);
         assert_eq!(frag.polygon_materials[0], (6, 0));
