@@ -118,13 +118,14 @@ pub struct MeshFragment {
     /// are using a material.
     pub vertex_material_count: u16,
 
-    /// _Unknown_ - The number of entries in `data9`. Seems to be used only for
+    /// _Unknown_ - The number of entries in `meshops`. Seems to be used only for
     /// animated mob models.
-    pub size9: u16,
+    pub meshop_count: u16,
 
     /// This allows vertex coordinates to be stored as integral values instead of
     /// floating-point values, without losing precision based on mesh size. Vertex
     /// values are multiplied by (1 shl `scale`) and stored in the vertex entries.
+    /// FPSCALE is the internal name.
     pub scale: u16,
 
     /// Vertices (x, y, z) belonging to this mesh. Each axis should
@@ -183,8 +184,8 @@ pub struct MeshFragment {
     /// references.
     pub vertex_materials: Vec<(u16, u16)>,
 
-    /// _Unknown_ - A collection of [MeshFragmentData9Entry]s
-    pub data9: Vec<MeshFragmentData9Entry>,
+    /// _Unknown_ - A collection of [MeshFragmentMeshOpEntry]s
+    pub meshops: Vec<MeshFragmentMeshOpEntry>,
 }
 
 impl FragmentParser for MeshFragment {
@@ -216,7 +217,7 @@ impl FragmentParser for MeshFragment {
                 vertex_piece_count,
                 polygon_material_count,
                 vertex_material_count,
-                size9,
+                meshop_count,
                 scale,
             ),
         ) = tuple((
@@ -254,7 +255,7 @@ impl FragmentParser for MeshFragment {
                 vertex_pieces,
                 polygon_materials,
                 vertex_materials,
-                data9,
+                meshops,
             ),
         ) = tuple((
             count(tuple((le_i16, le_i16, le_i16)), position_count as usize),
@@ -265,7 +266,7 @@ impl FragmentParser for MeshFragment {
             count(tuple((le_u16, le_u16)), vertex_piece_count as usize),
             count(tuple((le_u16, le_u16)), polygon_material_count as usize),
             count(tuple((le_u16, le_u16)), vertex_material_count as usize),
-            count(MeshFragmentData9Entry::parse, size9 as usize),
+            count(MeshFragmentMeshOpEntry::parse, meshop_count as usize),
         ))(i)?;
 
         Ok((
@@ -290,7 +291,7 @@ impl FragmentParser for MeshFragment {
                 vertex_piece_count,
                 polygon_material_count,
                 vertex_material_count,
-                size9,
+                meshop_count,
                 scale,
                 positions,
                 texture_coordinates,
@@ -300,7 +301,7 @@ impl FragmentParser for MeshFragment {
                 vertex_pieces,
                 polygon_materials,
                 vertex_materials,
-                data9,
+                meshops,
             },
         ))
     }
@@ -336,7 +337,7 @@ impl Fragment for MeshFragment {
             &self.vertex_piece_count.to_le_bytes()[..],
             &self.polygon_material_count.to_le_bytes()[..],
             &self.vertex_material_count.to_le_bytes()[..],
-            &self.size9.to_le_bytes()[..],
+            &self.meshop_count.to_le_bytes()[..],
             &self.scale.to_le_bytes()[..],
             &self
                 .positions
@@ -379,7 +380,7 @@ impl Fragment for MeshFragment {
                 .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes()].concat())
                 .collect::<Vec<_>>()[..],
             &self
-                .data9
+                .meshops
                 .iter()
                 .flat_map(|d| d.into_bytes())
                 .collect::<Vec<_>>()[..],
@@ -440,9 +441,8 @@ impl MeshFragmentFaceEntry {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// _Unknown_
-pub struct MeshFragmentData9Entry {
-    /// _Unknown_ - This seems to reference one of the vertex entries. This field
-    /// only exists if `type_field` contains a value in the range 1-3.
+pub struct MeshFragmentMeshOpEntry {
+    /// The type of MESHOP - one of (at least) MESHOP_VA (int), MESHOP_SW (int, int, int), MESHOP_VA (int), MESHOP_EL (float), MESHOP_FA (int)
     pub index1: Option<u16>,
 
     /// _Unknown_ - This seems to reference one of the vertex entries. This field is only valid if
@@ -450,20 +450,20 @@ pub struct MeshFragmentData9Entry {
     pub index2: Option<u16>,
 
     /// _Unknown_ - If `type_field` contains 4, then this field exists instead of `index1`
-    /// and `index2`. [MeshFragmentData9Entry]s seem to be sorted by this value.
+    /// and `index2`. [MeshFragmentMeshOpEntry]s seem to be sorted by this value.
     pub offset: Option<f32>,
 
     /// _Unknown_ - It seems to only contain values in the range 0-2.
     pub param1: u8,
 
     /// _Unknown_ - It seems to control whether `index1`, `index2`, and `offset` exist. It can only
-    /// contain values in the range 1-4. It looks like the [MeshFragmentData9Entry]s are broken up into
+    /// contain values in the range 1-4. It looks like the [MeshFragmentMeshOpEntry]s are broken up into
     /// blocks, where each block is terminated by an entry where `type_field` is 4.
     pub type_field: u8,
 }
 
-impl MeshFragmentData9Entry {
-    fn parse(input: &[u8]) -> WResult<MeshFragmentData9Entry> {
+impl MeshFragmentMeshOpEntry {
+    fn parse(input: &[u8]) -> WResult<MeshFragmentMeshOpEntry> {
         let unknown_data = &input[0..4];
         let input = &input[4..];
 
@@ -484,7 +484,7 @@ impl MeshFragmentData9Entry {
 
         Ok((
             i,
-            MeshFragmentData9Entry {
+            MeshFragmentMeshOpEntry {
                 index1,
                 index2,
                 offset,
@@ -534,7 +534,7 @@ mod tests {
         assert_eq!(frag.vertex_piece_count, 0);
         assert_eq!(frag.polygon_material_count, 1);
         assert_eq!(frag.vertex_material_count, 1);
-        assert_eq!(frag.size9, 0);
+        assert_eq!(frag.meshop_count, 0);
         assert_eq!(frag.scale, 5);
         assert_eq!(frag.positions.len(), 8);
         assert_eq!(frag.positions[0], (2, -1154, -3));
@@ -552,35 +552,43 @@ mod tests {
         assert_eq!(frag.polygon_materials[0], (6, 0));
         assert_eq!(frag.vertex_materials.len(), 1);
         assert_eq!(frag.vertex_materials[0], (8, 0));
-        assert_eq!(frag.data9.len(), 0);
+        assert_eq!(frag.meshops.len(), 0);
     }
 
     #[test]
-    fn it_parses_data9() {
+    fn it_parses_meshops() {
         #![allow(overflowing_literals)]
         let data = &include_bytes!("../../../fixtures/fragments/global_chr/0177-0x36.frag")[..];
         let frag = MeshFragment::parse(data).unwrap().1;
 
-        assert_eq!(frag.size9, 1387);
-        assert_eq!(frag.data9.len(), 1387);
+        assert_eq!(frag.meshop_count, 1387);
+        assert_eq!(frag.meshops.len(), 1387);
 
-        for item in frag.data9.iter() {
+        for item in frag.meshops.iter() {
             assert!(item.type_field <= 4);
         }
 
-        assert_eq!(frag.data9[0].type_field, 2);
-        assert_eq!(frag.data9[0].index1.unwrap(), 4);
-        assert_eq!(frag.data9[0].index2.unwrap(), 0);
+        assert_eq!(frag.meshops[0].type_field, 2);
+        assert_eq!(frag.meshops[0].index1.unwrap(), 4);
+        assert_eq!(frag.meshops[0].index2.unwrap(), 0);
 
-        assert_eq!(frag.data9[1].type_field, 3);
+        assert_eq!(frag.meshops[1].type_field, 3);
 
-        assert_eq!(frag.data9[5].type_field, 4);
-        assert_eq!(frag.data9[5].offset.unwrap(), 1.0);
+        assert_eq!(frag.meshops[5].type_field, 4);
+        assert_eq!(frag.meshops[5].offset.unwrap(), 1.0);
     }
 
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
+        let frag = MeshFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.into_bytes()[..], data);
+    }
+
+    #[test]
+    fn it_serializes_meshops() {
+        let data = &include_bytes!("../../../fixtures/fragments/global_chr/0177-0x36.frag")[..];
         let frag = MeshFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
