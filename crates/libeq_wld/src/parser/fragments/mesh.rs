@@ -107,17 +107,17 @@ pub struct MeshFragment {
     /// pieces in the skeleton than are in the meshes it references. Extra pieces have
     /// no faces or vertices and I suspect they are there to define attachment points for
     /// objects (e.g. weapons or shields).
-    pub vertex_piece_count: u16,
+    pub skin_assignment_groups_count: u16,
 
     /// The number of polygon texture entries. faces are grouped together by
     /// material and polygon material entries. This tells the client the number of
     /// faces using a material.
-    pub polygon_material_count: u16,
+    pub face_material_groups_count: u16,
 
     /// The number of vertex material entries. Vertices are grouped together
     /// by material and vertex material entries tell the client how many vertices there
     /// are using a material.
-    pub vertex_material_count: u16,
+    pub vertex_material_groups_count: u16,
 
     /// _Unknown_ - The number of entries in `meshops`. Seems to be used only for
     /// animated mob models.
@@ -166,7 +166,7 @@ pub struct MeshFragment {
     /// as it is usually jsut a "stem" starting point for the skeleton. Only those pieces
     /// referenced here in the mesh should actually be rendered. Any other pieces in the skeleton
     /// contain no vertices or faces And have other purposes.
-    pub vertex_pieces: Vec<(u16, u16)>,
+    pub skin_assignment_groups: Vec<(u16, u16)>,
 
     /// The first element of the tuple is the number of faces that use the same material. All
     /// polygon entries are sorted by material index so that faces use the same material are
@@ -174,7 +174,7 @@ pub struct MeshFragment {
     ///
     /// The second element of the tuple is the index of the material that the faces use according
     /// to the [MaterialListFragment] that this fragment references.
-    pub polygon_materials: Vec<(u16, u16)>,
+    pub face_material_groups: Vec<(u16, u16)>,
 
     /// The first element of the tuple is the number of vertices that use the same
     /// material. Vertex materials, like faces, are sorted by material index so
@@ -183,7 +183,7 @@ pub struct MeshFragment {
     /// The second element of the tuple is the index of the material that the
     /// vertices use, according to the [MaterialListFragment] fragment that this fragment
     /// references.
-    pub vertex_materials: Vec<(u16, u16)>,
+    pub vertex_material_groups: Vec<(u16, u16)>,
 
     /// _Unknown_ - A collection of [MeshFragmentMeshOpEntry]s
     pub meshops: Vec<MeshFragmentMeshOpEntry>,
@@ -217,9 +217,9 @@ impl FragmentParser for MeshFragment {
                 normal_count,
                 color_count,
                 face_count,
-                vertex_piece_count,
-                polygon_material_count,
-                vertex_material_count,
+                skin_assignment_groups_count,
+                face_material_groups_count,
+                vertex_material_groups_count,
                 meshop_count,
                 scale,
             ),
@@ -255,9 +255,9 @@ impl FragmentParser for MeshFragment {
                 vertex_normals,
                 vertex_colors,
                 faces,
-                vertex_pieces,
-                polygon_materials,
-                vertex_materials,
+                skin_assignment_groups,
+                face_material_groups,
+                vertex_material_groups,
                 meshops,
             ),
         ) = tuple((
@@ -266,9 +266,9 @@ impl FragmentParser for MeshFragment {
             count(tuple((le_i8, le_i8, le_i8)), normal_count as usize),
             count(le_u32, color_count as usize),
             count(MeshFragmentFaceEntry::parse, face_count as usize),
-            count(tuple((le_u16, le_u16)), vertex_piece_count as usize),
-            count(tuple((le_u16, le_u16)), polygon_material_count as usize),
-            count(tuple((le_u16, le_u16)), vertex_material_count as usize),
+            count(tuple((le_u16, le_u16)), skin_assignment_groups_count as usize),
+            count(tuple((le_u16, le_u16)), face_material_groups_count as usize),
+            count(tuple((le_u16, le_u16)), vertex_material_groups_count as usize),
             count(MeshFragmentMeshOpEntry::parse, meshop_count as usize),
         ))(i)?;
 
@@ -291,9 +291,9 @@ impl FragmentParser for MeshFragment {
                 normal_count,
                 color_count,
                 face_count,
-                vertex_piece_count,
-                polygon_material_count,
-                vertex_material_count,
+                skin_assignment_groups_count,
+                face_material_groups_count,
+                vertex_material_groups_count,
                 meshop_count,
                 scale,
                 positions,
@@ -301,9 +301,9 @@ impl FragmentParser for MeshFragment {
                 vertex_normals,
                 vertex_colors,
                 faces,
-                vertex_pieces,
-                polygon_materials,
-                vertex_materials,
+                skin_assignment_groups,
+                face_material_groups,
+                vertex_material_groups,
                 meshops,
             },
         ))
@@ -337,9 +337,9 @@ impl Fragment for MeshFragment {
             &self.normal_count.to_le_bytes()[..],
             &self.color_count.to_le_bytes()[..],
             &self.face_count.to_le_bytes()[..],
-            &self.vertex_piece_count.to_le_bytes()[..],
-            &self.polygon_material_count.to_le_bytes()[..],
-            &self.vertex_material_count.to_le_bytes()[..],
+            &self.skin_assignment_groups_count.to_le_bytes()[..],
+            &self.face_material_groups_count.to_le_bytes()[..],
+            &self.vertex_material_groups_count.to_le_bytes()[..],
             &self.meshop_count.to_le_bytes()[..],
             &self.scale.to_le_bytes()[..],
             &self
@@ -368,17 +368,17 @@ impl Fragment for MeshFragment {
                 .flat_map(|p| p.into_bytes())
                 .collect::<Vec<_>>()[..],
             &self
-                .vertex_pieces
+                .skin_assignment_groups
                 .iter()
                 .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes()].concat())
                 .collect::<Vec<_>>()[..],
             &self
-                .polygon_materials
+                .face_material_groups
                 .iter()
                 .flat_map(|p| [p.0.to_le_bytes(), p.1.to_le_bytes()].concat())
                 .collect::<Vec<_>>()[..],
             &self
-                .vertex_materials
+                .vertex_material_groups
                 .iter()
                 .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes()].concat())
                 .collect::<Vec<_>>()[..],
@@ -544,9 +544,9 @@ mod tests {
         assert_eq!(frag.texture_coordinate_count, 8);
         assert_eq!(frag.normal_count, 8);
         assert_eq!(frag.face_count, 6);
-        assert_eq!(frag.vertex_piece_count, 0);
-        assert_eq!(frag.polygon_material_count, 1);
-        assert_eq!(frag.vertex_material_count, 1);
+        assert_eq!(frag.skin_assignment_groups_count, 0);
+        assert_eq!(frag.face_material_groups_count, 1);
+        assert_eq!(frag.vertex_material_groups_count, 1);
         assert_eq!(frag.meshop_count, 0);
         assert_eq!(frag.scale, 5);
         assert_eq!(frag.positions.len(), 8);
@@ -560,11 +560,11 @@ mod tests {
         assert_eq!(frag.faces.len(), 6);
         assert_eq!(frag.faces[0].flags, 0);
         assert_eq!(frag.faces[0].vertex_indexes, (0, 1, 2));
-        assert_eq!(frag.vertex_pieces.len(), 0);
-        assert_eq!(frag.polygon_materials.len(), 1);
-        assert_eq!(frag.polygon_materials[0], (6, 0));
-        assert_eq!(frag.vertex_materials.len(), 1);
-        assert_eq!(frag.vertex_materials[0], (8, 0));
+        assert_eq!(frag.skin_assignment_groups.len(), 0);
+        assert_eq!(frag.face_material_groups.len(), 1);
+        assert_eq!(frag.face_material_groups[0], (6, 0));
+        assert_eq!(frag.vertex_material_groups.len(), 1);
+        assert_eq!(frag.vertex_material_groups[0], (8, 0));
         assert_eq!(frag.meshops.len(), 0);
     }
 
