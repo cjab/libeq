@@ -466,7 +466,7 @@ pub struct MeshFragmentMeshOpEntry {
     /// blocks, where each block is terminated by an entry where `type_field` is 4.
     /// 
     /// The type of MESHOP, one of:
-    /// 1: SW (vertex_index: u16, face_index: u16, type: u8) e.g. "MESHOP_SW 1553 1 1569" where the arguments are re-arranged to 1553 1569 0
+    /// 1: SW (vertex_index: u16, vertex_index: u16, type: u8) e.g. "MESHOP_SW 1553 1 1569" where the arguments are re-arranged to 1553 1569 0
     /// 2: FA (face_index: u16) + 3 empty bytes
     /// 3: VA (vertex_index: u16) + 3 empty bytes
     /// 4: EL (offset: f32) + 1 empty byte
