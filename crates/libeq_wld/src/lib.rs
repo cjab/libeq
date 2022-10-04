@@ -42,7 +42,7 @@ pub mod parser;
 
 use parser::{
     FragmentRef, MaterialFragment, MeshAnimatedVerticesFragment, MeshFragment,
-    MeshFragmentPolygonEntry, MeshReferenceFragment, ModelFragment, ObjectLocationFragment,
+    MeshFragmentFaceEntry, MeshReferenceFragment, ModelFragment, ObjectLocationFragment,
     TextureFragment, TransparencyFlags, WldDoc, TextureFragmentFlags
 };
 use std::error::Error;
@@ -189,7 +189,7 @@ impl<'a> Mesh<'a> {
     /// a triangle list.
     pub fn indices(&self) -> Vec<u32> {
         self.fragment
-            .polygons
+            .faces
             .iter()
             .flat_map(|v| {
                 vec![
@@ -205,7 +205,7 @@ impl<'a> Mesh<'a> {
     /// Vertices that should be part of the collision mesh
     pub fn collision_indices(&self) -> Vec<u32> {
         self.fragment
-            .polygons
+            .faces
             .iter()
             .filter(|p| 0x0010 & p.flags == 0)
             .flat_map(|v| {
@@ -257,7 +257,7 @@ impl<'a> Mesh<'a> {
                     index,
                     fragments: &self
                         .fragment
-                        .polygons
+                        .faces
                         .get(batch)
                         .expect("Primitive fragments out of range"),
                     material_idx: *material_idx as usize,
@@ -283,7 +283,7 @@ impl<'a> Mesh<'a> {
 pub struct Primitive<'a> {
     mesh: &'a Mesh<'a>,
     index: usize,
-    fragments: &'a [MeshFragmentPolygonEntry],
+    fragments: &'a [MeshFragmentFaceEntry],
     material_idx: usize,
 }
 
