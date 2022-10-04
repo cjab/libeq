@@ -186,6 +186,8 @@ pub struct MeshFragment {
 
     /// _Unknown_ - A collection of [MeshFragmentMeshOpEntry]s
     pub meshops: Vec<MeshFragmentMeshOpEntry>,
+
+    // FIXME: There's some trailing bytes here, between 1-3 in _chr wlds.
 }
 
 impl FragmentParser for MeshFragment {
@@ -442,7 +444,9 @@ impl MeshFragmentFaceEntry {
 #[derive(Debug, PartialEq)]
 /// _Unknown_
 pub struct MeshFragmentMeshOpEntry {
-    /// The type of MESHOP - one of (at least) MESHOP_VA (int), MESHOP_SW (int, int, int), MESHOP_VA (int), MESHOP_EL (float), MESHOP_FA (int)
+    
+    /// _Unknown_ - This seems to reference one of the vertex entries. This field is only valid if
+    /// `type_field` contains 1. Otherwise, this field must contain 0.
     pub index1: Option<u16>,
 
     /// _Unknown_ - This seems to reference one of the vertex entries. This field is only valid if
@@ -459,6 +463,12 @@ pub struct MeshFragmentMeshOpEntry {
     /// _Unknown_ - It seems to control whether `index1`, `index2`, and `offset` exist. It can only
     /// contain values in the range 1-4. It looks like the [MeshFragmentMeshOpEntry]s are broken up into
     /// blocks, where each block is terminated by an entry where `type_field` is 4.
+    /// 
+    /// The type of MESHOP, one of:
+    /// 1: SW (u16, u16, u8) e.g. "MESHOP_SW 1553 1 1569" where the arguments are re-arranged to 1553 1569 0
+    /// 2: VA or FA (u16) + 3 empty bytes
+    /// 3: VA or FA (u16) + 3 empty bytes
+    /// 4: EL (f32) + 1 empty byte
     pub type_field: u8,
 }
 
