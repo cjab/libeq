@@ -48,16 +48,16 @@ pub struct SkeletonTrackSetFragment {
     pub dags: Vec<Dag>,
 
     /// The number of fragment3 and data3 entries there are.
-    pub size2: Option<u32>,
+    pub num_attached_skins: Option<u32>,
 
-    /// There are `size2` of these. This field only exists if the proper bit in the `flags`
+    /// There are `num_attched_skins` of these. This field only exists if the proper bit in the `flags`
     /// field is set. These entries generally point to 0x2D [MeshReferenceFragment]s and
     /// outline all of the meshes in the animated model. For example, there might be a mesh
     /// for a model’s body and another one for the head.
-    pub fragment3: Option<Vec<u32>>,
+    pub dm_sprites: Option<Vec<u32>>,
 
     /// _Unknown_ - There are size2 of these.
-    pub data3: Option<Vec<u32>>,
+    pub link_skin_updates_to_dag_index: Option<Vec<u32>>,
 }
 
 impl FragmentParser for SkeletonTrackSetFragment {
@@ -86,14 +86,15 @@ impl FragmentParser for SkeletonTrackSetFragment {
 
         let (i, dags) = count(Dag::parse, num_dags as usize)(i)?;
 
-        let (i, size2) = if flags.has_unknown_flag() {
+        let (i, num_attached_skins) = if flags.has_unknown_flag() {
             le_u32(i).map(|(i, size2)| (i, Some(size2)))?
         } else {
             (i, None)
         };
 
-        let (remaining, (fragment3, data3)) = if flags.has_unknown_flag() {
-            let size = size2.unwrap_or(0) as usize;
+        let (remaining, (dm_sprites, link_skin_updates_to_dag_index)) = if flags.has_unknown_flag()
+        {
+            let size = num_attached_skins.unwrap_or(0) as usize;
             tuple((count(le_u32, size), count(le_u32, size)))(i)
                 .map(|(i, (f3, d3))| (i, (Some(f3), Some(d3))))?
         } else {
@@ -110,9 +111,9 @@ impl FragmentParser for SkeletonTrackSetFragment {
                 center_offset,
                 bounding_radius,
                 dags,
-                size2,
-                fragment3,
-                data3,
+                num_attached_skins,
+                dm_sprites,
+                link_skin_updates_to_dag_index,
             },
         ))
     }
@@ -232,13 +233,15 @@ impl Fragment for SkeletonTrackSetFragment {
                 .iter()
                 .flat_map(|e| e.into_bytes())
                 .collect::<Vec<_>>()[..],
-            &self.size2.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
             &self
-                .fragment3
+                .num_attached_skins
+                .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self
+                .dm_sprites
                 .as_ref()
                 .map_or(vec![], |f| f.iter().flat_map(|x| x.to_le_bytes()).collect())[..],
             &self
-                .data3
+                .link_skin_updates_to_dag_index
                 .as_ref()
                 .map_or(vec![], |d| d.iter().flat_map(|x| x.to_le_bytes()).collect())[..],
         ]
@@ -311,9 +314,9 @@ mod tests {
         assert_eq!(frag.dags[0].num_sub_dags, 1);
         assert_eq!(frag.dags[0].sub_dags.len(), 1);
         assert_eq!(frag.dags[0].sub_dags[0], 1);
-        assert_eq!(frag.size2, Some(1));
-        assert_eq!(frag.fragment3.unwrap(), vec![13]);
-        assert_eq!(frag.data3.unwrap(), vec![2]);
+        assert_eq!(frag.num_attached_skins, Some(1));
+        assert_eq!(frag.dm_sprites.unwrap(), vec![13]);
+        assert_eq!(frag.link_skin_updates_to_dag_index.unwrap(), vec![2]);
     }
 
     #[test]
