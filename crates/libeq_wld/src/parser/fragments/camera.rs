@@ -241,7 +241,7 @@ mod tests {
         );
         assert_eq!(frag.bsp_nodes.len(), 1);
         assert_eq!(frag.bsp_nodes[0].vertex_count, 4);
-        assert_eq!(frag.bsp_nodes[0].render_method, RenderMethod::new(0));
+        assert_eq!(frag.bsp_nodes[0].render_method, RenderMethod::from_u32(0));
         assert_eq!(frag.bsp_nodes[0].render_info.flags.has_pen(), true);
         assert_eq!(frag.bsp_nodes[0].render_info.flags.has_brightness(), false);
         assert_eq!(
