@@ -4,8 +4,8 @@ use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 
-use num_derive::FromPrimitive;
-use num_traits::FromPrimitive;
+use num_derive::{FromPrimitive, ToPrimitive};
+use num_traits::{FromPrimitive, ToPrimitive};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -248,84 +248,114 @@ impl UvMap {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(PartialEq)]
-pub struct RenderMethod(u32);
+pub enum RenderMethod {
+    Standard {
+        draw_style: DrawStyle,
+        lighting: Lighting,
+        shading: Shading,
+        texture_style: TextureStyle,
+        unknown_bits: u32,
+    },
+    UserDefined {
+        id: u32,
+    },
+}
 
 impl RenderMethod {
-    pub fn new(flags: u32) -> Self {
-        Self(flags)
-    }
-
     pub fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
-        Ok((remaining, Self(raw_flags)))
+
+        Ok((remaining, Self::from_u32(raw_flags)))
+    }
+
+    pub fn as_u32(&self) -> u32 {
+        match self {
+            Self::Standard {
+                draw_style,
+                lighting,
+                shading,
+                texture_style,
+                unknown_bits,
+            } => {
+                ((*draw_style as u32)
+                    | ((*lighting as u32) << 2)
+                    | ((*shading as u32) << 5)
+                    | ((*texture_style as u32) << 7)
+                    | ((*unknown_bits as u32) << 11))
+            }
+            Self::UserDefined { id } => (*id | 0x80000000),
+        }
+    }
+
+    pub fn from_u32(raw_flags: u32) -> Self {
+        if raw_flags >> 31 == 1 {
+            Self::UserDefined {
+                id: raw_flags & !0x80000000,
+            }
+        } else {
+            Self::Standard {
+                draw_style: FromPrimitive::from_u32(raw_flags & 0b11).unwrap(),
+                lighting: FromPrimitive::from_u32((raw_flags >> 2) & 0b111).unwrap(),
+                shading: FromPrimitive::from_u32((raw_flags >> 5) & 0b11).unwrap(),
+                texture_style: FromPrimitive::from_u32((raw_flags >> 7) & 0b1111).unwrap(),
+                unknown_bits: (raw_flags >> 11) & 0xfffff,
+            }
+        }
     }
 
     pub fn into_bytes(&self) -> Vec<u8> {
-        self.0.to_le_bytes().to_vec()
-    }
-
-    pub fn draw_style(&self) -> DrawStyle {
-        // Safe to unwrap because mask limits to two bits
-        // and all values are covered by the `DrawStyle` enum.
-        FromPrimitive::from_u32(self.0 & 0b11).unwrap()
-    }
-
-    pub fn lighting(&self) -> Lighting {
-        // Safe to unwrap because mask limits to three bits
-        // and all values are covered by the `Lighting` enum.
-        FromPrimitive::from_u32((self.0 >> 2) & 0b111).unwrap()
-    }
-
-    pub fn shading(&self) -> Shading {
-        // Safe to unwrap because mask limits to two bits
-        // and all values are covered by the `Shading` enum.
-        FromPrimitive::from_u32((self.0 >> 5) & 0b11).unwrap()
-    }
-
-    pub fn texture_style(&self) -> TextureStyle {
-        // Safe to unwrap because mask limits to four bits
-        // and all values are covered by the `TextureStyle` enum.
-        FromPrimitive::from_u32((self.0 >> 7) & 0b1111).unwrap()
-    }
-
-    pub fn unknown_bits(&self) -> u32 {
-        (self.0 >> 11) & 0xfffff
-    }
-
-    pub fn user_defined(&self) -> bool {
-        self.0 >> 31 == 1
+        match self {
+            Self::UserDefined { .. } => self.as_u32().to_le_bytes().to_vec(),
+            Self::Standard { .. } => self.as_u32().to_le_bytes().to_vec(),
+        }
     }
 }
 
 impl From<RenderMethod> for u32 {
     fn from(value: RenderMethod) -> Self {
-        value.0
+        value.as_u32()
     }
 }
 
 impl std::fmt::Debug for RenderMethod {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            r#"RenderMethod(0b{:b}) {{
+        match self {
+            Self::Standard {
+                draw_style,
+                lighting,
+                shading,
+                texture_style,
+                unknown_bits,
+            } => write!(
+                f,
+                r#"RenderMethod::Standard(0b{:b}) {{
     draw_style: {:?}
     lighting: {:?}
     shading: {:?}
     texture_style: {:?}
     unknown_bits: {:?}
 }}"#,
-            self.0,
-            self.draw_style(),
-            self.lighting(),
-            self.shading(),
-            self.texture_style(),
-            self.unknown_bits()
-        )
+                self.as_u32(),
+                draw_style,
+                lighting,
+                shading,
+                texture_style,
+                unknown_bits
+            ),
+            Self::UserDefined { id } => write!(
+                f,
+                r#"RenderMethod::UserDefined(0b{:b}) {{
+    id: {:?}
+}}"#,
+                self.as_u32(),
+                id,
+            ),
+        }
     }
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, FromPrimitive, PartialEq)]
+#[derive(Debug, FromPrimitive, ToPrimitive, PartialEq)]
 pub enum DrawStyle {
     Transparent = 0x0,
     Unknown = 0x1,
@@ -334,7 +364,7 @@ pub enum DrawStyle {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, FromPrimitive, PartialEq)]
+#[derive(Debug, FromPrimitive, ToPrimitive, PartialEq)]
 pub enum Lighting {
     ZeroIntensity = 0x0,
     Unknown1 = 0x1,
@@ -347,7 +377,7 @@ pub enum Lighting {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, FromPrimitive, PartialEq)]
+#[derive(Debug, FromPrimitive, ToPrimitive, PartialEq)]
 pub enum Shading {
     None1 = 0x0,
     None2 = 0x1,
@@ -356,7 +386,7 @@ pub enum Shading {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, FromPrimitive, PartialEq)]
+#[derive(Debug, FromPrimitive, ToPrimitive, PartialEq)]
 pub enum TextureStyle {
     None = 0x0,
     XXXXXXXX1 = 0x1,
