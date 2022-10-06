@@ -382,16 +382,18 @@ mod tests {
         assert_eq!(frag.pitches[0].num_headings, 1);
         assert_eq!(frag.pitches[0].headings.len(), 1);
         assert_eq!(frag.pitches[0].headings[0].heading_cap, 64);
-        assert_eq!(frag.render_method, RenderMethod::new(1171));
-        assert_eq!(frag.render_method.draw_style(), DrawStyle::Solid);
-        assert_eq!(frag.render_method.lighting(), Lighting::Ambient);
-        assert_eq!(frag.render_method.shading(), Shading::None1);
+        assert_eq!(frag.render_method, RenderMethod::from_u32(1171));
         assert_eq!(
-            frag.render_method.texture_style(),
-            TextureStyle::TransTexture4
+            frag.render_method,
+            RenderMethod::Standard {
+                draw_style: DrawStyle::Solid,
+                lighting: Lighting::Ambient,
+                shading: Shading::None1,
+                texture_style: TextureStyle::TransTexture4,
+                unknown_bits: 0,
+            }
         );
-        assert_eq!(frag.render_method.unknown_bits(), 0);
-        assert_eq!(frag.render_method.user_defined(), false);
+
         assert_eq!(frag.render_info.flags, RenderInfoFlags::new(7));
         assert_eq!(frag.render_info.flags.has_pen(), true);
         assert_eq!(frag.render_info.flags.has_brightness(), true);
