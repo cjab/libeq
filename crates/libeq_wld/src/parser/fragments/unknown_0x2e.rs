@@ -1,7 +1,5 @@
 use std::any::Any;
 
-use nom::number::complete::{le_f32, le_u32};
-
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
 #[cfg(feature = "serde")]
@@ -25,21 +23,13 @@ impl FragmentParser for Unknown0x2eFragment {
     fn parse(input: &[u8]) -> WResult<Self> {
         let (i, name_reference) = StringReference::parse(input)?;
 
-        Ok((
-            i,
-            Self {
-                name_reference
-            },
-        ))
+        Ok((i, Self { name_reference }))
     }
 }
 
 impl Fragment for Unknown0x2eFragment {
     fn into_bytes(&self) -> Vec<u8> {
-        [
-            &self.name_reference.into_bytes()[..],
-        ]
-        .concat()
+        [&self.name_reference.into_bytes()[..]].concat()
     }
 
     fn as_any(&self) -> &dyn Any {
