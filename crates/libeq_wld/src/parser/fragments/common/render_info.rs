@@ -5,7 +5,7 @@ use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;
 
 use num_derive::{FromPrimitive, ToPrimitive};
-use num_traits::{FromPrimitive, ToPrimitive};
+use num_traits::FromPrimitive;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -277,13 +277,13 @@ impl RenderMethod {
                 texture_style,
                 unknown_bits,
             } => {
-                ((*draw_style as u32)
+                (*draw_style as u32)
                     | ((*lighting as u32) << 2)
                     | ((*shading as u32) << 5)
                     | ((*texture_style as u32) << 7)
-                    | ((*unknown_bits as u32) << 11))
+                    | ((*unknown_bits as u32) << 11)
             }
-            Self::UserDefined { id } => (*id | 0x80000000),
+            Self::UserDefined { id } => *id | 0x80000000,
         }
     }
 
