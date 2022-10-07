@@ -257,7 +257,7 @@ pub enum RenderMethod {
         unknown_bits: u32,
     },
     UserDefined {
-        id: u32,
+        material_type: MaterialType,
     },
 }
 
@@ -283,14 +283,14 @@ impl RenderMethod {
                     | ((*texture_style as u32) << 7)
                     | ((*unknown_bits as u32) << 11)
             }
-            Self::UserDefined { id } => *id | 0x80000000,
+            Self::UserDefined { material_type } => (*material_type as u32) | 0x80000000,
         }
     }
 
     pub fn from_u32(raw_flags: u32) -> Self {
         if raw_flags >> 31 == 1 {
             Self::UserDefined {
-                id: raw_flags & !0x80000000,
+                material_type: FromPrimitive::from_u32(raw_flags & !0x80000000).unwrap(),
             }
         } else {
             Self::Standard {
@@ -342,13 +342,13 @@ impl std::fmt::Debug for RenderMethod {
                 texture_style,
                 unknown_bits
             ),
-            Self::UserDefined { id } => write!(
+            Self::UserDefined { material_type } => write!(
                 f,
                 r#"RenderMethod::UserDefined(0b{:b}) {{
-    id: {:?}
+    material_type: {:?}
 }}"#,
                 self.as_u32(),
-                id,
+                material_type,
             ),
         }
     }
@@ -403,4 +403,41 @@ pub enum TextureStyle {
     Unknown1 = 0xc,
     Unknown2 = 0xe,
     XXXXX = 0xf,
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, FromPrimitive, ToPrimitive, PartialEq)]
+/// Source: LanternExtractor
+/// (https://github.com/LanternEQ/LanternExtractor/blob/afe174b71ac9f9ab75e259bac2282735b093426d/LanternExtractor/EQ/Wld/DataTypes/MaterialType.cs)
+pub enum MaterialType {
+    /// Used for boundaries that are not rendered. TextInfoReference can be null or have reference.
+    Boundary = 0x0,
+    /// Standard diffuse shader
+    Diffuse = 0x01,
+    /// Diffuse variant
+    Diffuse2 = 0x02,
+    //// Transparent with 0.5 blend strength
+    Transparent50 = 0x05,
+    /// Transparent with 0.25 blend strength
+    Transparent25 = 0x09,
+    /// Transparent with 0.75 blend strength
+    Transparent75 = 0x0A,
+    /// Non solid surfaces that shouldn't really be masked
+    TransparentMaskedPassable = 0x07,
+    TransparentAdditiveUnlit = 0x0B,
+    TransparentMasked = 0x13,
+    Diffuse3 = 0x14,
+    Diffuse4 = 0x15,
+    TransparentAdditive = 0x17,
+    Diffuse5 = 0x19,
+    InvisibleUnknown = 0x53,
+    Diffuse6 = 0x553,
+    CompleteUnknown = 0x1A, // TODO: Analyze this
+    Diffuse7 = 0x12,
+    Diffuse8 = 0x31,
+    InvisibleUnknown2 = 0x4B,
+    DiffuseSkydome = 0x0D,     // Need to confirm
+    TransparentSkydome = 0x0F, // Need to confirm
+    TransparentAdditiveUnlitSkydome = 0x10,
+    InvisibleUnknown3 = 0x03,
 }
