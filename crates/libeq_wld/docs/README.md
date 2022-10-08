@@ -398,7 +398,7 @@
       <td>55</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/mesh_animated_vertices.rs">MeshAnimatedVertices</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x37--mesh-animated-vertices--plain">Mesh Animated Vertices</a></td>
-      <td></td>
+      <td>DMTRACKDEF</td>
     </tr>
   </tbody>
 </table>
