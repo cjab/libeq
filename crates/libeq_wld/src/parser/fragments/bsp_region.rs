@@ -1,10 +1,12 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, MeshFragment, StringReference, WResult};
+use super::{
+    Fragment, FragmentParser, FragmentRef, MeshFragment, RenderMethod, StringReference, WResult,
+};
 
 use nom::combinator::map;
 use nom::multi::count;
-use nom::number::complete::{le_u16, le_u32, le_u8};
+use nom::number::complete::{le_f32, le_i32, le_u16, le_u32, le_u8};
 use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
@@ -18,68 +20,87 @@ use serde::{Deserialize, Serialize};
 pub struct BspRegionFragment {
     pub name_reference: StringReference,
 
-    /// Most flags are _unknown_. Usually contains 0x181 for regions that contain polygons and 0x81
+    /// bit 0 - has SPHERE %f %f %f %f
+    /// bit 1 - has REVERBVOLUME %f
+    /// bit 2 - has REVERBOFFSET %d
+    /// bit 3 - has REGIONFOG
+    /// bit 4 - has ENABLEGOURAUD2
+    /// bit 5 - has ENCODEDVISIBILITY
+    /// ...
+    /// bit 7 (windcatcher) - If set then `pvs` contains u8 entries (more common).
+    /// bit 8 - ??? seems to mean mesh_reference exists?
+    ///
+    /// WINDCATCHER:
+    /// Usually contains 0x181 for regions that contain polygons and 0x81
     /// for regions that are empty.
-    /// * bit 5 - If set then `pvs` contains u32 entries.
-    /// * bit 7 - If set then `pvs` contains u8 entries (more common).
-    pub flags: u32,
+    pub flags: RegionFlags,
 
-    /// _Unknown_ - Some sort of fragment reference. Usually nothing is referenced.
-    pub fragment1: FragmentRef<i32>,
+    /// AMBIENTLIGHT %s
+    pub ambient_light: FragmentRef<i32>,
 
-    /// The number of bytes in `data1`
-    pub size1: u32,
+    /// NUMREGIONVERTEX %d
+    pub num_region_vertex: u32,
 
-    /// The number of bytes in `data2`
-    pub size2: u32,
+    /// NUMPROXIMALREGIONS %d
+    pub num_proximal_regions: u32,
 
-    /// _Unknown_ - Usually 0
-    pub params1: u32,
+    /// NUMRENDERVERTICES %d
+    pub num_render_vertices: u32,
 
-    /// The number of `data3` entries. Usually 0.
-    pub size3: u32,
+    /// NUMWALLS %d
+    pub num_walls: u32,
 
-    /// The number of `data4` entries. Usually 0.
-    pub size4: u32,
+    /// NUMOBSTACLES %d
+    pub num_obstacles: u32,
 
-    /// _Unknown_ - Usually 0.
-    pub params2: u32,
+    /// NUMCUTTINGOBSTACLES %d
+    pub num_cutting_obstacles: u32,
 
-    /// The number of `data5` entries. Usually 1.
-    pub size5: u32,
+    /// NUMVISNODE %d
+    pub num_vis_node: u32,
 
-    /// The number of `pvs` entries. Usually 1.
-    pub pvs_count: u32,
+    /// potential visible set
+    /// NUMVISLIST %d
+    pub num_vis_list: u32,
 
-    /// According to the ZoneConverter source there are 12 * `size1` bytes here. Their format is
-    /// _unknown_ for lack of sample data to figure it out.
-    pub data1: Vec<u8>,
+    /// XYZ %f %f %f
+    pub region_vertices: Vec<(f32, f32, f32)>,
 
-    /// According to the ZoneConverter source there are 8 * `size2` bytes here. Their format is
-    /// _unknown_ for lack of sample data to figure it out.
-    pub data2: Vec<u8>,
+    /// PROXIMALREGION %d %f
+    pub proximal_regions: Vec<(u32, f32)>,
 
-    /// _Unknown_ data entries
-    pub data3: Vec<BspRegionFragmentData3Entry>,
+    /// XYZ %f %f %f
+    pub render_vertices: Vec<(f32, f32, f32)>,
 
-    /// _Unknown_ data entries
-    pub data4: Vec<BspRegionFragmentData4Entry>,
+    /// WALL
+    pub walls: Vec<Wall>,
 
-    /// _Unknown_ data entries
-    pub data5: Vec<BspRegionFragmentData5Entry>,
+    /// OBSTACLE
+    pub obstacles: Vec<Obstacle>,
 
-    /// A potentially visible set (PVS) of regions
-    pub pvs: Vec<BspRegionFragmentPVS>,
+    /// VISNODE
+    pub vis_nodes: Vec<VisNode>,
 
-    /// The number of bytes in the `name7` field.
-    pub size7: u32,
+    /// VISIBLELIST
+    pub visible_lists: Vec<VisibleList>,
 
-    /// _Unknown_ - An encoded string.
-    pub name7: Vec<u8>,
+    /// SPHERE %f %f %f %f
+    pub sphere: Option<(f32, f32, f32, f32)>,
 
-    /// _Unknown_ - Usually references nothing.
-    pub fragment2: FragmentRef<i32>,
+    /// REVERBVOLUME %f
+    pub reverb_volume: Option<f32>,
 
+    /// REVERBOFFSET %d
+    pub reverb_offset: Option<i32>,
+
+    /// Length of USERDATA string
+    user_data_size: u32,
+
+    /// USERDATA %s
+    user_data: Vec<u8>,
+
+    /// This does not appear in WLDCOM.
+    /// WINDCATCHER:
     /// If there are any polygons in this region then this reference points to a [MeshFragment]
     /// that contains only those polygons. That [MeshFragment] must contain all geometry information
     /// contained within the volume that this region represents and nothing that lies outside of
@@ -94,74 +115,87 @@ impl FragmentParser for BspRegionFragment {
     const TYPE_NAME: &'static str = "BspRegion";
 
     fn parse(input: &[u8]) -> WResult<BspRegionFragment> {
-        let (
-            i,
-            (
-                name_reference,
-                flags,
-                fragment1,
-                size1,
-                size2,
-                params1,
-                size3,
-                size4,
-                params2,
-                size5,
-                pvs_count,
-            ),
-        ) = tuple((
-            StringReference::parse,
-            le_u32,
-            FragmentRef::parse,
-            le_u32,
-            le_u32,
-            le_u32,
-            le_u32,
-            le_u32,
-            le_u32,
-            le_u32,
-            le_u32,
-        ))(input)?;
-        let (i, (data1, data2, data3, data4, data5, pvs, size7)) = tuple((
-            count(le_u8, size1 as usize),
-            count(le_u8, size2 as usize),
-            count(BspRegionFragmentData3Entry::parse, size3 as usize),
-            count(BspRegionFragmentData4Entry::parse, size4 as usize),
-            count(BspRegionFragmentData5Entry::parse, size5 as usize),
-            count(BspRegionFragmentPVS::parse, pvs_count as usize),
-            le_u32,
-        ))(i)?;
-        let (i, (name7, fragment2)) = tuple((count(le_u8, 12), FragmentRef::parse))(i)?;
+        let (i, name_reference) = StringReference::parse(input)?;
+        let (i, flags) = RegionFlags::parse(i)?;
+        let (i, ambient_light) = FragmentRef::parse(i)?;
+        let (i, num_region_vertex) = le_u32(i)?;
+        let (i, num_proximal_regions) = le_u32(i)?;
+        let (i, num_render_vertices) = le_u32(i)?;
+        let (i, num_walls) = le_u32(i)?;
+        let (i, num_obstacles) = le_u32(i)?;
+        let (i, num_cutting_obstacles) = le_u32(i)?;
+        let (i, num_vis_node) = le_u32(i)?;
+        let (i, num_vis_list) = le_u32(i)?;
+        let (i, region_vertices) =
+            count(tuple((le_f32, le_f32, le_f32)), num_region_vertex as usize)(i)?;
+        let (i, proximal_regions) =
+            count(tuple((le_u32, le_f32)), num_proximal_regions as usize)(i)?;
+        let (i, render_vertices) = count(
+            tuple((le_f32, le_f32, le_f32)),
+            num_render_vertices as usize,
+        )(i)?;
+        let (i, walls) = count(Wall::parse, num_walls as usize)(i)?;
+        let (i, obstacles) = count(Obstacle::parse, num_obstacles as usize)(i)?;
+        let (i, vis_nodes) = count(VisNode::parse, num_vis_node as usize)(i)?;
+        let (i, visible_lists) = if flags.has_byte_entries() {
+            count(VisibleList::parse_with_bytes, num_vis_list as usize)(i)?
+        } else {
+            count(VisibleList::parse_with_words, num_vis_list as usize)(i)?
+        };
 
-        let (remaining, mesh_reference) = if (flags & 0x100) == 0x100 {
+        let (i, sphere) = if flags.has_sphere() {
+            tuple((le_f32, le_f32, le_f32, le_f32))(i).map(|(rem, f)| (rem, Some(f)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, reverb_volume) = if flags.has_reverb_volume() {
+            le_f32(i).map(|(rem, f)| (rem, Some(f)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, reverb_offset) = if flags.has_reverb_offset() {
+            le_i32(i).map(|(rem, f)| (rem, Some(f)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, user_data_size) = le_u32(i)?;
+        let (i, user_data) = count(le_u8, user_data_size as usize)(i)?;
+
+        let (i, mesh_reference) = if flags.has_mesh_reference() {
             FragmentRef::parse(i).map(|(rem, f)| (rem, Some(f)))?
         } else {
             (i, None)
         };
 
         Ok((
-            remaining,
+            i,
             BspRegionFragment {
                 name_reference,
                 flags,
-                fragment1,
-                size1,
-                size2,
-                params1,
-                size3,
-                size4,
-                params2,
-                size5,
-                pvs_count,
-                data1,
-                data2,
-                data3,
-                data4,
-                data5,
-                pvs,
-                size7,
-                name7,
-                fragment2,
+                ambient_light,
+                num_region_vertex,
+                num_proximal_regions,
+                num_render_vertices,
+                num_walls,
+                num_obstacles,
+                num_cutting_obstacles,
+                num_vis_node,
+                num_vis_list,
+                region_vertices,
+                proximal_regions,
+                render_vertices,
+                walls,
+                obstacles,
+                vis_nodes,
+                visible_lists,
+                sphere,
+                reverb_volume,
+                reverb_offset,
+                user_data_size,
+                user_data,
                 mesh_reference,
             },
         ))
@@ -172,40 +206,68 @@ impl Fragment for BspRegionFragment {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
-            &self.flags.to_le_bytes()[..],
-            &self.fragment1.into_bytes()[..],
-            &self.size1.to_le_bytes()[..],
-            &self.size2.to_le_bytes()[..],
-            &self.params1.to_le_bytes()[..],
-            &self.size3.to_le_bytes()[..],
-            &self.size4.to_le_bytes()[..],
-            &self.params2.to_le_bytes()[..],
-            &self.size5.to_le_bytes()[..],
-            &self.pvs_count.to_le_bytes()[..],
-            &self.data2[..],
+            &self.flags.into_bytes()[..],
+            &self.ambient_light.into_bytes()[..],
+            &self.num_region_vertex.to_le_bytes()[..],
+            &self.num_proximal_regions.to_le_bytes()[..],
+            &self.num_render_vertices.to_le_bytes()[..],
+            &self.num_walls.to_le_bytes()[..],
+            &self.num_obstacles.to_le_bytes()[..],
+            &self.num_cutting_obstacles.to_le_bytes()[..],
+            &self.num_vis_node.to_le_bytes()[..],
+            &self.num_vis_list.to_le_bytes()[..],
             &self
-                .data3
+                .region_vertices
                 .iter()
-                .flat_map(|d| d.into_bytes())
+                .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()].concat())
                 .collect::<Vec<_>>()[..],
             &self
-                .data4
+                .proximal_regions
                 .iter()
-                .flat_map(|d| d.into_bytes())
+                .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes()].concat())
                 .collect::<Vec<_>>()[..],
             &self
-                .data5
+                .render_vertices
                 .iter()
-                .flat_map(|d| d.into_bytes())
+                .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()].concat())
                 .collect::<Vec<_>>()[..],
             &self
-                .pvs
+                .walls
                 .iter()
-                .flat_map(|p| p.into_bytes())
+                .flat_map(|w| w.into_bytes())
                 .collect::<Vec<_>>()[..],
-            &self.size7.to_le_bytes()[..],
-            &self.name7,
-            &self.fragment2.into_bytes()[..],
+            &self
+                .obstacles
+                .iter()
+                .flat_map(|o| o.into_bytes())
+                .collect::<Vec<_>>()[..],
+            &self
+                .vis_nodes
+                .iter()
+                .flat_map(|v| v.into_bytes())
+                .collect::<Vec<_>>()[..],
+            &self
+                .visible_lists
+                .iter()
+                .flat_map(|v| v.into_bytes())
+                .collect::<Vec<_>>()[..],
+            &self.sphere.map_or(vec![], |s| {
+                [
+                    s.0.to_le_bytes(),
+                    s.1.to_le_bytes(),
+                    s.2.to_le_bytes(),
+                    s.3.to_le_bytes(),
+                ]
+                .concat()
+            }),
+            &self
+                .reverb_volume
+                .map_or(vec![], |r| r.to_le_bytes().to_vec())[..],
+            &self
+                .reverb_offset
+                .map_or(vec![], |r| r.to_le_bytes().to_vec())[..],
+            &self.user_data_size.to_le_bytes()[..],
+            &self.user_data[..],
             &self
                 .mesh_reference
                 .as_ref()
@@ -229,65 +291,136 @@ impl Fragment for BspRegionFragment {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// _Unknown_
-pub struct BspRegionFragmentData3Entry {
-    /// _Unknown_
-    /// * bit 1 - If set then the `params1`and `params2` fields exist.
-    flags: u32,
+pub struct RegionFlags(u32);
 
-    /// The number of `data1` entries.
-    size1: u32,
+impl RegionFlags {
+    const HAS_SPHERE: u32 = 0x01;
+    const HAS_REVERB_VOLUME: u32 = 0x02;
+    const HAS_REVERB_OFFSET: u32 = 0x04;
+    const REGION_FOG: u32 = 0x08;
+    const ENABLE_GOURAUD2: u32 = 0x10;
+    const ENCODED_VISIBILITY: u32 = 0x20;
+    //TODO: Verify these
+    const HAS_BYTE_ENTRIES: u32 = 0x80;
+    const HAS_MESH_REFERENCE: u32 = 0x100;
 
-    /// _Unknown_
-    data1: Vec<u32>,
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, raw_flags) = le_u32(input)?;
+        Ok((i, Self(raw_flags)))
+    }
 
-    /// _Unknown_ - Only exists if bit 1 of `flags` is set.
-    params1: Option<(u32, u32, u32)>,
+    fn into_bytes(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
+    }
 
-    /// _Unknown_ - Only exists if bit 1 of `flags` is set.
-    params2: Option<u32>,
+    pub fn has_sphere(&self) -> bool {
+        self.0 & Self::HAS_SPHERE == Self::HAS_SPHERE
+    }
+
+    pub fn has_reverb_volume(&self) -> bool {
+        self.0 & Self::HAS_REVERB_VOLUME == Self::HAS_REVERB_VOLUME
+    }
+
+    pub fn has_reverb_offset(&self) -> bool {
+        self.0 & Self::HAS_REVERB_OFFSET == Self::HAS_REVERB_OFFSET
+    }
+
+    pub fn region_fog(&self) -> bool {
+        self.0 & Self::REGION_FOG == Self::REGION_FOG
+    }
+
+    pub fn enable_gouraud2(&self) -> bool {
+        self.0 & Self::ENABLE_GOURAUD2 == Self::ENABLE_GOURAUD2
+    }
+
+    pub fn encoded_visibility(&self) -> bool {
+        self.0 & Self::ENCODED_VISIBILITY == Self::ENCODED_VISIBILITY
+    }
+
+    //TODO: Verify this
+    pub fn has_byte_entries(&self) -> bool {
+        self.0 & Self::HAS_BYTE_ENTRIES == Self::HAS_BYTE_ENTRIES
+    }
+
+    //TODO: Verify this
+    pub fn has_mesh_reference(&self) -> bool {
+        self.0 & Self::HAS_MESH_REFERENCE == Self::HAS_MESH_REFERENCE
+    }
 }
 
-impl BspRegionFragmentData3Entry {
-    fn parse(input: &[u8]) -> WResult<BspRegionFragmentData3Entry> {
-        let (i, (flags, size1)) = tuple((le_u32, le_u32))(input)?;
-        let (i, data1) = count(le_u32, size1 as usize)(i)?;
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+pub struct Wall {
+    /// bit 0 - has FLOOR (is floor?)
+    /// bit 1 - has RENDERMETHOD and NORMALABCD (is renderable?)
+    flags: WallFlags,
 
-        let has_params = flags & 0x02 == 0x02;
-        let (remaining, (params1, params2)) = if has_params {
-            tuple((
-                map(tuple((le_u32, le_u32, le_u32)), Some),
-                map(le_u32, Some),
-            ))(i)?
+    /// NUMVERTICES %d
+    num_vertices: u32,
+
+    /// RENDERMETHOD ...
+    render_method: Option<RenderMethod>,
+
+    /// NORMALABCD %f %f %f %f
+    normal_abcd: Option<(f32, f32, f32, f32)>,
+
+    /// VERTEXLIST %d ...%d
+    vertex_list: Vec<u32>,
+}
+
+impl Wall {
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, flags) = WallFlags::parse(input)?;
+        let (i, num_vertices) = le_u32(i)?;
+
+        let (i, render_method) = if flags.has_method_and_normal() {
+            RenderMethod::parse(i).map(|(rem, m)| (rem, Some(m)))?
         } else {
-            (i, (None, None))
+            (i, None)
         };
 
+        let (i, normal_abcd) = if flags.has_method_and_normal() {
+            tuple((le_f32, le_f32, le_f32, le_f32))(i).map(|(rem, n)| (rem, Some(n)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, vertex_list) = count(le_u32, num_vertices as usize)(i)?;
+
         Ok((
-            remaining,
-            BspRegionFragmentData3Entry {
+            i,
+            Self {
                 flags,
-                size1,
-                data1,
-                params1,
-                params2,
+                num_vertices,
+                render_method,
+                normal_abcd,
+                vertex_list,
             },
         ))
     }
 
     fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.flags.to_le_bytes()[..],
-            &self.size1.to_le_bytes()[..],
+            &self.flags.into_bytes()[..],
+            &self.num_vertices.to_le_bytes()[..],
             &self
-                .data1
-                .iter()
-                .flat_map(|d| d.to_le_bytes())
-                .collect::<Vec<_>>()[..],
-            &self.params1.map_or(vec![], |p| {
-                [p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes()].concat()
+                .render_method
+                .as_ref()
+                .map_or(vec![], |m| m.into_bytes())[..],
+            &self.normal_abcd.map_or(vec![], |m| {
+                [
+                    m.0.to_le_bytes(),
+                    m.1.to_le_bytes(),
+                    m.2.to_le_bytes(),
+                    m.3.to_le_bytes(),
+                ]
+                .concat()
             })[..],
-            &self.params2.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
+            &self
+                .vertex_list
+                .iter()
+                .flat_map(|v| v.to_le_bytes())
+                .collect::<Vec<_>>()[..],
         ]
         .concat()
     }
@@ -295,77 +428,85 @@ impl BspRegionFragmentData3Entry {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// _Unknown_
-pub struct BspRegionFragmentData4Entry {
-    /// _Unknown_
-    flags: u32,
+pub struct WallFlags(u32);
 
-    /// _Unknown_
-    params1: u32,
+impl WallFlags {
+    const HAS_FLOOR: u32 = 0x01;
+    const HAS_METHOD_AND_NORMAL: u32 = 0x02;
 
-    /// _Unknown_ - This seems to determine if `params2a` and/or `params2b` exist.
-    type_field: u32,
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, raw_flags) = le_u32(input)?;
+        Ok((i, Self(raw_flags)))
+    }
 
-    /// _Unknown_ - Only exists if `type_field` is greater than 7.
-    params2a: Option<u32>,
+    fn into_bytes(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
+    }
 
-    /// _Unknown_ - Only exists if `type_field` is one of the following:
-    /// * 0x0A
-    /// * 0x0B
-    /// * 0x0C
-    /// Though I'm not at all sure about this due to lack of sample data.
-    params2b: Option<u32>,
+    pub fn has_floor(&self) -> bool {
+        self.0 & Self::HAS_FLOOR == Self::HAS_FLOOR
+    }
 
-    /// The number of bytes in the `name` field.
-    name_size: u32,
-
-    /// An encoded string.
-    name: String,
+    pub fn has_method_and_normal(&self) -> bool {
+        self.0 & Self::HAS_METHOD_AND_NORMAL == Self::HAS_METHOD_AND_NORMAL
+    }
 }
 
-impl BspRegionFragmentData4Entry {
-    fn parse(input: &[u8]) -> WResult<BspRegionFragmentData4Entry> {
-        let (i, (flags, params1, type_field)) = tuple((le_u32, le_u32, le_u32))(input)?;
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+/// _Unknown_
+pub struct Obstacle {
+    /// bit 0 - is a FLOOR
+    /// bit 1 - is a GEOMETRYCUTTINGOBSTACLE
+    /// bit 2 - has USERDATA %s
+    flags: ObstacleFlags,
 
-        let (i, params2a) = if type_field > 7 {
-            map(le_u32, Some)(i)?
+    /// NEXTREGION %d
+    next_region: i32,
+
+    /// Length of USERDATA string
+    user_data_size: Option<u32>,
+
+    /// USERDATA %s
+    user_data: Option<Vec<u8>>,
+}
+
+impl Obstacle {
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, flags) = ObstacleFlags::parse(input)?;
+        let (i, next_region) = le_i32(i)?;
+
+        let (i, user_data_size) = if flags.has_user_data() {
+            le_u32(i).map(|(rem, u)| (rem, Some(u)))?
         } else {
             (i, None)
         };
 
-        let (i, params2b) = if type_field > 7 {
-            map(le_u32, Some)(i)?
+        let (i, user_data) = if let Some(data_size) = user_data_size {
+            count(le_u8, data_size as usize)(i).map(|(rem, u)| (rem, Some(u)))?
         } else {
             (i, None)
         };
-
-        let (i, name_size) = le_u32(i)?;
-
-        let (remaining, name) = count(le_u8, name_size as usize)(i)?;
 
         Ok((
-            remaining,
-            BspRegionFragmentData4Entry {
+            i,
+            Self {
                 flags,
-                params1,
-                type_field,
-                params2a,
-                params2b,
-                name_size,
-                name: String::from_utf8(name).unwrap(),
+                next_region,
+                user_data_size,
+                user_data,
             },
         ))
     }
 
     fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.flags.to_le_bytes()[..],
-            &self.params1.to_le_bytes()[..],
-            &self.type_field.to_le_bytes()[..],
-            &self.params2a.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
-            &self.params2b.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
-            &self.name_size.to_le_bytes()[..],
-            &self.name.as_bytes()[..],
+            &self.flags.into_bytes()[..],
+            &self.next_region.to_le_bytes()[..],
+            &self
+                .user_data_size
+                .map_or(vec![], |u| u.to_le_bytes().to_vec())[..],
+            &self.user_data.as_ref().map_or(vec![], |u| u.clone())[..],
         ]
         .concat()
     }
@@ -373,55 +514,78 @@ impl BspRegionFragmentData4Entry {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// _Unknown_
-pub struct BspRegionFragmentData5Entry {
-    /// _Unknown_ - Usually 0.
-    params1: (u32, u32, u32),
+pub struct ObstacleFlags(u32);
 
-    /// _Unknown_ - Usually 0.
-    params2: u32,
+impl ObstacleFlags {
+    const IS_FLOOR: u32 = 0x01;
+    const IS_GEOMETRY_CUTTING: u32 = 0x02;
+    const HAS_USER_DATA: u32 = 0x04;
 
-    /// _Unknown_ - Usually 1.
-    params3: u32,
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, raw_flags) = le_u32(input)?;
+        Ok((i, Self(raw_flags)))
+    }
 
-    /// _Unknown_ - Usually 0.
-    params4: u32,
+    fn into_bytes(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
+    }
 
-    /// _Unknown_ - Usually 0.
-    params5: u32,
+    pub fn is_floor(&self) -> bool {
+        self.0 & Self::IS_FLOOR == Self::IS_FLOOR
+    }
+
+    pub fn is_geometry_cutting(&self) -> bool {
+        self.0 & Self::IS_GEOMETRY_CUTTING == Self::IS_GEOMETRY_CUTTING
+    }
+
+    pub fn has_user_data(&self) -> bool {
+        self.0 & Self::HAS_USER_DATA == Self::HAS_USER_DATA
+    }
 }
 
-impl BspRegionFragmentData5Entry {
-    fn parse(input: &[u8]) -> WResult<BspRegionFragmentData5Entry> {
-        let (remaining, (params1, params2, params3, params4, params5)) = tuple((
-            tuple((le_u32, le_u32, le_u32)),
-            le_u32,
-            le_u32,
-            le_u32,
-            le_u32,
-        ))(input)?;
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+pub struct VisNode {
+    /// NORMALABCD %f %f %f %f
+    normal_abcd: (f32, f32, f32, f32),
+
+    /// VISLISTINDEX %d
+    vis_list_index: u32,
+
+    /// FRONTTREE %d
+    front_tree: u32,
+
+    /// BACKTREE %d
+    back_tree: u32,
+}
+
+impl VisNode {
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, normal_abcd) = tuple((le_f32, le_f32, le_f32, le_f32))(input)?;
+        let (i, vis_list_index) = le_u32(i)?;
+        let (i, front_tree) = le_u32(i)?;
+        let (i, back_tree) = le_u32(i)?;
 
         Ok((
-            remaining,
-            BspRegionFragmentData5Entry {
-                params1,
-                params2,
-                params3,
-                params4,
-                params5,
+            i,
+            Self {
+                normal_abcd,
+                vis_list_index,
+                front_tree,
+                back_tree,
             },
         ))
     }
 
     fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.params1.0.to_le_bytes()[..],
-            &self.params1.1.to_le_bytes()[..],
-            &self.params1.2.to_le_bytes()[..],
-            &self.params2.to_le_bytes()[..],
-            &self.params3.to_le_bytes()[..],
-            &self.params4.to_le_bytes()[..],
-            &self.params5.to_le_bytes()[..],
+            &self.normal_abcd.0.to_le_bytes()[..],
+            &self.normal_abcd.1.to_le_bytes()[..],
+            &self.normal_abcd.2.to_le_bytes()[..],
+            &self.normal_abcd.3.to_le_bytes()[..],
+            &self.vis_list_index.to_le_bytes()[..],
+            &self.front_tree.to_le_bytes()[..],
+            &self.back_tree.to_le_bytes()[..],
         ]
         .concat()
     }
@@ -429,11 +593,11 @@ impl BspRegionFragmentData5Entry {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// A potentially visible set (PVS) of regions
-pub struct BspRegionFragmentPVS {
-    /// The number of entries in the `data` field
-    size: u16,
+pub struct VisibleList {
+    /// RANGE %d
+    range_count: u16,
 
+    /// ...%d
     /// This is a complicated field. It contains run-length-encoded data that tells the
     /// client which regions are “nearby”. The purpose appears to be so that the client
     /// can determine which mobs in the zone have to have their Z coordinates checked,
@@ -470,19 +634,76 @@ pub struct BspRegionFragmentPVS {
     /// It should be noted that the values in the range 0x40..0xBF allow skipping and
     /// including of no more than seven IDs at a time. Also, they are not necessary to
     /// encode a region list: they merely allow better compression.
-    data: Vec<u8>,
+    ranges: Vec<RangeEntry>,
 }
 
-impl BspRegionFragmentPVS {
-    fn parse(input: &[u8]) -> WResult<BspRegionFragmentPVS> {
-        let (i, size) = le_u16(input)?;
-        let (remaining, data) = count(le_u8, size as usize)(i)?;
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+enum RangeEntry {
+    Byte(u8),
+    Word(u16),
+}
 
-        Ok((remaining, BspRegionFragmentPVS { size, data }))
+impl RangeEntry {
+    fn into_bytes(&self) -> Vec<u8> {
+        match self {
+            Self::Byte(b) => vec![*b],
+            Self::Word(u) => u.to_le_bytes().to_vec(),
+        }
+    }
+}
+
+impl VisibleList {
+    fn parse_with_bytes(input: &[u8]) -> WResult<Self> {
+        Self::parse(input, true)
+    }
+
+    fn parse_with_words(input: &[u8]) -> WResult<Self> {
+        Self::parse(input, false)
+    }
+
+    fn parse(input: &[u8], byte_entries: bool) -> WResult<Self> {
+        let (i, range_count) = le_u16(input)?;
+
+        let (i, ranges) = if byte_entries {
+            count(le_u8, range_count as usize)(i).map(|(rem, e)| {
+                (
+                    rem,
+                    e.into_iter()
+                        .map(|r| RangeEntry::Byte(r))
+                        .collect::<Vec<_>>(),
+                )
+            })?
+        } else {
+            count(le_u16, range_count as usize)(i).map(|(rem, e)| {
+                (
+                    rem,
+                    e.into_iter()
+                        .map(|r| RangeEntry::Word(r))
+                        .collect::<Vec<_>>(),
+                )
+            })?
+        };
+
+        Ok((
+            i,
+            Self {
+                range_count,
+                ranges,
+            },
+        ))
     }
 
     fn into_bytes(&self) -> Vec<u8> {
-        [&self.size.to_le_bytes()[..], &self.data[..]].concat()
+        [
+            &self.range_count.to_le_bytes()[..],
+            &self
+                .ranges
+                .iter()
+                .flat_map(|r| r.into_bytes())
+                .collect::<Vec<_>>(),
+        ]
+        .concat()
     }
 }
 
@@ -493,42 +714,55 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1731-0x22.frag")[..];
-        let frag = BspRegionFragment::parse(data).unwrap().1;
+        let (remaining, frag) = BspRegionFragment::parse(data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(-29318));
-        assert_eq!(frag.flags, 0x81);
-        assert_eq!(frag.fragment1, FragmentRef::new(0));
-        assert_eq!(frag.size1, 0);
-        assert_eq!(frag.size2, 0);
-        assert_eq!(frag.params1, 0);
-        assert_eq!(frag.size3, 0);
-        assert_eq!(frag.size4, 0);
-        assert_eq!(frag.params2, 0);
-        assert_eq!(frag.size5, 1);
-        assert_eq!(frag.pvs_count, 1);
-        assert_eq!(frag.data1.len(), 0);
-        assert_eq!(frag.data2.len(), 0);
-        assert_eq!(frag.data3.len(), 0);
-        assert_eq!(frag.data4.len(), 0);
-        assert_eq!(frag.data5.len(), 1);
-        assert_eq!(frag.data5[0].params1, (0, 0, 0));
-        assert_eq!(frag.data5[0].params2, 0);
-        assert_eq!(frag.data5[0].params3, 1);
-        assert_eq!(frag.data5[0].params4, 0);
-        assert_eq!(frag.data5[0].params5, 0);
-        assert_eq!(frag.pvs.len(), 1);
-        assert_eq!(frag.pvs[0].size, 14);
+        assert_eq!(frag.flags, RegionFlags(0x81));
+        assert_eq!(frag.ambient_light, FragmentRef::new(0));
+        assert_eq!(frag.num_region_vertex, 0);
+        assert_eq!(frag.num_proximal_regions, 0);
+        assert_eq!(frag.num_render_vertices, 0);
+        assert_eq!(frag.num_walls, 0);
+        assert_eq!(frag.num_obstacles, 0);
+        assert_eq!(frag.num_cutting_obstacles, 0);
+        assert_eq!(frag.num_vis_node, 1);
+        assert_eq!(frag.num_vis_list, 1);
+        assert_eq!(frag.region_vertices.len(), 0);
+        assert_eq!(frag.proximal_regions.len(), 0);
+        assert_eq!(frag.render_vertices.len(), 0);
+        assert_eq!(frag.walls.len(), 0);
+        assert_eq!(frag.obstacles.len(), 0);
+        assert_eq!(frag.vis_nodes[0].normal_abcd, (0.0, 0.0, 0.0, 0.0));
+        assert_eq!(frag.vis_nodes[0].vis_list_index, 1);
+        assert_eq!(frag.vis_nodes[0].front_tree, 0);
+        assert_eq!(frag.vis_nodes[0].back_tree, 0);
+        assert_eq!(frag.visible_lists.len(), 1);
+        assert_eq!(frag.visible_lists[0].range_count, 14);
         assert_eq!(
-            frag.pvs[0].data,
-            vec![254, 242, 24, 202, 86, 81, 39, 218, 87, 63, 44, 10, 19, 216]
+            frag.visible_lists[0].ranges,
+            vec![254u8, 242, 24, 202, 86, 81, 39, 218, 87, 63, 44, 10, 19, 216]
+                .iter()
+                .map(|i| RangeEntry::Byte(*i))
+                .collect::<Vec<_>>()
         );
-        assert_eq!(frag.size7, 3308745734);
         assert_eq!(
-            frag.name7,
-            vec![111, 114, 48, 197, 160, 16, 158, 193, 238, 18, 110, 67]
+            frag.sphere,
+            Some((-2935.2515, -2823.152, -19.758118, 238.07394))
         );
-        assert_eq!(frag.fragment2, FragmentRef::new(0));
+        assert_eq!(frag.reverb_volume, None);
+        assert_eq!(frag.reverb_offset, None);
+        assert_eq!(frag.user_data_size, 0);
+        assert_eq!(frag.user_data, vec![]);
         assert_eq!(frag.mesh_reference, None);
+        assert_eq!(remaining, vec![]);
+    }
+
+    #[test]
+    fn it_parses_with_mesh_reference() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1738-0x22.frag")[..];
+        let (remaining, frag) = BspRegionFragment::parse(data).unwrap();
+        assert_eq!(frag.mesh_reference, Some(FragmentRef::new(132)));
+        assert_eq!(remaining, vec![]);
     }
 
     #[test]
