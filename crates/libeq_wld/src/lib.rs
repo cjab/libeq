@@ -244,7 +244,7 @@ impl<'a> Mesh<'a> {
     pub fn primitives(&self) -> Vec<Primitive> {
         let mut pos = 0;
         self.fragment
-            .polygon_materials
+            .face_material_groups
             .iter()
             .enumerate()
             .map(|(index, (poly_count, ref material_idx))| {
