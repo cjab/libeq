@@ -5,7 +5,6 @@ use super::{
     MeshAnimatedVerticesReferenceFragment, StringReference, WResult,
 };
 
-use nom::combinator::map;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_i8, le_u16, le_u32, le_u8};
 use nom::sequence::tuple;
@@ -483,10 +482,7 @@ impl MeshFragmentMeshOpEntry {
         let unknown_data = &input[0..4];
         let input = &input[4..];
 
-        let (i, (param1, type_field)) = tuple((
-            le_u8,
-            le_u8,
-        ))(input)?;
+        let (i, (param1, type_field)) = tuple((le_u8, le_u8))(input)?;
 
         let (unknown_data, offset) = if type_field == 4 {
             le_f32(unknown_data).map(|(i, offset)| (i, Some(offset)))?
@@ -495,7 +491,8 @@ impl MeshFragmentMeshOpEntry {
         };
 
         let (_, (index1, index2)) = if type_field != 4 {
-            tuple((le_u16, le_u16))(unknown_data).map(|(i, (index1, index2))| (i, (Some(index1), Some(index2))))?
+            tuple((le_u16, le_u16))(unknown_data)
+                .map(|(i, (index1, index2))| (i, (Some(index1), Some(index2))))?
         } else {
             (unknown_data, (None, None))
         };

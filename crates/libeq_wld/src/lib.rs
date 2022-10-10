@@ -349,12 +349,8 @@ impl<'a> Material<'a> {
             })
     }
 
-    pub fn transparency_flags(&self) -> &TransparencyFlags {
-        &self.fragment.transparency_flags
-    }
-
-    pub fn mask_color_coord(&self) -> &(f32, f32) {
-        &self.fragment.mask_color_coord
+    pub fn render_method(&self) -> &RenderMethod {
+        &self.fragment.render_method
     }
 }
 

@@ -4,7 +4,6 @@ use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_u32, le_u8};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};

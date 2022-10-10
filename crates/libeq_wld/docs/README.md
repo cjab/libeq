@@ -321,7 +321,7 @@
       <td>44</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/alternate_mesh.rs">AlternateMesh</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x2c--alternate-mesh--plain">Alternate Mesh</a></td>
-      <td></td>
+      <td>DMSPRITEDEF (suspected)</td>
     </tr>
     <tr>
       <td>0x2d</td>
@@ -349,14 +349,14 @@
       <td>48</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/material.rs">Material</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x30--texture--reference">Texture</a></td>
-      <td></td>
+      <td>MATERIALDEFINITION</td>
     </tr>
     <tr>
       <td>0x31</td>
       <td>49</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/material_list.rs">MaterialList</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x31--texture-list--plain">TextureList</a></td>
-      <td></td>
+      <td>MATERIALPALETTE</td>
     </tr>
     <tr>
       <td>0x32</td>
@@ -391,14 +391,42 @@
       <td>54</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/mesh.rs">Mesh</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x36--mesh--plain">Mesh</a></td>
-      <td></td>
+      <td>DMSPRITEDEF2</td>
     </tr>
     <tr>
       <td>0x37</td>
       <td>55</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/mesh_animated_vertices.rs">MeshAnimatedVertices</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x37--mesh-animated-vertices--plain">Mesh Animated Vertices</a></td>
-      <td></td>
+      <td>DMTRACKDEF</td>
+    </tr>
+  </tbody>
+</table>
+
+## ASCII File Extensions
+<table id="ascii-file-extensions">
+  <thead>
+    <tr>
+      <th>Extension</th>
+      <th>Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>MDF</td>
+      <td>Material</td>
+    </tr>
+    <tr>
+      <td>SPH</td>
+      <td>Animation</td>
+    </tr>
+    <tr>
+      <td>SPK</td>
+      <td>Skin Exporter (Mesh, Hierarchical Sprite data)</td>
+    </tr>
+    <tr>
+      <td>SPS</td>
+      <td>Simple Sprite Def (Texture)</td>
     </tr>
   </tbody>
 </table>
