@@ -187,8 +187,6 @@ pub struct MeshFragment {
 
     /// _Unknown_ - A collection of [MeshFragmentMeshOpEntry]s
     pub meshops: Vec<MeshFragmentMeshOpEntry>,
-
-    // FIXME: There's some trailing bytes here, between 1-3 in _chr wlds.
 }
 
 impl FragmentParser for MeshFragment {
@@ -272,6 +270,8 @@ impl FragmentParser for MeshFragment {
             count(MeshFragmentMeshOpEntry::parse, meshop_count as usize),
         ))(i)?;
 
+        // Note - There's trailing zeroes here which are not read.
+
         Ok((
             remaining,
             MeshFragment {
@@ -312,6 +312,14 @@ impl FragmentParser for MeshFragment {
 
 impl Fragment for MeshFragment {
     fn into_bytes(&self) -> Vec<u8> {
+        let meshops = &self
+                .meshops
+                .iter()
+                .flat_map(|d| d.into_bytes())
+                .collect::<Vec<_>>()[..];
+        let padding_size = (4 - meshops.len() % 4) % 4;
+        let padding: Vec<u8> = vec![0; padding_size];
+
         [
             &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
@@ -382,11 +390,8 @@ impl Fragment for MeshFragment {
                 .iter()
                 .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes()].concat())
                 .collect::<Vec<_>>()[..],
-            &self
-                .meshops
-                .iter()
-                .flat_map(|d| d.into_bytes())
-                .collect::<Vec<_>>()[..],
+            meshops,
+            &padding[..]
         ]
         .concat()
     }
