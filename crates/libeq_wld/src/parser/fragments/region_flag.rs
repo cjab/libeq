@@ -1,9 +1,12 @@
 use std::any::Any;
 
+use crate::parser::strings::{decode_string, encode_string};
+
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_u32, le_u8};
+use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -48,7 +51,7 @@ pub struct RegionFlagFragment {
     /// contain a “magic” string that told the client what was special about the included
     /// regions (e.g. WTN__01521000000000000000000000___000000000000). This field is padded
     /// with nulls to make it end on a DWORD boundary.
-    pub user_data: Vec<u8>,
+    pub user_data: String,
 }
 
 impl FragmentParser for RegionFlagFragment {
@@ -63,9 +66,7 @@ impl FragmentParser for RegionFlagFragment {
         let (i, region_count) = le_u32(i)?;
         let (i, regions) = count(le_u32, region_count as usize)(i)?;
         let (i, user_data_size) = le_u32(i)?;
-        let padding = (4 - user_data_size % 4) % 4;
-        let user_data_size_with_padding = user_data_size + padding;
-        let (i, user_data) = count(le_u8, user_data_size_with_padding as usize)(i)?;
+        let (i, user_data) = count(le_u8, user_data_size as usize)(i)?;
 
         Ok((
             i,
@@ -75,7 +76,7 @@ impl FragmentParser for RegionFlagFragment {
                 region_count,
                 regions,
                 user_data_size,
-                user_data,
+                user_data: decode_string(&user_data),
             },
         ))
     }
@@ -83,6 +84,10 @@ impl FragmentParser for RegionFlagFragment {
 
 impl Fragment for RegionFlagFragment {
     fn into_bytes(&self) -> Vec<u8> {
+        let user_data_size = self.user_data_size as usize;
+        let padding = (4 - user_data_size % 4) % 4;
+        let mut user_data = encode_string(&self.user_data);
+        user_data.resize(user_data_size + padding, 0);
         [
             &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
@@ -93,11 +98,7 @@ impl Fragment for RegionFlagFragment {
                 .flat_map(|r| r.to_le_bytes())
                 .collect::<Vec<_>>()[..],
             &self.user_data_size.to_le_bytes()[..],
-            &self
-                .user_data
-                .iter()
-                .flat_map(|d| d.to_le_bytes())
-                .collect::<Vec<_>>()[..],
+            &user_data[..],
         ]
         .concat()
     }
@@ -129,12 +130,31 @@ mod tests {
         assert_eq!(frag.region_count, 2);
         assert_eq!(frag.regions, vec![2859, 2865]);
         assert_eq!(frag.user_data_size, 0);
-        assert_eq!(frag.user_data, vec![]);
+        assert_eq!(frag.user_data, "");
+    }
+    #[test]
+    fn it_parses_user_data() {
+        let data = &include_bytes!("../../../fixtures/fragments/qeynos/10322-0x29.frag")[..];
+        let frag = RegionFlagFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-124807));
+        assert_eq!(frag.flags, 0x0);
+        assert_eq!(frag.region_count, 2);
+        assert_eq!(frag.regions, vec![4521, 4523]);
+        assert_eq!(frag.user_data_size, 47);
+        assert_eq!(frag.user_data, "DRNTP00002-00030000357999999999___000000000000\0");
     }
 
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
+        let frag = RegionFlagFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.into_bytes()[..], data);
+    }
+    #[test]
+    fn it_serializes_user_data() {
+        let data = &include_bytes!("../../../fixtures/fragments/qeynos/10322-0x29.frag")[..];
         let frag = RegionFlagFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
