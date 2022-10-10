@@ -32,39 +32,39 @@ pub struct AlternateMeshFragment {
     pub flags: u32,
 
     /// Tells how many vertices there are in the mesh. Normally this is three times the number
-    /// of polygons, but this is by no means necessary as polygons can share vertices. However,
-    /// sharing vertices degrades the ability to use vertex normals to make a mesh look
+    /// of faces, but this is by no means necessary as faces can share vertices. However,
+    /// sharing vertices degrades the ability to use vertex vertex_normals to make a mesh look
     /// more rounded (with shading).
     pub vertex_count: u32,
 
     /// Tells how many texture coordinate pairs there are in the mesh. This should equal the
     /// number of vertices in the mesh. Presumably this could contain zero if none of the
-    /// polygons have textures mapped to them (but why would anyone do that?)
-    pub tex_coords_count: u32,
+    /// faces have textures mapped to them (but why would anyone do that?)
+    pub texture_coordinate_count: u32,
 
     /// Tells how many vertex normal entries there are in the mesh. This should equal the number
     /// of vertices in the mesh. Presumably this could contain zero if vertices should use
-    /// polygon normals instead, but I haven’t tried it (vertex normals are preferable anyway).
-    pub normals_count: u32,
+    /// polygon vertex_normals instead, but I haven’t tried it (vertex vertex_normals are preferable anyway).
+    pub normal_count: u32,
 
     /// Its purpose is unknown (though if the pattern with the 0x36 fragment holds then it
     /// should contain color information).
     pub size4: u32,
 
-    /// The number of polygons in the mesh.
-    pub polygon_count: u32,
+    /// The number of faces in the mesh.
+    pub face_count: u32,
 
     /// This seems to only be used when dealing with animated (mob) models.
-    /// It determines the number of entries in `data6`.
-    pub size6: u16,
+    /// It determines the number of entries in `meshops`.
+    pub meshop_count: u16,
 
     /// This seems to only be used when dealing with animated (mob) models. It tells how many
     /// VertexPiece entries there are. Vertices are grouped together by skeleton piece in this
     /// case and VertexPiece entries tell the client how many vertices are in each piece.
     /// It’s possible that there could be more pieces in the skeleton than are in the meshes
-    /// it references. Extra pieces have no polygons or vertices and I suspect they are there
+    /// it references. Extra pieces have no faces or vertices and I suspect they are there
     /// to define attachment points for objects (e.g. weapons or shields).
-    pub vertex_piece_count: i16,
+    pub skin_assignment_group_count: i16,
 
     pub size9: u32,
 
@@ -86,22 +86,22 @@ pub struct AlternateMeshFragment {
     /// There are `vertex_count` of these.
     pub vertices: Vec<(f32, f32, f32)>,
 
-    /// There are `tex_coords_count` of these.
-    pub texture_coords: Vec<(f32, f32)>,
+    /// There are `texture_coordinate_count` of these.
+    pub texture_coordinates: Vec<(f32, f32)>,
 
-    /// There are `normals_count` of these
-    pub normals: Vec<(f32, f32, f32)>,
+    /// There are `normal_count` of these
+    pub vertex_normals: Vec<(f32, f32, f32)>,
 
     /// _Unknown_ - There are `size4` of these.
     pub data4: Vec<u32>,
 
-    /// _Unknown_ - There are `polygon_count` of these.
-    /// First tuple value seems to be flags, usually contains 0x004b for polygons.
+    /// _Unknown_ - There are `face_count` of these.
+    /// First tuple value seems to be flags, usually contains 0x004b for faces.
     /// Second tuple values are usually zero. Their purpose is _unknown_.
-    pub polygons: Vec<AlternateMeshFragmentPolygonEntry>,
+    pub faces: Vec<AlternateMeshFragmentFaceEntry>,
 
-    /// There are `size6` of these.
-    pub data6: Vec<AlternateMeshFragmentData6Entry>,
+    /// There are `meshop_count` of these.
+    pub meshops: Vec<AlternateMeshFragmentMeshopEntry>,
 
     /// The first element of the tuple is the number of vertices in a skeleton piece.
     ///
@@ -109,8 +109,8 @@ pub struct AlternateMeshFragment {
     /// [SkeletonTrackSet] fragment. The very first piece (index 0) is usually not referenced here
     /// as it is usually jsut a "stem" starting point for the skeleton. Only those pieces
     /// referenced here in the mesh should actually be rendered. Any other pieces in the skeleton
-    /// contain no vertices or polygons And have other purposes.
-    pub vertex_pieces: Vec<(u16, u16)>,
+    /// contain no vertices or faces And have other purposes.
+    pub skin_assignment_groups: Vec<(u16, u16)>,
 
     /// _Unknown_ - This only exists if bit 9 of `flags` is set.
     pub size8: Option<u32>,
@@ -124,19 +124,19 @@ pub struct AlternateMeshFragment {
     /// _Unknown_ - There are 'size9' of these
     pub data9: Vec<(u16,u16)>,
 
-    /// Tells how many PolygonTex entries there are. Polygons are grouped together by texture and PolygonTex entries tell the client how many polygons there are that use a particular texture. This field only exists if bit 11 of Flags is 1.
-    pub polygontex_count: Option<u32>,
+    /// Tells how many PolygonTex entries there are. faces are grouped together by texture and PolygonTex entries tell the client how many faces there are that use a particular texture. This field only exists if bit 11 of Flags is 1.
+    pub face_material_group_count: Option<u32>,
     
     /// PolygonTex entries (there are PolygonTexCount of these)
-    pub polygontex_entries: Option<Vec<(u16,u16)>>,
+    pub face_material_groups: Option<Vec<(u16,u16)>>,
 
-    /// The number of `vertex_materials` entries there are. Polygons are grouped together by
-    /// material and `vertex_material` entries telling the client how many polygons there are
+    /// The number of `vertex_material_groups` entries there are. faces are grouped together by
+    /// material and `vertex_material` entries telling the client how many faces there are
     /// that use a particular material. This field only exists if bit 12 of `flags` is set.
-    pub vertex_material_count: Option<u32>,
+    pub vertex_material_group_count: Option<u32>,
 
     /// The first element of the tuple is the number of vertices that use the same
-    /// material. Vertex materials, like polygons, are sorted by material index so
+    /// material. Vertex materials, like faces, are sorted by material index so
     /// that vertices that use the same material are together.
     ///
     /// The second element of the tuple is the index of the material that the
@@ -145,8 +145,8 @@ pub struct AlternateMeshFragment {
     ///
     /// The rest are _Unknown_
     ///
-    /// There are 'vertex_material_count` of these.
-    pub vertex_materials: Option<Vec<(u16, u16)>>,
+    /// There are 'vertex_material_group_count` of these.
+    pub vertex_material_groups: Option<Vec<(u16, u16)>>,
     
     /// its purpose is unknown. This field only exists if bit 13 of Flags is 1.
     pub params3: Option<(u32,u32,u32)>,
@@ -169,12 +169,12 @@ impl FragmentParser for AlternateMeshFragment {
                 name_reference,
                 flags,
                 vertex_count,
-                tex_coords_count,
-                normals_count,
+                texture_coordinate_count,
+                normal_count,
                 size4,
-                polygon_count,
-                size6,
-                vertex_piece_count,
+                face_count,
+                meshop_count,
+                skin_assignment_group_count,
                 size9,
                 material_list_ref,
                 fragment2,
@@ -198,18 +198,18 @@ impl FragmentParser for AlternateMeshFragment {
             le_u32,
         ))(input)?;
 
-        let (i, (vertices, texture_coords, normals, data4, polygons, data6, vertex_pieces)) =
+        let (i, (vertices, texture_coordinates, vertex_normals, data4, faces, meshops, skin_assignment_groups)) =
         tuple((
             count(tuple((le_f32, le_f32, le_f32)), vertex_count as usize),
-            count(tuple((le_f32, le_f32)), tex_coords_count as usize),
-            count(tuple((le_f32, le_f32, le_f32)), normals_count as usize),
+            count(tuple((le_f32, le_f32)), texture_coordinate_count as usize),
+            count(tuple((le_f32, le_f32, le_f32)), normal_count as usize),
             count(le_u32, size4 as usize),
             count(
-                AlternateMeshFragmentPolygonEntry::parse,
-                polygon_count as usize,
+                AlternateMeshFragmentFaceEntry::parse,
+                face_count as usize,
             ),
-            count(AlternateMeshFragmentData6Entry::parse, size6 as usize),
-            count(tuple((le_u16, le_u16)), vertex_piece_count as usize)
+            count(AlternateMeshFragmentMeshopEntry::parse, meshop_count as usize),
+            count(tuple((le_u16, le_u16)), skin_assignment_group_count as usize)
         ))(i)?;
 
         let (i, size8) = if flags & 0x200 == 0x200 { // Bit 9 is set
@@ -228,26 +228,26 @@ impl FragmentParser for AlternateMeshFragment {
 
         let (i, data9) = count(tuple((le_u16, le_u16)), size9 as usize)(i)?;
 
-        let (i, polygontex_count) = if flags & 0x800 == 0x800 { // Bit 11 set
-            le_u32(i).map(|(i, polygontex_count)| (i, Some(polygontex_count)))?
+        let (i, face_material_group_count) = if flags & 0x800 == 0x800 { // Bit 11 set
+            le_u32(i).map(|(i, face_material_group_count)| (i, Some(face_material_group_count)))?
         } else {
             (i, None)
         };
 
-        let (i, polygontex_entries) = if flags & 0x800 == 0x800 { // Bit 11 set
-            count(tuple((le_u16, le_u16)),  polygontex_count.unwrap() as usize)(i).map(|(i, polygontex_entries)| (i, Some(polygontex_entries)))?
+        let (i, face_material_groups) = if flags & 0x800 == 0x800 { // Bit 11 set
+            count(tuple((le_u16, le_u16)),  face_material_group_count.unwrap() as usize)(i).map(|(i, face_material_groups)| (i, Some(face_material_groups)))?
         } else {
             (i, None)
         };
 
-        let (i, vertex_material_count) = if flags & 0x1000 == 0x1000 { // Bit 12 set
-            le_u32(i).map(|(i, vertex_material_count)| (i, Some(vertex_material_count)))?
+        let (i, vertex_material_group_count) = if flags & 0x1000 == 0x1000 { // Bit 12 set
+            le_u32(i).map(|(i, vertex_material_group_count)| (i, Some(vertex_material_group_count)))?
         } else {
             (i, None)
         };
 
-        let (i, vertex_materials) = if flags & 0x1000 == 0x1000 { // Bit 12 set
-            count(tuple((le_u16, le_u16)),  vertex_material_count.unwrap() as usize)(i).map(|(i, vertex_materials)| (i, Some(vertex_materials)))?
+        let (i, vertex_material_groups) = if flags & 0x1000 == 0x1000 { // Bit 12 set
+            count(tuple((le_u16, le_u16)),  vertex_material_group_count.unwrap() as usize)(i).map(|(i, vertex_material_groups)| (i, Some(vertex_material_groups)))?
         } else {
             (i, None)
         };
@@ -270,32 +270,32 @@ impl FragmentParser for AlternateMeshFragment {
                 name_reference,
                 flags,
                 vertex_count,
-                tex_coords_count,
-                normals_count,
+                texture_coordinate_count,
+                normal_count,
                 size4,
-                polygon_count,
-                size6,
-                vertex_piece_count,
+                face_count,
+                meshop_count,
+                skin_assignment_group_count,
                 size9,
                 material_list_ref,
                 fragment2,
                 center,
                 params2,
                 vertices,
-                texture_coords,
-                normals,
+                texture_coordinates,
+                vertex_normals,
                 data4,
-                polygons,
-                data6,
-                vertex_pieces,
+                faces,
+                meshops,
+                skin_assignment_groups,
                 size8,
                 data8,
                 params4,
                 data9,
-                polygontex_count,
-                polygontex_entries,
-                vertex_material_count,
-                vertex_materials,
+                face_material_group_count,
+                face_material_groups,
+                vertex_material_group_count,
+                vertex_material_groups,
                 params3,
                 params5
             },
@@ -311,25 +311,25 @@ impl Fragment for AlternateMeshFragment {
             .flat_map(|v| vec![v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()])
             .flatten()
             .collect::<Vec<_>>();
-        let texture_coords = self
-            .texture_coords
+        let texture_coordinates = self
+            .texture_coordinates
             .iter()
             .flat_map(|v| vec![v.0.to_le_bytes(), v.1.to_le_bytes()])
             .flatten()
             .collect::<Vec<_>>();
-        let normals = self
-            .normals
+        let vertex_normals = self
+            .vertex_normals
             .iter()
             .flat_map(|v| vec![v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()])
             .flatten()
             .collect::<Vec<_>>();
-        let polygons = self
-            .polygons
+        let faces = self
+            .faces
             .iter()
             .flat_map(|p| p.into_bytes())
             .collect::<Vec<_>>();
-        let data6 = self
-            .data6
+        let meshops = self
+            .meshops
             .iter()
             .flat_map(|d| d.into_bytes())
             .collect::<Vec<_>>();
@@ -345,14 +345,14 @@ impl Fragment for AlternateMeshFragment {
             .flat_map(|d| d.to_le_bytes())
             .collect::<Vec<_>>();
 
-        let vertex_pieces = self
-            .vertex_pieces
+        let skin_assignment_groups = self
+            .skin_assignment_groups
             .iter()
             .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes()].concat())
             .collect::<Vec<_>>();
 
-        let polygontex_entries = self
-            .polygontex_entries
+        let face_material_groups = self
+            .face_material_groups
             .as_ref()
             .map_or(vec![], |i| i.iter()
             .flat_map(|v| {
@@ -364,8 +364,8 @@ impl Fragment for AlternateMeshFragment {
             })
             .collect::<Vec<_>>());
 
-        let vertex_materials = self
-            .vertex_materials
+        let vertex_material_groups = self
+            .vertex_material_groups
             .as_ref()
             .map_or(vec![], |i| i.iter()
             .flat_map(|v| {
@@ -381,12 +381,12 @@ impl Fragment for AlternateMeshFragment {
             &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.vertex_count.to_le_bytes()[..],
-            &self.tex_coords_count.to_le_bytes()[..],
-            &self.normals_count.to_le_bytes()[..],
+            &self.texture_coordinate_count.to_le_bytes()[..],
+            &self.normal_count.to_le_bytes()[..],
             &self.size4.to_le_bytes()[..],
-            &self.polygon_count.to_le_bytes()[..],
-            &self.size6.to_le_bytes()[..],
-            &self.vertex_piece_count.to_le_bytes()[..],
+            &self.face_count.to_le_bytes()[..],
+            &self.meshop_count.to_le_bytes()[..],
+            &self.skin_assignment_group_count.to_le_bytes()[..],
             &self.size9.to_le_bytes()[..],
             &self.material_list_ref.into_bytes()[..],
             &self.fragment2.to_le_bytes()[..],
@@ -395,16 +395,16 @@ impl Fragment for AlternateMeshFragment {
             &self.center.2.to_le_bytes()[..],
             &self.params2.to_le_bytes()[..],
             &vertices[..],
-            &texture_coords[..],
-            &normals[..],
+            &texture_coordinates[..],
+            &vertex_normals[..],
             &self
                 .data4
                 .iter()
                 .flat_map(|d| d.to_le_bytes())
                 .collect::<Vec<_>>()[..],
-            &polygons[..],
-            &data6[..],
-            &vertex_pieces[..],
+            &faces[..],
+            &meshops[..],
+            &skin_assignment_groups[..],
             &self.size8.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
             &data8[..],
             &params4,
@@ -413,10 +413,10 @@ impl Fragment for AlternateMeshFragment {
                 .iter()
                 .flat_map(|d| [d.0.to_le_bytes(), d.1.to_le_bytes()].concat() )
                 .collect::<Vec<_>>()[..],
-            &self.polygontex_count.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
-            &polygontex_entries[..],
-            &self.vertex_material_count.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
-            &vertex_materials[..],
+            &self.face_material_group_count.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
+            &face_material_groups[..],
+            &self.vertex_material_group_count.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
+            &vertex_material_groups[..],
             &self.params3.map_or(vec![], |p| {
                 [p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes()].concat()
             })[..],
@@ -440,8 +440,8 @@ impl Fragment for AlternateMeshFragment {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 /// Represents a polygon within a [AlternativeMeshFragment].
-pub struct AlternateMeshFragmentPolygonEntry {
-    /// This usually contains 0x004b for polygons.
+pub struct AlternateMeshFragmentFaceEntry {
+    /// This usually contains 0x004b for faces.
     pub flags: u16,
 
     /// _Unknown_ - Usually contains zeros.
@@ -451,7 +451,7 @@ pub struct AlternateMeshFragmentPolygonEntry {
     pub vertex_indexes: (u16, u16, u16),
 }
 
-impl AlternateMeshFragmentPolygonEntry {
+impl AlternateMeshFragmentFaceEntry {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.flags.to_le_bytes()[..],
@@ -467,8 +467,8 @@ impl AlternateMeshFragmentPolygonEntry {
     }
 }
 
-impl AlternateMeshFragmentPolygonEntry {
-    fn parse(input: &[u8]) -> WResult<AlternateMeshFragmentPolygonEntry> {
+impl AlternateMeshFragmentFaceEntry {
+    fn parse(input: &[u8]) -> WResult<AlternateMeshFragmentFaceEntry> {
         let (remaining, (flags, data, vertex_indexes)) = tuple((
             le_u16,
             tuple((le_u16, le_u16, le_u16, le_u16)),
@@ -476,7 +476,7 @@ impl AlternateMeshFragmentPolygonEntry {
         ))(input)?;
         Ok((
             remaining,
-            AlternateMeshFragmentPolygonEntry {
+            AlternateMeshFragmentFaceEntry {
                 flags,
                 data,
                 vertex_indexes,
@@ -487,13 +487,13 @@ impl AlternateMeshFragmentPolygonEntry {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-pub struct AlternateMeshFragmentData6Entry {
+pub struct AlternateMeshFragmentMeshopEntry {
     /// This seems to reference one of the vertex entries. This field only exists if `_type`
     /// contains a value in the range 1 to 3.
     pub vertex_index: Option<u32>,
 
     /// _Unknown_
-    /// If `_type` contains 4 then this field exists instead of `vertex_index`. Data6 entries seem
+    /// If `_type` contains 4 then this field exists instead of `vertex_index`. meshops entries seem
     /// to be sorted by this value
     pub offset: Option<f32>,
 
@@ -509,7 +509,7 @@ pub struct AlternateMeshFragmentData6Entry {
     pub type_field: u32,
 }
 
-impl AlternateMeshFragmentData6Entry {
+impl AlternateMeshFragmentMeshopEntry {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.vertex_index.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
@@ -522,8 +522,8 @@ impl AlternateMeshFragmentData6Entry {
     }
 }
 
-impl AlternateMeshFragmentData6Entry {
-    fn parse(input: &[u8]) -> WResult<AlternateMeshFragmentData6Entry> {
+impl AlternateMeshFragmentMeshopEntry {
+    fn parse(input: &[u8]) -> WResult<AlternateMeshFragmentMeshopEntry> {
         let unknown_data = &input[0..4];
         let input = &input[4..];
 
@@ -545,7 +545,7 @@ impl AlternateMeshFragmentData6Entry {
 
         Ok((
             remaining,
-            AlternateMeshFragmentData6Entry {
+            AlternateMeshFragmentMeshopEntry {
                 vertex_index,
                 offset,
                 param1,
@@ -568,12 +568,12 @@ mod tests {
         assert_eq!(frag.name_reference, StringReference::new(-44));
         assert_eq!(frag.flags, 0x1802);
         assert_eq!(frag.vertex_count, 29);
-        assert_eq!(frag.tex_coords_count, 29);
-        assert_eq!(frag.normals_count, 29);
+        assert_eq!(frag.texture_coordinate_count, 29);
+        assert_eq!(frag.normal_count, 29);
         assert_eq!(frag.size4, 0);
-        assert_eq!(frag.polygon_count, 12);
-        assert_eq!(frag.size6, 64);
-        assert_eq!(frag.vertex_piece_count, 0);
+        assert_eq!(frag.face_count, 12);
+        assert_eq!(frag.meshop_count, 64);
+        assert_eq!(frag.skin_assignment_group_count, 0);
         assert_eq!(frag.size9, 1);
         assert_eq!(frag.material_list_ref, FragmentRef::new(5));
         assert_eq!(frag.fragment2, 0);
@@ -581,27 +581,27 @@ mod tests {
         assert_eq!(frag.params2, 0);
         assert_eq!(frag.vertices.len(), frag.vertex_count as usize);
         assert_eq!(frag.vertices[0], (0.0, 12.247571, -5.070387));
-        assert_eq!(frag.texture_coords.len(), frag.tex_coords_count as usize);
-        assert_eq!(frag.texture_coords[0], (-0.07326539, -4.9999995)); // FIXME: This does not look like a valid UV coordinate.  It should be between 0 and 1.
-        assert_eq!(frag.normals.len(), frag.normals_count as usize);
-        assert_eq!(frag.normals[0], (0.5, 0.5, 0.0));
+        assert_eq!(frag.texture_coordinates.len(), frag.texture_coordinate_count as usize);
+        assert_eq!(frag.texture_coordinates[0], (-0.07326539, -4.9999995)); // FIXME: This does not look like a valid UV coordinate.  It should be between 0 and 1.
+        assert_eq!(frag.vertex_normals.len(), frag.normal_count as usize);
+        assert_eq!(frag.vertex_normals[0], (0.5, 0.5, 0.0));
         assert_eq!(frag.data4.len(), frag.size4 as usize);
-        assert_eq!(frag.polygons.len(), frag.polygon_count as usize);
-        assert_eq!(frag.polygons[1].flags, 0);
-        assert_eq!(frag.polygons[0].data, (46010, 0, 49024, 75));
-        assert_eq!(frag.polygons[0].vertex_indexes, (0, 0, 0));
-        assert_eq!(frag.data6.len(), frag.size6 as usize);
-        assert_eq!(frag.data6[0].param1, 22);
-        assert_eq!(frag.data6[0].param2, 20);
-        assert_eq!(frag.data6[0].type_field, 2);
-        assert_eq!(frag.vertex_pieces.len(), frag.vertex_piece_count as usize);
+        assert_eq!(frag.faces.len(), frag.face_count as usize);
+        assert_eq!(frag.faces[1].flags, 0);
+        assert_eq!(frag.faces[0].data, (46010, 0, 49024, 75));
+        assert_eq!(frag.faces[0].vertex_indexes, (0, 0, 0));
+        assert_eq!(frag.meshops.len(), frag.meshop_count as usize);
+        assert_eq!(frag.meshops[0].param1, 22);
+        assert_eq!(frag.meshops[0].param2, 20);
+        assert_eq!(frag.meshops[0].type_field, 2);
+        assert_eq!(frag.skin_assignment_groups.len(), frag.skin_assignment_group_count as usize);
         assert_eq!(frag.size8, None);
         assert_eq!(frag.data8, None);
         assert_eq!(frag.data9.len(), 1);
-        assert_eq!(frag.polygontex_count, Some(1));
-        assert_eq!(frag.polygontex_entries, Some(vec![(12, 0)]));
-        assert_eq!(frag.vertex_material_count, Some(1));
-        assert_eq!(frag.vertex_materials, Some(vec![(29, 0)]));
+        assert_eq!(frag.face_material_group_count, Some(1));
+        assert_eq!(frag.face_material_groups, Some(vec![(12, 0)]));
+        assert_eq!(frag.vertex_material_group_count, Some(1));
+        assert_eq!(frag.vertex_material_groups, Some(vec![(29, 0)]));
     }
 
     #[test]
@@ -612,29 +612,29 @@ mod tests {
         assert_eq!(frag.name_reference, StringReference::new(-6091));
         assert_eq!(frag.flags, 0x5803);
         assert_eq!(frag.vertex_count, 56);
-        assert_eq!(frag.tex_coords_count, 56);
-        assert_eq!(frag.normals_count, 56);
+        assert_eq!(frag.texture_coordinate_count, 56);
+        assert_eq!(frag.normal_count, 56);
         assert_eq!(frag.size4, 0);
-        assert_eq!(frag.polygon_count, 28);
-        assert_eq!(frag.size6, 0);
-        assert_eq!(frag.vertex_piece_count, 0);
+        assert_eq!(frag.face_count, 28);
+        assert_eq!(frag.meshop_count, 0);
+        assert_eq!(frag.skin_assignment_group_count, 0);
         assert_eq!(frag.size9, 0);
         assert_eq!(frag.material_list_ref, FragmentRef::new(567));
         assert_eq!(frag.fragment2, 0);
         assert_eq!(frag.center, (0.0, 0.0, 2.2031567));
         assert_eq!(frag.params2, 3141746767); // FIXME: Doesn't seem like this should be a u32.  Could be a float.
         assert_eq!(frag.vertices.len(), frag.vertex_count as usize);
-        assert_eq!(frag.texture_coords.len(), frag.tex_coords_count as usize);
-        assert_eq!(frag.normals.len(), frag.normals_count as usize);
+        assert_eq!(frag.texture_coordinates.len(), frag.texture_coordinate_count as usize);
+        assert_eq!(frag.vertex_normals.len(), frag.normal_count as usize);
         assert_eq!(frag.data4.len(), frag.size4 as usize);
-        assert_eq!(frag.polygons.len(), frag.polygon_count as usize);
-        assert_eq!(frag.data6.len(), frag.size6 as usize);
-        assert_eq!(frag.vertex_pieces.len(), frag.vertex_piece_count as usize);
+        assert_eq!(frag.faces.len(), frag.face_count as usize);
+        assert_eq!(frag.meshops.len(), frag.meshop_count as usize);
+        assert_eq!(frag.skin_assignment_groups.len(), frag.skin_assignment_group_count as usize);
         assert_eq!(frag.size8, None);
         assert_eq!(frag.data8, None);
         assert_eq!(frag.data9.len(), 0);
-        assert_eq!(frag.polygontex_count, Some(2));
-        assert_eq!(frag.vertex_material_count, Some(2));
+        assert_eq!(frag.face_material_group_count, Some(2));
+        assert_eq!(frag.vertex_material_group_count, Some(2));
         assert_eq!(frag.params5.unwrap().0, 3224882372); // FIXME: This is probably either a float or color 
     }
 
