@@ -76,7 +76,7 @@ impl FragmentParser for RegionFlagFragment {
                 region_count,
                 regions,
                 user_data_size,
-                user_data: decode_string(&user_data),
+                user_data: decode_string(&user_data).trim_end_matches("\0").to_string(),
             },
         ))
     }
@@ -86,7 +86,7 @@ impl Fragment for RegionFlagFragment {
     fn into_bytes(&self) -> Vec<u8> {
         let user_data_size = self.user_data_size as usize;
         let padding = (4 - user_data_size % 4) % 4;
-        let mut user_data = encode_string(&self.user_data);
+        let mut user_data = encode_string(&format!("{}{}", &self.user_data, "\0"));
         user_data.resize(user_data_size + padding, 0);
         [
             &self.name_reference.into_bytes()[..],
@@ -142,7 +142,7 @@ mod tests {
         assert_eq!(frag.region_count, 2);
         assert_eq!(frag.regions, vec![4521, 4523]);
         assert_eq!(frag.user_data_size, 47);
-        assert_eq!(frag.user_data, "DRNTP00002-00030000357999999999___000000000000\0");
+        assert_eq!(frag.user_data, "DRNTP00002-00030000357999999999___000000000000");
     }
 
     #[test]
