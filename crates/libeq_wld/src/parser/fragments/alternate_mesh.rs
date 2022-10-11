@@ -119,9 +119,11 @@ pub struct AlternateMeshFragment {
     pub data8: Option<Vec<u32>>,
 
     /// _Unknown_
+    /// Seems to reference vertex indices
     pub params4: Vec<u16>,
     
     /// _Unknown_ - There are 'size9' of these
+    /// Seems to correlate a vertex index to another number.
     pub data9: Vec<(u16,u16)>,
 
     /// Tells how many PolygonTex entries there are. faces are grouped together by texture and PolygonTex entries tell the client how many faces there are that use a particular texture. This field only exists if bit 11 of Flags is 1.
@@ -441,13 +443,15 @@ impl Fragment for AlternateMeshFragment {
 #[derive(Debug)]
 /// Represents a polygon within a [AlternativeMeshFragment].
 pub struct AlternateMeshFragmentFaceEntry {
-    /// This usually contains 0x004b for faces.
+    /// This is usually 0 except the first face which has a unique value each time (probably not flags)
     pub flags: u16,
 
     /// _Unknown_ - Usually contains zeros.
+    /// In gequip, this is filled with vertex indexes (except the first face, which has big numbers) and vertex_indexes is not.  4th element is always 75
     pub data: (u16, u16, u16, u16),
 
     /// An index for each of the polygon's vertex coordinates (idx1, idx2, idx3).
+    /// This must be incorrect, this is usually `0,1,0` or `0,0,0` or `0,2,0` or something similar - not vertex indexes
     pub vertex_indexes: (u16, u16, u16),
 }
 
