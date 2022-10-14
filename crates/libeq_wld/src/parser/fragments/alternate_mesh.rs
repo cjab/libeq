@@ -1,6 +1,8 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, MaterialListFragment, StringReference, WResult};
+use super::{
+    Fragment, FragmentParser, FragmentRef, MaterialListFragment, StringReference, WResult,
+};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_u16, le_u32};
@@ -49,7 +51,7 @@ pub struct AlternateMeshFragment {
 
     /// Its purpose is unknown (though if the pattern with the 0x36 fragment holds then it
     /// should contain color information).
-    pub size4: u32,
+    pub color_count: u32,
 
     /// The number of faces in the mesh.
     pub face_count: u32,
@@ -58,15 +60,15 @@ pub struct AlternateMeshFragment {
     /// It determines the number of entries in `meshops`.
     pub meshop_count: u16,
 
+    pub fragment1: i16,
+
     /// This seems to only be used when dealing with animated (mob) models. It tells how many
     /// VertexPiece entries there are. Vertices are grouped together by skeleton piece in this
     /// case and VertexPiece entries tell the client how many vertices are in each piece.
     /// It’s possible that there could be more pieces in the skeleton than are in the meshes
     /// it references. Extra pieces have no faces or vertices and I suspect they are there
     /// to define attachment points for objects (e.g. weapons or shields).
-    pub skin_assignment_group_count: i16,
-
-    pub size9: u32,
+    pub skin_assignment_group_count: u32,
 
     /// References a 0x31 [MaterialListFragment]. It tells the client which textures this mesh
     /// uses. For zone meshes, a single 0x31 fragment should be built that contains all the
@@ -75,13 +77,13 @@ pub struct AlternateMeshFragment {
     pub material_list_ref: FragmentRef<MaterialListFragment>,
 
     /// _Unknown_
-    pub fragment2: u32,
+    pub fragment3: u32,
 
     /// This seems to define the center of the model and is used for positioning (I think).
     pub center: (f32, f32, f32),
 
-    /// _Unknown_ FIXME: Could be float
-    pub params2: u32,
+    /// _Unknown_
+    pub params1: (f32, f32, f32),
 
     /// There are `vertex_count` of these.
     pub vertices: Vec<(f32, f32, f32)>,
@@ -92,8 +94,8 @@ pub struct AlternateMeshFragment {
     /// There are `normal_count` of these
     pub vertex_normals: Vec<(f32, f32, f32)>,
 
-    /// _Unknown_ - There are `size4` of these.
-    pub data4: Vec<u32>,
+    /// There are `color_count` of these.
+    pub vertex_colors: Vec<u32>,
 
     /// _Unknown_ - There are `face_count` of these.
     /// First tuple value seems to be flags, usually contains 0x004b for faces.
@@ -118,19 +120,11 @@ pub struct AlternateMeshFragment {
     /// _Unknown_ - This only exists if bit 9 of `flags` is set. There are `size8` of these.
     pub data8: Option<Vec<u32>>,
 
-    /// _Unknown_
-    /// Seems to reference vertex indices
-    pub params4: Vec<u16>,
-    
-    /// _Unknown_ - There are 'size9' of these
-    /// Seems to correlate a vertex index to another number.
-    pub data9: Vec<(u16,u16)>,
-
     /// Tells how many PolygonTex entries there are. faces are grouped together by texture and PolygonTex entries tell the client how many faces there are that use a particular texture. This field only exists if bit 11 of Flags is 1.
     pub face_material_group_count: Option<u32>,
-    
+
     /// PolygonTex entries (there are PolygonTexCount of these)
-    pub face_material_groups: Option<Vec<(u16,u16)>>,
+    pub face_material_groups: Option<Vec<(u16, u16)>>,
 
     /// The number of `vertex_material_groups` entries there are. faces are grouped together by
     /// material and `vertex_material` entries telling the client how many faces there are
@@ -149,13 +143,12 @@ pub struct AlternateMeshFragment {
     ///
     /// There are 'vertex_material_group_count` of these.
     pub vertex_material_groups: Option<Vec<(u16, u16)>>,
-    
+
     /// its purpose is unknown. This field only exists if bit 13 of Flags is 1.
-    pub params3: Option<(u32,u32,u32)>,
+    pub params2: Option<(u32, u32, u32)>,
 
     /// its purpose is unknown. This field only exists if bit 14 of Flags is 1.
-    pub params5: Option<(u32,u32,u32,u32,u32,u32)>
-
+    pub params3: Option<(f32, f32, f32, f32, f32, f32)>,
 }
 
 impl FragmentParser for AlternateMeshFragment {
@@ -173,15 +166,15 @@ impl FragmentParser for AlternateMeshFragment {
                 vertex_count,
                 texture_coordinate_count,
                 normal_count,
-                size4,
+                color_count,
                 face_count,
                 meshop_count,
+                fragment1,
                 skin_assignment_group_count,
-                size9,
                 material_list_ref,
-                fragment2,
+                fragment3,
                 center,
-                params2,
+                params1,
             ),
         ) = tuple((
             StringReference::parse,
@@ -197,71 +190,98 @@ impl FragmentParser for AlternateMeshFragment {
             FragmentRef::parse,
             le_u32,
             tuple((le_f32, le_f32, le_f32)),
-            le_u32,
+            tuple((le_f32, le_f32, le_f32))
         ))(input)?;
 
-        let (i, (vertices, texture_coordinates, vertex_normals, data4, faces, meshops, skin_assignment_groups)) =
-        tuple((
+        let (
+            i,
+            (
+                vertices,
+                texture_coordinates,
+                vertex_normals,
+                vertex_colors,
+                faces,
+                meshops,
+                skin_assignment_groups,
+            ),
+        ) = tuple((
             count(tuple((le_f32, le_f32, le_f32)), vertex_count as usize),
             count(tuple((le_f32, le_f32)), texture_coordinate_count as usize),
             count(tuple((le_f32, le_f32, le_f32)), normal_count as usize),
-            count(le_u32, size4 as usize),
+            count(le_u32, color_count as usize),
+            count(AlternateMeshFragmentFaceEntry::parse, face_count as usize),
             count(
-                AlternateMeshFragmentFaceEntry::parse,
-                face_count as usize,
+                AlternateMeshFragmentMeshopEntry::parse,
+                meshop_count as usize,
             ),
-            count(AlternateMeshFragmentMeshopEntry::parse, meshop_count as usize),
-            count(tuple((le_u16, le_u16)), skin_assignment_group_count as usize)
+            count(
+                tuple((le_u16, le_u16)),
+                skin_assignment_group_count as usize,
+            ),
         ))(i)?;
 
-        let (i, size8) = if flags & 0x200 == 0x200 { // Bit 9 is set
+        let (i, size8) = if flags & 0x200 == 0x200 {
+            // Bit 9 is set
             le_u32(i).map(|(i, size8)| (i, Some(size8)))?
         } else {
             (i, None)
         };
 
-        let (i, data8) = if flags & 0x200 == 0x200 { // Bit 9 is set
+        let (i, data8) = if flags & 0x200 == 0x200 {
+            // Bit 9 is set
             count(le_u32, size8.unwrap() as usize)(i).map(|(i, data8)| (i, Some(data8)))?
         } else {
             (i, None)
         };
 
-        let (i, params4) = count(le_u16, 4)(i)?;
-
-        let (i, data9) = count(tuple((le_u16, le_u16)), size9 as usize)(i)?;
-
-        let (i, face_material_group_count) = if flags & 0x800 == 0x800 { // Bit 11 set
+        let (i, face_material_group_count) = if flags & 0x800 == 0x800 {
+            // Bit 11 set
             le_u32(i).map(|(i, face_material_group_count)| (i, Some(face_material_group_count)))?
         } else {
             (i, None)
         };
 
-        let (i, face_material_groups) = if flags & 0x800 == 0x800 { // Bit 11 set
-            count(tuple((le_u16, le_u16)),  face_material_group_count.unwrap() as usize)(i).map(|(i, face_material_groups)| (i, Some(face_material_groups)))?
+        let (i, face_material_groups) = if flags & 0x800 == 0x800 {
+            // Bit 11 set
+            count(
+                tuple((le_u16, le_u16)),
+                face_material_group_count.unwrap() as usize,
+            )(i)
+            .map(|(i, face_material_groups)| (i, Some(face_material_groups)))?
         } else {
             (i, None)
         };
 
-        let (i, vertex_material_group_count) = if flags & 0x1000 == 0x1000 { // Bit 12 set
-            le_u32(i).map(|(i, vertex_material_group_count)| (i, Some(vertex_material_group_count)))?
+        let (i, vertex_material_group_count) = if flags & 0x1000 == 0x1000 {
+            // Bit 12 set
+            le_u32(i)
+                .map(|(i, vertex_material_group_count)| (i, Some(vertex_material_group_count)))?
         } else {
             (i, None)
         };
 
-        let (i, vertex_material_groups) = if flags & 0x1000 == 0x1000 { // Bit 12 set
-            count(tuple((le_u16, le_u16)),  vertex_material_group_count.unwrap() as usize)(i).map(|(i, vertex_material_groups)| (i, Some(vertex_material_groups)))?
-        } else {
-            (i, None)
-        };
-        
-        let (i, params3) = if flags & 0x2000 == 0x2000 { // Bit 13 set
-            tuple((le_u32, le_u32, le_u32))(i).map(|(i, params3)| (i, Some(params3)))?
+        let (i, vertex_material_groups) = if flags & 0x1000 == 0x1000 {
+            // Bit 12 set
+            count(
+                tuple((le_u16, le_u16)),
+                vertex_material_group_count.unwrap() as usize,
+            )(i)
+            .map(|(i, vertex_material_groups)| (i, Some(vertex_material_groups)))?
         } else {
             (i, None)
         };
 
-        let (i, params5) = if flags & 0x4000 == 0x4000 { // Bit 14 set
-            tuple((le_u32, le_u32, le_u32, le_u32, le_u32, le_u32))(i).map(|(i, params5)| (i, Some(params5)))?
+        let (i, params2) = if flags & 0x2000 == 0x2000 {
+            // Bit 13 set
+            tuple((le_u32, le_u32, le_u32))(i).map(|(i, params2)| (i, Some(params2)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, params3) = if flags & 0x4000 == 0x4000 {
+            // Bit 14 set
+            tuple((le_f32, le_f32, le_f32, le_f32, le_f32, le_f32))(i)
+                .map(|(i, params3)| (i, Some(params3)))?
         } else {
             (i, None)
         };
@@ -274,32 +294,30 @@ impl FragmentParser for AlternateMeshFragment {
                 vertex_count,
                 texture_coordinate_count,
                 normal_count,
-                size4,
+                color_count,
                 face_count,
                 meshop_count,
+                fragment1,
                 skin_assignment_group_count,
-                size9,
                 material_list_ref,
-                fragment2,
+                fragment3,
                 center,
-                params2,
+                params1,
                 vertices,
                 texture_coordinates,
                 vertex_normals,
-                data4,
+                vertex_colors,
                 faces,
                 meshops,
                 skin_assignment_groups,
                 size8,
                 data8,
-                params4,
-                data9,
                 face_material_group_count,
                 face_material_groups,
                 vertex_material_group_count,
                 vertex_material_groups,
+                params2,
                 params3,
-                params5
             },
         ))
     }
@@ -336,16 +354,9 @@ impl Fragment for AlternateMeshFragment {
             .flat_map(|d| d.into_bytes())
             .collect::<Vec<_>>();
 
-        let data8 = self
-            .data8
-            .as_ref()
-            .map_or(vec![], |i| i.iter().flat_map(|d| d.to_le_bytes()).collect::<Vec<_>>());
-
-        let params4 = self
-            .params4
-            .iter()
-            .flat_map(|d| d.to_le_bytes())
-            .collect::<Vec<_>>();
+        let data8 = self.data8.as_ref().map_or(vec![], |i| {
+            i.iter().flat_map(|d| d.to_le_bytes()).collect::<Vec<_>>()
+        });
 
         let skin_assignment_groups = self
             .skin_assignment_groups
@@ -353,31 +364,17 @@ impl Fragment for AlternateMeshFragment {
             .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes()].concat())
             .collect::<Vec<_>>();
 
-        let face_material_groups = self
-            .face_material_groups
-            .as_ref()
-            .map_or(vec![], |i| i.iter()
-            .flat_map(|v| {
-                [
-                    &v.0.to_le_bytes()[..],
-                    &v.1.to_le_bytes()[..],
-                ]
-                .concat()
-            })
-            .collect::<Vec<_>>());
+        let face_material_groups = self.face_material_groups.as_ref().map_or(vec![], |i| {
+            i.iter()
+                .flat_map(|v| [&v.0.to_le_bytes()[..], &v.1.to_le_bytes()[..]].concat())
+                .collect::<Vec<_>>()
+        });
 
-        let vertex_material_groups = self
-            .vertex_material_groups
-            .as_ref()
-            .map_or(vec![], |i| i.iter()
-            .flat_map(|v| {
-                [
-                    &v.0.to_le_bytes()[..],
-                    &v.1.to_le_bytes()[..],
-                ]
-                .concat()
-            })
-            .collect::<Vec<_>>());
+        let vertex_material_groups = self.vertex_material_groups.as_ref().map_or(vec![], |i| {
+            i.iter()
+                .flat_map(|v| [&v.0.to_le_bytes()[..], &v.1.to_le_bytes()[..]].concat())
+                .collect::<Vec<_>>()
+        });
 
         [
             &self.name_reference.into_bytes()[..],
@@ -385,22 +382,24 @@ impl Fragment for AlternateMeshFragment {
             &self.vertex_count.to_le_bytes()[..],
             &self.texture_coordinate_count.to_le_bytes()[..],
             &self.normal_count.to_le_bytes()[..],
-            &self.size4.to_le_bytes()[..],
+            &self.color_count.to_le_bytes()[..],
             &self.face_count.to_le_bytes()[..],
             &self.meshop_count.to_le_bytes()[..],
+            &self.fragment1.to_le_bytes()[..],
             &self.skin_assignment_group_count.to_le_bytes()[..],
-            &self.size9.to_le_bytes()[..],
             &self.material_list_ref.into_bytes()[..],
-            &self.fragment2.to_le_bytes()[..],
+            &self.fragment3.to_le_bytes()[..],
             &self.center.0.to_le_bytes()[..],
             &self.center.1.to_le_bytes()[..],
             &self.center.2.to_le_bytes()[..],
-            &self.params2.to_le_bytes()[..],
+            &self.params1.0.to_le_bytes()[..],
+            &self.params1.1.to_le_bytes()[..],
+            &self.params1.2.to_le_bytes()[..],
             &vertices[..],
             &texture_coordinates[..],
             &vertex_normals[..],
             &self
-                .data4
+                .vertex_colors
                 .iter()
                 .flat_map(|d| d.to_le_bytes())
                 .collect::<Vec<_>>()[..],
@@ -409,18 +408,19 @@ impl Fragment for AlternateMeshFragment {
             &skin_assignment_groups[..],
             &self.size8.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
             &data8[..],
-            &params4,
             &self
-                .data9
-                .iter()
-                .flat_map(|d| [d.0.to_le_bytes(), d.1.to_le_bytes()].concat() )
-                .collect::<Vec<_>>()[..],
-            &self.face_material_group_count.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
+                .face_material_group_count
+                .map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
             &face_material_groups[..],
-            &self.vertex_material_group_count.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
+            &self
+                .vertex_material_group_count
+                .map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
             &vertex_material_groups[..],
-            &self.params3.map_or(vec![], |p| {
+            &self.params2.map_or(vec![], |p| {
                 [p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes()].concat()
+            })[..],
+            &self.params3.map_or(vec![], |p| {
+                [p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes(), p.3.to_le_bytes(), p.4.to_le_bytes(), p.5.to_le_bytes()].concat()
             })[..],
         ]
         .concat()
@@ -492,6 +492,11 @@ impl AlternateMeshFragmentFaceEntry {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub struct AlternateMeshFragmentMeshopEntry {
+    /// _Unknown_ - It seems to control whether VertexIndex1, VertexIndex2, and Offset exist.
+    /// It can only contain values in the range 1 to 4. It looks like the Data9 entries are broken
+    /// up into blocks, where each block is terminated by an entry where Data9Type is 4.
+    pub type_field: u32,
+
     /// This seems to reference one of the vertex entries. This field only exists if `_type`
     /// contains a value in the range 1 to 3.
     pub vertex_index: Option<u32>,
@@ -505,22 +510,19 @@ pub struct AlternateMeshFragmentMeshopEntry {
     pub param1: u16,
 
     /// _Unknown_
-    pub param2: u16,
-
-    /// _Unknown_ - It seems to control whether VertexIndex1, VertexIndex2, and Offset exist.
-    /// It can only contain values in the range 1 to 4. It looks like the Data9 entries are broken
-    /// up into blocks, where each block is terminated by an entry where Data9Type is 4.
-    pub type_field: u32,
+    pub param2: u16, 
 }
 
 impl AlternateMeshFragmentMeshopEntry {
     fn into_bytes(&self) -> Vec<u8> {
         [
-            &self.vertex_index.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
+            &self.type_field.to_le_bytes()[..],
+            &self
+                .vertex_index
+                .map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
             &self.offset.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
             &self.param1.to_le_bytes()[..],
             &self.param2.to_le_bytes()[..],
-            &self.type_field.to_le_bytes()[..],
         ]
         .concat()
     }
@@ -528,33 +530,30 @@ impl AlternateMeshFragmentMeshopEntry {
 
 impl AlternateMeshFragmentMeshopEntry {
     fn parse(input: &[u8]) -> WResult<AlternateMeshFragmentMeshopEntry> {
-        let unknown_data = &input[0..4];
-        let input = &input[4..];
+        let (remaining, type_field) = le_u32(input)?;
 
-        let (remaining, (param1, param2, type_field)) =
-            tuple((le_u16, le_u16, le_u32))(input)?;
-        
-        let (unknown_data, offset) = if type_field == 4 {
-            le_f32(unknown_data).map(|(i, offset)| (i, Some(offset)))?
+        let (remaining, offset) = if type_field == 4 {
+            le_f32(remaining).map(|(i, offset)| (i, Some(offset)))?
         } else {
-            (unknown_data, None)
+            (remaining, None)
         };
 
-        let (_, vertex_index) = if type_field != 4 {
-            le_u32(unknown_data).map(|(i, vertex_index)| (i, Some(vertex_index)))?
+        let (remaining, vertex_index) = if type_field != 4 {
+            le_u32(remaining).map(|(i, vertex_index)| (i, Some(vertex_index)))?
         } else {
-            (unknown_data, None)
+            (remaining, None)
         };
 
+        let (remaining, (param1, param2)) = tuple((le_u16, le_u16))(remaining)?;
 
         Ok((
             remaining,
             AlternateMeshFragmentMeshopEntry {
+                type_field,
                 vertex_index,
                 offset,
                 param1,
                 param2,
-                type_field
             },
         ))
     }
@@ -574,34 +573,37 @@ mod tests {
         assert_eq!(frag.vertex_count, 29);
         assert_eq!(frag.texture_coordinate_count, 29);
         assert_eq!(frag.normal_count, 29);
-        assert_eq!(frag.size4, 0);
+        assert_eq!(frag.color_count, 0);
         assert_eq!(frag.face_count, 12);
         assert_eq!(frag.meshop_count, 64);
-        assert_eq!(frag.skin_assignment_group_count, 0);
-        assert_eq!(frag.size9, 1);
+        assert_eq!(frag.skin_assignment_group_count, 1);
         assert_eq!(frag.material_list_ref, FragmentRef::new(5));
-        assert_eq!(frag.fragment2, 0);
         assert_eq!(frag.center, (0.0, 0.0, 0.0));
-        assert_eq!(frag.params2, 0);
+        assert_eq!(frag.params1, (0.0, 0.0, 12.247571));
         assert_eq!(frag.vertices.len(), frag.vertex_count as usize);
-        assert_eq!(frag.vertices[0], (0.0, 12.247571, -5.070387));
-        assert_eq!(frag.texture_coordinates.len(), frag.texture_coordinate_count as usize);
-        assert_eq!(frag.texture_coordinates[0], (-0.07326539, -4.9999995)); // FIXME: This does not look like a valid UV coordinate.  It should be between 0 and 1.
+        assert_eq!(frag.vertices[0], (-5.070387, -5.073263, 4.9999995));
+        assert_eq!(
+            frag.texture_coordinates.len(),
+            frag.texture_coordinate_count as usize
+        );
+        assert_eq!(frag.texture_coordinates[0], (0.99999994, 0.99999976)); // FIXME: This does not look like a valid UV coordinate.  It should be between 0 and 1.
         assert_eq!(frag.vertex_normals.len(), frag.normal_count as usize);
-        assert_eq!(frag.vertex_normals[0], (0.5, 0.5, 0.0));
-        assert_eq!(frag.data4.len(), frag.size4 as usize);
+        assert_eq!(frag.vertex_normals[0], (0.0, -1.0, 1.3435886e-7));
+        assert_eq!(frag.vertex_colors.len(), frag.color_count as usize);
         assert_eq!(frag.faces.len(), frag.face_count as usize);
-        assert_eq!(frag.faces[1].flags, 0);
-        assert_eq!(frag.faces[0].data, (46010, 0, 49024, 75));
-        assert_eq!(frag.faces[0].vertex_indexes, (0, 0, 0));
+        assert_eq!(frag.faces[1].flags, 0b1001011);
+        assert_eq!(frag.faces[0].data, (0, 0, 0, 0));
+        assert_eq!(frag.faces[0].vertex_indexes, (3, 2, 0));
         assert_eq!(frag.meshops.len(), frag.meshop_count as usize);
-        assert_eq!(frag.meshops[0].param1, 22);
-        assert_eq!(frag.meshops[0].param2, 20);
+        assert_eq!(frag.meshops[0].param1, 0);
+        assert_eq!(frag.meshops[0].param2, 0);
         assert_eq!(frag.meshops[0].type_field, 2);
-        assert_eq!(frag.skin_assignment_groups.len(), frag.skin_assignment_group_count as usize);
+        assert_eq!(
+            frag.skin_assignment_groups.len(),
+            frag.skin_assignment_group_count as usize
+        );
         assert_eq!(frag.size8, None);
         assert_eq!(frag.data8, None);
-        assert_eq!(frag.data9.len(), 1);
         assert_eq!(frag.face_material_group_count, Some(1));
         assert_eq!(frag.face_material_groups, Some(vec![(12, 0)]));
         assert_eq!(frag.vertex_material_group_count, Some(1));
@@ -618,28 +620,31 @@ mod tests {
         assert_eq!(frag.vertex_count, 56);
         assert_eq!(frag.texture_coordinate_count, 56);
         assert_eq!(frag.normal_count, 56);
-        assert_eq!(frag.size4, 0);
+        assert_eq!(frag.color_count, 0);
         assert_eq!(frag.face_count, 28);
         assert_eq!(frag.meshop_count, 0);
         assert_eq!(frag.skin_assignment_group_count, 0);
-        assert_eq!(frag.size9, 0);
         assert_eq!(frag.material_list_ref, FragmentRef::new(567));
-        assert_eq!(frag.fragment2, 0);
         assert_eq!(frag.center, (0.0, 0.0, 2.2031567));
-        assert_eq!(frag.params2, 3141746767); // FIXME: Doesn't seem like this should be a u32.  Could be a float.
+        assert_eq!(frag.params1, (-0.002979297, -0.88816565, 3.0285614));
         assert_eq!(frag.vertices.len(), frag.vertex_count as usize);
-        assert_eq!(frag.texture_coordinates.len(), frag.texture_coordinate_count as usize);
+        assert_eq!(
+            frag.texture_coordinates.len(),
+            frag.texture_coordinate_count as usize
+        );
         assert_eq!(frag.vertex_normals.len(), frag.normal_count as usize);
-        assert_eq!(frag.data4.len(), frag.size4 as usize);
+        assert_eq!(frag.vertex_colors.len(), frag.color_count as usize);
         assert_eq!(frag.faces.len(), frag.face_count as usize);
         assert_eq!(frag.meshops.len(), frag.meshop_count as usize);
-        assert_eq!(frag.skin_assignment_groups.len(), frag.skin_assignment_group_count as usize);
+        assert_eq!(
+            frag.skin_assignment_groups.len(),
+            frag.skin_assignment_group_count as usize
+        );
         assert_eq!(frag.size8, None);
         assert_eq!(frag.data8, None);
-        assert_eq!(frag.data9.len(), 0);
         assert_eq!(frag.face_material_group_count, Some(2));
         assert_eq!(frag.vertex_material_group_count, Some(2));
-        assert_eq!(frag.params5.unwrap().0, 3224882372); // FIXME: This is probably either a float or color 
+        assert_eq!(frag.params3.unwrap().0, -2.871873);
     }
 
     #[test]
