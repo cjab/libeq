@@ -22,12 +22,13 @@ pub struct Unknown0x2eFragment {
     pub frame_count: u32,
     // SLEEP 200
     pub sleep: u32,
+    // Unknown
     pub param1: u32,
     // RGBDEFORMATIONFRAME
     //   NUMRGBAS %d
     //   RGBA %9.7f, %9.7f, %9.7f, %9.7f
     // ENDRGBDEFORMATIONFRAME
-    pub data: Vec<(f32, f32, f32)>,
+    pub frames: Vec<Vec<(f32, f32, f32)>>,
 }
 
 impl FragmentParser for Unknown0x2eFragment {
@@ -42,8 +43,12 @@ impl FragmentParser for Unknown0x2eFragment {
         let (i, (flags, vertex_count, frame_count, sleep, param1)) =
             tuple((le_u32, le_u32, le_u32, le_u32, le_u32))(i)?;
 
-        let (i, data) = count(tuple((le_f32, le_f32, le_f32)), (vertex_count * frame_count) as usize)(i)?;
-
+        let (i, frames) = 
+            count(
+                count(tuple((le_f32, le_f32, le_f32)), vertex_count as usize),
+                frame_count as usize,
+            )(i)?;
+        
         Ok((
             i,
             Self {
@@ -53,7 +58,7 @@ impl FragmentParser for Unknown0x2eFragment {
                 frame_count,
                 sleep,
                 param1,
-                data,
+                frames
             },
         ))
     }
