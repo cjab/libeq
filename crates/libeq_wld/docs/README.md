@@ -181,7 +181,7 @@
       <td>24</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/polyhedron.rs">Polyhedron</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x18--polygon-animation-reference--reference">Polygon Animation Reference?</a></td>
-      <td><a href="https://wld-doc.github.io/object-types/overview/#0x18">POLYHEDRON (ref)</a></td>
+      <td><a href="https://wld-doc.github.io/object-types/overview/#0x18">POLYHEDRON (instance)</a></td>
     </tr>
     <tr>
       <td>0x19</td>
@@ -195,7 +195,7 @@
       <td>26</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/sphere_list.rs">SphereList</a></td>
       <td></td>
-      <td><a href="https://wld-doc.github.io/object-types/overview/#0x1a">SPHERELIST (ref)</a></td>
+      <td><a href="https://wld-doc.github.io/object-types/overview/#0x1a">SPHERELIST (instance)</a></td>
     </tr>
     <tr>
       <td>0x1b</td>
@@ -209,14 +209,14 @@
       <td>28</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/light.rs">Light</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x1c--light-source-reference--reference">Light Source Reference</a></td>
-      <td><a href="https://wld-doc.github.io/object-types/overview/#0x1c">LIGHT (ref)</a></td>
+      <td><a href="https://wld-doc.github.io/object-types/overview/#0x1c">LIGHT (instance)</a></td>
     </tr>
     <tr>
       <td>0x1d</td>
       <td>29</td>
       <td></td>
       <td></td>
-      <td><a href="https://wld-doc.github.io/object-types/overview/#pointlight---0x1d">POINTLIGHT ????</a></td>
+      <td><a href="https://wld-doc.github.io/object-types/overview/#pointlight---0x1d">POINTLIGHT (old)</a></td>
     </tr>
     <tr>
       <td>0x1e</td>
@@ -272,7 +272,7 @@
       <td>37</td>
       <td></td>
       <td></td>
-      <td><a href="https://wld-doc.github.io/object-types/overview/#directionallight---0x25">DIRECTIONALLIGHT ????</a></td>
+      <td><a href="https://wld-doc.github.io/object-types/overview/#directionallight---0x25">DIRECTIONALLIGHT (old)</a></td>
     </tr>
     <tr>
       <td>0x26</td>
@@ -286,7 +286,7 @@
       <td>39</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/blit_sprite.rs">BlitSprite</a></td>
       <td></td>
-      <td><a href="https://wld-doc.github.io/object-types/overview/#0x27">BLITSPRITE (ref)</a></td>
+      <td><a href="https://wld-doc.github.io/object-types/overview/#0x27">BLITSPRITE (instance)</a></td>
     </tr>
     <tr>
       <td>0x28</td>
@@ -328,21 +328,21 @@
       <td>45</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_sprite.rs">DmSprite</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x2d--mesh-reference--reference">Mesh Reference</a></td>
-      <td></td>
+      <td>DMSPRITE (instance)</td>
     </tr>
     <tr>
       <td>0x2e</td>
       <td>46</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_track_def.rs">DmTrackDef</a></td>
       <td></td>
-      <td></td>
+      <td>DMTRACKDEF</td>
     </tr>
     <tr>
       <td>0x2f</td>
       <td>47</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_track.rs">DmTrack</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x2f--mesh-animated-vertices-reference--reference">Mesh Animated Vertices Reference</a></td>
-      <td></td>
+      <td>DMTRACKINSTANCE</td>
     </tr>
     <tr>
       <td>0x30</td>
@@ -363,28 +363,28 @@
       <td>50</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_rgb_track_def.rs">DmRGBTrackDef</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x32--vertex-color--plain">Vertex Color</a></td>
-      <td></td>
+      <td>DMRGBTrackDef</td>
     </tr>
     <tr>
       <td>0x33</td>
       <td>51</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_rgb_track.rs">DmRGBTrack</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x33--vertex-color-reference--reference">Vertex Color Reference</a></td>
-      <td></td>
+      <td>DMRGBTrackInst</td>
     </tr>
     <tr>
       <td>0x34</td>
       <td>52</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/particle_cloud_def.rs">ParticleCloudDef</a></td>
       <td></td>
-      <td></td>
+      <td>Particle Cloud Definition (not yet encountered in ASCII form) (PARTICLECLOUDDEF?)</td>
     </tr>
     <tr>
       <td>0x35</td>
       <td>53</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/global_ambient_light_def.rs">GlobalAmbientLightDef</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x35--first-fragment--plain">First Fragment</a></td>
-      <td></td>
+      <td>World Constant Ambient (not yet encountered in ASCII form) (GLOBALAMBIENT_LIGHTDEF?)</td>
     </tr>
     <tr>
       <td>0x36</td>
@@ -398,7 +398,7 @@
       <td>55</td>
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_track_def_2.rs">DmTrackDef2</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x37--mesh-animated-vertices--plain">Mesh Animated Vertices</a></td>
-      <td>DMTRACKDEF</td>
+      <td>DMTRACKDEF2</td>
     </tr>
   </tbody>
 </table>
