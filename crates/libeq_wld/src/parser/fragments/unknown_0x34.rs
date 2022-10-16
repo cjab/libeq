@@ -2,7 +2,7 @@ use std::any::Any;
 
 use nom::number::complete::{le_f32, le_u32};
 
-use super::{Fragment, FragmentParser, StringReference, WResult};
+use super::{Fragment, FragmentParser, StringReference, WResult, BlitSpriteDefinitionFragment, FragmentRef};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -34,7 +34,7 @@ pub struct Unknown0x34Fragment {
     pub unknown_18: u32,
     pub unknown_19: f32,
     pub unknown_20: f32,
-    pub unknown_21: u32,
+    pub blitsprite: FragmentRef<BlitSpriteDefinitionFragment>
 }
 
 impl FragmentParser for Unknown0x34Fragment {
@@ -65,7 +65,7 @@ impl FragmentParser for Unknown0x34Fragment {
         let (i, unknown_18) = le_u32(i)?;
         let (i, unknown_19) = le_f32(i)?;
         let (i, unknown_20) = le_f32(i)?;
-        let (i, unknown_21) = le_u32(i)?;
+        let (i, blitsprite) = FragmentRef::<BlitSpriteDefinitionFragment>::parse(i)?;
 
         Ok((
             i,
@@ -91,7 +91,7 @@ impl FragmentParser for Unknown0x34Fragment {
                 unknown_18,
                 unknown_19,
                 unknown_20,
-                unknown_21,
+                blitsprite,
             },
         ))
     }
@@ -121,7 +121,7 @@ impl Fragment for Unknown0x34Fragment {
             &self.unknown_18.to_le_bytes()[..],
             &self.unknown_19.to_le_bytes()[..],
             &self.unknown_20.to_le_bytes()[..],
-            &self.unknown_21.to_le_bytes()[..],
+            &self.blitsprite.into_bytes()[..],
         ]
         .concat()
     }
