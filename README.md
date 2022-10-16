@@ -63,6 +63,6 @@ cargo run -p wld-cli -- extract --format ron gfaydark.wld gfaydark.ron
 cargo run -p wld-cli -- create --format ron gfaydark.ron gfaydark.wld
 
 # Extract and create to/from JSON:
-cargo run -p wld-cli -- extract --format ron gfaydark.wld gfaydark.json
-cargo run -p wld-cli -- create --format ron gfaydark.json gfaydark.wld
+cargo run -p wld-cli -- extract --format json gfaydark.wld gfaydark.json
+cargo run -p wld-cli -- create --format json gfaydark.json gfaydark.wld
 ```
