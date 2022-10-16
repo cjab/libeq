@@ -9,25 +9,19 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// RGBDEFORMATIONTRACKDEF
+/// DMTRACKDEF
 ///
+/// An older version of the 0x37 fragment, which describes the animation of individual vertices in a DMSPRITEDEF mesh.
+/// 
 /// **Type ID:** 0x2e
 pub struct Unknown0x2eFragment {
     pub name_reference: StringReference,
 
     pub flags: u32,
-    // NUMVERTICES %d
     pub vertex_count: u32,
-    // NUMFRAMES 1
     pub frame_count: u32,
-    // SLEEP 200
     pub sleep: u32,
-    // Unknown
     pub param1: u32,
-    // RGBDEFORMATIONFRAME
-    //   NUMRGBAS %d
-    //   RGBA %9.7f, %9.7f, %9.7f, %9.7f
-    // ENDRGBDEFORMATIONFRAME
     pub frames: Vec<Vec<(f32, f32, f32)>>,
 }
 
@@ -66,7 +60,23 @@ impl FragmentParser for Unknown0x2eFragment {
 
 impl Fragment for Unknown0x2eFragment {
     fn into_bytes(&self) -> Vec<u8> {
-        [&self.name_reference.into_bytes()[..]].concat()
+        [
+            &self.name_reference.into_bytes()[..],
+            &self.flags.to_be_bytes()[..],
+            &self.vertex_count.to_le_bytes()[..],
+            &self.frame_count.to_le_bytes()[..],
+            &self.sleep.to_le_bytes()[..],
+            &self.param1.to_le_bytes()[..],
+            &self
+                .frames
+                .iter()
+                .flat_map(|f| {
+                    f.iter().flat_map(|x| {
+                        [x.0.to_le_bytes(), x.1.to_le_bytes(), x.2.to_le_bytes()].concat()
+                    })
+                })
+                .collect::<Vec<_>>()[..],
+        ].concat()
     }
 
     fn as_any(&self) -> &dyn Any {
