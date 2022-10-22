@@ -28,6 +28,7 @@ mod skeleton_track_set;
 mod skeleton_track_set_reference;
 mod texture;
 mod texture_images;
+mod texture_images_rtk;
 mod texture_reference;
 mod two_dimensional_object;
 mod two_dimensional_object_reference;
@@ -78,6 +79,7 @@ pub use skeleton_track_set::*;
 pub use skeleton_track_set_reference::*;
 pub use texture::*;
 pub use texture_images::*;
+pub use texture_images_rtk::*;
 pub use texture_reference::*;
 pub use two_dimensional_object::*;
 pub use two_dimensional_object_reference::*;
@@ -163,6 +165,7 @@ pub enum FragmentType {
     SkeletonTrackSetReference(SkeletonTrackSetReferenceFragment),
     Texture(TextureFragment),
     TextureImages(TextureImagesFragment),
+    TextureImagesRtk(TextureImagesFragmentRtk),
     TextureReference(TextureReferenceFragment),
     TwoDimensionalObject(TwoDimensionalObjectFragment),
     TwoDimensionalObjectReference(TwoDimensionalObjectReferenceFragment),
@@ -207,6 +210,7 @@ impl Deref for FragmentType {
             Self::SkeletonTrackSetReference(x) => x,
             Self::Texture(x) => x,
             Self::TextureImages(x) => x,
+            Self::TextureImagesRtk(x) => x,
             Self::TextureReference(x) => x,
             Self::TwoDimensionalObject(x) => x,
             Self::TwoDimensionalObjectReference(x) => x,

@@ -312,6 +312,7 @@ impl<'a> FragmentHeader<'a> {
 
     fn parse_body(self, index: usize) -> Result<FragmentType, WldDocError<'a>> {
         let parsed = match self.fragment_type {
+            #[cfg(not(feature = "rtk"))]
             AlternateMeshFragment::TYPE_ID => Some(
                 AlternateMeshFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::AlternateMesh(f.1))),
@@ -445,6 +446,11 @@ impl<'a> FragmentHeader<'a> {
             TextureImagesFragment::TYPE_ID => Some(
                 TextureImagesFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::TextureImages(f.1))),
+            ),
+            #[cfg(feature = "rtk")]
+            TextureImagesFragmentRtk::TYPE_ID => Some(
+                TextureImagesFragmentRtk::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::TextureImagesRtk(f.1))),
             ),
             Unknown0x34Fragment::TYPE_ID => Some(
                 Unknown0x34Fragment::parse(&self.field_data)

@@ -139,6 +139,10 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             TextureImagesFragment::TYPE_NAME,
             Color::Rgb(0xa9, 0xa9, 0xa9),
         ),
+        FragmentType::TextureImagesRtk(_) => (
+            TextureImagesFragmentRtk::TYPE_NAME,
+            Color::Rgb(0xa9, 0xa9, 0xa9),
+        ),
         FragmentType::TextureReference(_) => (
             TextureReferenceFragment::TYPE_NAME,
             Color::Rgb(0x8b, 0x45, 0x13),
