@@ -99,7 +99,7 @@ pub fn draw_fragment_body<B>(
         .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
         .split(layout_chunk);
 
-    let tabs = Tabs::new(["Fields", "Raw"].iter().cloned().map(Spans::from).collect())
+    let tabs = Tabs::new(["Fields", "JSON", "Raw"].iter().cloned().map(Spans::from).collect())
         .block(Block::default())
         .select(app.detail_body_tab_idx)
         .style(Style::default().fg(Color::White))
@@ -114,6 +114,9 @@ pub fn draw_fragment_body<B>(
     match app.detail_body_tab_idx {
         0 => {
             draw_fragment_fields(f, app, layout[1], fragment_idx, fragment);
+        }
+        1 => {
+            draw_json_fragment_data(f, app, layout[1], fragment_idx, fragment);
         }
         _ => {
             draw_raw_fragment_data(f, app, layout[1], fragment_idx, fragment);
@@ -155,6 +158,34 @@ pub fn draw_raw_fragment_data<B>(
             .border_style(Style::default().fg(border_color)),
     );
     f.render_widget(paragraph, layout_chunk);
+}
+
+pub fn draw_json_fragment_data<B>(
+    f: &mut Frame<B>,
+    app: &App,
+    layout_chunk: Rect,
+    fragment_idx: usize,
+    fragment: &FragmentType,
+) where
+    B: Backend,
+{
+    let border_color = match app.route.active_block {
+        ActiveBlock::FragmentDetails => ACTIVE_BLOCK_COLOR,
+        _ => INACTIVE_BLOCK_COLOR,
+    };
+
+    let json = serde_json::to_string_pretty(&fragment).expect("Could not serialize to json");
+
+    let fields = Paragraph::new(json)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(border_color)),
+        )
+        .style(Style::default().fg(Color::White))
+        .scroll(app.detail_scroll_pos);
+
+    f.render_widget(fields, layout_chunk);
 }
 
 pub fn draw_fragment_fields<B>(

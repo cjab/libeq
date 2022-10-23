@@ -27,14 +27,14 @@ pub fn handle_app(key: Key, app: &mut App) {
         Key::Char('\t') => match app.route.id {
             RouteId::Main => {
                 app.detail_scroll_pos = (0, 0);
-                app.detail_body_tab_idx = (app.detail_body_tab_idx + 1) % 2;
+                app.detail_body_tab_idx = wrap_idx(app.detail_body_tab_idx as i32 + 1, 3);
             }
         },
         // Tab back
         Key::BackTab => match app.route.id {
             RouteId::Main => {
                 app.detail_scroll_pos = (0, 0);
-                app.detail_body_tab_idx = ((app.detail_body_tab_idx as i32 - 1).abs() % 2) as usize;
+                app.detail_body_tab_idx = wrap_idx(app.detail_body_tab_idx as i32 - 1, 3);
             }
         },
         // Move down
@@ -119,4 +119,8 @@ pub fn handle_app(key: Key, app: &mut App) {
         },
         _ => {}
     }
+}
+
+fn wrap_idx(idx: i32, idx_max: i32) -> usize {
+    (((idx % idx_max) + idx_max) % idx_max).abs() as usize
 }
