@@ -133,11 +133,13 @@ fn print_error(error: &WldDocError) -> Result<(), std::io::Error> {
             write!(out, "\n{}\n", "Unknown Fragment".color(Color::Yellow))?;
             write!(
                 out,
-                "{} 0x{:02x}, {} {}\n",
+                "{} 0x{:02x}, {} {} {} {}\n",
                 "type:".color(Color::Grey54),
                 header.fragment_type,
                 "index:".color(Color::Grey54),
-                index
+                index,
+                "size:".color(Color::Grey54),
+                header.size
             )?;
             write!(out, "Dumping fragment body...\n")?;
             let mut hex_printer = Printer::new(&mut out, true, hexyl::BorderStyle::Unicode, true);

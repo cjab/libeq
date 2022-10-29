@@ -134,6 +134,13 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             SkeletonTrackSetReferenceFragment::TYPE_NAME,
             Color::Rgb(0x00, 0x8b, 0x8b),
         ),
+        FragmentType::SphereList(_) => {
+            (SphereListFragment::TYPE_NAME, Color::Rgb(0x3c, 0xb3, 0x71))
+        }
+        FragmentType::SphereListDef(_) => (
+            SphereListDefFragment::TYPE_NAME,
+            Color::Rgb(0x00, 0x8b, 0x8b),
+        ),
         FragmentType::Texture(_) => (TextureFragment::TYPE_NAME, Color::Rgb(0x2f, 0x4f, 0x4f)),
         FragmentType::TextureImages(_) => (
             TextureImagesFragment::TYPE_NAME,

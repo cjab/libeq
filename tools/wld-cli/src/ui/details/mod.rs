@@ -99,15 +99,21 @@ pub fn draw_fragment_body<B>(
         .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
         .split(layout_chunk);
 
-    let tabs = Tabs::new(["Fields", "JSON", "Raw"].iter().cloned().map(Spans::from).collect())
-        .block(Block::default())
-        .select(app.detail_body_tab_idx)
-        .style(Style::default().fg(Color::White))
-        .highlight_style(
-            Style::default()
-                .bg(Color::LightGreen)
-                .add_modifier(Modifier::BOLD),
-        );
+    let tabs = Tabs::new(
+        ["Fields", "JSON", "Raw"]
+            .iter()
+            .cloned()
+            .map(Spans::from)
+            .collect(),
+    )
+    .block(Block::default())
+    .select(app.detail_body_tab_idx)
+    .style(Style::default().fg(Color::White))
+    .highlight_style(
+        Style::default()
+            .bg(Color::LightGreen)
+            .add_modifier(Modifier::BOLD),
+    );
 
     f.render_widget(tabs, layout[0]);
 

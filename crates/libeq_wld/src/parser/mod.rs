@@ -454,6 +454,14 @@ impl<'a> FragmentHeader<'a> {
                 Unknown0x2eFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Unknown0x2e(f.1))),
             ),
+            SphereListFragment::TYPE_ID => Some(
+                SphereListFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::SphereList(f.1))),
+            ),
+            SphereListDefFragment::TYPE_ID => Some(
+                SphereListDefFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::SphereListDef(f.1))),
+            ),
             _ => None,
         };
 
