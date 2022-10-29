@@ -26,6 +26,8 @@ mod polygon_animation_reference;
 mod region_flag;
 mod skeleton_track_set;
 mod skeleton_track_set_reference;
+mod sphere_list;
+mod sphere_list_def;
 mod texture;
 mod texture_images;
 mod texture_reference;
@@ -76,6 +78,8 @@ pub use polygon_animation_reference::*;
 pub use region_flag::*;
 pub use skeleton_track_set::*;
 pub use skeleton_track_set_reference::*;
+pub use sphere_list::*;
+pub use sphere_list_def::*;
 pub use texture::*;
 pub use texture_images::*;
 pub use texture_reference::*;
@@ -161,6 +165,8 @@ pub enum FragmentType {
     RegionFlag(RegionFlagFragment),
     SkeletonTrackSet(SkeletonTrackSetFragment),
     SkeletonTrackSetReference(SkeletonTrackSetReferenceFragment),
+    SphereList(SphereListFragment),
+    SphereListDef(SphereListDefFragment),
     Texture(TextureFragment),
     TextureImages(TextureImagesFragment),
     TextureReference(TextureReferenceFragment),
@@ -205,6 +211,8 @@ impl Deref for FragmentType {
             Self::RegionFlag(x) => x,
             Self::SkeletonTrackSet(x) => x,
             Self::SkeletonTrackSetReference(x) => x,
+            Self::SphereList(x) => x,
+            Self::SphereListDef(x) => x,
             Self::Texture(x) => x,
             Self::TextureImages(x) => x,
             Self::TextureReference(x) => x,
