@@ -127,6 +127,9 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             ParticleCloudDefFragment::TYPE_NAME,
             Color::Rgb(0x80, 0x50, 0x05),
         ),
+        FragmentType::PaletteFile(_) => {
+            (PaletteFileFragment::TYPE_NAME, Color::Rgb(0x6a, 0x7f, 0xb5))
+        }
         FragmentType::PolygonAnimation(_) => (
             PolygonAnimationFragment::TYPE_NAME,
             Color::Rgb(0xff, 0x45, 0x00),
