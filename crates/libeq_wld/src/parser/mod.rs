@@ -454,6 +454,10 @@ impl<'a> FragmentHeader<'a> {
                 Unknown0x2eFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Unknown0x2e(f.1))),
             ),
+            PaletteFileFragment::TYPE_ID => Some(
+                PaletteFileFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::PaletteFile(f.1))),
+            ),
             _ => None,
         };
 
