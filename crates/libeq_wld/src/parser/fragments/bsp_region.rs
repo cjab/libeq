@@ -1,13 +1,16 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, MeshFragment, RenderMethod, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, MeshFragment, RenderInfo, RenderMethod, StringReference,
+    WResult,
 };
 
-use nom::combinator::map;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i32, le_u16, le_u32, le_u8};
 use nom::sequence::tuple;
+
+use num_derive::{FromPrimitive, ToPrimitive};
+use num_traits::FromPrimitive;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -130,9 +133,18 @@ impl FragmentParser for BspRegionFragment {
             count(tuple((le_f32, le_f32, le_f32)), num_region_vertex as usize)(i)?;
         let (i, proximal_regions) =
             count(tuple((le_u32, le_f32)), num_proximal_regions as usize)(i)?;
+
+        // Not 100% on the num_walls == 0 check. It looks like num_render_vertices can contain the sum of rendered wall verticies.
+        // TODO: Find a region with both walls and render vertices
+        let render_vertices_count = if num_walls == 0 {
+            num_render_vertices
+        } else {
+            0
+        };
+
         let (i, render_vertices) = count(
             tuple((le_f32, le_f32, le_f32)),
-            num_render_vertices as usize,
+            render_vertices_count as usize,
         )(i)?;
         let (i, walls) = count(Wall::parse, num_walls as usize)(i)?;
         let (i, obstacles) = count(Obstacle::parse, num_obstacles as usize)(i)?;
@@ -361,10 +373,14 @@ pub struct Wall {
     /// RENDERMETHOD ...
     render_method: Option<RenderMethod>,
 
+    /// RENDERINFO
+    render_info: Option<RenderInfo>,
+
     /// NORMALABCD %f %f %f %f
     normal_abcd: Option<(f32, f32, f32, f32)>,
 
     /// VERTEXLIST %d ...%d
+    /// Binary values are 0 based. "VERTEXLIST 1" becomes vertex_list[0]
     vertex_list: Vec<u32>,
 }
 
@@ -372,9 +388,16 @@ impl Wall {
     fn parse(input: &[u8]) -> WResult<Self> {
         let (i, flags) = WallFlags::parse(input)?;
         let (i, num_vertices) = le_u32(i)?;
+        let (i, vertex_list) = count(le_u32, num_vertices as usize)(i)?;
 
         let (i, render_method) = if flags.has_method_and_normal() {
             RenderMethod::parse(i).map(|(rem, m)| (rem, Some(m)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, render_info) = if flags.has_method_and_normal() {
+            RenderInfo::parse(i).map(|(rem, i)| (rem, Some(i)))?
         } else {
             (i, None)
         };
@@ -385,16 +408,15 @@ impl Wall {
             (i, None)
         };
 
-        let (i, vertex_list) = count(le_u32, num_vertices as usize)(i)?;
-
         Ok((
             i,
             Self {
                 flags,
                 num_vertices,
-                render_method,
-                normal_abcd,
                 vertex_list,
+                render_method,
+                render_info,
+                normal_abcd,
             },
         ))
     }
@@ -404,9 +426,18 @@ impl Wall {
             &self.flags.into_bytes()[..],
             &self.num_vertices.to_le_bytes()[..],
             &self
+                .vertex_list
+                .iter()
+                .flat_map(|v| v.to_le_bytes())
+                .collect::<Vec<_>>()[..],
+            &self
                 .render_method
                 .as_ref()
                 .map_or(vec![], |m| m.into_bytes())[..],
+            &self
+                .render_info
+                .as_ref()
+                .map_or(vec![], |i| i.into_bytes().to_vec())[..],
             &self.normal_abcd.map_or(vec![], |m| {
                 [
                     m.0.to_le_bytes(),
@@ -416,11 +447,6 @@ impl Wall {
                 ]
                 .concat()
             })[..],
-            &self
-                .vertex_list
-                .iter()
-                .flat_map(|v| v.to_le_bytes())
-                .collect::<Vec<_>>()[..],
         ]
         .concat()
     }
@@ -464,6 +490,29 @@ pub struct Obstacle {
     /// NEXTREGION %d
     next_region: i32,
 
+    /// XY_VERTEX 0 %d
+    /// XYZ_VERTEX 0 %d
+    /// XY_LINE 0 %d %d
+    /// XY_EDGE 0 %d %d
+    /// XYZ_EDGE 0 %d %d
+    /// PLANE 0 %d
+    /// EDGEPOLYGON 0
+    /// EDGEWALL 0 %d
+    obstacle_type: ObstacleType,
+
+    // NUMVERTICES %d
+    num_vertices: Option<u32>,
+
+    /// VERTEXLIST %d ...%d
+    vertex_list: Option<Vec<u32>>,
+
+    /// NORMALABCD %f %f %f %f
+    normal_abcd: Option<(f32, f32, f32, f32)>,
+
+    /// EDGEWALL 0 %d
+    /// Binary values are 0 based. "EDGEWALL 0 1" becomes edge_wall[0]
+    edge_wall: Option<u32>,
+
     /// Length of USERDATA string
     user_data_size: Option<u32>,
 
@@ -475,6 +524,34 @@ impl Obstacle {
     fn parse(input: &[u8]) -> WResult<Self> {
         let (i, flags) = ObstacleFlags::parse(input)?;
         let (i, next_region) = le_i32(i)?;
+        let (i, obstacle_type) = le_i32(i)?;
+        let obstacle_type = FromPrimitive::from_i32(obstacle_type).unwrap();
+
+        let (i, num_vertices) = if obstacle_type == ObstacleType::EdgePolygon
+            || obstacle_type == ObstacleType::EdgePolygonNormalAbcd
+        {
+            le_u32(i).map(|(i, vertex_list_size)| (i, Some(vertex_list_size)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, vertex_list) = if let Some(vertex_list_size) = num_vertices {
+            count(le_u32, vertex_list_size as usize)(i).map(|(rem, v)| (rem, Some(v)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, normal_abcd) = if obstacle_type == ObstacleType::EdgePolygonNormalAbcd {
+            tuple((le_f32, le_f32, le_f32, le_f32))(i).map(|(rem, n)| (rem, Some(n)))?
+        } else {
+            (i, None)
+        };
+
+        let (i, edge_wall) = if obstacle_type == ObstacleType::EdgeWall {
+            le_u32(i).map(|(i, w)| (i, Some(w)))?
+        } else {
+            (i, None)
+        };
 
         let (i, user_data_size) = if flags.has_user_data() {
             le_u32(i).map(|(rem, u)| (rem, Some(u)))?
@@ -493,6 +570,11 @@ impl Obstacle {
             Self {
                 flags,
                 next_region,
+                obstacle_type,
+                num_vertices,
+                vertex_list,
+                normal_abcd,
+                edge_wall,
                 user_data_size,
                 user_data,
             },
@@ -503,6 +585,24 @@ impl Obstacle {
         [
             &self.flags.into_bytes()[..],
             &self.next_region.to_le_bytes()[..],
+            &self.obstacle_type.into_bytes()[..],
+            &self
+                .num_vertices
+                .map_or(vec![], |n| n.to_le_bytes().to_vec())[..],
+            &self
+                .vertex_list
+                .as_ref()
+                .map_or(vec![], |o| o.iter().flat_map(|v| v.to_le_bytes()).collect())[..],
+            &self.normal_abcd.map_or(vec![], |m| {
+                [
+                    m.0.to_le_bytes(),
+                    m.1.to_le_bytes(),
+                    m.2.to_le_bytes(),
+                    m.3.to_le_bytes(),
+                ]
+                .concat()
+            })[..],
+            &self.edge_wall.map_or(vec![], |w| w.to_le_bytes().to_vec())[..],
             &self
                 .user_data_size
                 .map_or(vec![], |u| u.to_le_bytes().to_vec())[..],
@@ -540,6 +640,26 @@ impl ObstacleFlags {
 
     pub fn has_user_data(&self) -> bool {
         self.0 & Self::HAS_USER_DATA == Self::HAS_USER_DATA
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Copy, Clone, FromPrimitive, ToPrimitive)]
+enum ObstacleType {
+    XyVertex = 8,
+    XyzVertex = 9,
+    XyLine = 10,
+    XyEdge = 11,
+    XyzEdge = 12,
+    Plane = 13,
+    EdgePolygon = 14,
+    EdgeWall = 18,
+    EdgePolygonNormalAbcd = -15,
+}
+
+impl ObstacleType {
+    fn into_bytes(&self) -> Vec<u8> {
+        (*self as i32).to_le_bytes().to_vec()
     }
 }
 
@@ -709,6 +829,8 @@ impl VisibleList {
 
 #[cfg(test)]
 mod tests {
+    use crate::parser::{MaterialType, RenderInfoFlags, UvInfo, UvMap};
+
     use super::*;
 
     #[test]
@@ -766,8 +888,120 @@ mod tests {
     }
 
     #[test]
+    fn it_parses_with_padding() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/3260-0x22.frag")[..];
+        let (remaining, _frag) = BspRegionFragment::parse(data).unwrap();
+        assert_eq!(remaining, vec![]);
+    }
+
+    #[test]
+    fn it_parses_with_walls_and_obstructions() {
+        let data =
+            &include_bytes!("../../../fixtures/fragments/tanarus-thecity/8000-0x22.frag")[..];
+        let (remaining, frag) = BspRegionFragment::parse(data).unwrap();
+
+        // Walls
+        assert_eq!(frag.walls.len(), 7);
+        assert_eq!(frag.walls[0].flags, WallFlags(0x2));
+        assert_eq!(frag.walls[0].flags.has_floor(), false);
+        assert_eq!(frag.walls[0].num_vertices, 4);
+        assert_eq!(frag.walls[0].normal_abcd, Some((0.0, 1.0, 0.0, -31.999935)));
+        assert_eq!(frag.walls[0].vertex_list, vec![9700, 9590, 9574, 9687]);
+
+        assert_eq!(
+            frag.walls[0].render_method,
+            Some(RenderMethod::UserDefined {
+                material_type: MaterialType::Diffuse
+            })
+        );
+
+        // Render Info
+        let wall0_render_info = frag.walls[0].render_info.as_ref().unwrap();
+        assert_eq!(wall0_render_info.flags, RenderInfoFlags::new(63));
+        assert_eq!(wall0_render_info.flags.has_pen(), true);
+        assert_eq!(wall0_render_info.flags.has_brightness(), true);
+        assert_eq!(wall0_render_info.flags.has_scaled_ambient(), true);
+        assert_eq!(wall0_render_info.flags.has_simple_sprite(), true);
+        assert_eq!(wall0_render_info.flags.has_uv_info(), true);
+        assert_eq!(wall0_render_info.flags.is_two_sided(), false);
+        assert_eq!(wall0_render_info.pen, Some(201));
+        assert_eq!(wall0_render_info.brightness, Some(1.0));
+        assert_eq!(wall0_render_info.scaled_ambient, Some(1.0));
+        assert_eq!(wall0_render_info.simple_sprite_reference, Some(7994));
+        assert_eq!(
+            wall0_render_info.uv_info,
+            Some(UvInfo {
+                uv_origin: (944.000061, 32.000000, -0.000015),
+                u_axis: (-16.000000, -0.000001, 0.000000),
+                v_axis: (0.000000, -0.000001, 16.000015)
+            })
+        );
+        assert_eq!(
+            wall0_render_info.uv_map,
+            Some(UvMap {
+                entry_count: 5,
+                entries: vec![(0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
+            })
+        );
+
+        // Floor wall
+        assert_eq!(frag.walls[6].flags, WallFlags(0x3));
+        assert_eq!(frag.walls[6].flags.has_floor(), true);
+        assert_eq!(frag.walls[6].flags.has_method_and_normal(), true);
+        assert_eq!(
+            frag.walls[6].render_method,
+            Some(RenderMethod::UserDefined {
+                material_type: MaterialType::CompleteUnknown2
+            })
+        );
+
+        // Obstacles
+        assert_eq!(frag.obstacles.len(), 10);
+        assert_eq!(frag.obstacles[0].flags.is_floor(), false);
+        assert_eq!(
+            frag.obstacles[0].obstacle_type,
+            ObstacleType::EdgePolygonNormalAbcd
+        );
+        assert_eq!(
+            frag.obstacles[0].normal_abcd,
+            Some((1.0, 0.0, 0.0, -944.000061))
+        );
+        assert_eq!(frag.obstacles[0].num_vertices, Some(6));
+        assert_eq!(
+            frag.obstacles[0].vertex_list,
+            Some(vec![9570, 9574, 9590, 9591, 9592, 9621])
+        );
+        assert_eq!(frag.obstacles[0].next_region, 1068);
+        assert_eq!(frag.obstacles[0].edge_wall, None);
+
+        assert_eq!(frag.obstacles[3].flags.is_floor(), false);
+        assert_eq!(frag.obstacles[3].edge_wall, Some(0));
+
+        assert_eq!(frag.obstacles[9].flags.is_floor(), true);
+        assert_eq!(frag.obstacles[9].obstacle_type, ObstacleType::EdgeWall);
+        assert_eq!(frag.obstacles[9].normal_abcd, None);
+        assert_eq!(frag.obstacles[9].num_vertices, None);
+        assert_eq!(frag.obstacles[9].vertex_list, None);
+        assert_eq!(frag.obstacles[9].next_region, 0);
+        assert_eq!(frag.obstacles[9].edge_wall, Some(6));
+
+        assert_eq!(frag.user_data_size, 0);
+
+        assert_eq!(remaining, vec![]);
+    }
+
+    #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1731-0x22.frag")[..];
+        let frag = BspRegionFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.into_bytes()[..], data);
+    }
+
+    #[test]
+    fn it_serializes_with_walls_and_obstructions() {
+        let data =
+            &include_bytes!("../../../fixtures/fragments/tanarus-thecity/8000-0x22.frag")[..];
         let frag = BspRegionFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
