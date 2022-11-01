@@ -401,6 +401,7 @@ pub enum TextureStyle {
     Texture5 = 0xa,
     TransTexture5 = 0xb,
     Unknown1 = 0xc,
+    UnknownTanarus = 0xd,
     Unknown2 = 0xe,
     XXXXX = 0xf,
 }
@@ -440,4 +441,5 @@ pub enum MaterialType {
     TransparentSkydome = 0x0F, // Need to confirm
     TransparentAdditiveUnlitSkydome = 0x10,
     InvisibleUnknown3 = 0x03,
+    CompleteUnknown2 = 0x06, // Found on a "floor" wall in tanarus 'thecity'
 }
