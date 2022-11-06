@@ -446,9 +446,9 @@ impl<'a> FragmentHeader<'a> {
                 TextureImagesFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::TextureImages(f.1))),
             ),
-            Unknown0x34Fragment::TYPE_ID => Some(
-                Unknown0x34Fragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::Unknown0x34(f.1))),
+            ParticleCloudDefFragment::TYPE_ID => Some(
+                ParticleCloudDefFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::ParticleCloudDef(f.1))),
             ),
             Unknown0x2eFragment::TYPE_ID => Some(
                 Unknown0x2eFragment::parse(&self.field_data)

@@ -21,6 +21,7 @@ mod mob_skeleton_piece_track;
 mod mob_skeleton_piece_track_reference;
 mod model;
 mod object_location;
+mod particle_cloud_def;
 mod particle_sprite;
 mod particle_sprite_def;
 mod polygon_animation;
@@ -36,7 +37,6 @@ mod texture_reference;
 mod two_dimensional_object;
 mod two_dimensional_object_reference;
 mod unknown_0x2e;
-mod unknown_0x34;
 mod vertex_color;
 mod vertex_color_reference;
 mod zone_unknown;
@@ -75,6 +75,7 @@ pub use mob_skeleton_piece_track::*;
 pub use mob_skeleton_piece_track_reference::*;
 pub use model::*;
 pub use object_location::*;
+pub use particle_cloud_def::*;
 pub use particle_sprite::*;
 pub use particle_sprite_def::*;
 pub use polygon_animation::*;
@@ -90,7 +91,6 @@ pub use texture_reference::*;
 pub use two_dimensional_object::*;
 pub use two_dimensional_object_reference::*;
 pub use unknown_0x2e::*;
-pub use unknown_0x34::*;
 pub use vertex_color::*;
 pub use vertex_color_reference::*;
 pub use zone_unknown::*;
@@ -166,6 +166,7 @@ pub enum FragmentType {
     ObjectLocation(ObjectLocationFragment),
     ParticleSprite(ParticleSpriteFragment),
     ParticleSpriteDef(ParticleSpriteDefFragment),
+    ParticleCloudDef(ParticleCloudDefFragment),
     PolygonAnimation(PolygonAnimationFragment),
     PolygonAnimationReference(PolygonAnimationReferenceFragment),
     RegionFlag(RegionFlagFragment),
@@ -178,7 +179,6 @@ pub enum FragmentType {
     TextureReference(TextureReferenceFragment),
     TwoDimensionalObject(TwoDimensionalObjectFragment),
     TwoDimensionalObjectReference(TwoDimensionalObjectReferenceFragment),
-    Unknown0x34(Unknown0x34Fragment),
     Unknown0x2e(Unknown0x2eFragment),
     VertexColor(VertexColorFragment),
     VertexColorReference(VertexColorReferenceFragment),
@@ -214,6 +214,7 @@ impl Deref for FragmentType {
             Self::ObjectLocation(x) => x,
             Self::ParticleSprite(x) => x,
             Self::ParticleSpriteDef(x) => x,
+            Self::ParticleCloudDef(x) => x,
             Self::PolygonAnimation(x) => x,
             Self::PolygonAnimationReference(x) => x,
             Self::RegionFlag(x) => x,
@@ -226,7 +227,6 @@ impl Deref for FragmentType {
             Self::TextureReference(x) => x,
             Self::TwoDimensionalObject(x) => x,
             Self::TwoDimensionalObjectReference(x) => x,
-            Self::Unknown0x34(x) => x,
             Self::Unknown0x2e(x) => x,
             Self::VertexColor(x) => x,
             Self::VertexColorReference(x) => x,
