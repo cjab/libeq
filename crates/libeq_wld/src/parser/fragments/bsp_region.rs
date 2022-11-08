@@ -216,7 +216,7 @@ impl FragmentParser for BspRegionFragment {
 
 impl Fragment for BspRegionFragment {
     fn into_bytes(&self) -> Vec<u8> {
-        [
+        let bytes = [
             &self.name_reference.into_bytes()[..],
             &self.flags.into_bytes()[..],
             &self.ambient_light.into_bytes()[..],
@@ -285,7 +285,12 @@ impl Fragment for BspRegionFragment {
                 .as_ref()
                 .map_or(vec![], |m| m.into_bytes())[..],
         ]
-        .concat()
+        .concat();
+
+        let padding_size = (4 - bytes.len() % 4) % 4;
+        let padding: Vec<u8> = vec![0; padding_size];
+
+        [&bytes[..], &padding[..]].concat()
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -891,7 +896,7 @@ mod tests {
     fn it_parses_with_padding() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/3260-0x22.frag")[..];
         let (remaining, _frag) = BspRegionFragment::parse(data).unwrap();
-        assert_eq!(remaining, vec![]);
+        assert_eq!(remaining, vec![0, 0, 0]);
     }
 
     #[test]
@@ -987,12 +992,20 @@ mod tests {
 
         assert_eq!(frag.user_data_size, 0);
 
-        assert_eq!(remaining, vec![]);
+        assert_eq!(remaining, vec![0, 0]);
     }
 
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1731-0x22.frag")[..];
+        let frag = BspRegionFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.into_bytes()[..], data);
+    }
+
+    #[test]
+    fn it_serializes_with_padding() {
+        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/3260-0x22.frag")[..];
         let frag = BspRegionFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
