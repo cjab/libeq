@@ -446,9 +446,9 @@ impl<'a> FragmentHeader<'a> {
                 TextureImagesFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::TextureImages(f.1))),
             ),
-            Unknown0x34Fragment::TYPE_ID => Some(
-                Unknown0x34Fragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::Unknown0x34(f.1))),
+            ParticleCloudDefFragment::TYPE_ID => Some(
+                ParticleCloudDefFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::ParticleCloudDef(f.1))),
             ),
             Unknown0x2eFragment::TYPE_ID => Some(
                 Unknown0x2eFragment::parse(&self.field_data)
@@ -465,6 +465,14 @@ impl<'a> FragmentHeader<'a> {
             SphereListDefFragment::TYPE_ID => Some(
                 SphereListDefFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::SphereListDef(f.1))),
+            ),
+            ParticleSpriteFragment::TYPE_ID => Some(
+                ParticleSpriteFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::ParticleSprite(f.1))),
+            ),
+            ParticleSpriteDefFragment::TYPE_ID => Some(
+                ParticleSpriteDefFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::ParticleSpriteDef(f.1))),
             ),
             _ => None,
         };

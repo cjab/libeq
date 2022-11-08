@@ -115,9 +115,22 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             ObjectLocationFragment::TYPE_NAME,
             Color::Rgb(0x8b, 0x00, 0x8b),
         ),
-        FragmentType::PaletteFile(_) => {
-            (PaletteFileFragment::TYPE_NAME, Color::Rgb(0x6a, 0x7f, 0xb5))
-        }
+        FragmentType::PaletteFile(_) => (
+            PaletteFileFragment::TYPE_NAME,
+            Color::Rgb(0x6a, 0x7f, 0xb5),
+        ),
+        FragmentType::ParticleSprite(_) => (
+            ParticleSpriteFragment::TYPE_NAME,
+            Color::Rgb(0x26, 0x59, 0x70),
+        ),
+        FragmentType::ParticleSpriteDef(_) => (
+            ParticleSpriteDefFragment::TYPE_NAME,
+            Color::Rgb(0x3c, 0x88, 0xab),
+        ),
+        FragmentType::ParticleCloudDef(_) => (
+            ParticleCloudDefFragment::TYPE_NAME,
+            Color::Rgb(0x80, 0x50, 0x05),
+        ),
         FragmentType::PolygonAnimation(_) => (
             PolygonAnimationFragment::TYPE_NAME,
             Color::Rgb(0xff, 0x45, 0x00),
@@ -161,9 +174,6 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             TwoDimensionalObjectReferenceFragment::TYPE_NAME,
             Color::Rgb(0x80, 0x80, 0x00),
         ),
-        FragmentType::Unknown0x34(_) => {
-            (Unknown0x34Fragment::TYPE_NAME, Color::Rgb(0x80, 0x50, 0x05))
-        }
         FragmentType::Unknown0x2e(_) => {
             (Unknown0x2eFragment::TYPE_NAME, Color::Rgb(0x80, 0x50, 0x05))
         }
