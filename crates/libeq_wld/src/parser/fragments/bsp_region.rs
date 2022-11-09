@@ -134,7 +134,7 @@ impl FragmentParser for BspRegionFragment {
         let (i, proximal_regions) =
             count(tuple((le_u32, le_f32)), num_proximal_regions as usize)(i)?;
 
-        // Not 100% on the num_walls == 0 check. It looks like num_render_vertices can contain the sum of rendered wall verticies.
+        // Not 100% on the num_walls == 0 check. It looks like num_render_vertices can contain the sum of rendered wall vertices.
         // TODO: Find a region with both walls and render vertices
         let render_vertices_count = if num_walls == 0 {
             num_render_vertices
