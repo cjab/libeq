@@ -34,12 +34,14 @@ mod sphere_list;
 mod sphere_list_def;
 mod texture;
 mod texture_images;
+mod texture_images_rtk;
 mod texture_reference;
 mod two_dimensional_object;
 mod two_dimensional_object_reference;
 mod unknown_0x2e;
 mod vertex_color;
 mod vertex_color_reference;
+mod world_vertices;
 mod zone_unknown;
 
 use std::any::Any;
@@ -89,12 +91,14 @@ pub use sphere_list::*;
 pub use sphere_list_def::*;
 pub use texture::*;
 pub use texture_images::*;
+pub use texture_images_rtk::*;
 pub use texture_reference::*;
 pub use two_dimensional_object::*;
 pub use two_dimensional_object_reference::*;
 pub use unknown_0x2e::*;
 pub use vertex_color::*;
 pub use vertex_color_reference::*;
+pub use world_vertices::*;
 pub use zone_unknown::*;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -179,12 +183,14 @@ pub enum FragmentType {
     SphereListDef(SphereListDefFragment),
     Texture(TextureFragment),
     TextureImages(TextureImagesFragment),
+    TextureImagesRtk(TextureImagesRtkFragment),
     TextureReference(TextureReferenceFragment),
     TwoDimensionalObject(TwoDimensionalObjectFragment),
     TwoDimensionalObjectReference(TwoDimensionalObjectReferenceFragment),
     Unknown0x2e(Unknown0x2eFragment),
     VertexColor(VertexColorFragment),
     VertexColorReference(VertexColorReferenceFragment),
+    WorldVertices(WorldVerticesFragment),
     ZoneUnknown(ZoneUnknownFragment),
 }
 
@@ -228,13 +234,22 @@ impl Deref for FragmentType {
             Self::SphereListDef(x) => x,
             Self::Texture(x) => x,
             Self::TextureImages(x) => x,
+            Self::TextureImagesRtk(x) => x,
             Self::TextureReference(x) => x,
             Self::TwoDimensionalObject(x) => x,
             Self::TwoDimensionalObjectReference(x) => x,
             Self::Unknown0x2e(x) => x,
             Self::VertexColor(x) => x,
             Self::VertexColorReference(x) => x,
+            Self::WorldVertices(x) => x,
             Self::ZoneUnknown(x) => x,
         }
     }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum FragmentGame {
+    EverQuest,
+    Tanarus,
+    ReturnToKrondor,
 }
