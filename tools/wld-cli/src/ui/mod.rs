@@ -161,6 +161,10 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             TextureImagesFragment::TYPE_NAME,
             Color::Rgb(0xa9, 0xa9, 0xa9),
         ),
+        FragmentType::TextureImagesRtk(_) => (
+            TextureImagesRtkFragment::TYPE_NAME,
+            Color::Rgb(0xa9, 0xa9, 0xa9),
+        ),
         FragmentType::TextureReference(_) => (
             TextureReferenceFragment::TYPE_NAME,
             Color::Rgb(0x8b, 0x45, 0x13),
@@ -182,6 +186,10 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
         FragmentType::VertexColorReference(_) => (
             VertexColorReferenceFragment::TYPE_NAME,
             Color::Rgb(0xff, 0x14, 0x93),
+        ),
+        FragmentType::WorldVertices(_) => (
+            WorldVerticesFragment::TYPE_NAME,
+            Color::Rgb(0x59, 0x48, 0x78),
         ),
         FragmentType::ZoneUnknown(_) => {
             (ZoneUnknownFragment::TYPE_NAME, Color::Rgb(0xb0, 0x30, 0x60))
