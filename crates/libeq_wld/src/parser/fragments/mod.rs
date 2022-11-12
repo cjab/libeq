@@ -21,6 +21,7 @@ mod mob_skeleton_piece_track;
 mod mob_skeleton_piece_track_reference;
 mod model;
 mod object_location;
+mod palette_file;
 mod particle_cloud_def;
 mod particle_sprite;
 mod particle_sprite_def;
@@ -75,6 +76,7 @@ pub use mob_skeleton_piece_track::*;
 pub use mob_skeleton_piece_track_reference::*;
 pub use model::*;
 pub use object_location::*;
+pub use palette_file::*;
 pub use particle_cloud_def::*;
 pub use particle_sprite::*;
 pub use particle_sprite_def::*;
@@ -167,6 +169,7 @@ pub enum FragmentType {
     ParticleSprite(ParticleSpriteFragment),
     ParticleSpriteDef(ParticleSpriteDefFragment),
     ParticleCloudDef(ParticleCloudDefFragment),
+    PaletteFile(PaletteFileFragment),
     PolygonAnimation(PolygonAnimationFragment),
     PolygonAnimationReference(PolygonAnimationReferenceFragment),
     RegionFlag(RegionFlagFragment),
@@ -215,6 +218,7 @@ impl Deref for FragmentType {
             Self::ParticleSprite(x) => x,
             Self::ParticleSpriteDef(x) => x,
             Self::ParticleCloudDef(x) => x,
+            Self::PaletteFile(x) => x,
             Self::PolygonAnimation(x) => x,
             Self::PolygonAnimationReference(x) => x,
             Self::RegionFlag(x) => x,
