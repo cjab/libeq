@@ -9,7 +9,7 @@ use itertools::{Either, Itertools};
 use nom::bytes::complete::take;
 pub use nom::error::{context, ErrorKind, VerboseError, VerboseErrorKind};
 use nom::multi::count;
-use nom::number::complete::le_u32;
+use nom::number::complete::{le_i32, le_u32};
 use nom::IResult;
 use nom::Offset;
 
@@ -312,10 +312,20 @@ impl<'a> FragmentHeader<'a> {
 
     fn parse_body(self, index: usize) -> Result<FragmentType, WldDocError<'a>> {
         let parsed = match self.fragment_type {
-            AlternateMeshFragment::TYPE_ID => Some(
-                AlternateMeshFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::AlternateMesh(f.1))),
-            ),
+            AlternateMeshFragment::TYPE_ID => match self.detect_0x2c_variant() {
+                FragmentGame::EverQuest => Some(
+                    AlternateMeshFragment::parse(&self.field_data)
+                        .map(|f| (f.0, FragmentType::AlternateMesh(f.1))),
+                ),
+                FragmentGame::ReturnToKrondor => Some(
+                    TextureImagesRtkFragment::parse(&self.field_data)
+                        .map(|f| (f.0, FragmentType::TextureImagesRtk(f.1))),
+                ),
+                FragmentGame::Tanarus => Some(
+                    WorldVerticesFragment::parse(&self.field_data)
+                        .map(|f| (f.0, FragmentType::WorldVertices(f.1))),
+                ),
+            },
             BlitSpriteDefinitionFragment::TYPE_ID => Some(
                 BlitSpriteDefinitionFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::BlitSpriteDefinition(f.1))),
@@ -507,6 +517,21 @@ impl<'a> FragmentHeader<'a> {
         ]
         .concat()
     }
+
+    /// Each game appears to have it's own custom 0x2c
+    ///   EQ 0x2c starts with name ref (negative int)
+    ///   Tanarus 0x2c starts with the vertex count (positive int)
+    ///   RtK 0x2c is very small, 32 bytes was the largest I could find
+    fn detect_0x2c_variant(&self) -> FragmentGame {
+        if self.size < 50 {
+            return FragmentGame::ReturnToKrondor;
+        }
+
+        match le_i32::<_, VerboseError<&[u8]>>(self.field_data) {
+            Ok((_, n)) if n > 0 => FragmentGame::Tanarus,
+            _ => FragmentGame::EverQuest,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -549,5 +574,41 @@ mod tests {
             wld_doc.fragments.last().unwrap().into_bytes(),
             deserialized_doc.fragments.last().unwrap().into_bytes()
         );
+    }
+
+    #[test]
+    fn it_detects_eq_0x2c() {
+        let data = &include_bytes!("../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
+        let header = FragmentHeader {
+            size: data.len() as u32,
+            fragment_type: 0x2c,
+            field_data: data,
+        };
+
+        assert_eq!(header.detect_0x2c_variant(), FragmentGame::EverQuest);
+    }
+
+    #[test]
+    fn it_detects_tanarus_0x2c() {
+        let data = &include_bytes!("../../fixtures/fragments/tanarus-thecity/0001-0x2c.frag")[..];
+        let header = FragmentHeader {
+            size: data.len() as u32,
+            fragment_type: 0x2c,
+            field_data: data,
+        };
+
+        assert_eq!(header.detect_0x2c_variant(), FragmentGame::Tanarus);
+    }
+
+    #[test]
+    fn it_detects_rtk_0x2c() {
+        let data = &include_bytes!("../../fixtures/fragments/rtk/0000-0x2c.frag")[..];
+        let header = FragmentHeader {
+            size: data.len() as u32,
+            fragment_type: 0x2c,
+            field_data: data,
+        };
+
+        assert_eq!(header.detect_0x2c_variant(), FragmentGame::ReturnToKrondor);
     }
 }
