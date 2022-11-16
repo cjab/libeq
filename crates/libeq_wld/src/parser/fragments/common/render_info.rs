@@ -355,7 +355,7 @@ impl std::fmt::Debug for RenderMethod {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, FromPrimitive, ToPrimitive, PartialEq)]
+#[derive(Debug, FromPrimitive, ToPrimitive, PartialEq, Clone, Copy)]
 pub enum DrawStyle {
     Transparent = 0x0,
     Unknown = 0x1,
@@ -364,7 +364,7 @@ pub enum DrawStyle {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, FromPrimitive, ToPrimitive, PartialEq)]
+#[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, PartialEq)]
 pub enum Lighting {
     ZeroIntensity = 0x0,
     Unknown1 = 0x1,
@@ -377,7 +377,7 @@ pub enum Lighting {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, FromPrimitive, ToPrimitive, PartialEq)]
+#[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, PartialEq)]
 pub enum Shading {
     None1 = 0x0,
     None2 = 0x1,
@@ -386,7 +386,7 @@ pub enum Shading {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, FromPrimitive, ToPrimitive, PartialEq)]
+#[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, PartialEq)]
 pub enum TextureStyle {
     None = 0x0,
     XXXXXXXX1 = 0x1,
@@ -407,7 +407,7 @@ pub enum TextureStyle {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, FromPrimitive, ToPrimitive, PartialEq)]
+#[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, PartialEq)]
 /// Source: LanternExtractor
 /// (https://github.com/LanternEQ/LanternExtractor/blob/afe174b71ac9f9ab75e259bac2282735b093426d/LanternExtractor/EQ/Wld/DataTypes/MaterialType.cs)
 pub enum MaterialType {
