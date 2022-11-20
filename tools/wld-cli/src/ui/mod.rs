@@ -76,6 +76,13 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Color::Rgb(0xb2, 0x22, 0x22),
         ),
         FragmentType::First(_) => (FirstFragment::TYPE_NAME, Color::Rgb(0x7b, 0x68, 0xee)),
+        FragmentType::FourDSprite(_) => {
+            (FourDSpriteFragment::TYPE_NAME, Color::Rgb(0xcc, 0x66, 0x66))
+        }
+        FragmentType::FourDSpriteDef(_) => (
+            FourDSpriteDefFragment::TYPE_NAME,
+            Color::Rgb(0xee, 0x99, 0x44),
+        ),
         FragmentType::LightInfo(_) => (LightInfoFragment::TYPE_NAME, Color::Rgb(0x00, 0xbf, 0xff)),
         FragmentType::LightSource(_) => {
             (LightSourceFragment::TYPE_NAME, Color::Rgb(0xff, 0xff, 0x00))
