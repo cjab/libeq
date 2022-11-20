@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// DMTRACKDEF
 ///
 /// An older version of the 0x37 fragment, which describes the animation of individual vertices in a DMSPRITEDEF mesh.
-/// 
+///
 /// **Type ID:** 0x2e
 pub struct Unknown0x2eFragment {
     pub name_reference: StringReference,
@@ -37,12 +37,11 @@ impl FragmentParser for Unknown0x2eFragment {
         let (i, (flags, vertex_count, frame_count, sleep, param1)) =
             tuple((le_u32, le_u32, le_u32, le_u32, le_u32))(i)?;
 
-        let (i, frames) = 
-            count(
-                count(tuple((le_f32, le_f32, le_f32)), vertex_count as usize),
-                frame_count as usize,
-            )(i)?;
-        
+        let (i, frames) = count(
+            count(tuple((le_f32, le_f32, le_f32)), vertex_count as usize),
+            frame_count as usize,
+        )(i)?;
+
         Ok((
             i,
             Self {
@@ -52,7 +51,7 @@ impl FragmentParser for Unknown0x2eFragment {
                 frame_count,
                 sleep,
                 param1,
-                frames
+                frames,
             },
         ))
     }
@@ -76,7 +75,8 @@ impl Fragment for Unknown0x2eFragment {
                     })
                 })
                 .collect::<Vec<_>>()[..],
-        ].concat()
+        ]
+        .concat()
     }
 
     fn as_any(&self) -> &dyn Any {

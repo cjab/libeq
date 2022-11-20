@@ -263,9 +263,15 @@ impl FragmentParser for MeshFragment {
             count(tuple((le_i8, le_i8, le_i8)), normal_count as usize),
             count(le_u32, color_count as usize),
             count(MeshFragmentFaceEntry::parse, face_count as usize),
-            count(tuple((le_u16, le_u16)), skin_assignment_groups_count as usize),
+            count(
+                tuple((le_u16, le_u16)),
+                skin_assignment_groups_count as usize,
+            ),
             count(tuple((le_u16, le_u16)), face_material_groups_count as usize),
-            count(tuple((le_u16, le_u16)), vertex_material_groups_count as usize),
+            count(
+                tuple((le_u16, le_u16)),
+                vertex_material_groups_count as usize,
+            ),
             count(MeshFragmentMeshOpEntry::parse, meshop_count as usize),
         ))(i)?;
 
@@ -312,10 +318,10 @@ impl FragmentParser for MeshFragment {
 impl Fragment for MeshFragment {
     fn into_bytes(&self) -> Vec<u8> {
         let meshops = &self
-                .meshops
-                .iter()
-                .flat_map(|d| d.into_bytes())
-                .collect::<Vec<_>>()[..];
+            .meshops
+            .iter()
+            .flat_map(|d| d.into_bytes())
+            .collect::<Vec<_>>()[..];
         let padding_size = (4 - meshops.len() % 4) % 4;
         let padding: Vec<u8> = vec![0; padding_size];
 
@@ -390,7 +396,7 @@ impl Fragment for MeshFragment {
                 .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes()].concat())
                 .collect::<Vec<_>>()[..],
             meshops,
-            &padding[..]
+            &padding[..],
         ]
         .concat()
     }
@@ -449,7 +455,6 @@ impl MeshFragmentFaceEntry {
 #[derive(Debug, PartialEq)]
 /// _Unknown_
 pub struct MeshFragmentMeshOpEntry {
-    
     /// _Unknown_ - This seems to reference one of the vertex entries. This field is only valid if
     /// `type_field` contains 1. Otherwise, this field must contain 0.
     pub index1: Option<u16>,
@@ -468,7 +473,7 @@ pub struct MeshFragmentMeshOpEntry {
     /// _Unknown_ - It seems to control whether `index1`, `index2`, and `offset` exist. It can only
     /// contain values in the range 1-4. It looks like the [MeshFragmentMeshOpEntry]s are broken up into
     /// blocks, where each block is terminated by an entry where `type_field` is 4.
-    /// 
+    ///
     /// The type of MESHOP, one of:
     /// 1: SW (vertex_index: u16, vertex_index: u16, type: u8) e.g. "MESHOP_SW 1553 1 1569" where the arguments are re-arranged to 1553 1569 0
     /// 2: FA (face_index: u16) + 3 empty bytes
