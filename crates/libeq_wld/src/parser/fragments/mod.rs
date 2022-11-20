@@ -8,6 +8,8 @@ mod camera;
 mod camera_reference;
 mod common;
 mod first;
+mod four_d_sprite;
+mod four_d_sprite_def;
 mod light_info;
 mod light_source;
 mod light_source_reference;
@@ -65,6 +67,8 @@ pub use camera::*;
 pub use camera_reference::*;
 pub use common::*;
 pub use first::*;
+pub use four_d_sprite::*;
+pub use four_d_sprite_def::*;
 pub use light_info::*;
 pub use light_source::*;
 pub use light_source_reference::*;
@@ -157,6 +161,8 @@ pub enum FragmentType {
     Camera(CameraFragment),
     CameraReference(CameraReferenceFragment),
     First(FirstFragment),
+    FourDSprite(FourDSpriteFragment),
+    FourDSpriteDef(FourDSpriteDefFragment),
     LightInfo(LightInfoFragment),
     LightSource(LightSourceFragment),
     LightSourceReference(LightSourceReferenceFragment),
@@ -208,6 +214,8 @@ impl Deref for FragmentType {
             Self::Camera(x) => x,
             Self::CameraReference(x) => x,
             Self::First(x) => x,
+            Self::FourDSprite(x) => x,
+            Self::FourDSpriteDef(x) => x,
             Self::LightInfo(x) => x,
             Self::LightSource(x) => x,
             Self::LightSourceReference(x) => x,
