@@ -190,7 +190,7 @@ impl FragmentParser for AlternateMeshFragment {
             FragmentRef::parse,
             le_u32,
             tuple((le_f32, le_f32, le_f32)),
-            tuple((le_f32, le_f32, le_f32))
+            tuple((le_f32, le_f32, le_f32)),
         ))(input)?;
 
         let (
@@ -420,7 +420,15 @@ impl Fragment for AlternateMeshFragment {
                 [p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes()].concat()
             })[..],
             &self.params3.map_or(vec![], |p| {
-                [p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes(), p.3.to_le_bytes(), p.4.to_le_bytes(), p.5.to_le_bytes()].concat()
+                [
+                    p.0.to_le_bytes(),
+                    p.1.to_le_bytes(),
+                    p.2.to_le_bytes(),
+                    p.3.to_le_bytes(),
+                    p.4.to_le_bytes(),
+                    p.5.to_le_bytes(),
+                ]
+                .concat()
             })[..],
         ]
         .concat()
@@ -510,7 +518,7 @@ pub struct AlternateMeshFragmentMeshopEntry {
     pub param1: u16,
 
     /// _Unknown_
-    pub param2: u16, 
+    pub param2: u16,
 }
 
 impl AlternateMeshFragmentMeshopEntry {

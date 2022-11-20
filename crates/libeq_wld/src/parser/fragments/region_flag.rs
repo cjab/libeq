@@ -141,7 +141,10 @@ mod tests {
         assert_eq!(frag.region_count, 2);
         assert_eq!(frag.regions, vec![4521, 4523]);
         assert_eq!(frag.user_data_size, 47);
-        assert_eq!(frag.user_data, "DRNTP00002-00030000357999999999___000000000000");
+        assert_eq!(
+            frag.user_data,
+            "DRNTP00002-00030000357999999999___000000000000"
+        );
     }
 
     #[test]
