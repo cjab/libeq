@@ -474,6 +474,14 @@ impl<'a> FragmentHeader<'a> {
                 PaletteFileFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::PaletteFile(f.1))),
             ),
+            FourDSpriteFragment::TYPE_ID => Some(
+                FourDSpriteFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::FourDSprite(f.1))),
+            ),
+            FourDSpriteDefFragment::TYPE_ID => Some(
+                FourDSpriteDefFragment::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::FourDSpriteDef(f.1))),
+            ),
             _ => None,
         };
 
