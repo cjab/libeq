@@ -52,11 +52,14 @@ impl EqArchive {
         let files = archive
             .filenames()
             .iter()
-            .map(|filename| {
+            .enumerate()
+            .map(|(position, filename)| {
                 Ok((
                     filename.to_owned(),
                     archive
-                        .get(filename)
+                        .index_entries
+                        .get(position)
+                        .map(|entry| entry.decompress(&archive.blocks))
                         .ok_or(Error::FileNotFound(filename.to_string()))?,
                 ))
             })
@@ -182,17 +185,6 @@ impl Archive {
         let (_, directory) =
             Directory::parse(&directory_data).expect("Failed to parse directory block");
         directory.filenames
-    }
-
-    fn get(&self, filename: &str) -> Option<Vec<u8>> {
-        self.filenames()
-            .iter()
-            .position(|f| f.eq_ignore_ascii_case(filename))
-            .and_then(|position| {
-                self.index_entries
-                    .get(position)
-                    .map(|entry| entry.decompress(&self.blocks))
-            })
     }
 }
 
