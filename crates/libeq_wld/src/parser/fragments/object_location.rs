@@ -3,7 +3,7 @@ use std::any::Any;
 use super::common::Location;
 use super::{Fragment, FragmentParser, StringReference, WResult, VertexColorReferenceFragment, FragmentRef};
 
-use nom::number::complete::{le_f32, le_i32, le_u32};
+use nom::number::complete::{le_f32, le_u32};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
