@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::common::Location;
-use super::{Fragment, FragmentParser, StringReference, WResult};
+use super::{Fragment, FragmentParser, StringReference, WResult, VertexColorReferenceFragment, FragmentRef};
 
 use nom::number::complete::{le_f32, le_i32, le_u32};
 
@@ -55,7 +55,7 @@ pub struct ObjectLocationFragment {
 
     // Typically contains 30 when used in main zone files and 0 when used for
     // placeable objects. This field only exists if `fragment2` points to a fragment.
-    pub unknown: i32,
+    pub vertex_color_reference: FragmentRef<VertexColorReferenceFragment>,
 }
 
 impl FragmentParser for ObjectLocationFragment {
@@ -94,7 +94,7 @@ impl FragmentParser for ObjectLocationFragment {
         } else {
             (i, None)
         };
-        let (i, unknown) = le_i32(i)?;
+        let (i, vertex_color_reference) = FragmentRef::parse(i)?;
 
         Ok((
             i,
@@ -108,7 +108,7 @@ impl FragmentParser for ObjectLocationFragment {
                 bounding_radius,
                 scale_factor,
                 sound_name_reference,
-                unknown,
+                vertex_color_reference
             },
         ))
     }
@@ -132,7 +132,7 @@ impl Fragment for ObjectLocationFragment {
                 .scale_factor
                 .map_or(vec![], |s| s.to_le_bytes().to_vec())[..],
             &self.sound_name_reference.map_or(vec![], |s| s.into_bytes())[..],
-            &self.unknown.to_le_bytes()[..],
+            &self.vertex_color_reference.into_bytes()[..],
         ]
         .concat()
     }
@@ -230,7 +230,7 @@ mod tests {
         assert_eq!(frag.bounding_radius, Some(0.5));
         assert_eq!(frag.scale_factor, Some(0.5));
         assert_eq!(frag.sound_name_reference, None);
-        assert_eq!(frag.unknown, 0x0);
+        assert_eq!(frag.vertex_color_reference, FragmentRef::new(0));
     }
 
     #[test]
