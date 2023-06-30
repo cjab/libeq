@@ -3,7 +3,7 @@ use std::any::Any;
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::multi::count;
-use nom::number::complete::{le_i16, le_u32};
+use nom::number::complete::{le_f32, le_i16, le_u32};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -51,22 +51,17 @@ pub struct MobSkeletonPieceTrackFragment {
     pub name_reference: StringReference,
 
     /// Most flags are _unknown_.
-    /// * bit 3 - If set then `data2` exists (though I’m not at all sure about this since I
-    ///           have yet to see an example). It could instead mean that the rotation and
-    ///           shift entries are `u32`s or it could mean that they’re `f32`s.
+    /// * bit 3 - If set then the fragment uses `legacy_frame_transforms`
     pub flags: u32,
 
-    /// The number of `FrameTransform`s and `data2` entries there are.
+    /// The number of `FrameTransform` and `LegacyFrameTransform` entries there are.
     /// NUMFRAMES
     pub frame_count: u32,
 
-    /// FRAMETRANSFORM
-    pub frame_transforms: Vec<FrameTransform>,
+    pub frame_transforms: Option<Vec<FrameTransform>>,
 
-    /// _Unknown_ - There are (4 x Size) DWORDs here. This field exists only if the proper bit
-    /// in Flags is set. It’s possible that this is a bogus field and really just represents
-    /// the above fields in some sort of 32-bit form
-    pub data2: Option<Vec<u8>>,
+    /// FRAMETRANSFORM
+    pub legacy_frame_transforms: Option<Vec<LegacyFrameTransform>>,
 }
 
 impl FragmentParser for MobSkeletonPieceTrackFragment {
@@ -79,25 +74,14 @@ impl FragmentParser for MobSkeletonPieceTrackFragment {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, frame_count) = le_u32(i)?;
-        let (i, frame_transforms) = count(FrameTransform::parse, frame_count as usize)(i)?;
-
-        let (i, data2) = if i.len() > 0 && (flags & 0x08 == 0x08) {
-            (&i[0..0], Some(i.to_vec()))
+        let (i, frame_transforms, legacy_frame_transforms) = if flags & 0x08 == 0x08 {
+            let (i, frame_transforms) = count(FrameTransform::parse, frame_count as usize)(i)?;
+            (i, Some(frame_transforms), None)
         } else {
-            (i, None)
+            let (i, legacy_frame_transforms) =
+                count(LegacyFrameTransform::parse, frame_count as usize)(i)?;
+            (i, None, Some(legacy_frame_transforms))
         };
-        if i.len() > 0 {
-            panic!(
-                "Data2 of MobSkeletonPieceTrackFragment found - flags: {:?}, size: {:?}, len: {:?}, remaining: {:?}",
-                flags, frame_count, i.len(), i
-            );
-        }
-
-        //let (remaining, data2) = if flags & 0x08 == 0x08 {
-        //    count(le_i32, (size * 4) as usize)(i).map(|(i, data2)| (i, Some(data2)))?
-        //} else {
-        //    (i, None)
-        //};
 
         Ok((
             i,
@@ -106,7 +90,7 @@ impl FragmentParser for MobSkeletonPieceTrackFragment {
                 flags,
                 frame_count,
                 frame_transforms,
-                data2,
+                legacy_frame_transforms,
             },
         ))
     }
@@ -118,12 +102,12 @@ impl Fragment for MobSkeletonPieceTrackFragment {
             &self.name_reference.into_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.frame_count.to_le_bytes()[..],
-            &self
-                .frame_transforms
-                .iter()
-                .flat_map(|t| t.into_bytes())
-                .collect::<Vec<_>>()[..],
-            &self.data2.as_ref().map_or(vec![], |d| d.to_vec())[..],
+            &self.frame_transforms.as_ref().map_or(vec![], |ft| {
+                ft.iter().flat_map(|f| f.into_bytes()).collect()
+            })[..],
+            &self.legacy_frame_transforms.as_ref().map_or(vec![], |ft| {
+                ft.iter().flat_map(|f| f.into_bytes()).collect()
+            })[..],
         ]
         .concat()
     }
@@ -215,6 +199,77 @@ impl FrameTransform {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+/// When compressed from ascii the rotation is converted to a quaternion
+/// The ascii represention is euler angles out of 512
+pub struct LegacyFrameTransform {
+    /// The x component of the rotation quaternion.
+    pub rotate_x: f32,
+
+    /// The y component of the rotation quaternion.
+    pub rotate_y: f32,
+
+    /// The z component of the rotation quaternion.
+    pub rotate_z: f32,
+
+    /// The w component of the rotation quaternion.
+    pub rotate_w: f32,
+
+    /// The numerator for translation along the X axis.
+    pub shift_x_numerator: f32,
+
+    /// The numerator for translation along the Y axis.
+    pub shift_y_numerator: f32,
+
+    /// The numerator for translation along the Z axis.
+    pub shift_z_numerator: f32,
+
+    /// The denominator for the piece X, Y, and Z shift values.
+    /// Software should check to see if this is zero and ignore translation in that case.
+    pub shift_denominator: f32,
+}
+
+impl LegacyFrameTransform {
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, shift_denominator) = le_f32(input)?;
+        let (i, shift_x_numerator) = le_f32(i)?;
+        let (i, shift_y_numerator) = le_f32(i)?;
+        let (i, shift_z_numerator) = le_f32(i)?;
+        let (i, rotate_w) = le_f32(i)?;
+        let (i, rotate_x) = le_f32(i)?;
+        let (i, rotate_y) = le_f32(i)?;
+        let (i, rotate_z) = le_f32(i)?;
+
+        Ok((
+            i,
+            Self {
+                shift_denominator,
+                shift_x_numerator,
+                shift_y_numerator,
+                shift_z_numerator,
+                rotate_w,
+                rotate_x,
+                rotate_y,
+                rotate_z,
+            },
+        ))
+    }
+    fn into_bytes(&self) -> Vec<u8> {
+        [
+            &self.shift_denominator.to_le_bytes()[..],
+            &self.shift_x_numerator.to_le_bytes()[..],
+            &self.shift_y_numerator.to_le_bytes()[..],
+            &self.shift_z_numerator.to_le_bytes()[..],
+            &self.rotate_w.to_le_bytes()[..],
+            &self.rotate_x.to_le_bytes()[..],
+            &self.rotate_y.to_le_bytes()[..],
+            &self.rotate_z.to_le_bytes()[..],
+        ]
+        .concat()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -229,7 +284,7 @@ mod tests {
         assert_eq!(frag.frame_count, 1);
         assert_eq!(
             frag.frame_transforms,
-            vec![FrameTransform {
+            Some(vec![FrameTransform {
                 rotate_denominator: 16384,
                 rotate_x_numerator: 0,
                 rotate_y_numerator: 0,
@@ -238,14 +293,78 @@ mod tests {
                 shift_y_numerator: 0,
                 shift_z_numerator: 0,
                 shift_denominator: 256,
-            }]
+            }])
         );
-        assert_eq!(frag.data2, None);
+        assert_eq!(frag.legacy_frame_transforms, None);
     }
 
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
+        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.into_bytes()[..], data);
+    }
+
+    #[test]
+    fn it_parses_eq_beta() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip_beta/0652-0x12.frag")[..];
+        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-7183));
+        assert_eq!(frag.flags, 0x0);
+        assert_eq!(frag.frame_count, 12);
+        assert_eq!(frag.frame_transforms, None);
+        assert_eq!(
+            frag.legacy_frame_transforms.unwrap()[11],
+            LegacyFrameTransform {
+                rotate_x: 0.49999997,
+                rotate_y: 0.49999997,
+                rotate_z: 0.49999997,
+                rotate_w: 0.49999997,
+                shift_x_numerator: 0.8134234,
+                shift_y_numerator: 0.10555774,
+                shift_z_numerator: -0.18399855,
+                shift_denominator: 1.0
+            }
+        );
+    }
+
+    #[test]
+    fn it_serializes_eq_beta() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip_beta/0652-0x12.frag")[..];
+        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+
+        assert_eq!(&frag.into_bytes()[..], data);
+    }
+
+    #[test]
+    fn it_parses_rtk() {
+        let data = &include_bytes!("../../../fixtures/fragments/rtk/0002-0x12.frag")[..];
+        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-46));
+        assert_eq!(frag.flags, 0x0);
+        assert_eq!(frag.frame_count, 369);
+        assert_eq!(frag.frame_transforms, None);
+        assert_eq!(
+            frag.legacy_frame_transforms.unwrap()[368],
+            LegacyFrameTransform {
+                rotate_x: -0.01825354,
+                rotate_y: 0.012494401,
+                rotate_z: -0.012042822,
+                rotate_w: 0.99968284,
+                shift_x_numerator: 0.0,
+                shift_y_numerator: 0.0,
+                shift_z_numerator: 44.48,
+                shift_denominator: 0.999999
+            }
+        );
+    }
+
+    #[test]
+    fn it_serializes_rtk() {
+        let data = &include_bytes!("../../../fixtures/fragments/rtk/0002-0x12.frag")[..];
         let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
