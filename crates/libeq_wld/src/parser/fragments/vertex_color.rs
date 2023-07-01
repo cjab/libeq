@@ -10,7 +10,7 @@ use nom::sequence::tuple;
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// **Type ID:** 0x32
 pub struct VertexColorFragment {
     pub name_reference: StringReference,
