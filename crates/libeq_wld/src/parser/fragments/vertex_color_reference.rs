@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, MeshAnimatedVerticesFragment, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, VertexColorFragment, StringReference, WResult,
 };
 
 use nom::number::complete::le_u32;
@@ -18,8 +18,8 @@ use serde::{Deserialize, Serialize};
 pub struct VertexColorReferenceFragment {
     pub name_reference: StringReference,
 
-    /// The [MeshAnimatedVerticesFragment] reference.
-    pub reference: FragmentRef<MeshAnimatedVerticesFragment>,
+    /// The [VertexColorFragment] reference.
+    pub reference: FragmentRef<VertexColorFragment>,
 
     /// _Unknown_ - Usually contains 0.
     pub flags: u32,
