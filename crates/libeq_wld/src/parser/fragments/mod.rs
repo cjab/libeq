@@ -35,7 +35,7 @@ mod skeleton_track_set_reference;
 mod sphere_list;
 mod sphere_list_def;
 mod texture;
-mod texture_images;
+mod bm_info;
 mod texture_images_rtk;
 mod texture_reference;
 mod two_dimensional_object;
@@ -94,7 +94,7 @@ pub use skeleton_track_set_reference::*;
 pub use sphere_list::*;
 pub use sphere_list_def::*;
 pub use texture::*;
-pub use texture_images::*;
+pub use bm_info::*;
 pub use texture_images_rtk::*;
 pub use texture_reference::*;
 pub use two_dimensional_object::*;
@@ -188,7 +188,7 @@ pub enum FragmentType {
     SphereList(SphereListFragment),
     SphereListDef(SphereListDefFragment),
     Texture(TextureFragment),
-    TextureImages(TextureImagesFragment),
+    BmInfo(BmInfo),
     TextureImagesRtk(TextureImagesRtkFragment),
     TextureReference(TextureReferenceFragment),
     TwoDimensionalObject(TwoDimensionalObjectFragment),
@@ -241,7 +241,7 @@ impl Deref for FragmentType {
             Self::SphereList(x) => x,
             Self::SphereListDef(x) => x,
             Self::Texture(x) => x,
-            Self::TextureImages(x) => x,
+            Self::BmInfo(x) => x,
             Self::TextureImagesRtk(x) => x,
             Self::TextureReference(x) => x,
             Self::TwoDimensionalObject(x) => x,

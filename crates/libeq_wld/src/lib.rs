@@ -376,10 +376,10 @@ impl<'a> Texture<'a> {
         self.fragment
             .frame_references
             .iter()
-            // [TextureFragment]s reference a [TextureImagesFragment]
+            // [TextureFragment]s reference a [BmInfo]
             .map(move |r| self.doc.get(&r))
             .flat_map(|image| match image {
-                // The [TextureImagesFragment] itself contains a collection of filenames. In
+                // The [BmInfo] itself contains a collection of filenames. In
                 // practice this seems to always be just a single filename.
                 Some(i) => i
                     .entries

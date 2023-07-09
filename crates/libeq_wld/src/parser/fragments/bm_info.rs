@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 /// BMINFO "Name" "FileName1.bmp" "FileName2.dds"
 ///
 /// **Type ID:** 0x03
-pub struct TextureImagesFragment {
+pub struct BmInfo {
     pub name_reference: StringReference,
 
     /// Contains the number of texture filenames in this fragment minus 1.
@@ -36,19 +36,19 @@ pub struct TextureImagesFragment {
     pub entries: Vec<EncodedFilename>,
 }
 
-impl FragmentParser for TextureImagesFragment {
+impl FragmentParser for BmInfo {
     type T = Self;
 
     const TYPE_ID: u32 = 0x03;
-    const TYPE_NAME: &'static str = "TextureImages";
+    const TYPE_NAME: &'static str = "BmInfo";
 
-    fn parse(input: &[u8]) -> WResult<TextureImagesFragment> {
+    fn parse(input: &[u8]) -> WResult<BmInfo> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, entry_count) = le_u32(i)?;
         let (remaining, entries) = count(EncodedFilename::parse, (entry_count + 1) as usize)(i)?;
         Ok((
             remaining,
-            TextureImagesFragment {
+            BmInfo {
                 name_reference,
                 entry_count,
                 entries,
@@ -57,7 +57,7 @@ impl FragmentParser for TextureImagesFragment {
     }
 }
 
-impl Fragment for TextureImagesFragment {
+impl Fragment for BmInfo {
     fn into_bytes(&self) -> Vec<u8> {
         let entry_count: u32 = (self.entries.len() - 1).try_into().unwrap();
         let bytes = [
@@ -98,7 +98,7 @@ mod tests {
     fn it_parses() {
         #![allow(overflowing_literals)]
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0001-0x03.frag")[..];
-        let frag = TextureImagesFragment::parse(data).unwrap().1;
+        let frag = BmInfo::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0xffffffff));
         assert_eq!(frag.entry_count, 0);
@@ -111,7 +111,7 @@ mod tests {
     fn it_parses_multiple_entries() {
         #![allow(overflowing_literals)]
         let data = &include_bytes!("../../../fixtures/fragments/twilight/0000-0x03.frag")[..];
-        let frag = TextureImagesFragment::parse(data).unwrap().1;
+        let frag = BmInfo::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0xffffffff));
         assert_eq!(frag.entry_count, 7);
@@ -126,7 +126,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0029-0x03.frag")[..];
-        let frag = TextureImagesFragment::parse(data).unwrap().1;
+        let frag = BmInfo::parse(data).unwrap().1;
 
         assert_eq!([frag.into_bytes(), vec![0]].concat(), data);
     }
@@ -134,7 +134,7 @@ mod tests {
     #[test]
     fn it_serializes_with_multiple_entries_and_padding() {
         let data = &include_bytes!("../../../fixtures/fragments/twilight/0000-0x03.frag")[..];
-        let frag = TextureImagesFragment::parse(data).unwrap().1;
+        let frag = BmInfo::parse(data).unwrap().1;
 
         assert_eq!([frag.into_bytes(), vec![0]].concat(), data);
     }

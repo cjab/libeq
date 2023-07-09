@@ -32,7 +32,7 @@
     <tr>
       <td>0x03</td>
       <td>3</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/texture_images.rs">TextureImages</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/bm_info.rs">BmInfo</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x03--texture-bitmap-names--plain">Texture Bitmap Name(s)</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#frame---0x03">FRAME and BMINFO</a></td>
     </tr>
