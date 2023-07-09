@@ -161,7 +161,7 @@ pub struct MeshFragment {
     /// The first element of the tuple is the number of vertices in a skeleton piece.
     ///
     /// The second element of the tuple is the index of the piece according to the
-    /// [SkeletonTrackSet] fragment. The very first piece (index 0) is usually not referenced here
+    /// [HierarchicalSpriteDef] fragment. The very first piece (index 0) is usually not referenced here
     /// as it is usually jsut a "stem" starting point for the skeleton. Only those pieces
     /// referenced here in the mesh should actually be rendered. Any other pieces in the skeleton
     /// contain no vertices or faces And have other purposes.

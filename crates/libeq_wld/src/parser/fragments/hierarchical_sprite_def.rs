@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// This fragment describes a skeleton for an entire animated model, and is used for mob
-/// models. The overall skeleton is contained in a 0x10 [SkeletonTrackSetFragment] and
+/// models. The overall skeleton is contained in a 0x10 [HierarchicalSpriteDef] and
 /// is structured as a hierarchical tree. For example, a pelvis piece might connect to chest,
 /// left thigh, and right thigh pieces. The chest piece might connect to left bicep, right
 /// bicep, and neck pieces. The left bicep piece might connect to a left forearm piece.
@@ -24,14 +24,14 @@ use serde::{Deserialize, Serialize};
 /// how that piece is rotated and/or shifted relative to its parent piece.
 ///
 /// **Type ID:** 0x10
-pub struct SkeletonTrackSetFragment {
+pub struct HierarchicalSpriteDef {
     pub name_reference: StringReference,
 
     /// Most flags are _unknown_.
     /// * bit 0 - If set then `center_offset` exists.
     /// * bit 1 - If set then `bounding_radius` exists.
     /// * bit 9 - If set then `size2`, `fragment3`, and `data3` exist.
-    pub flags: SkeletonTrackSetFlags,
+    pub flags: HierarchicalSpriteDefFlags,
 
     /// The number of track reference entries
     pub num_dags: u32,
@@ -60,15 +60,15 @@ pub struct SkeletonTrackSetFragment {
     pub link_skin_updates_to_dag_index: Option<Vec<u32>>,
 }
 
-impl FragmentParser for SkeletonTrackSetFragment {
+impl FragmentParser for HierarchicalSpriteDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x10;
-    const TYPE_NAME: &'static str = "SkeletonTrackSet";
+    const TYPE_NAME: &'static str = "HierarchicalSpriteDef";
 
-    fn parse(input: &[u8]) -> WResult<SkeletonTrackSetFragment> {
+    fn parse(input: &[u8]) -> WResult<HierarchicalSpriteDef> {
         let (i, name_reference) = StringReference::parse(input)?;
-        let (i, flags) = SkeletonTrackSetFlags::parse(i)?;
+        let (i, flags) = HierarchicalSpriteDefFlags::parse(i)?;
         let (i, num_dags) = le_u32(i)?;
         let (i, collision_volume_reference) = le_u32(i)?;
 
@@ -103,7 +103,7 @@ impl FragmentParser for SkeletonTrackSetFragment {
 
         Ok((
             remaining,
-            SkeletonTrackSetFragment {
+            HierarchicalSpriteDef {
                 name_reference,
                 flags,
                 num_dags,
@@ -121,7 +121,7 @@ impl FragmentParser for SkeletonTrackSetFragment {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// Entries in the map's [SkeletonTrackSetFragment]
+/// Entries in the map's [HierarchicalSpriteDef]
 pub struct Dag {
     /// This seems to refer to the name of either this or another 0x10 fragment.
     /// It seems that at least one name reference points to the name of this fragment.
@@ -215,7 +215,7 @@ impl Dag {
     }
 }
 
-impl Fragment for SkeletonTrackSetFragment {
+impl Fragment for HierarchicalSpriteDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -263,9 +263,9 @@ impl Fragment for SkeletonTrackSetFragment {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-pub struct SkeletonTrackSetFlags(u32);
+pub struct HierarchicalSpriteDefFlags(u32);
 
-impl SkeletonTrackSetFlags {
+impl HierarchicalSpriteDefFlags {
     const HAS_CENTER_OFFSET: u32 = 0x01;
     const HAS_BOUNDING_RADIUS: u32 = 0x02;
     const UNKNOWN_FLAG: u32 = 0x200;
@@ -299,7 +299,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0013-0x10.frag")[..];
-        let frag = SkeletonTrackSetFragment::parse(data).unwrap().1;
+        let frag = HierarchicalSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-211));
         assert_eq!(frag.num_dags, 3);
@@ -322,7 +322,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0013-0x10.frag")[..];
-        let frag = SkeletonTrackSetFragment::parse(data).unwrap().1;
+        let frag = HierarchicalSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
