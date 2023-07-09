@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [PolygonAnimationFragment].
 ///
 /// **Type ID:** 0x18
-pub struct PolygonAnimationReferenceFragment {
+pub struct Polyhedron {
     pub name_reference: StringReference,
 
     /// The [PolygonAnimationFragment] reference.
@@ -28,13 +28,13 @@ pub struct PolygonAnimationReferenceFragment {
     pub scale_factor: Option<f32>,
 }
 
-impl FragmentParser for PolygonAnimationReferenceFragment {
+impl FragmentParser for Polyhedron {
     type T = Self;
 
     const TYPE_ID: u32 = 0x18;
-    const TYPE_NAME: &'static str = "PolygonAnimationReference";
+    const TYPE_NAME: &'static str = "Polyhedron";
 
-    fn parse(input: &[u8]) -> WResult<PolygonAnimationReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<Polyhedron> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, reference) = FragmentRef::parse(i)?;
         let (i, flags) = PolyhedronFlags::parse(i)?;
@@ -56,7 +56,7 @@ impl FragmentParser for PolygonAnimationReferenceFragment {
     }
 }
 
-impl Fragment for PolygonAnimationReferenceFragment {
+impl Fragment for Polyhedron {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -110,7 +110,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/1418-0x18.frag")[..];
-        let frag = PolygonAnimationReferenceFragment::parse(data).unwrap().1;
+        let frag = Polyhedron::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(0x058a));
@@ -121,7 +121,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/1418-0x18.frag")[..];
-        let frag = PolygonAnimationReferenceFragment::parse(data).unwrap().1;
+        let frag = Polyhedron::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

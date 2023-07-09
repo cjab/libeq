@@ -141,8 +141,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             PolygonAnimationFragment::TYPE_NAME,
             Color::Rgb(0xff, 0x45, 0x00),
         ),
-        FragmentType::PolygonAnimationReference(_) => (
-            PolygonAnimationReferenceFragment::TYPE_NAME,
+        FragmentType::Polyhedron(_) => (
+            Polyhedron::TYPE_NAME,
             Color::Rgb(0xff, 0x8c, 0x00),
         ),
         FragmentType::RegionFlag(_) => {

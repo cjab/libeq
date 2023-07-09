@@ -370,9 +370,9 @@ impl<'a> FragmentHeader<'a> {
                 LightSourceFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::LightSource(f.1))),
             ),
-            PolygonAnimationReferenceFragment::TYPE_ID => Some(
-                PolygonAnimationReferenceFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::PolygonAnimationReference(f.1))),
+            Polyhedron::TYPE_ID => Some(
+                Polyhedron::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Polyhedron(f.1))),
             ),
             PolygonAnimationFragment::TYPE_ID => Some(
                 PolygonAnimationFragment::parse(&self.field_data)
