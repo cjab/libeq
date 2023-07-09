@@ -1,4 +1,4 @@
-mod alternate_mesh;
+mod dm_sprite_def;
 mod ambient_light;
 mod blit_sprite_definition;
 mod blit_sprite_reference;
@@ -57,7 +57,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{StringReference, WResult};
 
-pub use alternate_mesh::*;
+pub use dm_sprite_def::*;
 pub use ambient_light::*;
 pub use blit_sprite_definition::*;
 pub use blit_sprite_reference::*;
@@ -152,7 +152,7 @@ pub trait FragmentParser {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub enum FragmentType {
-    AlternateMesh(AlternateMeshFragment),
+    DmSpriteDef(DmSpriteDef),
     AmbientLight(AmbientLightFragment),
     BlitSpriteDefinition(BlitSpriteDefinitionFragment),
     BlitSpriteReference(BlitSpriteReferenceFragment),
@@ -205,7 +205,7 @@ impl Deref for FragmentType {
 
     fn deref(&self) -> &Self::Target {
         match self {
-            Self::AlternateMesh(x) => x,
+            Self::DmSpriteDef(x) => x,
             Self::AmbientLight(x) => x,
             Self::BlitSpriteDefinition(x) => x,
             Self::BlitSpriteReference(x) => x,

@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 /// far so the information here is uncertain.
 ///
 /// **Type ID:** 0x2c
-pub struct AlternateMeshFragment {
+pub struct DmSpriteDef {
     pub name_reference: StringReference,
 
     /// Most fields are _unknown_. This usually contains 0x00001803.
@@ -100,10 +100,10 @@ pub struct AlternateMeshFragment {
     /// _Unknown_ - There are `face_count` of these.
     /// First tuple value seems to be flags, usually contains 0x004b for faces.
     /// Second tuple values are usually zero. Their purpose is _unknown_.
-    pub faces: Vec<AlternateMeshFragmentFaceEntry>,
+    pub faces: Vec<DmSpriteDefFaceEntry>,
 
     /// There are `meshop_count` of these.
-    pub meshops: Vec<AlternateMeshFragmentMeshopEntry>,
+    pub meshops: Vec<DmSpriteDefMeshopEntry>,
 
     /// The first element of the tuple is the number of vertices in a skeleton piece.
     ///
@@ -151,13 +151,13 @@ pub struct AlternateMeshFragment {
     pub params3: Option<(f32, f32, f32, f32, f32, f32)>,
 }
 
-impl FragmentParser for AlternateMeshFragment {
+impl FragmentParser for DmSpriteDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2c;
-    const TYPE_NAME: &'static str = "AlternateMesh";
+    const TYPE_NAME: &'static str = "DmSpriteDef";
 
-    fn parse(input: &[u8]) -> WResult<AlternateMeshFragment> {
+    fn parse(input: &[u8]) -> WResult<DmSpriteDef> {
         let (
             i,
             (
@@ -209,9 +209,9 @@ impl FragmentParser for AlternateMeshFragment {
             count(tuple((le_f32, le_f32)), texture_coordinate_count as usize),
             count(tuple((le_f32, le_f32, le_f32)), normal_count as usize),
             count(le_u32, color_count as usize),
-            count(AlternateMeshFragmentFaceEntry::parse, face_count as usize),
+            count(DmSpriteDefFaceEntry::parse, face_count as usize),
             count(
-                AlternateMeshFragmentMeshopEntry::parse,
+                DmSpriteDefMeshopEntry::parse,
                 meshop_count as usize,
             ),
             count(
@@ -288,7 +288,7 @@ impl FragmentParser for AlternateMeshFragment {
 
         Ok((
             i,
-            AlternateMeshFragment {
+            DmSpriteDef {
                 name_reference,
                 flags,
                 vertex_count,
@@ -323,7 +323,7 @@ impl FragmentParser for AlternateMeshFragment {
     }
 }
 
-impl Fragment for AlternateMeshFragment {
+impl Fragment for DmSpriteDef {
     fn into_bytes(&self) -> Vec<u8> {
         let vertices = self
             .vertices
@@ -449,8 +449,8 @@ impl Fragment for AlternateMeshFragment {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-/// Represents a polygon within a [AlternativeMeshFragment].
-pub struct AlternateMeshFragmentFaceEntry {
+/// Represents a polygon within a [DmSpriteDef].
+pub struct DmSpriteDefFaceEntry {
     /// This is usually 0 except the first face which has a unique value each time (probably not flags)
     pub flags: u16,
 
@@ -463,7 +463,7 @@ pub struct AlternateMeshFragmentFaceEntry {
     pub vertex_indexes: (u16, u16, u16),
 }
 
-impl AlternateMeshFragmentFaceEntry {
+impl DmSpriteDefFaceEntry {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.flags.to_le_bytes()[..],
@@ -479,8 +479,8 @@ impl AlternateMeshFragmentFaceEntry {
     }
 }
 
-impl AlternateMeshFragmentFaceEntry {
-    fn parse(input: &[u8]) -> WResult<AlternateMeshFragmentFaceEntry> {
+impl DmSpriteDefFaceEntry {
+    fn parse(input: &[u8]) -> WResult<DmSpriteDefFaceEntry> {
         let (remaining, (flags, data, vertex_indexes)) = tuple((
             le_u16,
             tuple((le_u16, le_u16, le_u16, le_u16)),
@@ -488,7 +488,7 @@ impl AlternateMeshFragmentFaceEntry {
         ))(input)?;
         Ok((
             remaining,
-            AlternateMeshFragmentFaceEntry {
+            DmSpriteDefFaceEntry {
                 flags,
                 data,
                 vertex_indexes,
@@ -499,7 +499,7 @@ impl AlternateMeshFragmentFaceEntry {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-pub struct AlternateMeshFragmentMeshopEntry {
+pub struct DmSpriteDefMeshopEntry {
     /// _Unknown_ - It seems to control whether VertexIndex1, VertexIndex2, and Offset exist.
     /// It can only contain values in the range 1 to 4. It looks like the Data9 entries are broken
     /// up into blocks, where each block is terminated by an entry where Data9Type is 4.
@@ -521,7 +521,7 @@ pub struct AlternateMeshFragmentMeshopEntry {
     pub param2: u16,
 }
 
-impl AlternateMeshFragmentMeshopEntry {
+impl DmSpriteDefMeshopEntry {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.type_field.to_le_bytes()[..],
@@ -536,8 +536,8 @@ impl AlternateMeshFragmentMeshopEntry {
     }
 }
 
-impl AlternateMeshFragmentMeshopEntry {
-    fn parse(input: &[u8]) -> WResult<AlternateMeshFragmentMeshopEntry> {
+impl DmSpriteDefMeshopEntry {
+    fn parse(input: &[u8]) -> WResult<DmSpriteDefMeshopEntry> {
         let (remaining, type_field) = le_u32(input)?;
 
         let (remaining, offset) = if type_field == 4 {
@@ -556,7 +556,7 @@ impl AlternateMeshFragmentMeshopEntry {
 
         Ok((
             remaining,
-            AlternateMeshFragmentMeshopEntry {
+            DmSpriteDefMeshopEntry {
                 type_field,
                 vertex_index,
                 offset,
@@ -574,7 +574,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
-        let frag = AlternateMeshFragment::parse(data).unwrap().1;
+        let frag = DmSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-44));
         assert_eq!(frag.flags, 0x1802);
@@ -621,7 +621,7 @@ mod tests {
     #[test]
     fn it_parses_with_bit14() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip_beta/0567-0x2c.frag")[..];
-        let frag = AlternateMeshFragment::parse(data).unwrap().1;
+        let frag = DmSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-6091));
         assert_eq!(frag.flags, 0x5803);
@@ -658,7 +658,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
-        let frag = AlternateMeshFragment::parse(data).unwrap().1;
+        let frag = DmSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

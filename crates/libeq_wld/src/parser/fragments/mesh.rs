@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// This is the fragment most often used for models. However, [AlternateMeshFragment] fragment
+/// This is the fragment most often used for models. However, [DmSpriteDef] fragment
 /// is also sometimes used.
 ///
 /// **Type ID:** 0x36

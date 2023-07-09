@@ -319,7 +319,7 @@
     <tr>
       <td>0x2c</td>
       <td>44</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/alternate_mesh.rs">AlternateMesh</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_sprite_def.rs">DmSpriteDef</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x2c--alternate-mesh--plain">Alternate Mesh</a></td>
       <td>DMSPRITEDEF (suspected)</td>
     </tr>
