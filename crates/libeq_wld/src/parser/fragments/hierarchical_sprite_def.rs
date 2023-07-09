@@ -36,7 +36,7 @@ pub struct HierarchicalSpriteDef {
     /// The number of track reference entries
     pub num_dags: u32,
 
-    /// Optionally points to a 0x18 [PolygonAnimationReferenceFragment]?
+    /// Optionally points to a 0x18 [Polyhedron]?
     /// TODO: This still needs investigation
     pub collision_volume_reference: u32,
 
