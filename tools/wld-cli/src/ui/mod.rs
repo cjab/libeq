@@ -198,8 +198,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             WorldVerticesFragment::TYPE_NAME,
             Color::Rgb(0x59, 0x48, 0x78),
         ),
-        FragmentType::ZoneUnknown(_) => {
-            (ZoneUnknownFragment::TYPE_NAME, Color::Rgb(0xb0, 0x30, 0x60))
+        FragmentType::Sphere(_) => {
+            (Sphere::TYPE_NAME, Color::Rgb(0xb0, 0x30, 0x60))
         }
     }
 }

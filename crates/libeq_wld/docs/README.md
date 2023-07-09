@@ -165,7 +165,7 @@
     <tr>
       <td>0x16</td>
       <td>22</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/zone_unknown.rs">ZoneUnknown</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/sphere.rs">Sphere</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x16--zone-unknown--plain">Zone Unknown</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#0x16">SPHERE (ref)</a></td>
     </tr>

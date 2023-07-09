@@ -44,7 +44,7 @@ mod unknown_0x2e;
 mod vertex_color;
 mod vertex_color_reference;
 mod world_vertices;
-mod zone_unknown;
+mod sphere;
 
 use std::any::Any;
 use std::marker::PhantomData;
@@ -103,7 +103,7 @@ pub use unknown_0x2e::*;
 pub use vertex_color::*;
 pub use vertex_color_reference::*;
 pub use world_vertices::*;
-pub use zone_unknown::*;
+pub use sphere::*;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -197,7 +197,7 @@ pub enum FragmentType {
     VertexColor(VertexColorFragment),
     VertexColorReference(VertexColorReferenceFragment),
     WorldVertices(WorldVerticesFragment),
-    ZoneUnknown(ZoneUnknownFragment),
+    Sphere(Sphere),
 }
 
 impl Deref for FragmentType {
@@ -250,7 +250,7 @@ impl Deref for FragmentType {
             Self::VertexColor(x) => x,
             Self::VertexColorReference(x) => x,
             Self::WorldVertices(x) => x,
-            Self::ZoneUnknown(x) => x,
+            Self::Sphere(x) => x,
         }
     }
 }
