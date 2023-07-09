@@ -60,7 +60,7 @@
     <tr>
       <td>0x07</td>
       <td>7</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/two_dimensional_object_reference.rs">TwoDimensionalObjectReference</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/sprite_2d.rs">Sprite2D</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x07--camera-reference--reference">Two-Dimensional Object Reference</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#0x07">2DSPRITE (ref)</a></td>
     </tr>
