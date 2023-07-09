@@ -389,9 +389,9 @@ impl<'a> FragmentHeader<'a> {
                 SkeletonTrackSetReferenceFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::SkeletonTrackSetReference(f.1))),
             ),
-            CameraReferenceFragment::TYPE_ID => Some(
-                CameraReferenceFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::CameraReference(f.1))),
+            Sprite3D::TYPE_ID => Some(
+                Sprite3D::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Sprite3D(f.1))),
             ),
             CameraFragment::TYPE_ID => Some(
                 CameraFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::Camera(f.1))),

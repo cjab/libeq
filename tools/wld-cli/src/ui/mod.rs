@@ -71,8 +71,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
         FragmentType::BspRegion(_) => (BspRegionFragment::TYPE_NAME, Color::Rgb(0x00, 0xff, 0xff)),
         FragmentType::BspTree(_) => (BspTreeFragment::TYPE_NAME, Color::Rgb(0x00, 0xfa, 0x9a)),
         FragmentType::Camera(_) => (CameraFragment::TYPE_NAME, Color::Rgb(0x48, 0x3d, 0x8b)),
-        FragmentType::CameraReference(_) => (
-            CameraReferenceFragment::TYPE_NAME,
+        FragmentType::Sprite3D(_) => (
+            Sprite3D::TYPE_NAME,
             Color::Rgb(0xb2, 0x22, 0x22),
         ),
         FragmentType::First(_) => (FirstFragment::TYPE_NAME, Color::Rgb(0x7b, 0x68, 0xee)),
