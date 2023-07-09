@@ -284,7 +284,7 @@
     <tr>
       <td>0x27</td>
       <td>39</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/blit_sprite_reference.rs">BlitSpriteReference</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/blit_sprite.rs">BlitSprite</a></td>
       <td></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#0x27">BLITSPRITE (ref)</a></td>
     </tr>

@@ -330,9 +330,9 @@ impl<'a> FragmentHeader<'a> {
                 BlitSpriteDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::BlitSpriteDef(f.1))),
             ),
-            BlitSpriteReferenceFragment::TYPE_ID => Some(
-                BlitSpriteReferenceFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::BlitSpriteReference(f.1))),
+            BlitSprite::TYPE_ID => Some(
+                BlitSprite::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::BlitSprite(f.1))),
             ),
             VertexColorReferenceFragment::TYPE_ID => Some(
                 VertexColorReferenceFragment::parse(&self.field_data)
