@@ -37,7 +37,7 @@ mod sphere_list_def;
 mod texture;
 mod bm_info;
 mod texture_images_rtk;
-mod texture_reference;
+mod simple_sprite;
 mod two_dimensional_object;
 mod two_dimensional_object_reference;
 mod unknown_0x2e;
@@ -96,7 +96,7 @@ pub use sphere_list_def::*;
 pub use texture::*;
 pub use bm_info::*;
 pub use texture_images_rtk::*;
-pub use texture_reference::*;
+pub use simple_sprite::*;
 pub use two_dimensional_object::*;
 pub use two_dimensional_object_reference::*;
 pub use unknown_0x2e::*;
@@ -190,7 +190,7 @@ pub enum FragmentType {
     Texture(TextureFragment),
     BmInfo(BmInfo),
     TextureImagesRtk(TextureImagesRtkFragment),
-    TextureReference(TextureReferenceFragment),
+    SimpleSprite(SimpleSprite),
     TwoDimensionalObject(TwoDimensionalObjectFragment),
     TwoDimensionalObjectReference(TwoDimensionalObjectReferenceFragment),
     Unknown0x2e(Unknown0x2eFragment),
@@ -243,7 +243,7 @@ impl Deref for FragmentType {
             Self::Texture(x) => x,
             Self::BmInfo(x) => x,
             Self::TextureImagesRtk(x) => x,
-            Self::TextureReference(x) => x,
+            Self::SimpleSprite(x) => x,
             Self::TwoDimensionalObject(x) => x,
             Self::TwoDimensionalObjectReference(x) => x,
             Self::Unknown0x2e(x) => x,

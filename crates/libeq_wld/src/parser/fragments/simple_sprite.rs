@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [TextureFragment] fragment.
 ///
 /// **Type ID:** 0x05
-pub struct TextureReferenceFragment {
+pub struct SimpleSprite {
     pub name_reference: StringReference,
 
     /// The [TextureFragment] reference.
@@ -23,18 +23,18 @@ pub struct TextureReferenceFragment {
     pub flags: u32,
 }
 
-impl FragmentParser for TextureReferenceFragment {
+impl FragmentParser for SimpleSprite {
     type T = Self;
 
     const TYPE_ID: u32 = 0x05;
-    const TYPE_NAME: &'static str = "TextureReference";
+    const TYPE_NAME: &'static str = "SimpleSprite";
 
-    fn parse(input: &[u8]) -> WResult<TextureReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<SimpleSprite> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
-            TextureReferenceFragment {
+            SimpleSprite {
                 name_reference,
                 reference,
                 flags,
@@ -43,7 +43,7 @@ impl FragmentParser for TextureReferenceFragment {
     }
 }
 
-impl Fragment for TextureReferenceFragment {
+impl Fragment for SimpleSprite {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0003-0x05.frag")[..];
-        let frag = TextureReferenceFragment::parse(data).unwrap().1;
+        let frag = SimpleSprite::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0x0));
         assert_eq!(frag.reference, FragmentRef::new(0x3));
@@ -83,7 +83,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0003-0x05.frag")[..];
-        let frag = TextureReferenceFragment::parse(data).unwrap().1;
+        let frag = SimpleSprite::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
