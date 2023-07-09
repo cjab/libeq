@@ -12,17 +12,17 @@ use serde::{Deserialize, Serialize};
 /// SPHERE fragment
 ///
 /// **Type ID:** 0x16
-pub struct ZoneUnknownFragment {
+pub struct Sphere {
     pub name_reference: StringReference,
 
     pub radius: f32,
 }
 
-impl FragmentParser for ZoneUnknownFragment {
+impl FragmentParser for Sphere {
     type T = Self;
 
     const TYPE_ID: u32 = 0x16;
-    const TYPE_NAME: &'static str = "ZoneUnknown";
+    const TYPE_NAME: &'static str = "Sphere";
 
     fn parse(input: &[u8]) -> WResult<Self> {
         let (i, name_reference) = StringReference::parse(input)?;
@@ -38,7 +38,7 @@ impl FragmentParser for ZoneUnknownFragment {
     }
 }
 
-impl Fragment for ZoneUnknownFragment {
+impl Fragment for Sphere {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -67,7 +67,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4640-0x16.frag")[..];
-        let frag = ZoneUnknownFragment::parse(data).unwrap().1;
+        let frag = Sphere::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
     }
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4640-0x16.frag")[..];
-        let frag = ZoneUnknownFragment::parse(data).unwrap().1;
+        let frag = Sphere::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

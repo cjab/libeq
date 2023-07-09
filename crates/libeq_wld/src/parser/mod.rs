@@ -381,9 +381,9 @@ impl<'a> FragmentHeader<'a> {
             FirstFragment::TYPE_ID => Some(
                 FirstFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::First(f.1))),
             ),
-            ZoneUnknownFragment::TYPE_ID => Some(
-                ZoneUnknownFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::ZoneUnknown(f.1))),
+            Sphere::TYPE_ID => Some(
+                Sphere::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Sphere(f.1))),
             ),
             HierarchicalSprite::TYPE_ID => Some(
                 HierarchicalSprite::parse(&self.field_data)
