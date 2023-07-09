@@ -172,7 +172,7 @@
     <tr>
       <td>0x17</td>
       <td>23</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/polygon_animation.rs">PolygonAnimation</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/polyhedron_def.rs">PolyhedronDef</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x17--polygon-animation--plain">Polygon Animation?</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#polyhedrondefinition---0x17">POLYHEDRONDEFINITION</a></td>
     </tr>

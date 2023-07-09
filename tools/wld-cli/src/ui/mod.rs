@@ -137,8 +137,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
         FragmentType::PaletteFile(_) => {
             (PaletteFileFragment::TYPE_NAME, Color::Rgb(0x6a, 0x7f, 0xb5))
         }
-        FragmentType::PolygonAnimation(_) => (
-            PolygonAnimationFragment::TYPE_NAME,
+        FragmentType::PolyhedronDef(_) => (
+            PolyhedronDef::TYPE_NAME,
             Color::Rgb(0xff, 0x45, 0x00),
         ),
         FragmentType::Polyhedron(_) => (

@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, PolygonAnimationFragment, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, PolyhedronDef, StringReference, WResult,
 };
 
 use nom::number::complete::{le_f32, le_u32};
@@ -11,14 +11,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// A reference to a [PolygonAnimationFragment].
+/// A reference to a [PolyhedronDef].
 ///
 /// **Type ID:** 0x18
 pub struct Polyhedron {
     pub name_reference: StringReference,
 
-    /// The [PolygonAnimationFragment] reference.
-    pub reference: FragmentRef<PolygonAnimationFragment>,
+    /// The [PolyhedronDef] reference.
+    pub reference: FragmentRef<PolyhedronDef>,
 
     /// _Unknown_
     /// * bit 0 - If set `params1` exists.

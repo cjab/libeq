@@ -374,9 +374,9 @@ impl<'a> FragmentHeader<'a> {
                 Polyhedron::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Polyhedron(f.1))),
             ),
-            PolygonAnimationFragment::TYPE_ID => Some(
-                PolygonAnimationFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::PolygonAnimation(f.1))),
+            PolyhedronDef::TYPE_ID => Some(
+                PolyhedronDef::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::PolyhedronDef(f.1))),
             ),
             FirstFragment::TYPE_ID => Some(
                 FirstFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::First(f.1))),

@@ -27,7 +27,7 @@ mod palette_file;
 mod particle_cloud_def;
 mod particle_sprite;
 mod particle_sprite_def;
-mod polygon_animation;
+mod polyhedron_def;
 mod polyhedron;
 mod region_flag;
 mod hierarchical_sprite_def;
@@ -86,7 +86,7 @@ pub use palette_file::*;
 pub use particle_cloud_def::*;
 pub use particle_sprite::*;
 pub use particle_sprite_def::*;
-pub use polygon_animation::*;
+pub use polyhedron_def::*;
 pub use polyhedron::*;
 pub use region_flag::*;
 pub use hierarchical_sprite_def::*;
@@ -180,7 +180,7 @@ pub enum FragmentType {
     ParticleSpriteDef(ParticleSpriteDefFragment),
     ParticleCloudDef(ParticleCloudDefFragment),
     PaletteFile(PaletteFileFragment),
-    PolygonAnimation(PolygonAnimationFragment),
+    PolyhedronDef(PolyhedronDef),
     Polyhedron(Polyhedron),
     RegionFlag(RegionFlagFragment),
     HierarchicalSpriteDef(HierarchicalSpriteDef),
@@ -233,7 +233,7 @@ impl Deref for FragmentType {
             Self::ParticleSpriteDef(x) => x,
             Self::ParticleCloudDef(x) => x,
             Self::PaletteFile(x) => x,
-            Self::PolygonAnimation(x) => x,
+            Self::PolyhedronDef(x) => x,
             Self::Polyhedron(x) => x,
             Self::RegionFlag(x) => x,
             Self::HierarchicalSpriteDef(x) => x,
