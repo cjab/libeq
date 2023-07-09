@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, StringReference, TwoDimensionalObjectFragment, WResult,
+    Fragment, FragmentParser, FragmentRef, StringReference, Sprite2DDef, WResult,
 };
 
 use nom::number::complete::le_u32;
@@ -18,8 +18,8 @@ use serde::{Deserialize, Serialize};
 pub struct TwoDimensionalObjectReferenceFragment {
     pub name_reference: StringReference,
 
-    /// The [TwoDimensionalObjectFragment] reference.
-    pub reference: FragmentRef<TwoDimensionalObjectFragment>,
+    /// The [Sprite2DDef] reference.
+    pub reference: FragmentRef<Sprite2DDef>,
 
     /// _Unknown_ Seems to always contain 0.
     pub flags: u32,

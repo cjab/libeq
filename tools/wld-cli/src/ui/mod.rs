@@ -176,8 +176,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             SimpleSprite::TYPE_NAME,
             Color::Rgb(0x8b, 0x45, 0x13),
         ),
-        FragmentType::TwoDimensionalObject(_) => (
-            TwoDimensionalObjectFragment::TYPE_NAME,
+        FragmentType::Sprite2DDef(_) => (
+            Sprite2DDef::TYPE_NAME,
             Color::Rgb(0x00, 0x64, 0x00),
         ),
         FragmentType::TwoDimensionalObjectReference(_) => (
