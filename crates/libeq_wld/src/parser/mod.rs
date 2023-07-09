@@ -400,9 +400,9 @@ impl<'a> FragmentHeader<'a> {
                 TwoDimensionalObjectReferenceFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::TwoDimensionalObjectReference(f.1))),
             ),
-            TwoDimensionalObjectFragment::TYPE_ID => Some(
-                TwoDimensionalObjectFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::TwoDimensionalObject(f.1))),
+            Sprite2DDef::TYPE_ID => Some(
+                Sprite2DDef::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Sprite2DDef(f.1))),
             ),
             ObjectLocationFragment::TYPE_ID => Some(
                 ObjectLocationFragment::parse(&self.field_data)

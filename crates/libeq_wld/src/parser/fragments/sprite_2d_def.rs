@@ -16,7 +16,7 @@ use super::{Fragment, FragmentParser, StringReference, WResult};
 /// in nature. Examples are coins and blood spatters.
 ///
 /// **Type ID:** 0x06
-pub struct TwoDimensionalObjectFragment {
+pub struct Sprite2DDef {
     pub name_reference: StringReference,
 
     pub flags: SpriteFlags,
@@ -87,13 +87,13 @@ pub struct TwoDimensionalObjectFragment {
     pub render_info: RenderInfo,
 }
 
-impl FragmentParser for TwoDimensionalObjectFragment {
+impl FragmentParser for Sprite2DDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x06;
-    const TYPE_NAME: &'static str = "TwoDimensionalObject";
+    const TYPE_NAME: &'static str = "Sprite2DDef";
 
-    fn parse(input: &[u8]) -> WResult<TwoDimensionalObjectFragment> {
+    fn parse(input: &[u8]) -> WResult<Sprite2DDef> {
         let (i, (name_reference, flags, num_frames, num_pitches, sprite_size, sphere_fragment)) =
             tuple((
                 StringReference::parse,
@@ -144,7 +144,7 @@ impl FragmentParser for TwoDimensionalObjectFragment {
 
         Ok((
             remaining,
-            TwoDimensionalObjectFragment {
+            Sprite2DDef {
                 name_reference,
                 flags,
                 num_frames,
@@ -164,7 +164,7 @@ impl FragmentParser for TwoDimensionalObjectFragment {
     }
 }
 
-impl Fragment for TwoDimensionalObjectFragment {
+impl Fragment for Sprite2DDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -259,7 +259,7 @@ impl SpriteFlags {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// `pitches` entries in the [TwoDimensionalObjectFragment]
+/// `pitches` entries in the [Sprite2DDef]
 pub struct SpritePitch {
     /// Windcatcher:
     /// _Unknown_ - Usually contains 0x200.
@@ -365,7 +365,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
-        let frag = TwoDimensionalObjectFragment::parse(data).unwrap().1;
+        let frag = Sprite2DDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-18282));
         assert_eq!(frag.num_frames, 1);
@@ -412,7 +412,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
-        let frag = TwoDimensionalObjectFragment::parse(data).unwrap().1;
+        let frag = Sprite2DDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
