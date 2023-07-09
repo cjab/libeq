@@ -277,7 +277,7 @@
     <tr>
       <td>0x26</td>
       <td>38</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/blit_sprite_definition.rs">BlitSpriteDefinition</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/blit_sprite_def.rs">BlitSpriteDef</a></td>
       <td></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#blitspritedefinition---0x26">BLITSPRITEDEFINITION</a></td>
     </tr>

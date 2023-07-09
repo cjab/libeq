@@ -326,9 +326,9 @@ impl<'a> FragmentHeader<'a> {
                         .map(|f| (f.0, FragmentType::WorldVertices(f.1))),
                 ),
             },
-            BlitSpriteDefinitionFragment::TYPE_ID => Some(
-                BlitSpriteDefinitionFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::BlitSpriteDefinition(f.1))),
+            BlitSpriteDef::TYPE_ID => Some(
+                BlitSpriteDef::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::BlitSpriteDef(f.1))),
             ),
             BlitSpriteReferenceFragment::TYPE_ID => Some(
                 BlitSpriteReferenceFragment::parse(&self.field_data)
