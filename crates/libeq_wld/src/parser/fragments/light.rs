@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [LightSourceFragment].
 ///
 /// **Type ID:** 0x1c
-pub struct LightSourceReferenceFragment {
+pub struct Light {
     pub name_reference: StringReference,
 
     /// The [LightSourceFragment] reference.
@@ -23,18 +23,18 @@ pub struct LightSourceReferenceFragment {
     pub flags: u32,
 }
 
-impl FragmentParser for LightSourceReferenceFragment {
+impl FragmentParser for Light {
     type T = Self;
 
     const TYPE_ID: u32 = 0x1c;
-    const TYPE_NAME: &'static str = "LightSource";
+    const TYPE_NAME: &'static str = "Light";
 
-    fn parse(input: &[u8]) -> WResult<LightSourceReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<Light> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
-            LightSourceReferenceFragment {
+            Light {
                 name_reference,
                 reference,
                 flags,
@@ -43,7 +43,7 @@ impl FragmentParser for LightSourceReferenceFragment {
     }
 }
 
-impl Fragment for LightSourceReferenceFragment {
+impl Fragment for Light {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4636-0x1c.frag")[..];
-        let frag = LightSourceReferenceFragment::parse(data).unwrap().1;
+        let frag = Light::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(1729));
@@ -83,7 +83,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4636-0x1c.frag")[..];
-        let frag = LightSourceReferenceFragment::parse(data).unwrap().1;
+        let frag = Light::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

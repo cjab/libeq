@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, LightSourceReferenceFragment, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, Light, StringReference, WResult,
 };
 
 use nom::number::complete::{le_f32, le_u32};
@@ -11,14 +11,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// A reference to a [LightSourceReferenceFragment].
+/// A reference to a [Light].
 ///
 /// **Type ID:** 0x28
 pub struct LightInfoFragment {
     pub name_reference: StringReference,
 
-    /// The [LightSourceReferenceFragment] reference.
-    pub reference: FragmentRef<LightSourceReferenceFragment>,
+    /// The [Light] reference.
+    pub reference: FragmentRef<Light>,
 
     /// _Unknown_ - Usually contains 256 (0x100).
     pub flags: PointLightFlags,

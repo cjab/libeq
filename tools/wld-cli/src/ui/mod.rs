@@ -87,8 +87,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
         FragmentType::LightSource(_) => {
             (LightSourceFragment::TYPE_NAME, Color::Rgb(0xff, 0xff, 0x00))
         }
-        FragmentType::LightSourceReference(_) => (
-            LightSourceReferenceFragment::TYPE_NAME,
+        FragmentType::Light(_) => (
+            Light::TYPE_NAME,
             Color::Rgb(0x00, 0xff, 0x00),
         ),
         FragmentType::Material(_) => (MaterialFragment::TYPE_NAME, Color::Rgb(0xf0, 0xe6, 0x8c)),

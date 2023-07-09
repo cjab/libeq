@@ -362,9 +362,9 @@ impl<'a> FragmentHeader<'a> {
                 LightInfoFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::LightInfo(f.1))),
             ),
-            LightSourceReferenceFragment::TYPE_ID => Some(
-                LightSourceReferenceFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::LightSourceReference(f.1))),
+            Light::TYPE_ID => Some(
+                Light::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Light(f.1))),
             ),
             LightSourceFragment::TYPE_ID => Some(
                 LightSourceFragment::parse(&self.field_data)
