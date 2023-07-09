@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, StringReference, TextureImagesFragment, WResult,
+    Fragment, FragmentParser, FragmentRef, StringReference, BmInfo, WResult,
 };
 
 use nom::multi::count;
@@ -14,9 +14,9 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// This fragment represents an entire texture rather than merely a bitmap used by that
-/// texture. The conceptual difference from [TextureImagesFragment] fragments is that textures
+/// texture. The conceptual difference from [BmInfo] fragments is that textures
 /// may be animated; the [TextureFragment] fragment represents the entire texture
-/// including all bitmaps that it uses whereas a [TextureImagesFragment] fragment would
+/// including all bitmaps that it uses whereas a [BmInfo] fragment would
 /// represent only a single bitmap in the animated sequence.
 ///
 /// **Type ID:** 0x04
@@ -24,12 +24,12 @@ pub struct TextureFragment {
     pub name_reference: StringReference,
 
     /// Most flags are _unknown_ however:
-    /// * bit 3 - If set texture is animated (has more than one [TextureImagesFragment] reference.
+    /// * bit 3 - If set texture is animated (has more than one [BmInfo] reference.
     /// This also means that a `params1` field exists.
     /// * bit 4 - If set a `params2` field exists. This _seems_ to always be set.
     pub flags: TextureFragmentFlags,
 
-    /// The number of [TextureImagesFragment] references.
+    /// The number of [BmInfo] references.
     pub frame_count: u32,
 
     /// Only present if bit `has_current_frame` in `flags` is set.
@@ -38,9 +38,9 @@ pub struct TextureFragment {
     /// Only present if `sleep` in `flags` is set.
     pub sleep: Option<u32>,
 
-    /// One or more references to [TextureImagesFragment] fragments. For most textures this will
+    /// One or more references to [BmInfo] fragments. For most textures this will
     /// be a single reference but animated textures will reference multiple.
-    pub frame_references: Vec<FragmentRef<TextureImagesFragment>>,
+    pub frame_references: Vec<FragmentRef<BmInfo>>,
 }
 
 impl FragmentParser for TextureFragment {
