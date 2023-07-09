@@ -423,12 +423,12 @@ impl<'a> FragmentHeader<'a> {
             ActorDef::TYPE_ID => Some(
                 ActorDef::parse(&self.field_data).map(|f| (f.0, FragmentType::ActorDef(f.1))),
             ),
-            BspTreeFragment::TYPE_ID => Some(
-                BspTreeFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::BspTree(f.1))),
+            WorldTree::TYPE_ID => Some(
+                WorldTree::parse(&self.field_data).map(|f| (f.0, FragmentType::WorldTree(f.1))),
             ),
-            BspRegionFragment::TYPE_ID => Some(
-                BspRegionFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::BspRegion(f.1))),
+            Region::TYPE_ID => Some(
+                Region::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Region(f.1))),
             ),
             MeshFragment::TYPE_ID => {
                 Some(MeshFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::Mesh(f.1))))

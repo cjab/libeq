@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 /// A region within a map's BSP Tree.
 ///
 /// **Type ID:** 0x22
-pub struct BspRegionFragment {
+pub struct Region {
     pub name_reference: StringReference,
 
     /// bit 0 - has SPHERE %f %f %f %f
@@ -111,13 +111,13 @@ pub struct BspRegionFragment {
     pub mesh_reference: Option<FragmentRef<MeshFragment>>,
 }
 
-impl FragmentParser for BspRegionFragment {
+impl FragmentParser for Region {
     type T = Self;
 
     const TYPE_ID: u32 = 0x22;
-    const TYPE_NAME: &'static str = "BspRegion";
+    const TYPE_NAME: &'static str = "Region";
 
-    fn parse(input: &[u8]) -> WResult<BspRegionFragment> {
+    fn parse(input: &[u8]) -> WResult<Region> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = RegionFlags::parse(i)?;
         let (i, ambient_light) = FragmentRef::parse(i)?;
@@ -184,7 +184,7 @@ impl FragmentParser for BspRegionFragment {
 
         Ok((
             i,
-            BspRegionFragment {
+            Region {
                 name_reference,
                 flags,
                 ambient_light,
@@ -214,7 +214,7 @@ impl FragmentParser for BspRegionFragment {
     }
 }
 
-impl Fragment for BspRegionFragment {
+impl Fragment for Region {
     fn into_bytes(&self) -> Vec<u8> {
         let bytes = [
             &self.name_reference.into_bytes()[..],
@@ -841,7 +841,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1731-0x22.frag")[..];
-        let (remaining, frag) = BspRegionFragment::parse(data).unwrap();
+        let (remaining, frag) = Region::parse(data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(-29318));
         assert_eq!(frag.flags, RegionFlags(0x81));
@@ -887,7 +887,7 @@ mod tests {
     #[test]
     fn it_parses_with_mesh_reference() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1738-0x22.frag")[..];
-        let (remaining, frag) = BspRegionFragment::parse(data).unwrap();
+        let (remaining, frag) = Region::parse(data).unwrap();
         assert_eq!(frag.mesh_reference, Some(FragmentRef::new(132)));
         assert_eq!(remaining, vec![]);
     }
@@ -895,7 +895,7 @@ mod tests {
     #[test]
     fn it_parses_with_padding() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/3260-0x22.frag")[..];
-        let (remaining, _frag) = BspRegionFragment::parse(data).unwrap();
+        let (remaining, _frag) = Region::parse(data).unwrap();
         assert_eq!(remaining, vec![0, 0, 0]);
     }
 
@@ -903,7 +903,7 @@ mod tests {
     fn it_parses_with_walls_and_obstructions() {
         let data =
             &include_bytes!("../../../fixtures/fragments/tanarus-thecity/8000-0x22.frag")[..];
-        let (remaining, frag) = BspRegionFragment::parse(data).unwrap();
+        let (remaining, frag) = Region::parse(data).unwrap();
 
         // Walls
         assert_eq!(frag.walls.len(), 7);
@@ -998,7 +998,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1731-0x22.frag")[..];
-        let frag = BspRegionFragment::parse(data).unwrap().1;
+        let frag = Region::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
@@ -1006,7 +1006,7 @@ mod tests {
     #[test]
     fn it_serializes_with_padding() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/3260-0x22.frag")[..];
-        let frag = BspRegionFragment::parse(data).unwrap().1;
+        let frag = Region::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
@@ -1015,7 +1015,7 @@ mod tests {
     fn it_serializes_with_walls_and_obstructions() {
         let data =
             &include_bytes!("../../../fixtures/fragments/tanarus-thecity/8000-0x22.frag")[..];
-        let frag = BspRegionFragment::parse(data).unwrap().1;
+        let frag = Region::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

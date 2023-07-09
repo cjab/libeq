@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{BspRegionFragment, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
+use super::{Region, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// A map's BSP Tree.
 ///
 /// **Type ID:** 0x21
-pub struct BspTreeFragment {
+pub struct WorldTree {
     pub name_reference: StringReference,
 
     /// The number of [WorldNode]s in this tree.
@@ -24,11 +24,11 @@ pub struct BspTreeFragment {
     pub world_nodes: Vec<WorldNode>,
 }
 
-impl FragmentParser for BspTreeFragment {
+impl FragmentParser for WorldTree {
     type T = Self;
 
     const TYPE_ID: u32 = 0x21;
-    const TYPE_NAME: &'static str = "BspTree";
+    const TYPE_NAME: &'static str = "WorldTree";
 
     fn parse(input: &[u8]) -> WResult<Self> {
         let (i, name_reference) = StringReference::parse(input)?;
@@ -46,7 +46,7 @@ impl FragmentParser for BspTreeFragment {
     }
 }
 
-impl Fragment for BspTreeFragment {
+impl Fragment for WorldTree {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -75,7 +75,7 @@ impl Fragment for BspTreeFragment {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// Entries in the map's [BspTreeFragment]
+/// Entries in the map's [WorldTree]
 pub struct WorldNode {
     /// The normal to the split plane.
     pub normal: (f32, f32, f32),
@@ -84,9 +84,9 @@ pub struct WorldNode {
     /// fields the splitting plane is represented in Hessian Normal Form.
     pub split_distance: f32,
 
-    /// If this is a leaf node, this contains the index of the [BspRegionFragment] fragment that this
+    /// If this is a leaf node, this contains the index of the [Region] fragment that this
     /// refers to (with the lowest index being 1). Otherwise this will contain 0.
-    pub region: FragmentRef<BspRegionFragment>,
+    pub region: FragmentRef<Region>,
 
     /// If this is not a leaf node these are references to [WorldNode] on either side of the
     /// splitting plane.
@@ -135,7 +135,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
-        let frag = BspTreeFragment::parse(data).unwrap().1;
+        let frag = WorldTree::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0x0));
         assert_eq!(frag.world_node_count, 5809);
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
-        let frag = BspTreeFragment::parse(data).unwrap().1;
+        let frag = WorldTree::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
