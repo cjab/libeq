@@ -46,7 +46,7 @@
     <tr>
       <td>0x05</td>
       <td>5</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/texture_reference.rs">TextureReference</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/simple_sprite.rs">SimpleSprite</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x05--texture-bitmap-info-reference--reference">Texture Bitmap Info Reference</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#simplespriteinst---0x05">SIMPLESPRITEINST</a></td>
     </tr>

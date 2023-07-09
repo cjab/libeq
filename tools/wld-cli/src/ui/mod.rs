@@ -172,8 +172,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             TextureImagesRtkFragment::TYPE_NAME,
             Color::Rgb(0xa9, 0xa9, 0xa9),
         ),
-        FragmentType::TextureReference(_) => (
-            TextureReferenceFragment::TYPE_NAME,
+        FragmentType::SimpleSprite(_) => (
+            SimpleSprite::TYPE_NAME,
             Color::Rgb(0x8b, 0x45, 0x13),
         ),
         FragmentType::TwoDimensionalObject(_) => (

@@ -2,7 +2,7 @@ use std::any::Any;
 
 use super::common::RenderMethod;
 use super::{
-    Fragment, FragmentParser, FragmentRef, StringReference, TextureReferenceFragment, WResult,
+    Fragment, FragmentParser, FragmentRef, StringReference, SimpleSprite, WResult,
 };
 
 use nom::number::complete::{le_f32, le_u32};
@@ -42,8 +42,8 @@ pub struct MaterialFragment {
     /// SCALEDAMBIENT %f
     pub scaled_ambient: f32,
 
-    /// A reference to a [TextureReferenceFragment] fragment.
-    pub reference: FragmentRef<TextureReferenceFragment>,
+    /// A reference to a [SimpleSprite] fragment.
+    pub reference: FragmentRef<SimpleSprite>,
 
     /// _Unknown_ - This only exists if bit 1 of flags is set. Both fields usually contain 0.
     pub pair: Option<(u32, f32)>,
