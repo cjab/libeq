@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 /// The left forearm piece might connect to a left hand piece. The idea is to start at the
 /// base “stem” piece in the skeleton and recursively walk the tree to each successive piece.
 ///
-/// For each piece there is a 0x13 [MobSkeletonPieceTrackReferenceFragment], which
+/// For each piece there is a 0x13 [Track], which
 /// references one 0x12 [MobSkeletonPieceTrackFragment]. Each 0x12 fragment defines
 /// how that piece is rotated and/or shifted relative to its parent piece.
 ///

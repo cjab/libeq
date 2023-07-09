@@ -408,9 +408,9 @@ impl<'a> FragmentHeader<'a> {
                 ObjectLocationFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::ObjectLocation(f.1))),
             ),
-            MobSkeletonPieceTrackReferenceFragment::TYPE_ID => Some(
-                MobSkeletonPieceTrackReferenceFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::MobSkeletonPieceTrackReference(f.1))),
+            Track::TYPE_ID => Some(
+                Track::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Track(f.1))),
             ),
             MobSkeletonPieceTrackFragment::TYPE_ID => Some(
                 MobSkeletonPieceTrackFragment::parse(&self.field_data)
