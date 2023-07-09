@@ -148,8 +148,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
         FragmentType::RegionFlag(_) => {
             (RegionFlagFragment::TYPE_NAME, Color::Rgb(0x00, 0x00, 0xff))
         }
-        FragmentType::SkeletonTrackSet(_) => (
-            SkeletonTrackSetFragment::TYPE_NAME,
+        FragmentType::HierarchicalSpriteDef(_) => (
+            HierarchicalSpriteDef::TYPE_NAME,
             Color::Rgb(0x3c, 0xb3, 0x71),
         ),
         FragmentType::HierarchicalSprite(_) => (

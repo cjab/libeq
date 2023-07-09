@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, SkeletonTrackSetFragment, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, HierarchicalSpriteDef, StringReference, WResult,
 };
 
 use nom::number::complete::le_u32;
@@ -12,14 +12,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// A reference to a [SkeletonTrackSetFragment].
+/// A reference to a [HierarchicalSpriteDef].
 ///
 /// **Type ID:** 0x11
 pub struct HierarchicalSprite {
     pub name_reference: StringReference,
 
-    /// The [SkeletonTrackSetFragment] reference.
-    pub reference: FragmentRef<SkeletonTrackSetFragment>,
+    /// The [HierarchicalSpriteDef] reference.
+    pub reference: FragmentRef<HierarchicalSpriteDef>,
 
     /// _Unknown_ Seems to always contain 0.
     pub params1: u32,

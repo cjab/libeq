@@ -30,7 +30,7 @@ mod particle_sprite_def;
 mod polygon_animation;
 mod polygon_animation_reference;
 mod region_flag;
-mod skeleton_track_set;
+mod hierarchical_sprite_def;
 mod hierarchical_sprite;
 mod sphere_list;
 mod sphere_list_def;
@@ -89,7 +89,7 @@ pub use particle_sprite_def::*;
 pub use polygon_animation::*;
 pub use polygon_animation_reference::*;
 pub use region_flag::*;
-pub use skeleton_track_set::*;
+pub use hierarchical_sprite_def::*;
 pub use hierarchical_sprite::*;
 pub use sphere_list::*;
 pub use sphere_list_def::*;
@@ -183,7 +183,7 @@ pub enum FragmentType {
     PolygonAnimation(PolygonAnimationFragment),
     PolygonAnimationReference(PolygonAnimationReferenceFragment),
     RegionFlag(RegionFlagFragment),
-    SkeletonTrackSet(SkeletonTrackSetFragment),
+    HierarchicalSpriteDef(HierarchicalSpriteDef),
     HierarchicalSprite(HierarchicalSprite),
     SphereList(SphereListFragment),
     SphereListDef(SphereListDefFragment),
@@ -236,7 +236,7 @@ impl Deref for FragmentType {
             Self::PolygonAnimation(x) => x,
             Self::PolygonAnimationReference(x) => x,
             Self::RegionFlag(x) => x,
-            Self::SkeletonTrackSet(x) => x,
+            Self::HierarchicalSpriteDef(x) => x,
             Self::HierarchicalSprite(x) => x,
             Self::SphereList(x) => x,
             Self::SphereListDef(x) => x,
