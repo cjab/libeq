@@ -420,8 +420,8 @@ impl<'a> FragmentHeader<'a> {
                 HierarchicalSpriteDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::HierarchicalSpriteDef(f.1))),
             ),
-            ModelFragment::TYPE_ID => Some(
-                ModelFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::Model(f.1))),
+            ActorDef::TYPE_ID => Some(
+                ActorDef::parse(&self.field_data).map(|f| (f.0, FragmentType::ActorDef(f.1))),
             ),
             BspTreeFragment::TYPE_ID => Some(
                 BspTreeFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::BspTree(f.1))),

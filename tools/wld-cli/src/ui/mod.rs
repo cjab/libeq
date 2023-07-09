@@ -117,7 +117,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Track::TYPE_NAME,
             Color::Rgb(0x32, 0xcd, 0x32),
         ),
-        FragmentType::Model(_) => (ModelFragment::TYPE_NAME, Color::Rgb(0xda, 0xa5, 0x20)),
+        FragmentType::ActorDef(_) => (ActorDef::TYPE_NAME, Color::Rgb(0xda, 0xa5, 0x20)),
         FragmentType::ObjectLocation(_) => (
             ObjectLocationFragment::TYPE_NAME,
             Color::Rgb(0x8b, 0x00, 0x8b),
