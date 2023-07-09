@@ -158,7 +158,7 @@
     <tr>
       <td>0x15</td>
       <td>21</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/object_location.rs">ObjectLocation</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/actor.rs">Actor</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x15--object-location--reference">Object Location</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#actorinst---0x15">ACTORINST</a></td>
     </tr>

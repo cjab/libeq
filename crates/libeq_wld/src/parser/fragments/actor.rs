@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 /// **Type ID:** 0x15
-pub struct ObjectLocationFragment {
+pub struct Actor {
     pub name_reference: StringReference,
 
     /// When used in main zone files, the reference points to a 0x14 Player Info fragment. When used for static (placeable) objects,
@@ -58,13 +58,13 @@ pub struct ObjectLocationFragment {
     pub vertex_color_reference: FragmentRef<VertexColorReferenceFragment>,
 }
 
-impl FragmentParser for ObjectLocationFragment {
+impl FragmentParser for Actor {
     type T = Self;
 
     const TYPE_ID: u32 = 0x15;
-    const TYPE_NAME: &'static str = "ObjectLocation";
+    const TYPE_NAME: &'static str = "Actor";
 
-    fn parse(input: &[u8]) -> WResult<ObjectLocationFragment> {
+    fn parse(input: &[u8]) -> WResult<Actor> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, actor_def_reference) = StringReference::parse(i)?;
         let (i, flags) = ActorInstFlags::parse(i)?;
@@ -98,7 +98,7 @@ impl FragmentParser for ObjectLocationFragment {
 
         Ok((
             i,
-            ObjectLocationFragment {
+            Actor {
                 name_reference,
                 actor_def_reference,
                 flags,
@@ -114,7 +114,7 @@ impl FragmentParser for ObjectLocationFragment {
     }
 }
 
-impl Fragment for ObjectLocationFragment {
+impl Fragment for Actor {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -208,7 +208,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4641-0x15.frag")[..];
-        let frag = ObjectLocationFragment::parse(data).unwrap().1;
+        let frag = Actor::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.actor_def_reference, StringReference::new(4640));
@@ -236,7 +236,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4641-0x15.frag")[..];
-        let frag = ObjectLocationFragment::parse(data).unwrap().1;
+        let frag = Actor::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

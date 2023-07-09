@@ -118,8 +118,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Color::Rgb(0x32, 0xcd, 0x32),
         ),
         FragmentType::ActorDef(_) => (ActorDef::TYPE_NAME, Color::Rgb(0xda, 0xa5, 0x20)),
-        FragmentType::ObjectLocation(_) => (
-            ObjectLocationFragment::TYPE_NAME,
+        FragmentType::Actor(_) => (
+            Actor::TYPE_NAME,
             Color::Rgb(0x8b, 0x00, 0x8b),
         ),
         FragmentType::ParticleSprite(_) => (
