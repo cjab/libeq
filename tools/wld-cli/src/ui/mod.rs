@@ -152,8 +152,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             SkeletonTrackSetFragment::TYPE_NAME,
             Color::Rgb(0x3c, 0xb3, 0x71),
         ),
-        FragmentType::SkeletonTrackSetReference(_) => (
-            SkeletonTrackSetReferenceFragment::TYPE_NAME,
+        FragmentType::HierarchicalSprite(_) => (
+            HierarchicalSprite::TYPE_NAME,
             Color::Rgb(0x00, 0x8b, 0x8b),
         ),
         FragmentType::SphereList(_) => {
