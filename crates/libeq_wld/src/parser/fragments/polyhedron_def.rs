@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// **Type ID:** 0x17
-pub struct PolygonAnimationFragment {
+pub struct PolyhedronDef {
     pub name_reference: StringReference,
 
     /// _Unknown_ - Usually contains 0.1 // NOTE: WLD ref lists a float here, but I think it was a typo.
@@ -45,13 +45,13 @@ pub struct PolygonAnimationFragment {
     pub entries2: Vec<(u32, Vec<u32>)>,
 }
 
-impl FragmentParser for PolygonAnimationFragment {
+impl FragmentParser for PolyhedronDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x17;
-    const TYPE_NAME: &'static str = "PolygonAnimation";
+    const TYPE_NAME: &'static str = "PolyhedronDef";
 
-    fn parse(input: &[u8]) -> WResult<PolygonAnimationFragment> {
+    fn parse(input: &[u8]) -> WResult<PolyhedronDef> {
         let (i, (name_reference, flags, size1, size2, params1, params2)) = tuple((
             StringReference::parse,
             //le_f32,
@@ -74,7 +74,7 @@ impl FragmentParser for PolygonAnimationFragment {
 
         Ok((
             remaining,
-            PolygonAnimationFragment {
+            PolyhedronDef {
                 name_reference,
                 flags,
                 size1,
@@ -88,7 +88,7 @@ impl FragmentParser for PolygonAnimationFragment {
     }
 }
 
-impl Fragment for PolygonAnimationFragment {
+impl Fragment for PolyhedronDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -138,7 +138,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/1417-0x17.frag")[..];
-        let frag = PolygonAnimationFragment::parse(data).unwrap().1;
+        let frag = PolyhedronDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-14003));
         assert_eq!(frag.flags, 0x1);
@@ -155,7 +155,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/1417-0x17.frag")[..];
-        let frag = PolygonAnimationFragment::parse(data).unwrap().1;
+        let frag = PolyhedronDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
