@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{CameraFragment, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
+use super::{Sprite3DDef, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -10,14 +10,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-/// A reference to a [CameraFragment].
+/// A reference to a [Sprite3DDef].
 ///
 /// **Type ID:** 0x09
 pub struct Sprite3D {
     pub name_reference: StringReference,
 
-    /// The [CameraFragment] reference.
-    pub reference: FragmentRef<CameraFragment>,
+    /// The [Sprite3DDef] reference.
+    pub reference: FragmentRef<Sprite3DDef>,
 
     /// _Unknown_ Seems to always contain 0.
     pub flags: u32,

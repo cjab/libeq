@@ -45,7 +45,7 @@ pub struct ModelFragment {
 
     /// There are `fragment_reference_count` fragment references here. These references can point to several different
     /// kinds of fragments. In main zone files, there seems to be only one entry, which points to
-    /// a 0x09 Camera Reference fragment. When this is instead a static object reference, the entry
+    /// a 0x09 Sprite3D fragment. When this is instead a static object reference, the entry
     /// points to either a 0x2D Mesh Reference fragment. If this is an animated (mob) object
     /// reference, it points to a 0x11 Skeleton Track Set Reference fragment.
     /// This also has been seen to point to a 0x07 Two-dimensional Object Reference fragment

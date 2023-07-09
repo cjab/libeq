@@ -4,7 +4,7 @@ mod blit_sprite_def;
 mod blit_sprite;
 mod bsp_region;
 mod bsp_tree;
-mod camera;
+mod sprite_3d_def;
 mod sprite_3d;
 mod common;
 mod first;
@@ -63,7 +63,7 @@ pub use blit_sprite_def::*;
 pub use blit_sprite::*;
 pub use bsp_region::*;
 pub use bsp_tree::*;
-pub use camera::*;
+pub use sprite_3d_def::*;
 pub use sprite_3d::*;
 pub use common::*;
 pub use first::*;
@@ -158,7 +158,7 @@ pub enum FragmentType {
     BlitSprite(BlitSprite),
     BspRegion(BspRegionFragment),
     BspTree(BspTreeFragment),
-    Camera(CameraFragment),
+    Sprite3DDef(Sprite3DDef),
     Sprite3D(Sprite3D),
     First(FirstFragment),
     FourDSprite(FourDSpriteFragment),
@@ -211,7 +211,7 @@ impl Deref for FragmentType {
             Self::BlitSprite(x) => x,
             Self::BspRegion(x) => x,
             Self::BspTree(x) => x,
-            Self::Camera(x) => x,
+            Self::Sprite3DDef(x) => x,
             Self::Sprite3D(x) => x,
             Self::First(x) => x,
             Self::FourDSprite(x) => x,

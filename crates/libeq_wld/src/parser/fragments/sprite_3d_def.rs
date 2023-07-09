@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 /// In main zone files, the name of this fragment always seems to be CAMERA_DUMMY.
 ///
 /// **Type ID:** 0x08
-pub struct CameraFragment {
+pub struct Sprite3DDef {
     pub name_reference: StringReference,
 
     pub flags: ThreeDSpriteFlags,
@@ -47,13 +47,13 @@ pub struct CameraFragment {
     pub bsp_nodes: Vec<BspNodeEntry>,
 }
 
-impl FragmentParser for CameraFragment {
+impl FragmentParser for Sprite3DDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x08;
-    const TYPE_NAME: &'static str = "Camera";
+    const TYPE_NAME: &'static str = "Sprite3DDef";
 
-    fn parse(input: &[u8]) -> WResult<CameraFragment> {
+    fn parse(input: &[u8]) -> WResult<Sprite3DDef> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = ThreeDSpriteFlags::parse(i)?;
         let (i, vertex_count) = le_u32(i)?;
@@ -74,7 +74,7 @@ impl FragmentParser for CameraFragment {
 
         Ok((
             i,
-            CameraFragment {
+            Sprite3DDef {
                 name_reference,
                 flags,
                 vertex_count,
@@ -89,7 +89,7 @@ impl FragmentParser for CameraFragment {
     }
 }
 
-impl Fragment for CameraFragment {
+impl Fragment for Sprite3DDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -219,7 +219,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1729-0x08.frag")[..];
-        let (remaining, frag) = CameraFragment::parse(data).unwrap();
+        let (remaining, frag) = Sprite3DDef::parse(data).unwrap();
 
         assert_eq!(remaining.len(), 0);
 
@@ -263,7 +263,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1729-0x08.frag")[..];
-        let frag = CameraFragment::parse(data).unwrap().1;
+        let frag = Sprite3DDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
