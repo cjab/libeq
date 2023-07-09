@@ -291,7 +291,7 @@
     <tr>
       <td>0x28</td>
       <td>40</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/light_info.rs">LightInfo</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/point_light.rs">PointLight</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x28--light-info--reference">Light Info</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#pointlight-regions---0x28">POINTLIGHT</a></td>
     </tr>

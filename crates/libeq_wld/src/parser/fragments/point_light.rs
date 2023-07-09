@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [Light].
 ///
 /// **Type ID:** 0x28
-pub struct LightInfoFragment {
+pub struct PointLight {
     pub name_reference: StringReference,
 
     /// The [Light] reference.
@@ -36,11 +36,11 @@ pub struct LightInfoFragment {
     pub radius: f32,
 }
 
-impl FragmentParser for LightInfoFragment {
+impl FragmentParser for PointLight {
     type T = Self;
 
     const TYPE_ID: u32 = 0x28;
-    const TYPE_NAME: &'static str = "LightInfo";
+    const TYPE_NAME: &'static str = "PointLight";
 
     fn parse(input: &[u8]) -> WResult<Self> {
         let (i, name_reference) = StringReference::parse(input)?;
@@ -66,7 +66,7 @@ impl FragmentParser for LightInfoFragment {
     }
 }
 
-impl Fragment for LightInfoFragment {
+impl Fragment for PointLight {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -131,7 +131,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/lights/0002-0x28.frag")[..];
-        let frag = LightInfoFragment::parse(data).unwrap().1;
+        let frag = PointLight::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(2));
@@ -145,7 +145,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/lights/0002-0x28.frag")[..];
-        let frag = LightInfoFragment::parse(data).unwrap().1;
+        let frag = PointLight::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
