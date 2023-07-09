@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [CameraFragment].
 ///
 /// **Type ID:** 0x09
-pub struct CameraReferenceFragment {
+pub struct Sprite3D {
     pub name_reference: StringReference,
 
     /// The [CameraFragment] reference.
@@ -23,18 +23,18 @@ pub struct CameraReferenceFragment {
     pub flags: u32,
 }
 
-impl FragmentParser for CameraReferenceFragment {
+impl FragmentParser for Sprite3D {
     type T = Self;
 
     const TYPE_ID: u32 = 0x09;
-    const TYPE_NAME: &'static str = "CameraReference";
+    const TYPE_NAME: &'static str = "Sprite3D";
 
-    fn parse(input: &[u8]) -> WResult<CameraReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<Sprite3D> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
-            CameraReferenceFragment {
+            Sprite3D {
                 name_reference,
                 reference,
                 flags,
@@ -43,7 +43,7 @@ impl FragmentParser for CameraReferenceFragment {
     }
 }
 
-impl Fragment for CameraReferenceFragment {
+impl Fragment for Sprite3D {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4638-0x09.frag")[..];
-        let frag = CameraReferenceFragment::parse(data).unwrap().1;
+        let frag = Sprite3D::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(1730));
@@ -83,7 +83,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4638-0x09.frag")[..];
-        let frag = CameraReferenceFragment::parse(data).unwrap().1;
+        let frag = Sprite3D::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
