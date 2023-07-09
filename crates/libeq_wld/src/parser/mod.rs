@@ -393,8 +393,8 @@ impl<'a> FragmentHeader<'a> {
                 Sprite3D::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Sprite3D(f.1))),
             ),
-            CameraFragment::TYPE_ID => Some(
-                CameraFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::Camera(f.1))),
+            Sprite3DDef::TYPE_ID => Some(
+                Sprite3DDef::parse(&self.field_data).map(|f| (f.0, FragmentType::Sprite3DDef(f.1))),
             ),
             Sprite2D::TYPE_ID => Some(
                 Sprite2D::parse(&self.field_data)

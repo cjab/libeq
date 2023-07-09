@@ -67,7 +67,7 @@
     <tr>
       <td>0x08</td>
       <td>8</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/camera.rs">Camera</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/sprite_3d_def.rs">Sprite3DDef</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x08--camera--plain">Camera</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#3dspritedef---0x08">3DSPRITEDEF</a></td>
     </tr>
