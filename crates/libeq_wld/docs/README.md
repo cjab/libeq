@@ -130,7 +130,7 @@
     <tr>
       <td>0x11</td>
       <td>17</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/skeleton_track_set_reference.rs">SkeletonTrackSetReference</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/hierarchical_sprite.rs">HierarchicalSprite</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x11--skeleton-track-set-reference--reference">Skeleton Track Set Reference</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#0x11">HIERARCHICALSPRITE (ref)</a></td>
     </tr>

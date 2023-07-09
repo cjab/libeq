@@ -385,9 +385,9 @@ impl<'a> FragmentHeader<'a> {
                 ZoneUnknownFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::ZoneUnknown(f.1))),
             ),
-            SkeletonTrackSetReferenceFragment::TYPE_ID => Some(
-                SkeletonTrackSetReferenceFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::SkeletonTrackSetReference(f.1))),
+            HierarchicalSprite::TYPE_ID => Some(
+                HierarchicalSprite::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::HierarchicalSprite(f.1))),
             ),
             Sprite3D::TYPE_ID => Some(
                 Sprite3D::parse(&self.field_data)

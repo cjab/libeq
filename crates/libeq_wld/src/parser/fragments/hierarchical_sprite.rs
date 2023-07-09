@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [SkeletonTrackSetFragment].
 ///
 /// **Type ID:** 0x11
-pub struct SkeletonTrackSetReferenceFragment {
+pub struct HierarchicalSprite {
     pub name_reference: StringReference,
 
     /// The [SkeletonTrackSetFragment] reference.
@@ -25,18 +25,18 @@ pub struct SkeletonTrackSetReferenceFragment {
     pub params1: u32,
 }
 
-impl FragmentParser for SkeletonTrackSetReferenceFragment {
+impl FragmentParser for HierarchicalSprite {
     type T = Self;
 
     const TYPE_ID: u32 = 0x11;
-    const TYPE_NAME: &'static str = "SkeletonTrackSetReference";
+    const TYPE_NAME: &'static str = "HierarchicalSprite";
 
-    fn parse(input: &[u8]) -> WResult<SkeletonTrackSetReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<HierarchicalSprite> {
         let (remaining, (name_reference, reference, params1)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
-            SkeletonTrackSetReferenceFragment {
+            HierarchicalSprite {
                 name_reference,
                 reference,
                 params1,
@@ -45,7 +45,7 @@ impl FragmentParser for SkeletonTrackSetReferenceFragment {
     }
 }
 
-impl Fragment for SkeletonTrackSetReferenceFragment {
+impl Fragment for HierarchicalSprite {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/2228-0x11.frag")[..];
-        let frag = SkeletonTrackSetReferenceFragment::parse(data).unwrap().1;
+        let frag = HierarchicalSprite::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(0x0e));
@@ -85,7 +85,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/2228-0x11.frag")[..];
-        let frag = SkeletonTrackSetReferenceFragment::parse(data).unwrap().1;
+        let frag = HierarchicalSprite::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
