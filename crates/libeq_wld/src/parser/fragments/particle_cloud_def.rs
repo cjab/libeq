@@ -8,7 +8,7 @@ use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
 
 use super::{
-    BlitSpriteDefinitionFragment, Fragment, FragmentParser, FragmentRef, StringReference, WResult,
+    BlitSpriteDef, Fragment, FragmentParser, FragmentRef, StringReference, WResult,
 };
 
 #[cfg(feature = "serde")]
@@ -85,7 +85,7 @@ pub struct ParticleCloudDefFragment {
     /// Color, BGRX
     pub color: (u8, u8, u8, u8),
 
-    pub blitsprite: FragmentRef<BlitSpriteDefinitionFragment>,
+    pub blitsprite: FragmentRef<BlitSpriteDef>,
 }
 
 impl FragmentParser for ParticleCloudDefFragment {
@@ -116,7 +116,7 @@ impl FragmentParser for ParticleCloudDefFragment {
         let (i, spawn_rate) = le_u32(i)?;
         let (i, spawn_scale) = le_f32(i)?;
         let (i, color) = tuple((le_u8, le_u8, le_u8, le_u8))(i)?;
-        let (i, blitsprite) = FragmentRef::<BlitSpriteDefinitionFragment>::parse(i)?;
+        let (i, blitsprite) = FragmentRef::<BlitSpriteDef>::parse(i)?;
 
         Ok((
             i,

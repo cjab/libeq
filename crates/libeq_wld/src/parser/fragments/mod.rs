@@ -1,6 +1,6 @@
 mod dm_sprite_def;
 mod ambient_light;
-mod blit_sprite_definition;
+mod blit_sprite_def;
 mod blit_sprite_reference;
 mod bsp_region;
 mod bsp_tree;
@@ -59,7 +59,7 @@ use super::{StringReference, WResult};
 
 pub use dm_sprite_def::*;
 pub use ambient_light::*;
-pub use blit_sprite_definition::*;
+pub use blit_sprite_def::*;
 pub use blit_sprite_reference::*;
 pub use bsp_region::*;
 pub use bsp_tree::*;
@@ -154,7 +154,7 @@ pub trait FragmentParser {
 pub enum FragmentType {
     DmSpriteDef(DmSpriteDef),
     AmbientLight(AmbientLightFragment),
-    BlitSpriteDefinition(BlitSpriteDefinitionFragment),
+    BlitSpriteDef(BlitSpriteDef),
     BlitSpriteReference(BlitSpriteReferenceFragment),
     BspRegion(BspRegionFragment),
     BspTree(BspTreeFragment),
@@ -207,7 +207,7 @@ impl Deref for FragmentType {
         match self {
             Self::DmSpriteDef(x) => x,
             Self::AmbientLight(x) => x,
-            Self::BlitSpriteDefinition(x) => x,
+            Self::BlitSpriteDef(x) => x,
             Self::BlitSpriteReference(x) => x,
             Self::BspRegion(x) => x,
             Self::BspTree(x) => x,
