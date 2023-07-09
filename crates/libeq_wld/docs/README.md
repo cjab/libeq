@@ -39,7 +39,7 @@
     <tr>
       <td>0x04</td>
       <td>4</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/texture.rs">Texture</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/simple_sprite_def.rs">SimpleSpriteDef</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x04--texture-bitmap-info--plain">Texture Bitmap Info</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#simplespritedef---0x04">SIMPLESPRITEDEF</a></td>
     </tr>

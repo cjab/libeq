@@ -34,7 +34,7 @@ mod skeleton_track_set;
 mod skeleton_track_set_reference;
 mod sphere_list;
 mod sphere_list_def;
-mod texture;
+mod simple_sprite_def;
 mod bm_info;
 mod texture_images_rtk;
 mod simple_sprite;
@@ -93,7 +93,7 @@ pub use skeleton_track_set::*;
 pub use skeleton_track_set_reference::*;
 pub use sphere_list::*;
 pub use sphere_list_def::*;
-pub use texture::*;
+pub use simple_sprite_def::*;
 pub use bm_info::*;
 pub use texture_images_rtk::*;
 pub use simple_sprite::*;
@@ -187,7 +187,7 @@ pub enum FragmentType {
     SkeletonTrackSetReference(SkeletonTrackSetReferenceFragment),
     SphereList(SphereListFragment),
     SphereListDef(SphereListDefFragment),
-    Texture(TextureFragment),
+    SimpleSpriteDef(SimpleSpriteDef),
     BmInfo(BmInfo),
     TextureImagesRtk(TextureImagesRtkFragment),
     SimpleSprite(SimpleSprite),
@@ -240,7 +240,7 @@ impl Deref for FragmentType {
             Self::SkeletonTrackSetReference(x) => x,
             Self::SphereList(x) => x,
             Self::SphereListDef(x) => x,
-            Self::Texture(x) => x,
+            Self::SimpleSpriteDef(x) => x,
             Self::BmInfo(x) => x,
             Self::TextureImagesRtk(x) => x,
             Self::SimpleSprite(x) => x,

@@ -163,7 +163,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             SphereListDefFragment::TYPE_NAME,
             Color::Rgb(0x00, 0x8b, 0x8b),
         ),
-        FragmentType::Texture(_) => (TextureFragment::TYPE_NAME, Color::Rgb(0x2f, 0x4f, 0x4f)),
+        FragmentType::SimpleSpriteDef(_) => (SimpleSpriteDef::TYPE_NAME, Color::Rgb(0x2f, 0x4f, 0x4f)),
         FragmentType::BmInfo(_) => (
             BmInfo::TYPE_NAME,
             Color::Rgb(0xa9, 0xa9, 0xa9),
