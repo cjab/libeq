@@ -42,7 +42,7 @@ pub mod parser;
 
 use parser::{
     FragmentRef, MaterialFragment, MeshAnimatedVerticesFragment, MeshFragment,
-    MeshFragmentFaceEntry, MeshReferenceFragment, ModelFragment, ObjectLocationFragment,
+    MeshFragmentFaceEntry, MeshReferenceFragment, ActorDef, ObjectLocationFragment,
     RenderMethod, SimpleSpriteDef, SimpleSpriteDefFlags, WldDoc,
 };
 use std::error::Error;
@@ -98,7 +98,7 @@ impl Wld {
     /// Iterate over all the objects in the wld file.
     pub fn models(&self) -> impl Iterator<Item = Model> + '_ {
         self.0
-            .fragment_iter::<ModelFragment>()
+            .fragment_iter::<ActorDef>()
             .map(move |fragment| Model {
                 doc: &self.0,
                 fragment,
@@ -473,7 +473,7 @@ impl<'a> ObjectLocation<'a> {
 #[derive(Debug)]
 pub struct Model<'a> {
     doc: &'a WldDoc,
-    fragment: &'a ModelFragment,
+    fragment: &'a ActorDef,
 }
 
 impl<'a> Model<'a> {

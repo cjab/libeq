@@ -21,7 +21,7 @@ mod mesh_animated_vertices_reference;
 mod mesh_reference;
 mod track_def;
 mod track;
-mod model;
+mod actor_def;
 mod object_location;
 mod palette_file;
 mod particle_cloud_def;
@@ -80,7 +80,7 @@ pub use mesh_animated_vertices_reference::*;
 pub use mesh_reference::*;
 pub use track_def::*;
 pub use track::*;
-pub use model::*;
+pub use actor_def::*;
 pub use object_location::*;
 pub use palette_file::*;
 pub use particle_cloud_def::*;
@@ -174,7 +174,7 @@ pub enum FragmentType {
     MeshReference(MeshReferenceFragment),
     TrackDef(TrackDef),
     Track(Track),
-    Model(ModelFragment),
+    ActorDef(ActorDef),
     ObjectLocation(ObjectLocationFragment),
     ParticleSprite(ParticleSpriteFragment),
     ParticleSpriteDef(ParticleSpriteDefFragment),
@@ -227,7 +227,7 @@ impl Deref for FragmentType {
             Self::MeshReference(x) => x,
             Self::TrackDef(x) => x,
             Self::Track(x) => x,
-            Self::Model(x) => x,
+            Self::ActorDef(x) => x,
             Self::ObjectLocation(x) => x,
             Self::ParticleSprite(x) => x,
             Self::ParticleSpriteDef(x) => x,

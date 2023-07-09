@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// Static or animated model reference or player info.
 ///
 /// **Type ID:** 0x14
-pub struct ModelFragment {
+pub struct ActorDef {
     pub name_reference: StringReference,
 
     pub flags: ActorDefFlags,
@@ -45,23 +45,23 @@ pub struct ModelFragment {
 
     /// There are `fragment_reference_count` fragment references here. These references can point to several different
     /// kinds of fragments. In main zone files, there seems to be only one entry, which points to
-    /// a 0x09 Sprite3D fragment. When this is instead a static object reference, the entry
-    /// points to either a 0x2D Mesh Reference fragment. If this is an animated (mob) object
-    /// reference, it points to a 0x11 Skeleton Track Set Reference fragment.
-    /// This also has been seen to point to a 0x07 Two-dimensional Object Reference fragment
+    /// a 0x09 [Sprite3D] fragment. When this is instead a static object reference, the entry
+    /// points to either a 0x2D [DmSprite] fragment. If this is an animated (mob) object
+    /// reference, it points to a 0x11 [HierarchicalSprite] fragment.
+    /// This also has been seen to point to a 0x07 [Sprite2D] fragment
     /// (e.g. coins and blood spots).
     pub fragment_references: Vec<u32>,
 
     pub unknown: u32,
 }
 
-impl FragmentParser for ModelFragment {
+impl FragmentParser for ActorDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x14;
-    const TYPE_NAME: &'static str = "Model";
+    const TYPE_NAME: &'static str = "ActorDef";
 
-    fn parse(input: &[u8]) -> WResult<ModelFragment> {
+    fn parse(input: &[u8]) -> WResult<ActorDef> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = ActorDefFlags::parse(i)?;
         let (i, callback_name_reference) = StringReference::parse(i)?;
@@ -101,7 +101,7 @@ impl FragmentParser for ModelFragment {
     }
 }
 
-impl Fragment for ModelFragment {
+impl Fragment for ActorDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -227,7 +227,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4639-0x14.frag")[..];
-        let frag = ModelFragment::parse(data).unwrap().1;
+        let frag = ActorDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-52594));
         assert_eq!(frag.flags, ActorDefFlags(0));
@@ -252,7 +252,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4639-0x14.frag")[..];
-        let frag = ModelFragment::parse(data).unwrap().1;
+        let frag = ActorDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
