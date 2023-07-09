@@ -312,10 +312,10 @@ impl<'a> FragmentHeader<'a> {
 
     fn parse_body(self, index: usize) -> Result<FragmentType, WldDocError<'a>> {
         let parsed = match self.fragment_type {
-            AlternateMeshFragment::TYPE_ID => match self.detect_0x2c_variant() {
+            DmSpriteDef::TYPE_ID => match self.detect_0x2c_variant() {
                 FragmentGame::EverQuest => Some(
-                    AlternateMeshFragment::parse(&self.field_data)
-                        .map(|f| (f.0, FragmentType::AlternateMesh(f.1))),
+                    DmSpriteDef::parse(&self.field_data)
+                        .map(|f| (f.0, FragmentType::DmSpriteDef(f.1))),
                 ),
                 FragmentGame::ReturnToKrondor => Some(
                     TextureImagesRtkFragment::parse(&self.field_data)

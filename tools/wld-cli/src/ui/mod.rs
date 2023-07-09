@@ -52,8 +52,8 @@ where
 
 pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, Color) {
     match fragment_type {
-        FragmentType::AlternateMesh(_) => (
-            AlternateMeshFragment::TYPE_NAME,
+        FragmentType::DmSpriteDef(_) => (
+            DmSpriteDef::TYPE_NAME,
             Color::Rgb(0xad, 0xff, 0x2f),
         ),
         FragmentType::AmbientLight(_) => (
