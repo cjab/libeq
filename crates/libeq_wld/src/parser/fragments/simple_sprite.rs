@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, StringReference, TextureFragment, WResult};
+use super::{Fragment, FragmentParser, FragmentRef, StringReference, SimpleSpriteDef, WResult};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -10,14 +10,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// A reference to a [TextureFragment] fragment.
+/// A reference to a [SimpleSpriteDef] fragment.
 ///
 /// **Type ID:** 0x05
 pub struct SimpleSprite {
     pub name_reference: StringReference,
 
-    /// The [TextureFragment] reference.
-    pub reference: FragmentRef<TextureFragment>,
+    /// The [SimpleSpriteDef] reference.
+    pub reference: FragmentRef<SimpleSpriteDef>,
 
     /// _Unknown_ - Seems to always contain 0x50.
     pub flags: u32,

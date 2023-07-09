@@ -43,7 +43,7 @@ pub mod parser;
 use parser::{
     FragmentRef, MaterialFragment, MeshAnimatedVerticesFragment, MeshFragment,
     MeshFragmentFaceEntry, MeshReferenceFragment, ModelFragment, ObjectLocationFragment,
-    RenderMethod, TextureFragment, TextureFragmentFlags, WldDoc,
+    RenderMethod, SimpleSpriteDef, SimpleSpriteDefFlags, WldDoc,
 };
 use std::error::Error;
 
@@ -357,7 +357,7 @@ impl<'a> Material<'a> {
 #[derive(Debug)]
 pub struct Texture<'a> {
     doc: &'a WldDoc,
-    fragment: &'a TextureFragment,
+    fragment: &'a SimpleSpriteDef,
 }
 
 impl<'a> Texture<'a> {
@@ -366,7 +366,7 @@ impl<'a> Texture<'a> {
         self.doc.get_string(self.fragment.name_reference)
     }
 
-    pub fn flags(&self) -> &TextureFragmentFlags {
+    pub fn flags(&self) -> &SimpleSpriteDefFlags {
         &self.fragment.flags
     }
 
@@ -376,7 +376,7 @@ impl<'a> Texture<'a> {
         self.fragment
             .frame_references
             .iter()
-            // [TextureFragment]s reference a [BmInfo]
+            // [SimpleSpriteDef]s reference a [BmInfo]
             .map(move |r| self.doc.get(&r))
             .flat_map(|image| match image {
                 // The [BmInfo] itself contains a collection of filenames. In

@@ -449,8 +449,8 @@ impl<'a> FragmentHeader<'a> {
                 MeshReferenceFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::MeshReference(f.1))),
             ),
-            TextureFragment::TYPE_ID => Some(
-                TextureFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::Texture(f.1))),
+            SimpleSpriteDef::TYPE_ID => Some(
+                SimpleSpriteDef::parse(&self.field_data).map(|f| (f.0, FragmentType::SimpleSpriteDef(f.1))),
             ),
             BmInfo::TYPE_ID => Some(
                 BmInfo::parse(&self.field_data)

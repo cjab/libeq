@@ -15,19 +15,19 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, PartialEq)]
 /// This fragment represents an entire texture rather than merely a bitmap used by that
 /// texture. The conceptual difference from [BmInfo] fragments is that textures
-/// may be animated; the [TextureFragment] fragment represents the entire texture
+/// may be animated; the [SimpleSpriteDef] fragment represents the entire texture
 /// including all bitmaps that it uses whereas a [BmInfo] fragment would
 /// represent only a single bitmap in the animated sequence.
 ///
 /// **Type ID:** 0x04
-pub struct TextureFragment {
+pub struct SimpleSpriteDef {
     pub name_reference: StringReference,
 
     /// Most flags are _unknown_ however:
     /// * bit 3 - If set texture is animated (has more than one [BmInfo] reference.
     /// This also means that a `params1` field exists.
     /// * bit 4 - If set a `params2` field exists. This _seems_ to always be set.
-    pub flags: TextureFragmentFlags,
+    pub flags: SimpleSpriteDefFlags,
 
     /// The number of [BmInfo] references.
     pub frame_count: u32,
@@ -43,15 +43,15 @@ pub struct TextureFragment {
     pub frame_references: Vec<FragmentRef<BmInfo>>,
 }
 
-impl FragmentParser for TextureFragment {
+impl FragmentParser for SimpleSpriteDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x04;
-    const TYPE_NAME: &'static str = "Texture";
+    const TYPE_NAME: &'static str = "SimpleSpriteDef";
 
-    fn parse(input: &[u8]) -> WResult<TextureFragment> {
+    fn parse(input: &[u8]) -> WResult<SimpleSpriteDef> {
         let (i, (name_reference, flags, frame_count)) =
-            tuple((StringReference::parse, TextureFragmentFlags::parse, le_u32))(input)?;
+            tuple((StringReference::parse, SimpleSpriteDefFlags::parse, le_u32))(input)?;
 
         //TODO: Is this a thing? Find an example.
         let (i, _current_frame) = if flags.has_current_frame() {
@@ -73,7 +73,7 @@ impl FragmentParser for TextureFragment {
 
         Ok((
             remaining,
-            TextureFragment {
+            SimpleSpriteDef {
                 name_reference,
                 flags,
                 frame_count,
@@ -85,7 +85,7 @@ impl FragmentParser for TextureFragment {
     }
 }
 
-impl Fragment for TextureFragment {
+impl Fragment for SimpleSpriteDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -119,17 +119,17 @@ impl Fragment for TextureFragment {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-pub struct TextureFragmentFlags(pub u32);
+pub struct SimpleSpriteDefFlags(pub u32);
 
-impl TextureFragmentFlags {
+impl SimpleSpriteDefFlags {
     const SKIP_FRAMES: u32 = 0x02;
     const IS_ANIMATED: u32 = 0x08;
     const HAS_SLEEP: u32 = 0x10;
     const HAS_CURRENT_FRAME: u32 = 0x20;
 
-    fn parse(input: &[u8]) -> WResult<TextureFragmentFlags> {
+    fn parse(input: &[u8]) -> WResult<SimpleSpriteDefFlags> {
         let (remaining, raw_flags) = le_u32(input)?;
-        Ok((remaining, TextureFragmentFlags(raw_flags)))
+        Ok((remaining, SimpleSpriteDefFlags(raw_flags)))
     }
 
     fn into_bytes(&self) -> Vec<u8> {
@@ -161,7 +161,7 @@ mod tests {
     fn it_parses() {
         #![allow(overflowing_literals)]
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0002-0x04.frag")[..];
-        let frag = TextureFragment::parse(data).unwrap().1;
+        let frag = SimpleSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0xfffffff8));
         assert_eq!(frag.flags.0, 0x10);
@@ -180,7 +180,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0002-0x04.frag")[..];
-        let frag = TextureFragment::parse(data).unwrap().1;
+        let frag = SimpleSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
