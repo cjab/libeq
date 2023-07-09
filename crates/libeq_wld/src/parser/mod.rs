@@ -396,9 +396,9 @@ impl<'a> FragmentHeader<'a> {
             CameraFragment::TYPE_ID => Some(
                 CameraFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::Camera(f.1))),
             ),
-            TwoDimensionalObjectReferenceFragment::TYPE_ID => Some(
-                TwoDimensionalObjectReferenceFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::TwoDimensionalObjectReference(f.1))),
+            Sprite2D::TYPE_ID => Some(
+                Sprite2D::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Sprite2D(f.1))),
             ),
             Sprite2DDef::TYPE_ID => Some(
                 Sprite2DDef::parse(&self.field_data)

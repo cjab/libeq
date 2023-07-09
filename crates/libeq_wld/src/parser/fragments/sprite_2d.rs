@@ -12,10 +12,10 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// A reference to a [TwoDimensionalObjectReferenceFragment].
+/// A reference to a [Sprite2D].
 ///
 /// **Type ID:** 0x07
-pub struct TwoDimensionalObjectReferenceFragment {
+pub struct Sprite2D {
     pub name_reference: StringReference,
 
     /// The [Sprite2DDef] reference.
@@ -25,18 +25,18 @@ pub struct TwoDimensionalObjectReferenceFragment {
     pub flags: u32,
 }
 
-impl FragmentParser for TwoDimensionalObjectReferenceFragment {
+impl FragmentParser for Sprite2D {
     type T = Self;
 
     const TYPE_ID: u32 = 0x07;
-    const TYPE_NAME: &'static str = "TwoDimensionalObjectReference";
+    const TYPE_NAME: &'static str = "Sprite2D";
 
-    fn parse(input: &[u8]) -> WResult<TwoDimensionalObjectReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<Sprite2D> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
-            TwoDimensionalObjectReferenceFragment {
+            Sprite2D {
                 name_reference,
                 reference,
                 flags,
@@ -45,7 +45,7 @@ impl FragmentParser for TwoDimensionalObjectReferenceFragment {
     }
 }
 
-impl Fragment for TwoDimensionalObjectReferenceFragment {
+impl Fragment for Sprite2D {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/2224-0x07.frag")[..];
-        let frag = TwoDimensionalObjectReferenceFragment::parse(data)
+        let frag = Sprite2D::parse(data)
             .unwrap()
             .1;
 
@@ -87,7 +87,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/2224-0x07.frag")[..];
-        let frag = TwoDimensionalObjectReferenceFragment::parse(data)
+        let frag = Sprite2D::parse(data)
             .unwrap()
             .1;
 
