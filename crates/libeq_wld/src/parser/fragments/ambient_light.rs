@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, LightSourceReferenceFragment, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, Light, StringReference, WResult,
 };
 
 use nom::multi::count;
@@ -13,14 +13,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-/// A reference to a [LightSourceReferenceFragment].
+/// A reference to a [Light].
 ///
 /// **Type ID:** 0x2a
 pub struct AmbientLightFragment {
     pub name_reference: StringReference,
 
-    /// The [LightSourceReferenceFragment] reference.
-    pub reference: FragmentRef<LightSourceReferenceFragment>,
+    /// The [Light] reference.
+    pub reference: FragmentRef<Light>,
 
     /// _Unknown_ - Usually contains 0.
     pub flags: u32,
