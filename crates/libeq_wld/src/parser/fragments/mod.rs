@@ -19,7 +19,7 @@ mod mesh;
 mod mesh_animated_vertices;
 mod mesh_animated_vertices_reference;
 mod mesh_reference;
-mod mob_skeleton_piece_track;
+mod track_def;
 mod track;
 mod model;
 mod object_location;
@@ -78,7 +78,7 @@ pub use mesh::*;
 pub use mesh_animated_vertices::*;
 pub use mesh_animated_vertices_reference::*;
 pub use mesh_reference::*;
-pub use mob_skeleton_piece_track::*;
+pub use track_def::*;
 pub use track::*;
 pub use model::*;
 pub use object_location::*;
@@ -172,7 +172,7 @@ pub enum FragmentType {
     MeshAnimatedVertices(MeshAnimatedVerticesFragment),
     MeshAnimatedVerticesReference(MeshAnimatedVerticesReferenceFragment),
     MeshReference(MeshReferenceFragment),
-    MobSkeletonPieceTrack(MobSkeletonPieceTrackFragment),
+    TrackDef(TrackDef),
     Track(Track),
     Model(ModelFragment),
     ObjectLocation(ObjectLocationFragment),
@@ -225,7 +225,7 @@ impl Deref for FragmentType {
             Self::MeshAnimatedVertices(x) => x,
             Self::MeshAnimatedVerticesReference(x) => x,
             Self::MeshReference(x) => x,
-            Self::MobSkeletonPieceTrack(x) => x,
+            Self::TrackDef(x) => x,
             Self::Track(x) => x,
             Self::Model(x) => x,
             Self::ObjectLocation(x) => x,

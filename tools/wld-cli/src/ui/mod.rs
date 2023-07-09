@@ -109,8 +109,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             MeshReferenceFragment::TYPE_NAME,
             Color::Rgb(0xff, 0x7f, 0x50),
         ),
-        FragmentType::MobSkeletonPieceTrack(_) => (
-            MobSkeletonPieceTrackFragment::TYPE_NAME,
+        FragmentType::TrackDef(_) => (
+            TrackDef::TYPE_NAME,
             Color::Rgb(0x00, 0x00, 0x8b),
         ),
         FragmentType::Track(_) => (

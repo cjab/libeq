@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, MobSkeletonPieceTrackFragment, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, TrackDef, StringReference, WResult,
 };
 
 use nom::number::complete::le_u32;
@@ -11,14 +11,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// A reference to a [MobSkeletonPieceTrackFragment].
+/// A reference to a [TrackDef].
 ///
 /// **Type ID:** 0x13
 pub struct Track {
     pub name_reference: StringReference,
 
-    /// The [MobSkeletonPieceTrackFragment] reference.
-    pub reference: FragmentRef<MobSkeletonPieceTrackFragment>,
+    /// The [TrackDef] reference.
+    pub reference: FragmentRef<TrackDef>,
 
     pub flags: TrackInstanceFlags,
 
