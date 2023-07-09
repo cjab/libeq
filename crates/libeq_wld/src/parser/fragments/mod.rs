@@ -22,7 +22,7 @@ mod mesh_reference;
 mod track_def;
 mod track;
 mod actor_def;
-mod object_location;
+mod actor;
 mod palette_file;
 mod particle_cloud_def;
 mod particle_sprite;
@@ -81,7 +81,7 @@ pub use mesh_reference::*;
 pub use track_def::*;
 pub use track::*;
 pub use actor_def::*;
-pub use object_location::*;
+pub use actor::*;
 pub use palette_file::*;
 pub use particle_cloud_def::*;
 pub use particle_sprite::*;
@@ -175,7 +175,7 @@ pub enum FragmentType {
     TrackDef(TrackDef),
     Track(Track),
     ActorDef(ActorDef),
-    ObjectLocation(ObjectLocationFragment),
+    Actor(Actor),
     ParticleSprite(ParticleSpriteFragment),
     ParticleSpriteDef(ParticleSpriteDefFragment),
     ParticleCloudDef(ParticleCloudDefFragment),
@@ -228,7 +228,7 @@ impl Deref for FragmentType {
             Self::TrackDef(x) => x,
             Self::Track(x) => x,
             Self::ActorDef(x) => x,
-            Self::ObjectLocation(x) => x,
+            Self::Actor(x) => x,
             Self::ParticleSprite(x) => x,
             Self::ParticleSpriteDef(x) => x,
             Self::ParticleCloudDef(x) => x,

@@ -404,9 +404,9 @@ impl<'a> FragmentHeader<'a> {
                 Sprite2DDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Sprite2DDef(f.1))),
             ),
-            ObjectLocationFragment::TYPE_ID => Some(
-                ObjectLocationFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::ObjectLocation(f.1))),
+            Actor::TYPE_ID => Some(
+                Actor::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Actor(f.1))),
             ),
             Track::TYPE_ID => Some(
                 Track::parse(&self.field_data)

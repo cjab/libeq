@@ -55,7 +55,7 @@ pub struct MeshFragment {
     ///
     /// For placeable objects this seems to define where the vertices will lie relative to
     /// the object’s local origin. This seems to allow placeable objects to be created that
-    /// lie at some distance from their position as given in a [ObjectLocationFragment]
+    /// lie at some distance from their position as given in a [Actor]
     /// (why one would do this is a mystery, though).
     pub center: (f32, f32, f32),
 
