@@ -2,8 +2,8 @@ mod dm_sprite_def;
 mod ambient_light;
 mod blit_sprite_def;
 mod blit_sprite;
-mod bsp_region;
-mod bsp_tree;
+mod region;
+mod world_tree;
 mod sprite_3d_def;
 mod sprite_3d;
 mod common;
@@ -61,8 +61,8 @@ pub use dm_sprite_def::*;
 pub use ambient_light::*;
 pub use blit_sprite_def::*;
 pub use blit_sprite::*;
-pub use bsp_region::*;
-pub use bsp_tree::*;
+pub use region::*;
+pub use world_tree::*;
 pub use sprite_3d_def::*;
 pub use sprite_3d::*;
 pub use common::*;
@@ -156,8 +156,8 @@ pub enum FragmentType {
     AmbientLight(AmbientLightFragment),
     BlitSpriteDef(BlitSpriteDef),
     BlitSprite(BlitSprite),
-    BspRegion(BspRegionFragment),
-    BspTree(BspTreeFragment),
+    Region(Region),
+    WorldTree(WorldTree),
     Sprite3DDef(Sprite3DDef),
     Sprite3D(Sprite3D),
     First(FirstFragment),
@@ -209,8 +209,8 @@ impl Deref for FragmentType {
             Self::AmbientLight(x) => x,
             Self::BlitSpriteDef(x) => x,
             Self::BlitSprite(x) => x,
-            Self::BspRegion(x) => x,
-            Self::BspTree(x) => x,
+            Self::Region(x) => x,
+            Self::WorldTree(x) => x,
             Self::Sprite3DDef(x) => x,
             Self::Sprite3D(x) => x,
             Self::First(x) => x,

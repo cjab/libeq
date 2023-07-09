@@ -242,14 +242,14 @@
     <tr>
       <td>0x21</td>
       <td>33</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/bsp_tree.rs">BspTree</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/world_tree.rs">WorldTree</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x21--bsp-tree--plain">BSP Tree</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#worldtree---0x21">WORLDTREE</a></td>
     </tr>
     <tr>
       <td>0x22</td>
       <td>34</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/bsp_region.rs">BspRegion</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/region.rs">Region</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x22--bsp-region--plain">Bsp Region</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#region---0x22">REGION</a></td>
     </tr>
