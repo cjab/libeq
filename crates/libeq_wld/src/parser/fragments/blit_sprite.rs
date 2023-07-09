@@ -12,17 +12,17 @@ use serde::{Deserialize, Serialize};
 /// BLITSPRITE TAG
 ///
 /// **Type ID:** 0x27
-pub struct BlitSpriteReferenceFragment {
+pub struct BlitSprite {
     pub name_reference: StringReference,
     pub blit_sprite_reference: u32,
     pub unknown: i32,
 }
 
-impl FragmentParser for BlitSpriteReferenceFragment {
+impl FragmentParser for BlitSprite {
     type T = Self;
 
     const TYPE_ID: u32 = 0x27;
-    const TYPE_NAME: &'static str = "BlitSpriteReference";
+    const TYPE_NAME: &'static str = "BlitSprite";
 
     fn parse(input: &[u8]) -> WResult<Self> {
         let (i, name_reference) = StringReference::parse(input)?;
@@ -40,7 +40,7 @@ impl FragmentParser for BlitSpriteReferenceFragment {
     }
 }
 
-impl Fragment for BlitSpriteReferenceFragment {
+impl Fragment for BlitSprite {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],

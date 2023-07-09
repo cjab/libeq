@@ -64,8 +64,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             BlitSpriteDef::TYPE_NAME,
             Color::Rgb(0x0f, 0xff, 0xff),
         ),
-        FragmentType::BlitSpriteReference(_) => (
-            BlitSpriteReferenceFragment::TYPE_NAME,
+        FragmentType::BlitSprite(_) => (
+            BlitSprite::TYPE_NAME,
             Color::Rgb(0x0f, 0x2f, 0xff),
         ),
         FragmentType::BspRegion(_) => (BspRegionFragment::TYPE_NAME, Color::Rgb(0x00, 0xff, 0xff)),
