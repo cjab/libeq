@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// **Type ID:** 0x1b
-pub struct LightSourceFragment {
+pub struct LightDef {
     pub name_reference: StringReference,
 
     /// Windcatcher:
@@ -27,7 +27,7 @@ pub struct LightSourceFragment {
     ///           Otherwise, `params3a` doesn't exist but `params3b` and `red`, `green` and `blue` do exist.
     ///           This flag seems to determine whether the light is just a simple white light
     ///           or a light with its own color values.
-    pub flags: LightSourceFlags,
+    pub flags: LightDefFlags,
 
     /// Windcatcher:
     /// _Unknown_ - Usually contains 1
@@ -57,15 +57,15 @@ pub struct LightSourceFragment {
     pub colors: Option<Vec<(f32, f32, f32)>>,
 }
 
-impl FragmentParser for LightSourceFragment {
+impl FragmentParser for LightDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x1b;
-    const TYPE_NAME: &'static str = "LightSource";
+    const TYPE_NAME: &'static str = "LightDef";
 
-    fn parse(input: &[u8]) -> WResult<LightSourceFragment> {
+    fn parse(input: &[u8]) -> WResult<LightDef> {
         let (i, (name_reference, flags, frame_count)) =
-            tuple((StringReference::parse, LightSourceFlags::parse, le_u32))(input)?;
+            tuple((StringReference::parse, LightDefFlags::parse, le_u32))(input)?;
 
         let (i, current_frame) = if flags.has_current_frame() {
             le_u32(i).map(|(i, flags)| (i, Some(flags)))?
@@ -95,7 +95,7 @@ impl FragmentParser for LightSourceFragment {
 
         Ok((
             remaining,
-            LightSourceFragment {
+            LightDef {
                 name_reference,
                 flags,
                 frame_count,
@@ -108,7 +108,7 @@ impl FragmentParser for LightSourceFragment {
     }
 }
 
-impl Fragment for LightSourceFragment {
+impl Fragment for LightDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -147,9 +147,9 @@ impl Fragment for LightSourceFragment {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(PartialEq)]
-pub struct LightSourceFlags(u32);
+pub struct LightDefFlags(u32);
 
-impl LightSourceFlags {
+impl LightDefFlags {
     const HAS_CURRENT_FRAME: u32 = 0x01;
     const HAS_SLEEP: u32 = 0x02;
     const HAS_LIGHT_LEVELS: u32 = 0x04;
@@ -190,14 +190,14 @@ impl LightSourceFlags {
     }
 }
 
-impl fmt::Debug for LightSourceFlags {
+impl fmt::Debug for LightDefFlags {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "LightSourceFlags [{:b}]", self.0)
+        write!(f, "LightDefFlags [{:b}]", self.0)
     }
 }
 
-impl From<LightSourceFlags> for u32 {
-    fn from(value: LightSourceFlags) -> Self {
+impl From<LightDefFlags> for u32 {
+    fn from(value: LightDefFlags) -> Self {
         value.0
     }
 }
@@ -209,7 +209,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1728-0x1b.frag")[..];
-        let frag = LightSourceFragment::parse(data).unwrap().1;
+        let frag = LightDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-29288));
         assert_eq!(frag.flags.0, 0x04);
@@ -223,7 +223,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1728-0x1b.frag")[..];
-        let frag = LightSourceFragment::parse(data).unwrap().1;
+        let frag = LightDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

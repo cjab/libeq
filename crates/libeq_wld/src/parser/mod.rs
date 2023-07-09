@@ -366,9 +366,9 @@ impl<'a> FragmentHeader<'a> {
                 Light::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Light(f.1))),
             ),
-            LightSourceFragment::TYPE_ID => Some(
-                LightSourceFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::LightSource(f.1))),
+            LightDef::TYPE_ID => Some(
+                LightDef::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::LightDef(f.1))),
             ),
             Polyhedron::TYPE_ID => Some(
                 Polyhedron::parse(&self.field_data)

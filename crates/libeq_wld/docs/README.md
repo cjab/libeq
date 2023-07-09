@@ -200,7 +200,7 @@
     <tr>
       <td>0x1b</td>
       <td>27</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/light_source.rs">LightSource</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/light_def.rs">LightDef</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x1b--light-source--plain">Light Source</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#lightdefinition---0x1b">LIGHTDEFINITION</a></td>
     </tr>
