@@ -10,7 +10,7 @@ mod common;
 mod first;
 mod four_d_sprite;
 mod four_d_sprite_def;
-mod light_info;
+mod point_light;
 mod light_def;
 mod light;
 mod material;
@@ -69,7 +69,7 @@ pub use common::*;
 pub use first::*;
 pub use four_d_sprite::*;
 pub use four_d_sprite_def::*;
-pub use light_info::*;
+pub use point_light::*;
 pub use light_def::*;
 pub use light::*;
 pub use material::*;
@@ -163,7 +163,7 @@ pub enum FragmentType {
     First(FirstFragment),
     FourDSprite(FourDSpriteFragment),
     FourDSpriteDef(FourDSpriteDefFragment),
-    LightInfo(LightInfoFragment),
+    PointLight(PointLight),
     LightDef(LightDef),
     Light(Light),
     Material(MaterialFragment),
@@ -216,7 +216,7 @@ impl Deref for FragmentType {
             Self::First(x) => x,
             Self::FourDSprite(x) => x,
             Self::FourDSpriteDef(x) => x,
-            Self::LightInfo(x) => x,
+            Self::PointLight(x) => x,
             Self::LightDef(x) => x,
             Self::Light(x) => x,
             Self::Material(x) => x,

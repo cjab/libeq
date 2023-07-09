@@ -83,7 +83,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             FourDSpriteDefFragment::TYPE_NAME,
             Color::Rgb(0xee, 0x99, 0x44),
         ),
-        FragmentType::LightInfo(_) => (LightInfoFragment::TYPE_NAME, Color::Rgb(0x00, 0xbf, 0xff)),
+        FragmentType::PointLight(_) => (PointLight::TYPE_NAME, Color::Rgb(0x00, 0xbf, 0xff)),
         FragmentType::LightDef(_) => {
             (LightDef::TYPE_NAME, Color::Rgb(0xff, 0xff, 0x00))
         }

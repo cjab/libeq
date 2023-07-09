@@ -358,9 +358,9 @@ impl<'a> FragmentHeader<'a> {
                 RegionFlagFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::RegionFlag(f.1))),
             ),
-            LightInfoFragment::TYPE_ID => Some(
-                LightInfoFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::LightInfo(f.1))),
+            PointLight::TYPE_ID => Some(
+                PointLight::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::PointLight(f.1))),
             ),
             Light::TYPE_ID => Some(
                 Light::parse(&self.field_data)
