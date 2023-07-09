@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [MobSkeletonPieceTrackFragment].
 ///
 /// **Type ID:** 0x13
-pub struct MobSkeletonPieceTrackReferenceFragment {
+pub struct Track {
     pub name_reference: StringReference,
 
     /// The [MobSkeletonPieceTrackFragment] reference.
@@ -26,13 +26,13 @@ pub struct MobSkeletonPieceTrackReferenceFragment {
     pub sleep: Option<u32>,
 }
 
-impl FragmentParser for MobSkeletonPieceTrackReferenceFragment {
+impl FragmentParser for Track {
     type T = Self;
 
     const TYPE_ID: u32 = 0x13;
-    const TYPE_NAME: &'static str = "MobSkeletonPieceTrackReference";
+    const TYPE_NAME: &'static str = "Track";
 
-    fn parse(input: &[u8]) -> WResult<MobSkeletonPieceTrackReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<Track> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, reference) = FragmentRef::parse(i)?;
         let (i, flags) = TrackInstanceFlags::parse(i)?;
@@ -44,7 +44,7 @@ impl FragmentParser for MobSkeletonPieceTrackReferenceFragment {
 
         Ok((
             i,
-            MobSkeletonPieceTrackReferenceFragment {
+            Track {
                 name_reference,
                 reference,
                 flags,
@@ -54,7 +54,7 @@ impl FragmentParser for MobSkeletonPieceTrackReferenceFragment {
     }
 }
 
-impl Fragment for MobSkeletonPieceTrackReferenceFragment {
+impl Fragment for Track {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
-        let frag = MobSkeletonPieceTrackReferenceFragment::parse(data)
+        let frag = Track::parse(data)
             .unwrap()
             .1;
 
@@ -131,7 +131,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
-        let frag = MobSkeletonPieceTrackReferenceFragment::parse(data)
+        let frag = Track::parse(data)
             .unwrap()
             .1;
 

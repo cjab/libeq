@@ -144,7 +144,7 @@
     <tr>
       <td>0x13</td>
       <td>19</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/mob_skeleton_piece_track_reference.rs">MobSkeletonPieceTrackReference</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/track.rs">Track</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x13--mob-skeleton-piece-track-reference--reference">Mob Skeleton Piece Track Reference</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#trackinstance---0x13">TRACKINSTANCE</a></td>
     </tr>
