@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 /// base “stem” piece in the skeleton and recursively walk the tree to each successive piece.
 ///
 /// For each piece there is a 0x13 [Track], which
-/// references one 0x12 [MobSkeletonPieceTrackFragment]. Each 0x12 fragment defines
+/// references one 0x12 [TrackDef]. Each 0x12 fragment defines
 /// how that piece is rotated and/or shifted relative to its parent piece.
 ///
 /// **Type ID:** 0x10

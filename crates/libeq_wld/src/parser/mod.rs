@@ -412,9 +412,9 @@ impl<'a> FragmentHeader<'a> {
                 Track::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Track(f.1))),
             ),
-            MobSkeletonPieceTrackFragment::TYPE_ID => Some(
-                MobSkeletonPieceTrackFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::MobSkeletonPieceTrack(f.1))),
+            TrackDef::TYPE_ID => Some(
+                TrackDef::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::TrackDef(f.1))),
             ),
             HierarchicalSpriteDef::TYPE_ID => Some(
                 HierarchicalSpriteDef::parse(&self.field_data)

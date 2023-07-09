@@ -47,7 +47,7 @@ use serde::{Deserialize, Serialize};
 ///     calculated above (less efficient).
 ///
 /// **Type ID:** 0x12
-pub struct MobSkeletonPieceTrackFragment {
+pub struct TrackDef {
     pub name_reference: StringReference,
 
     /// Most flags are _unknown_.
@@ -64,13 +64,13 @@ pub struct MobSkeletonPieceTrackFragment {
     pub legacy_frame_transforms: Option<Vec<LegacyFrameTransform>>,
 }
 
-impl FragmentParser for MobSkeletonPieceTrackFragment {
+impl FragmentParser for TrackDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x12;
-    const TYPE_NAME: &'static str = "MobSkeletonPieceTrack";
+    const TYPE_NAME: &'static str = "TrackDef";
 
-    fn parse(input: &[u8]) -> WResult<MobSkeletonPieceTrackFragment> {
+    fn parse(input: &[u8]) -> WResult<TrackDef> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, frame_count) = le_u32(i)?;
@@ -85,7 +85,7 @@ impl FragmentParser for MobSkeletonPieceTrackFragment {
 
         Ok((
             i,
-            MobSkeletonPieceTrackFragment {
+            TrackDef {
                 name_reference,
                 flags,
                 frame_count,
@@ -96,7 +96,7 @@ impl FragmentParser for MobSkeletonPieceTrackFragment {
     }
 }
 
-impl Fragment for MobSkeletonPieceTrackFragment {
+impl Fragment for TrackDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -277,7 +277,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
-        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+        let frag = TrackDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-61));
         assert_eq!(frag.flags, 0x8);
@@ -301,7 +301,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
-        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+        let frag = TrackDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
@@ -309,7 +309,7 @@ mod tests {
     #[test]
     fn it_parses_eq_beta() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip_beta/0652-0x12.frag")[..];
-        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+        let frag = TrackDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-7183));
         assert_eq!(frag.flags, 0x0);
@@ -333,7 +333,7 @@ mod tests {
     #[test]
     fn it_serializes_eq_beta() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip_beta/0652-0x12.frag")[..];
-        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+        let frag = TrackDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
@@ -341,7 +341,7 @@ mod tests {
     #[test]
     fn it_parses_rtk() {
         let data = &include_bytes!("../../../fixtures/fragments/rtk/0002-0x12.frag")[..];
-        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+        let frag = TrackDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-46));
         assert_eq!(frag.flags, 0x0);
@@ -365,7 +365,7 @@ mod tests {
     #[test]
     fn it_serializes_rtk() {
         let data = &include_bytes!("../../../fixtures/fragments/rtk/0002-0x12.frag")[..];
-        let frag = MobSkeletonPieceTrackFragment::parse(data).unwrap().1;
+        let frag = TrackDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
