@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, ParticleSpriteDefFragment, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, ParticleSpriteDef, StringReference, WResult,
 };
 
 use nom::number::complete::le_u32;
@@ -12,14 +12,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-/// A reference to a [ParticleSpriteDefFragment].
+/// A reference to a [ParticleSpriteDef].
 ///
 /// **Type ID:** 0x0d
 pub struct ParticleSprite {
     pub name_reference: StringReference,
 
-    /// The [ParticleSpriteDefFragment] reference.
-    pub reference: FragmentRef<ParticleSpriteDefFragment>,
+    /// The [ParticleSpriteDef] reference.
+    pub reference: FragmentRef<ParticleSpriteDef>,
 
     /// _Unknown_.
     pub params1: u32,

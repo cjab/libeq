@@ -95,14 +95,14 @@
     <tr>
       <td>0x0c</td>
       <td>12</td>
-      <td></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/particle_sprite_def.rs">ParticleSpriteDef</a></td>
       <td></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#particlespritedef---0xc">PARTICLESPRITEDEF</a></td>
     </tr>
     <tr>
       <td>0x0d</td>
       <td>13</td>
-      <td></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/particle_sprite.rs">ParticleSprite</a></td>
       <td></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#0xd">PARTICLESPRITE (ref)</a></td>
     </tr>

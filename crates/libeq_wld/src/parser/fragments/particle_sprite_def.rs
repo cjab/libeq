@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// PARTICLESPRITEDEF fragment
 ///
 /// **Type ID:** 0x0c
-pub struct ParticleSpriteDefFragment {
+pub struct ParticleSpriteDef {
     pub name_reference: StringReference,
 
     pub flags: ParticleSpriteDefFlags,
@@ -45,7 +45,7 @@ pub struct ParticleSpriteDefFragment {
     pub pen: Vec<u32>,
 }
 
-impl FragmentParser for ParticleSpriteDefFragment {
+impl FragmentParser for ParticleSpriteDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x0c;
@@ -89,7 +89,7 @@ impl FragmentParser for ParticleSpriteDefFragment {
     }
 }
 
-impl Fragment for ParticleSpriteDefFragment {
+impl Fragment for ParticleSpriteDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -168,7 +168,7 @@ mod tests {
         let data = &include_bytes!(
             "../../../fixtures/fragments/wldcom/particle-sprite-0000-0x0c.frag"
         )[..];
-        let frag = ParticleSpriteDefFragment::parse(data).unwrap().1;
+        let frag = ParticleSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-1));
         assert_eq!(frag.flags, ParticleSpriteDefFlags(0x3));
@@ -208,7 +208,7 @@ mod tests {
         let data = &include_bytes!(
             "../../../fixtures/fragments/wldcom/particle-sprite-0000-0x0c.frag"
         )[..];
-        let frag = ParticleSpriteDefFragment::parse(data).unwrap().1;
+        let frag = ParticleSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

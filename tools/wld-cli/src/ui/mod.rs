@@ -127,7 +127,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Color::Rgb(0x26, 0x59, 0x70),
         ),
         FragmentType::ParticleSpriteDef(_) => (
-            ParticleSpriteDefFragment::TYPE_NAME,
+            ParticleSpriteDef::TYPE_NAME,
             Color::Rgb(0x3c, 0x88, 0xab),
         ),
         FragmentType::ParticleCloudDef(_) => (
