@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    FourDSpriteDefFragment, Fragment, FragmentParser, FragmentRef, StringReference, WResult,
+    Sprite4DDef, Fragment, FragmentParser, FragmentRef, StringReference, WResult,
 };
 
 use nom::number::complete::le_u32;
@@ -12,14 +12,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-/// A reference to a [FourDSpriteDefFragment].
+/// A reference to a [Sprite4DDef].
 ///
 /// **Type ID:** 0x0b
 pub struct Sprite4D {
     pub name_reference: StringReference,
 
-    /// The [FourDSpriteDefFragment] reference.
-    pub reference: FragmentRef<FourDSpriteDefFragment>,
+    /// The [Sprite4DDef] reference.
+    pub reference: FragmentRef<Sprite4DDef>,
 
     /// _Unknown_.
     pub params1: u32,
