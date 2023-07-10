@@ -298,7 +298,7 @@
     <tr>
       <td>0x29</td>
       <td>41</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/region_flag.rs">RegionFlag</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/zone.rs">Zone</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x29--region-flag--plain">Region Flag</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#zone---0x29">ZONE</a></td>
     </tr>

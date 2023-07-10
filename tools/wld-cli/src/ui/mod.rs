@@ -145,8 +145,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Polyhedron::TYPE_NAME,
             Color::Rgb(0xff, 0x8c, 0x00),
         ),
-        FragmentType::RegionFlag(_) => {
-            (RegionFlagFragment::TYPE_NAME, Color::Rgb(0x00, 0x00, 0xff))
+        FragmentType::Zone(_) => {
+            (Zone::TYPE_NAME, Color::Rgb(0x00, 0x00, 0xff))
         }
         FragmentType::HierarchicalSpriteDef(_) => (
             HierarchicalSpriteDef::TYPE_NAME,

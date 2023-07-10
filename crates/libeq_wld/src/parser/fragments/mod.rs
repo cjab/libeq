@@ -29,7 +29,7 @@ mod particle_sprite;
 mod particle_sprite_def;
 mod polyhedron_def;
 mod polyhedron;
-mod region_flag;
+mod zone;
 mod hierarchical_sprite_def;
 mod hierarchical_sprite;
 mod sphere_list;
@@ -88,7 +88,7 @@ pub use particle_sprite::*;
 pub use particle_sprite_def::*;
 pub use polyhedron_def::*;
 pub use polyhedron::*;
-pub use region_flag::*;
+pub use zone::*;
 pub use hierarchical_sprite_def::*;
 pub use hierarchical_sprite::*;
 pub use sphere_list::*;
@@ -182,7 +182,7 @@ pub enum FragmentType {
     PaletteFile(PaletteFileFragment),
     PolyhedronDef(PolyhedronDef),
     Polyhedron(Polyhedron),
-    RegionFlag(RegionFlagFragment),
+    Zone(Zone),
     HierarchicalSpriteDef(HierarchicalSpriteDef),
     HierarchicalSprite(HierarchicalSprite),
     SphereList(SphereListFragment),
@@ -235,7 +235,7 @@ impl Deref for FragmentType {
             Self::PaletteFile(x) => x,
             Self::PolyhedronDef(x) => x,
             Self::Polyhedron(x) => x,
-            Self::RegionFlag(x) => x,
+            Self::Zone(x) => x,
             Self::HierarchicalSpriteDef(x) => x,
             Self::HierarchicalSprite(x) => x,
             Self::SphereList(x) => x,
