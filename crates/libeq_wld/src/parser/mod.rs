@@ -472,8 +472,8 @@ impl<'a> FragmentHeader<'a> {
                 SphereListDefFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::SphereListDef(f.1))),
             ),
-            ParticleSpriteFragment::TYPE_ID => Some(
-                ParticleSpriteFragment::parse(&self.field_data)
+            ParticleSprite::TYPE_ID => Some(
+                ParticleSprite::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::ParticleSprite(f.1))),
             ),
             ParticleSpriteDefFragment::TYPE_ID => Some(
