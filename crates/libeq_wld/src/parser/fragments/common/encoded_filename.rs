@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// Bitmap filename entries within [BmInfo] and [PaletteFileFragment].
+/// Bitmap filename entries within [BmInfo] and [DefaultPaletteFile].
 pub struct EncodedFilename {
     /// The length of the filename in bytes.
     pub name_length: u16,

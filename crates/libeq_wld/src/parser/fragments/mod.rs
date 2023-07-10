@@ -23,7 +23,7 @@ mod track_def;
 mod track;
 mod actor_def;
 mod actor;
-mod palette_file;
+mod default_palette_file;
 mod particle_cloud_def;
 mod particle_sprite;
 mod particle_sprite_def;
@@ -82,7 +82,7 @@ pub use track_def::*;
 pub use track::*;
 pub use actor_def::*;
 pub use actor::*;
-pub use palette_file::*;
+pub use default_palette_file::*;
 pub use particle_cloud_def::*;
 pub use particle_sprite::*;
 pub use particle_sprite_def::*;
@@ -179,7 +179,7 @@ pub enum FragmentType {
     ParticleSprite(ParticleSprite),
     ParticleSpriteDef(ParticleSpriteDef),
     ParticleCloudDef(ParticleCloudDef),
-    PaletteFile(PaletteFileFragment),
+    DefaultPaletteFile(DefaultPaletteFile),
     PolyhedronDef(PolyhedronDef),
     Polyhedron(Polyhedron),
     Zone(Zone),
@@ -232,7 +232,7 @@ impl Deref for FragmentType {
             Self::ParticleSprite(x) => x,
             Self::ParticleSpriteDef(x) => x,
             Self::ParticleCloudDef(x) => x,
-            Self::PaletteFile(x) => x,
+            Self::DefaultPaletteFile(x) => x,
             Self::PolyhedronDef(x) => x,
             Self::Polyhedron(x) => x,
             Self::Zone(x) => x,

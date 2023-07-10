@@ -11,24 +11,24 @@ use serde::{Deserialize, Serialize};
 /// DEFAULTPALETTEFILE fragment
 ///
 /// **Type ID:** 0x01
-pub struct PaletteFileFragment {
+pub struct DefaultPaletteFile {
     pub name_reference: StringReference,
 
     pub entry: EncodedFilename,
 }
 
-impl FragmentParser for PaletteFileFragment {
+impl FragmentParser for DefaultPaletteFile {
     type T = Self;
 
     const TYPE_ID: u32 = 0x01;
-    const TYPE_NAME: &'static str = "PaletteFile";
+    const TYPE_NAME: &'static str = "DefaultPaletteFile";
 
-    fn parse(input: &[u8]) -> WResult<PaletteFileFragment> {
+    fn parse(input: &[u8]) -> WResult<DefaultPaletteFile> {
         let name_reference = StringReference::new(0);
         let (remainder, entry) = EncodedFilename::parse(input)?;
         Ok((
             remainder,
-            PaletteFileFragment {
+            DefaultPaletteFile {
                 name_reference,
                 entry,
             },
@@ -36,7 +36,7 @@ impl FragmentParser for PaletteFileFragment {
     }
 }
 
-impl Fragment for PaletteFileFragment {
+impl Fragment for DefaultPaletteFile {
     fn into_bytes(&self) -> Vec<u8> {
         let entry = &self.entry.into_bytes()[..];
         let padding_size = (4 - entry.len() % 4) % 4;
@@ -67,7 +67,7 @@ mod tests {
         #![allow(overflowing_literals)]
         let data =
             &include_bytes!("../../../fixtures/fragments/tanarus-thecity/0000-0x01.frag")[..];
-        let frag = PaletteFileFragment::parse(data).unwrap().1;
+        let frag = DefaultPaletteFile::parse(data).unwrap().1;
 
         assert_eq!(
             frag.entry,
@@ -82,7 +82,7 @@ mod tests {
     fn it_serializes() {
         let data =
             &include_bytes!("../../../fixtures/fragments/tanarus-thecity/0000-0x01.frag")[..];
-        let frag = PaletteFileFragment::parse(data).unwrap().1;
+        let frag = DefaultPaletteFile::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
