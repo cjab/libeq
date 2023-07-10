@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::common::Location;
-use super::{Fragment, FragmentParser, StringReference, WResult, VertexColorReferenceFragment, FragmentRef};
+use super::{Fragment, FragmentParser, StringReference, WResult, DmRGBTrack, FragmentRef};
 
 use nom::number::complete::{le_f32, le_u32};
 
@@ -55,7 +55,7 @@ pub struct Actor {
 
     // Typically contains 30 when used in main zone files and 0 when used for
     // placeable objects. This field only exists if `fragment2` points to a fragment.
-    pub vertex_color_reference: FragmentRef<VertexColorReferenceFragment>,
+    pub vertex_color_reference: FragmentRef<DmRGBTrack>,
 }
 
 impl FragmentParser for Actor {

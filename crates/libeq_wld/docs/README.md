@@ -368,7 +368,7 @@
     <tr>
       <td>0x33</td>
       <td>51</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/vertex_color_reference.rs">VertexColorReference</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_rgb_track.rs">DmRGBTrack</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x33--vertex-color-reference--reference">Vertex Color Reference</a></td>
       <td></td>
     </tr>

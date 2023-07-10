@@ -190,8 +190,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
         FragmentType::VertexColor(_) => {
             (VertexColorFragment::TYPE_NAME, Color::Rgb(0xdd, 0xa0, 0xdd))
         }
-        FragmentType::VertexColorReference(_) => (
-            VertexColorReferenceFragment::TYPE_NAME,
+        FragmentType::DmRGBTrack(_) => (
+            DmRGBTrack::TYPE_NAME,
             Color::Rgb(0xff, 0x14, 0x93),
         ),
         FragmentType::WorldVertices(_) => (
