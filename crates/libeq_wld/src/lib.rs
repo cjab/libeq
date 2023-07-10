@@ -41,7 +41,7 @@
 pub mod parser;
 
 use parser::{
-    FragmentRef, MaterialFragment, MeshAnimatedVerticesFragment, MeshFragment,
+    FragmentRef, MaterialDef, MeshAnimatedVerticesFragment, MeshFragment,
     MeshFragmentFaceEntry, DmSprite, ActorDef, Actor,
     RenderMethod, SimpleSpriteDef, SimpleSpriteDefFlags, WldDoc,
 };
@@ -78,7 +78,7 @@ impl Wld {
     /// Iterate over all materials in the wld file.
     pub fn materials(&self) -> impl Iterator<Item = Material> + '_ {
         self.0
-            .fragment_iter::<MaterialFragment>()
+            .fragment_iter::<MaterialDef>()
             .map(move |fragment| Material {
                 doc: &self.0,
                 fragment,
@@ -329,7 +329,7 @@ impl<'a> Primitive<'a> {
 #[derive(Debug)]
 pub struct Material<'a> {
     doc: &'a WldDoc,
-    fragment: &'a MaterialFragment,
+    fragment: &'a MaterialDef,
 }
 
 impl<'a> Material<'a> {

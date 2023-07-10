@@ -437,9 +437,9 @@ impl<'a> FragmentHeader<'a> {
                 MaterialListFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::MaterialList(f.1))),
             ),
-            MaterialFragment::TYPE_ID => Some(
-                MaterialFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::Material(f.1))),
+            MaterialDef::TYPE_ID => Some(
+                MaterialDef::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::MaterialDef(f.1))),
             ),
             SimpleSprite::TYPE_ID => Some(
                 SimpleSprite::parse(&self.field_data)

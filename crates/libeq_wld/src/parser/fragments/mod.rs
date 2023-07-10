@@ -13,7 +13,7 @@ mod four_d_sprite_def;
 mod point_light;
 mod light_def;
 mod light;
-mod material;
+mod material_def;
 mod material_list;
 mod mesh;
 mod mesh_animated_vertices;
@@ -72,7 +72,7 @@ pub use four_d_sprite_def::*;
 pub use point_light::*;
 pub use light_def::*;
 pub use light::*;
-pub use material::*;
+pub use material_def::*;
 pub use material_list::*;
 pub use mesh::*;
 pub use mesh_animated_vertices::*;
@@ -166,7 +166,7 @@ pub enum FragmentType {
     PointLight(PointLight),
     LightDef(LightDef),
     Light(Light),
-    Material(MaterialFragment),
+    MaterialDef(MaterialDef),
     MaterialList(MaterialListFragment),
     Mesh(MeshFragment),
     MeshAnimatedVertices(MeshAnimatedVerticesFragment),
@@ -219,7 +219,7 @@ impl Deref for FragmentType {
             Self::PointLight(x) => x,
             Self::LightDef(x) => x,
             Self::Light(x) => x,
-            Self::Material(x) => x,
+            Self::MaterialDef(x) => x,
             Self::MaterialList(x) => x,
             Self::Mesh(x) => x,
             Self::MeshAnimatedVertices(x) => x,
