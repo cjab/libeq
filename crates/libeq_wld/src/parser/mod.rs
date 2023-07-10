@@ -318,8 +318,8 @@ impl<'a> FragmentHeader<'a> {
                         .map(|f| (f.0, FragmentType::DmSpriteDef(f.1))),
                 ),
                 FragmentGame::ReturnToKrondor => Some(
-                    TextureImagesRtkFragment::parse(&self.field_data)
-                        .map(|f| (f.0, FragmentType::TextureImagesRtk(f.1))),
+                    BmInfoRtk::parse(&self.field_data)
+                        .map(|f| (f.0, FragmentType::BmInfoRtk(f.1))),
                 ),
                 FragmentGame::Tanarus => Some(
                     WorldVerticesFragment::parse(&self.field_data)

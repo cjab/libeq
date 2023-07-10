@@ -36,7 +36,7 @@ mod sphere_list;
 mod sphere_list_def;
 mod simple_sprite_def;
 mod bm_info;
-mod texture_images_rtk;
+mod bm_info_rtk;
 mod simple_sprite;
 mod sprite_2d_def;
 mod sprite_2d;
@@ -95,7 +95,7 @@ pub use sphere_list::*;
 pub use sphere_list_def::*;
 pub use simple_sprite_def::*;
 pub use bm_info::*;
-pub use texture_images_rtk::*;
+pub use bm_info_rtk::*;
 pub use simple_sprite::*;
 pub use sprite_2d_def::*;
 pub use sprite_2d::*;
@@ -189,7 +189,7 @@ pub enum FragmentType {
     SphereListDef(SphereListDefFragment),
     SimpleSpriteDef(SimpleSpriteDef),
     BmInfo(BmInfo),
-    TextureImagesRtk(TextureImagesRtkFragment),
+    BmInfoRtk(BmInfoRtk),
     SimpleSprite(SimpleSprite),
     Sprite2DDef(Sprite2DDef),
     Sprite2D(Sprite2D),
@@ -242,7 +242,7 @@ impl Deref for FragmentType {
             Self::SphereListDef(x) => x,
             Self::SimpleSpriteDef(x) => x,
             Self::BmInfo(x) => x,
-            Self::TextureImagesRtk(x) => x,
+            Self::BmInfoRtk(x) => x,
             Self::SimpleSprite(x) => x,
             Self::Sprite2DDef(x) => x,
             Self::Sprite2D(x) => x,

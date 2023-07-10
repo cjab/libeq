@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, PartialEq)]
 /// This fragment references one or more texture filenames. So far all known textures
 /// reference a single filename.
-pub struct TextureImagesRtkFragment {
+pub struct BmInfoRtk {
     pub name_reference: StringReference,
 
     /// Contains the number of texture filenames in this fragment. Again, this appears
@@ -26,13 +26,13 @@ pub struct TextureImagesRtkFragment {
     pub entries: Vec<EncodedFilename>,
 }
 
-impl FragmentParser for TextureImagesRtkFragment {
+impl FragmentParser for BmInfoRtk {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2c;
-    const TYPE_NAME: &'static str = "TextureImagesRtk";
+    const TYPE_NAME: &'static str = "BmInfoRtk";
 
-    fn parse(input: &[u8]) -> WResult<TextureImagesRtkFragment> {
+    fn parse(input: &[u8]) -> WResult<BmInfoRtk> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, rtk) = le_u32(i)?;
         let (i, size1) = le_u32(i)?;
@@ -40,7 +40,7 @@ impl FragmentParser for TextureImagesRtkFragment {
         let (remaining, entries) = count(EncodedFilename::parse, (size1 + 1) as usize)(i)?;
         Ok((
             remaining,
-            TextureImagesRtkFragment {
+            BmInfoRtk {
                 name_reference,
                 size1,
                 rtk,
@@ -50,7 +50,7 @@ impl FragmentParser for TextureImagesRtkFragment {
     }
 }
 
-impl Fragment for TextureImagesRtkFragment {
+impl Fragment for BmInfoRtk {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -86,7 +86,7 @@ mod tests {
     fn it_parses() {
         #![allow(overflowing_literals)]
         let data = &include_bytes!("../../../fixtures/fragments/rtk/0000-0x2c.frag")[..];
-        let frag = TextureImagesRtkFragment::parse(data).unwrap().1;
+        let frag = BmInfoRtk::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0xffffffff));
         //FIXME: Why is this 0? If this is size it should be 1.
@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/rtk/0000-0x2c.frag")[..];
-        let frag = TextureImagesRtkFragment::parse(data).unwrap().1;
+        let frag = BmInfoRtk::parse(data).unwrap().1;
 
         assert_eq!([frag.into_bytes(), vec![0]].concat(), data);
     }
