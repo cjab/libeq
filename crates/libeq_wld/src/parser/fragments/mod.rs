@@ -153,7 +153,7 @@ pub trait FragmentParser {
 #[derive(Debug)]
 pub enum FragmentType {
     DmSpriteDef(DmSpriteDef),
-    AmbientLight(AmbientLightFragment),
+    AmbientLight(AmbientLight),
     BlitSpriteDef(BlitSpriteDef),
     BlitSprite(BlitSprite),
     Region(Region),
