@@ -105,8 +105,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             MeshAnimatedVerticesReferenceFragment::TYPE_NAME,
             Color::Rgb(0xff, 0x00, 0xff),
         ),
-        FragmentType::MeshReference(_) => (
-            MeshReferenceFragment::TYPE_NAME,
+        FragmentType::DmSprite(_) => (
+            DmSprite::TYPE_NAME,
             Color::Rgb(0xff, 0x7f, 0x50),
         ),
         FragmentType::TrackDef(_) => (

@@ -326,7 +326,7 @@
     <tr>
       <td>0x2d</td>
       <td>45</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/mesh_reference.rs">MeshReference</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_sprite.rs">DmSprite</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x2d--mesh-reference--reference">Mesh Reference</a></td>
       <td></td>
     </tr>

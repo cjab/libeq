@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [MeshFragment] fragment.
 ///
 /// **Type ID:** 0x2d
-pub struct MeshReferenceFragment {
+pub struct DmSprite {
     pub name_reference: StringReference,
 
     /// The [MeshFragment] reference.
@@ -23,18 +23,18 @@ pub struct MeshReferenceFragment {
     pub params: u32,
 }
 
-impl FragmentParser for MeshReferenceFragment {
+impl FragmentParser for DmSprite {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2d;
-    const TYPE_NAME: &'static str = "MeshReference";
+    const TYPE_NAME: &'static str = "DmSprite";
 
-    fn parse(input: &[u8]) -> WResult<MeshReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<DmSprite> {
         let (remaining, (name_reference, reference, params)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
-            MeshReferenceFragment {
+            DmSprite {
                 name_reference,
                 reference,
                 params,
@@ -43,7 +43,7 @@ impl FragmentParser for MeshReferenceFragment {
     }
 }
 
-impl Fragment for MeshReferenceFragment {
+impl Fragment for DmSprite {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0012-0x2d.frag")[..];
-        let frag = MeshReferenceFragment::parse(data).unwrap().1;
+        let frag = DmSprite::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(6));
@@ -83,7 +83,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0012-0x2d.frag")[..];
-        let frag = MeshReferenceFragment::parse(data).unwrap().1;
+        let frag = DmSprite::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
