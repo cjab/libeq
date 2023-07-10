@@ -92,8 +92,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Color::Rgb(0x00, 0xff, 0x00),
         ),
         FragmentType::MaterialDef(_) => (MaterialDef::TYPE_NAME, Color::Rgb(0xf0, 0xe6, 0x8c)),
-        FragmentType::MaterialList(_) => (
-            MaterialListFragment::TYPE_NAME,
+        FragmentType::MaterialPalette(_) => (
+            MaterialPalette::TYPE_NAME,
             Color::Rgb(0x64, 0x95, 0xed),
         ),
         FragmentType::Mesh(_) => (MeshFragment::TYPE_NAME, Color::Rgb(0xaf, 0xee, 0xee)),

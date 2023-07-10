@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, PartialEq)]
 ///
 /// **Type ID:** 0x31
-pub struct MaterialListFragment {
+pub struct MaterialPalette {
     pub name_reference: StringReference,
 
     /// _Unknown_ - Must contain 0.
@@ -26,19 +26,19 @@ pub struct MaterialListFragment {
     pub fragments: Vec<FragmentRef<MaterialDef>>,
 }
 
-impl FragmentParser for MaterialListFragment {
+impl FragmentParser for MaterialPalette {
     type T = Self;
 
     const TYPE_ID: u32 = 0x31;
-    const TYPE_NAME: &'static str = "MaterialList";
+    const TYPE_NAME: &'static str = "MaterialPalette";
 
-    fn parse(input: &[u8]) -> WResult<MaterialListFragment> {
+    fn parse(input: &[u8]) -> WResult<MaterialPalette> {
         let (i, (name_reference, flags, size1)) =
             tuple((StringReference::parse, le_u32, le_u32))(input)?;
         let (remaining, fragments) = count(FragmentRef::parse, size1 as usize)(i)?;
         Ok((
             remaining,
-            MaterialListFragment {
+            MaterialPalette {
                 name_reference,
                 flags,
                 size1,
@@ -48,7 +48,7 @@ impl FragmentParser for MaterialListFragment {
     }
 }
 
-impl Fragment for MaterialListFragment {
+impl Fragment for MaterialPalette {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -84,7 +84,7 @@ mod tests {
     fn it_parses() {
         #![allow(overflowing_literals)]
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0130-0x31.frag")[..];
-        let frag = MaterialListFragment::parse(data).unwrap().1;
+        let frag = MaterialPalette::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-1122));
         assert_eq!(frag.flags, 0x0);
@@ -96,7 +96,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0130-0x31.frag")[..];
-        let frag = MaterialListFragment::parse(data).unwrap().1;
+        let frag = MaterialPalette::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

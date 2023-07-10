@@ -433,9 +433,9 @@ impl<'a> FragmentHeader<'a> {
             MeshFragment::TYPE_ID => {
                 Some(MeshFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::Mesh(f.1))))
             }
-            MaterialListFragment::TYPE_ID => Some(
-                MaterialListFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::MaterialList(f.1))),
+            MaterialPalette::TYPE_ID => Some(
+                MaterialPalette::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::MaterialPalette(f.1))),
             ),
             MaterialDef::TYPE_ID => Some(
                 MaterialDef::parse(&self.field_data)
