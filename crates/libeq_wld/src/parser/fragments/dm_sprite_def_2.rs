@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 /// is also sometimes used.
 ///
 /// **Type ID:** 0x36
-pub struct MeshFragment {
+pub struct DmSpriteDef2 {
     pub name_reference: StringReference,
 
     /// _Unknown_ - The meaning of the flags is unknown but the following values
@@ -155,8 +155,8 @@ pub struct MeshFragment {
     /// most illuminated vertices.
     pub vertex_colors: Vec<u32>,
 
-    /// A collection of [MeshFragmentFaceEntry]s used in this mesh.
-    pub faces: Vec<MeshFragmentFaceEntry>,
+    /// A collection of [DmSpriteDef2FaceEntry]s used in this mesh.
+    pub faces: Vec<DmSpriteDef2FaceEntry>,
 
     /// The first element of the tuple is the number of vertices in a skeleton piece.
     ///
@@ -184,17 +184,17 @@ pub struct MeshFragment {
     /// references.
     pub vertex_material_groups: Vec<(u16, u16)>,
 
-    /// _Unknown_ - A collection of [MeshFragmentMeshOpEntry]s
-    pub meshops: Vec<MeshFragmentMeshOpEntry>,
+    /// _Unknown_ - A collection of [DmSpriteDef2MeshOpEntry]s
+    pub meshops: Vec<DmSpriteDef2MeshOpEntry>,
 }
 
-impl FragmentParser for MeshFragment {
+impl FragmentParser for DmSpriteDef2 {
     type T = Self;
 
     const TYPE_ID: u32 = 0x36;
-    const TYPE_NAME: &'static str = "Mesh";
+    const TYPE_NAME: &'static str = "DmSpriteDef2";
 
-    fn parse(input: &[u8]) -> WResult<MeshFragment> {
+    fn parse(input: &[u8]) -> WResult<DmSpriteDef2> {
         let (
             i,
             (
@@ -262,7 +262,7 @@ impl FragmentParser for MeshFragment {
             count(tuple((le_i16, le_i16)), texture_coordinate_count as usize),
             count(tuple((le_i8, le_i8, le_i8)), normal_count as usize),
             count(le_u32, color_count as usize),
-            count(MeshFragmentFaceEntry::parse, face_count as usize),
+            count(DmSpriteDef2FaceEntry::parse, face_count as usize),
             count(
                 tuple((le_u16, le_u16)),
                 skin_assignment_groups_count as usize,
@@ -272,14 +272,14 @@ impl FragmentParser for MeshFragment {
                 tuple((le_u16, le_u16)),
                 vertex_material_groups_count as usize,
             ),
-            count(MeshFragmentMeshOpEntry::parse, meshop_count as usize),
+            count(DmSpriteDef2MeshOpEntry::parse, meshop_count as usize),
         ))(i)?;
 
         // Note - There's trailing zeroes here which are not read.
 
         Ok((
             remaining,
-            MeshFragment {
+            DmSpriteDef2 {
                 name_reference,
                 flags,
                 material_list_ref,
@@ -315,7 +315,7 @@ impl FragmentParser for MeshFragment {
     }
 }
 
-impl Fragment for MeshFragment {
+impl Fragment for DmSpriteDef2 {
     fn into_bytes(&self) -> Vec<u8> {
         let meshops = &self
             .meshops
@@ -416,8 +416,8 @@ impl Fragment for MeshFragment {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// Represents a polygon within a [MeshFragment].
-pub struct MeshFragmentFaceEntry {
+/// Represents a polygon within a [DmSpriteDef2].
+pub struct DmSpriteDef2FaceEntry {
     /// Most flags are _Unknown_. This usually contains 0x0 for faces but
     /// contains 0x0010 for faces that the player can pass through (like water
     /// and tree leaves).
@@ -427,13 +427,13 @@ pub struct MeshFragmentFaceEntry {
     pub vertex_indexes: (u16, u16, u16),
 }
 
-impl MeshFragmentFaceEntry {
-    fn parse(input: &[u8]) -> WResult<MeshFragmentFaceEntry> {
+impl DmSpriteDef2FaceEntry {
+    fn parse(input: &[u8]) -> WResult<DmSpriteDef2FaceEntry> {
         let (remaining, (flags, vertex_indexes)) =
             tuple((le_u16, tuple((le_u16, le_u16, le_u16))))(input)?;
         Ok((
             remaining,
-            MeshFragmentFaceEntry {
+            DmSpriteDef2FaceEntry {
                 flags,
                 vertex_indexes,
             },
@@ -454,7 +454,7 @@ impl MeshFragmentFaceEntry {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// _Unknown_
-pub struct MeshFragmentMeshOpEntry {
+pub struct DmSpriteDef2MeshOpEntry {
     /// _Unknown_ - This seems to reference one of the vertex entries. This field is only valid if
     /// `type_field` contains 1. Otherwise, this field must contain 0.
     pub index1: Option<u16>,
@@ -464,14 +464,14 @@ pub struct MeshFragmentMeshOpEntry {
     pub index2: Option<u16>,
 
     /// _Unknown_ - If `type_field` contains 4, then this field exists instead of `index1`
-    /// and `index2`. [MeshFragmentMeshOpEntry]s seem to be sorted by this value.
+    /// and `index2`. [DmSpriteDef2MeshOpEntry]s seem to be sorted by this value.
     pub offset: Option<f32>,
 
     /// _Unknown_ - It seems to only contain values in the range 0-2.
     pub param1: u8,
 
     /// _Unknown_ - It seems to control whether `index1`, `index2`, and `offset` exist. It can only
-    /// contain values in the range 1-4. It looks like the [MeshFragmentMeshOpEntry]s are broken up into
+    /// contain values in the range 1-4. It looks like the [DmSpriteDef2MeshOpEntry]s are broken up into
     /// blocks, where each block is terminated by an entry where `type_field` is 4.
     ///
     /// The type of MESHOP, one of:
@@ -482,8 +482,8 @@ pub struct MeshFragmentMeshOpEntry {
     pub type_field: u8,
 }
 
-impl MeshFragmentMeshOpEntry {
-    fn parse(input: &[u8]) -> WResult<MeshFragmentMeshOpEntry> {
+impl DmSpriteDef2MeshOpEntry {
+    fn parse(input: &[u8]) -> WResult<DmSpriteDef2MeshOpEntry> {
         let unknown_data = &input[0..4];
         let input = &input[4..];
 
@@ -504,7 +504,7 @@ impl MeshFragmentMeshOpEntry {
 
         Ok((
             i,
-            MeshFragmentMeshOpEntry {
+            DmSpriteDef2MeshOpEntry {
                 index1,
                 index2,
                 offset,
@@ -534,7 +534,7 @@ mod tests {
     fn it_parses() {
         #![allow(overflowing_literals)]
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
-        let frag = MeshFragment::parse(data).unwrap().1;
+        let frag = DmSpriteDef2::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-1134));
         assert_eq!(frag.flags, 0x18003);
@@ -579,7 +579,7 @@ mod tests {
     fn it_parses_meshops() {
         #![allow(overflowing_literals)]
         let data = &include_bytes!("../../../fixtures/fragments/global_chr/0177-0x36.frag")[..];
-        let frag = MeshFragment::parse(data).unwrap().1;
+        let frag = DmSpriteDef2::parse(data).unwrap().1;
 
         assert_eq!(frag.meshop_count, 1387);
         assert_eq!(frag.meshops.len(), 1387);
@@ -601,7 +601,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
-        let frag = MeshFragment::parse(data).unwrap().1;
+        let frag = DmSpriteDef2::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
@@ -609,7 +609,7 @@ mod tests {
     #[test]
     fn it_serializes_meshops() {
         let data = &include_bytes!("../../../fixtures/fragments/global_chr/0177-0x36.frag")[..];
-        let frag = MeshFragment::parse(data).unwrap().1;
+        let frag = DmSpriteDef2::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

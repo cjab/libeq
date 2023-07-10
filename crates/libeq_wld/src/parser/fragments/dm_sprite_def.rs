@@ -13,9 +13,9 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-/// This fragment is rarely seen. It is very similar to the 0x36 [MeshFragment].
+/// This fragment is rarely seen. It is very similar to the 0x36 [DmSpriteDef2].
 /// I believe that this might have been the original type and was later replaced
-/// by the 0x36 [MeshFragment]. I’ve only seen one example of this fragment so
+/// by the 0x36 [DmSpriteDef2]. I’ve only seen one example of this fragment so
 /// far so the information here is uncertain.
 ///
 /// **Type ID:** 0x2c

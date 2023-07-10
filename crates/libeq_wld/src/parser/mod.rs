@@ -430,8 +430,8 @@ impl<'a> FragmentHeader<'a> {
                 Region::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Region(f.1))),
             ),
-            MeshFragment::TYPE_ID => {
-                Some(MeshFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::Mesh(f.1))))
+            DmSpriteDef2::TYPE_ID => {
+                Some(DmSpriteDef2::parse(&self.field_data).map(|f| (f.0, FragmentType::DmSpriteDef2(f.1))))
             }
             MaterialPalette::TYPE_ID => Some(
                 MaterialPalette::parse(&self.field_data)

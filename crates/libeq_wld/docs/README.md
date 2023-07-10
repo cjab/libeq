@@ -389,7 +389,7 @@
     <tr>
       <td>0x36</td>
       <td>54</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/mesh.rs">Mesh</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_sprite_def_2.rs">DmSpriteDef2</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x36--mesh--plain">Mesh</a></td>
       <td>DMSPRITEDEF2</td>
     </tr>

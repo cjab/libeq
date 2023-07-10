@@ -96,7 +96,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             MaterialPalette::TYPE_NAME,
             Color::Rgb(0x64, 0x95, 0xed),
         ),
-        FragmentType::Mesh(_) => (MeshFragment::TYPE_NAME, Color::Rgb(0xaf, 0xee, 0xee)),
+        FragmentType::DmSpriteDef2(_) => (DmSpriteDef2::TYPE_NAME, Color::Rgb(0xaf, 0xee, 0xee)),
         FragmentType::MeshAnimatedVertices(_) => (
             MeshAnimatedVerticesFragment::TYPE_NAME,
             Color::Rgb(0xff, 0xe4, 0xc4),

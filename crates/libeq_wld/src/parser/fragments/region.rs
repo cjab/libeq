@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, MeshFragment, RenderInfo, RenderMethod, StringReference,
+    Fragment, FragmentParser, FragmentRef, DmSpriteDef2, RenderInfo, RenderMethod, StringReference,
     WResult,
 };
 
@@ -104,11 +104,11 @@ pub struct Region {
 
     /// This does not appear in WLDCOM.
     /// WINDCATCHER:
-    /// If there are any polygons in this region then this reference points to a [MeshFragment]
-    /// that contains only those polygons. That [MeshFragment] must contain all geometry information
+    /// If there are any polygons in this region then this reference points to a [DmSpriteDef2]
+    /// that contains only those polygons. That [DmSpriteDef2] must contain all geometry information
     /// contained within the volume that this region represents and nothing that lies outside of
     /// that volume.
-    pub mesh_reference: Option<FragmentRef<MeshFragment>>,
+    pub mesh_reference: Option<FragmentRef<DmSpriteDef2>>,
 }
 
 impl FragmentParser for Region {
