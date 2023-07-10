@@ -456,8 +456,8 @@ impl<'a> FragmentHeader<'a> {
                 BmInfo::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::BmInfo(f.1))),
             ),
-            ParticleCloudDefFragment::TYPE_ID => Some(
-                ParticleCloudDefFragment::parse(&self.field_data)
+            ParticleCloudDef::TYPE_ID => Some(
+                ParticleCloudDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::ParticleCloudDef(f.1))),
             ),
             DmTrackDef::TYPE_ID => Some(

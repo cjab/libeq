@@ -178,7 +178,7 @@ pub enum FragmentType {
     Actor(Actor),
     ParticleSprite(ParticleSpriteFragment),
     ParticleSpriteDef(ParticleSpriteDefFragment),
-    ParticleCloudDef(ParticleCloudDefFragment),
+    ParticleCloudDef(ParticleCloudDef),
     PaletteFile(PaletteFileFragment),
     PolyhedronDef(PolyhedronDef),
     Polyhedron(Polyhedron),

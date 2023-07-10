@@ -131,7 +131,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Color::Rgb(0x3c, 0x88, 0xab),
         ),
         FragmentType::ParticleCloudDef(_) => (
-            ParticleCloudDefFragment::TYPE_NAME,
+            ParticleCloudDef::TYPE_NAME,
             Color::Rgb(0x80, 0x50, 0x05),
         ),
         FragmentType::PaletteFile(_) => {
