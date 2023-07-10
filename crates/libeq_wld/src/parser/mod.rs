@@ -480,9 +480,9 @@ impl<'a> FragmentHeader<'a> {
                 ParticleSpriteDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::ParticleSpriteDef(f.1))),
             ),
-            PaletteFileFragment::TYPE_ID => Some(
-                PaletteFileFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::PaletteFile(f.1))),
+            DefaultPaletteFile::TYPE_ID => Some(
+                DefaultPaletteFile::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::DefaultPaletteFile(f.1))),
             ),
             Sprite4D::TYPE_ID => Some(
                 Sprite4D::parse(&self.field_data)

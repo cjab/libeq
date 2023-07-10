@@ -18,7 +18,7 @@
     <tr>
       <td>0x01</td>
       <td>1</td>
-      <td></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/default_palette_file.rs">DefaultPaletteFile</a></td>
       <td></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#defaultpalettefile---0x01">DEFAULTPALETTEFILE %s</a></td>
     </tr>
