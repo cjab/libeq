@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [VertexColorFragment].
 ///
 /// **Type ID:** 0x33
-pub struct VertexColorReferenceFragment {
+pub struct DmRGBTrack {
     pub name_reference: StringReference,
 
     /// The [VertexColorFragment] reference.
@@ -25,18 +25,18 @@ pub struct VertexColorReferenceFragment {
     pub flags: u32,
 }
 
-impl FragmentParser for VertexColorReferenceFragment {
+impl FragmentParser for DmRGBTrack {
     type T = Self;
 
     const TYPE_ID: u32 = 0x33;
-    const TYPE_NAME: &'static str = "VertexColorReference";
+    const TYPE_NAME: &'static str = "DmRGBTrack";
 
-    fn parse(input: &[u8]) -> WResult<VertexColorReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<DmRGBTrack> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
-            VertexColorReferenceFragment {
+            DmRGBTrack {
                 name_reference,
                 reference,
                 flags,
@@ -45,7 +45,7 @@ impl FragmentParser for VertexColorReferenceFragment {
     }
 }
 
-impl Fragment for VertexColorReferenceFragment {
+impl Fragment for DmRGBTrack {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/objects/0001-0x33.frag")[..];
-        let frag = VertexColorReferenceFragment::parse(data).unwrap().1;
+        let frag = DmRGBTrack::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(1));
@@ -85,7 +85,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/objects/0001-0x33.frag")[..];
-        let frag = VertexColorReferenceFragment::parse(data).unwrap().1;
+        let frag = DmRGBTrack::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

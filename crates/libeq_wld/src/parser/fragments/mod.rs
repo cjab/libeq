@@ -42,7 +42,7 @@ mod sprite_2d_def;
 mod sprite_2d;
 mod dm_track_def;
 mod vertex_color;
-mod vertex_color_reference;
+mod dm_rgb_track;
 mod world_vertices;
 mod sphere;
 
@@ -101,7 +101,7 @@ pub use sprite_2d_def::*;
 pub use sprite_2d::*;
 pub use dm_track_def::*;
 pub use vertex_color::*;
-pub use vertex_color_reference::*;
+pub use dm_rgb_track::*;
 pub use world_vertices::*;
 pub use sphere::*;
 
@@ -195,7 +195,7 @@ pub enum FragmentType {
     Sprite2D(Sprite2D),
     DmTrackDef(DmTrackDef),
     VertexColor(VertexColorFragment),
-    VertexColorReference(VertexColorReferenceFragment),
+    DmRGBTrack(DmRGBTrack),
     WorldVertices(WorldVerticesFragment),
     Sphere(Sphere),
 }
@@ -248,7 +248,7 @@ impl Deref for FragmentType {
             Self::Sprite2D(x) => x,
             Self::DmTrackDef(x) => x,
             Self::VertexColor(x) => x,
-            Self::VertexColorReference(x) => x,
+            Self::DmRGBTrack(x) => x,
             Self::WorldVertices(x) => x,
             Self::Sphere(x) => x,
         }
