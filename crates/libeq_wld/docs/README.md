@@ -382,7 +382,7 @@
     <tr>
       <td>0x35</td>
       <td>53</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/first.rs">First</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/global_ambient_light_def.rs">GlobalAmbientLightDef</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x35--first-fragment--plain">First Fragment</a></td>
       <td></td>
     </tr>

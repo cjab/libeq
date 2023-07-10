@@ -9,23 +9,23 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug)]
 /// The first fragment has a single field. A name reference
 /// that always has a value of 0xff000000.
-pub struct FirstFragment {
+pub struct GlobalAmbientLightDef {
     pub name_reference: StringReference,
 }
 
-impl FragmentParser for FirstFragment {
+impl FragmentParser for GlobalAmbientLightDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x35;
-    const TYPE_NAME: &'static str = "First";
+    const TYPE_NAME: &'static str = "GlobalAmbientLightDef";
 
-    fn parse(input: &[u8]) -> WResult<FirstFragment> {
+    fn parse(input: &[u8]) -> WResult<GlobalAmbientLightDef> {
         let (remainder, name_reference) = StringReference::parse(input)?;
-        Ok((remainder, FirstFragment { name_reference }))
+        Ok((remainder, GlobalAmbientLightDef { name_reference }))
     }
 }
 
-impl Fragment for FirstFragment {
+impl Fragment for GlobalAmbientLightDef {
     fn into_bytes(&self) -> Vec<u8> {
         [&self.name_reference.into_bytes()[..]].concat()
     }
@@ -51,7 +51,7 @@ mod tests {
     fn it_has_a_known_name_reference() {
         #![allow(overflowing_literals)]
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0000-0x35.frag")[..];
-        let frag = FirstFragment::parse(data).unwrap().1;
+        let frag = GlobalAmbientLightDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0xff000000));
     }
@@ -59,7 +59,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0000-0x35.frag")[..];
-        let frag = FirstFragment::parse(data).unwrap().1;
+        let frag = GlobalAmbientLightDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
