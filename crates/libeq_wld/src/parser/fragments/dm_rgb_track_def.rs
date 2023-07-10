@@ -20,7 +20,7 @@ pub struct DmRGBTrackDef {
 
     /// The number of color values in the `vertex_colors` list. It should be equal
     /// to the number of vertices in the placeable object, as contained in its 0x36
-    /// [MeshFragment].
+    /// [DmSpriteDef2].
     pub vertex_color_count: u32,
 
     /// _Unknown_ - Usually contains 1.
@@ -41,7 +41,7 @@ pub struct DmRGBTrackDef {
     /// Further experimentation is required. 0xD9 seems to be a good (typical) A value for
     /// most illuminated vertices.
     ///
-    /// This field works in exactly the same way as it does in the 0x36 [MeshFragment].
+    /// This field works in exactly the same way as it does in the 0x36 [DmSpriteDef2].
     pub vertex_colors: Vec<u32>,
 }
 

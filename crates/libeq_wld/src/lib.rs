@@ -41,8 +41,8 @@
 pub mod parser;
 
 use parser::{
-    FragmentRef, MaterialDef, MeshAnimatedVerticesFragment, MeshFragment,
-    MeshFragmentFaceEntry, DmSprite, ActorDef, Actor,
+    FragmentRef, MaterialDef, MeshAnimatedVerticesFragment, DmSpriteDef2,
+    DmSpriteDef2FaceEntry, DmSprite, ActorDef, Actor,
     RenderMethod, SimpleSpriteDef, SimpleSpriteDefFlags, WldDoc,
 };
 use std::error::Error;
@@ -68,7 +68,7 @@ impl Wld {
     /// Iterate over all meshes in the wld file.
     pub fn meshes(&self) -> impl Iterator<Item = Mesh> + '_ {
         self.0
-            .fragment_iter::<MeshFragment>()
+            .fragment_iter::<DmSpriteDef2>()
             .map(move |fragment| Mesh {
                 doc: &self.0,
                 fragment,
@@ -137,7 +137,7 @@ impl<'a> MeshAnimatedVertices<'a> {
 #[derive(Debug)]
 pub struct Mesh<'a> {
     doc: &'a WldDoc,
-    fragment: &'a MeshFragment,
+    fragment: &'a DmSpriteDef2,
 }
 
 impl<'a> Mesh<'a> {
@@ -283,7 +283,7 @@ impl<'a> Mesh<'a> {
 pub struct Primitive<'a> {
     mesh: &'a Mesh<'a>,
     index: usize,
-    fragments: &'a [MeshFragmentFaceEntry],
+    fragments: &'a [DmSpriteDef2FaceEntry],
     material_idx: usize,
 }
 
@@ -495,9 +495,9 @@ impl<'a> Model<'a> {
         })
     }
 
-    // FIXME: I think casting the fragments to MeshFragment can be done in some better way, but this works for me at the moment.
-    /// Follow the fragment reference to find the MeshFragment
-    fn get_mesh_fragment(&self) -> Option<&MeshFragment> {
+    // FIXME: I think casting the fragments to DmSpriteDef2 can be done in some better way, but this works for me at the moment.
+    /// Follow the fragment reference to find the DmSpriteDef2
+    fn get_mesh_fragment(&self) -> Option<&DmSpriteDef2> {
         let fragment_ref = *self.fragment.fragment_references.first()?;
         let fragment_ref: FragmentRef<DmSprite> =
             FragmentRef::new(fragment_ref as i32);

@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, MeshFragment, StringReference, WResult};
+use super::{Fragment, FragmentParser, FragmentRef, DmSpriteDef2, StringReference, WResult};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -10,14 +10,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-/// A reference to a [MeshFragment] fragment.
+/// A reference to a [DmSpriteDef2] fragment.
 ///
 /// **Type ID:** 0x2d
 pub struct DmSprite {
     pub name_reference: StringReference,
 
-    /// The [MeshFragment] reference.
-    pub reference: FragmentRef<MeshFragment>,
+    /// The [DmSpriteDef2] reference.
+    pub reference: FragmentRef<DmSpriteDef2>,
 
     /// _Unknown_ - Apparently must be zero.
     pub params: u32,
