@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, MaterialListFragment,
+    Fragment, FragmentParser, FragmentRef, MaterialPalette,
     DmTrack, StringReference, WResult,
 };
 
@@ -28,15 +28,15 @@ pub struct MeshFragment {
     /// * For placeable objects: 0x00014003
     pub flags: u32,
 
-    /// A reference to a [MaterialListFragment] fragment. This tells the client which materials
+    /// A reference to a [MaterialPalette] fragment. This tells the client which materials
     /// this mesh uses.
     ///
-    /// For zone meshes the [MaterialListFragment] contains all the materials used in the
+    /// For zone meshes the [MaterialPalette] contains all the materials used in the
     /// entire zone.
     ///
-    /// For placeable objects the [MaterialListFragment] contains all of the materials used in
+    /// For placeable objects the [MaterialPalette] contains all of the materials used in
     /// that object.
-    pub material_list_ref: FragmentRef<MaterialListFragment>,
+    pub material_list_ref: FragmentRef<MaterialPalette>,
 
     /// A reference to a [DmTrack]. This is set for non-character
     /// animated meshes. For example swaying flags and trees.
@@ -172,7 +172,7 @@ pub struct MeshFragment {
     /// grouped together.
     ///
     /// The second element of the tuple is the index of the material that the faces use according
-    /// to the [MaterialListFragment] that this fragment references.
+    /// to the [MaterialPalette] that this fragment references.
     pub face_material_groups: Vec<(u16, u16)>,
 
     /// The first element of the tuple is the number of vertices that use the same
@@ -180,7 +180,7 @@ pub struct MeshFragment {
     /// that vertices that use the same material are together.
     ///
     /// The second element of the tuple is the index of the material that the
-    /// vertices use, according to the [MaterialListFragment] fragment that this fragment
+    /// vertices use, according to the [MaterialPalette] fragment that this fragment
     /// references.
     pub vertex_material_groups: Vec<(u16, u16)>,
 

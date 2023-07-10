@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, MaterialListFragment, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, MaterialPalette, StringReference, WResult,
 };
 
 use nom::multi::count;
@@ -70,11 +70,11 @@ pub struct DmSpriteDef {
     /// to define attachment points for objects (e.g. weapons or shields).
     pub skin_assignment_group_count: u32,
 
-    /// References a 0x31 [MaterialListFragment]. It tells the client which textures this mesh
+    /// References a 0x31 [MaterialPalette]. It tells the client which textures this mesh
     /// uses. For zone meshes, a single 0x31 fragment should be built that contains all the
     /// textures used in the entire zone. For placeable objects, there should be a 0x31
     /// fragment that references only those textures used in that particular object.
-    pub material_list_ref: FragmentRef<MaterialListFragment>,
+    pub material_list_ref: FragmentRef<MaterialPalette>,
 
     /// _Unknown_
     pub fragment3: u32,
@@ -136,7 +136,7 @@ pub struct DmSpriteDef {
     /// that vertices that use the same material are together.
     ///
     /// The second element of the tuple is the index of the material that the
-    /// vertices use, according to the [MaterialListFragment] fragment that this fragment
+    /// vertices use, according to the [MaterialPalette] fragment that this fragment
     /// references. This field only exists if bit 12 of `flags` is set.
     ///
     /// The rest are _Unknown_

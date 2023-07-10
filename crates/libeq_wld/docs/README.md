@@ -354,7 +354,7 @@
     <tr>
       <td>0x31</td>
       <td>49</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/material_list.rs">MaterialList</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/material_palette.rs">MaterialPalette</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x31--texture-list--plain">TextureList</a></td>
       <td>MATERIALPALETTE</td>
     </tr>
