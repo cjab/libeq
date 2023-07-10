@@ -88,7 +88,7 @@
     <tr>
       <td>0x0b</td>
       <td>11</td>
-      <td></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/sprite_4d.rs">Sprite4D</a></td>
       <td></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#0xb">4DSPRITE (ref)</a></td>
     </tr>
