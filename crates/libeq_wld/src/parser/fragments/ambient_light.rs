@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [Light].
 ///
 /// **Type ID:** 0x2a
-pub struct AmbientLightFragment {
+pub struct AmbientLight {
     pub name_reference: StringReference,
 
     /// The [Light] reference.
@@ -36,20 +36,20 @@ pub struct AmbientLightFragment {
     pub regions: Vec<u32>,
 }
 
-impl FragmentParser for AmbientLightFragment {
+impl FragmentParser for AmbientLight {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2a;
     const TYPE_NAME: &'static str = "AmbientLight";
 
-    fn parse(input: &[u8]) -> WResult<AmbientLightFragment> {
+    fn parse(input: &[u8]) -> WResult<AmbientLight> {
         let (i, (name_reference, reference, flags, region_count)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32, le_u32))(input)?;
         let (remaining, regions) = count(le_u32, region_count as usize)(i)?;
 
         Ok((
             remaining,
-            AmbientLightFragment {
+            AmbientLight {
                 name_reference,
                 reference,
                 flags,
@@ -60,7 +60,7 @@ impl FragmentParser for AmbientLightFragment {
     }
 }
 
-impl Fragment for AmbientLightFragment {
+impl Fragment for AmbientLight {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -96,7 +96,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4637-0x2a.frag")[..];
-        let frag = AmbientLightFragment::parse(data).unwrap().1;
+        let frag = AmbientLight::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-52558));
         assert_eq!(frag.flags, 0);
@@ -108,7 +108,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4637-0x2a.frag")[..];
-        let frag = AmbientLightFragment::parse(data).unwrap().1;
+        let frag = AmbientLight::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

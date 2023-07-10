@@ -57,7 +57,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Color::Rgb(0xad, 0xff, 0x2f),
         ),
         FragmentType::AmbientLight(_) => (
-            AmbientLightFragment::TYPE_NAME,
+            AmbientLight::TYPE_NAME,
             Color::Rgb(0xa0, 0x20, 0xf0),
         ),
         FragmentType::BlitSpriteDef(_) => (
