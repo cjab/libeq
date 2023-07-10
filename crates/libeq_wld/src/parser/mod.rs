@@ -378,8 +378,8 @@ impl<'a> FragmentHeader<'a> {
                 PolyhedronDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::PolyhedronDef(f.1))),
             ),
-            FirstFragment::TYPE_ID => Some(
-                FirstFragment::parse(&self.field_data).map(|f| (f.0, FragmentType::First(f.1))),
+            GlobalAmbientLightDef::TYPE_ID => Some(
+                GlobalAmbientLightDef::parse(&self.field_data).map(|f| (f.0, FragmentType::GlobalAmbientLightDef(f.1))),
             ),
             Sphere::TYPE_ID => Some(
                 Sphere::parse(&self.field_data)

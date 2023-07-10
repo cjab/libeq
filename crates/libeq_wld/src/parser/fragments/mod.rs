@@ -7,7 +7,7 @@ mod world_tree;
 mod sprite_3d_def;
 mod sprite_3d;
 mod common;
-mod first;
+mod global_ambient_light_def;
 mod four_d_sprite;
 mod four_d_sprite_def;
 mod point_light;
@@ -66,7 +66,7 @@ pub use world_tree::*;
 pub use sprite_3d_def::*;
 pub use sprite_3d::*;
 pub use common::*;
-pub use first::*;
+pub use global_ambient_light_def::*;
 pub use four_d_sprite::*;
 pub use four_d_sprite_def::*;
 pub use point_light::*;
@@ -160,7 +160,7 @@ pub enum FragmentType {
     WorldTree(WorldTree),
     Sprite3DDef(Sprite3DDef),
     Sprite3D(Sprite3D),
-    First(FirstFragment),
+    GlobalAmbientLightDef(GlobalAmbientLightDef),
     FourDSprite(FourDSpriteFragment),
     FourDSpriteDef(FourDSpriteDefFragment),
     PointLight(PointLight),
@@ -213,7 +213,7 @@ impl Deref for FragmentType {
             Self::WorldTree(x) => x,
             Self::Sprite3DDef(x) => x,
             Self::Sprite3D(x) => x,
-            Self::First(x) => x,
+            Self::GlobalAmbientLightDef(x) => x,
             Self::FourDSprite(x) => x,
             Self::FourDSpriteDef(x) => x,
             Self::PointLight(x) => x,

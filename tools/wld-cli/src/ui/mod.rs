@@ -75,7 +75,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Sprite3D::TYPE_NAME,
             Color::Rgb(0xb2, 0x22, 0x22),
         ),
-        FragmentType::First(_) => (FirstFragment::TYPE_NAME, Color::Rgb(0x7b, 0x68, 0xee)),
+        FragmentType::GlobalAmbientLightDef(_) => (GlobalAmbientLightDef::TYPE_NAME, Color::Rgb(0x7b, 0x68, 0xee)),
         FragmentType::FourDSprite(_) => {
             (FourDSpriteFragment::TYPE_NAME, Color::Rgb(0xcc, 0x66, 0x66))
         }
