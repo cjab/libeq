@@ -2,7 +2,7 @@ use std::any::Any;
 
 use super::{
     Fragment, FragmentParser, FragmentRef, MaterialListFragment,
-    MeshAnimatedVerticesReferenceFragment, StringReference, WResult,
+    DmTrack, StringReference, WResult,
 };
 
 use nom::multi::count;
@@ -38,9 +38,9 @@ pub struct MeshFragment {
     /// that object.
     pub material_list_ref: FragmentRef<MaterialListFragment>,
 
-    /// A reference to a [MeshAnimatedVerticesReferenceFragment]. This is set for non-character
+    /// A reference to a [DmTrack]. This is set for non-character
     /// animated meshes. For example swaying flags and trees.
-    pub animation_ref: FragmentRef<MeshAnimatedVerticesReferenceFragment>,
+    pub animation_ref: FragmentRef<DmTrack>,
 
     /// _Unknown_ - Usually empty
     pub fragment3: FragmentRef<i32>,
