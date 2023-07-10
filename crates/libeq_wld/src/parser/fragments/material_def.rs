@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, PartialEq)]
 ///
 /// **Type ID:** 0x30
-pub struct MaterialFragment {
+pub struct MaterialDef {
     pub name_reference: StringReference,
 
     /// Most flags are _unknown_, however:
@@ -49,13 +49,13 @@ pub struct MaterialFragment {
     pub pair: Option<(u32, f32)>,
 }
 
-impl FragmentParser for MaterialFragment {
+impl FragmentParser for MaterialDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x30;
-    const TYPE_NAME: &'static str = "Material";
+    const TYPE_NAME: &'static str = "MaterialDef";
 
-    fn parse(input: &[u8]) -> WResult<MaterialFragment> {
+    fn parse(input: &[u8]) -> WResult<MaterialDef> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, render_method) = RenderMethod::parse(i)?;
@@ -72,7 +72,7 @@ impl FragmentParser for MaterialFragment {
 
         Ok((
             i,
-            MaterialFragment {
+            MaterialDef {
                 name_reference,
                 flags,
                 render_method,
@@ -86,7 +86,7 @@ impl FragmentParser for MaterialFragment {
     }
 }
 
-impl Fragment for MaterialFragment {
+impl Fragment for MaterialDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -123,7 +123,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0004-0x30.frag")[..];
-        let frag = MaterialFragment::parse(data).unwrap().1;
+        let frag = MaterialDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-22));
         assert_eq!(frag.flags, 0x02);
@@ -141,7 +141,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0004-0x30.frag")[..];
-        let frag = MaterialFragment::parse(data).unwrap().1;
+        let frag = MaterialDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

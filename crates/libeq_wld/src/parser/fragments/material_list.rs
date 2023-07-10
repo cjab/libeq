@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, MaterialFragment, StringReference, WResult};
+use super::{Fragment, FragmentParser, FragmentRef, MaterialDef, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;
@@ -22,8 +22,8 @@ pub struct MaterialListFragment {
     /// The number of fragment references this fragment contains.
     pub size1: u32,
 
-    /// `size1` references to [MaterialFragment] fragments.
-    pub fragments: Vec<FragmentRef<MaterialFragment>>,
+    /// `size1` references to [MaterialDef] fragments.
+    pub fragments: Vec<FragmentRef<MaterialDef>>,
 }
 
 impl FragmentParser for MaterialListFragment {
