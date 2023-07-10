@@ -361,7 +361,7 @@
     <tr>
       <td>0x32</td>
       <td>50</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/vertex_color.rs">VertexColor</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_rgb_track_def.rs">DmRGBTrackDef</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x32--vertex-color--plain">Vertex Color</a></td>
       <td></td>
     </tr>
