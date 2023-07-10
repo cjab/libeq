@@ -476,8 +476,8 @@ impl<'a> FragmentHeader<'a> {
                 ParticleSprite::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::ParticleSprite(f.1))),
             ),
-            ParticleSpriteDefFragment::TYPE_ID => Some(
-                ParticleSpriteDefFragment::parse(&self.field_data)
+            ParticleSpriteDef::TYPE_ID => Some(
+                ParticleSpriteDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::ParticleSpriteDef(f.1))),
             ),
             PaletteFileFragment::TYPE_ID => Some(
