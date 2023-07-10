@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, MeshAnimatedVerticesFragment, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, DmTrackDef2, StringReference, WResult,
 };
 
 use nom::number::complete::le_u32;
@@ -12,14 +12,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// A reference to a [MeshAnimatedVerticesFragment].
+/// A reference to a [DmTrackDef2].
 ///
 /// **Type ID:** 0x2f
 pub struct DmTrack {
     pub name_reference: StringReference,
 
-    /// The [MeshAnimatedVerticesFragment] reference.
-    pub reference: FragmentRef<MeshAnimatedVerticesFragment>,
+    /// The [DmTrackDef2] reference.
+    pub reference: FragmentRef<DmTrackDef2>,
 
     /// _Unknown_ - Usually contains 0.
     pub flags: u32,

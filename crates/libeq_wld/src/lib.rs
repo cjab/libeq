@@ -41,7 +41,7 @@
 pub mod parser;
 
 use parser::{
-    FragmentRef, MaterialDef, MeshAnimatedVerticesFragment, DmSpriteDef2,
+    FragmentRef, MaterialDef, DmTrackDef2, DmSpriteDef2,
     DmSpriteDef2FaceEntry, DmSprite, ActorDef, Actor,
     RenderMethod, SimpleSpriteDef, SimpleSpriteDefFlags, WldDoc,
 };
@@ -109,7 +109,7 @@ impl Wld {
 #[derive(Debug)]
 pub struct MeshAnimatedVertices<'a> {
     doc: &'a WldDoc,
-    fragment: &'a MeshAnimatedVerticesFragment,
+    fragment: &'a DmTrackDef2,
 }
 
 impl<'a> MeshAnimatedVertices<'a> {

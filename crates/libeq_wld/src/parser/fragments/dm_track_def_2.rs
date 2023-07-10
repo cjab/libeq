@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 /// fragment as the client cycles through the animation frames.
 ///
 /// **Type ID:** 0x37
-pub struct MeshAnimatedVerticesFragment {
+pub struct DmTrackDef2 {
     pub name_reference: StringReference,
 
     /// _Unknown_ - Usually contains 0.
@@ -51,13 +51,13 @@ pub struct MeshAnimatedVerticesFragment {
     pub size6: u16,
 }
 
-impl FragmentParser for MeshAnimatedVerticesFragment {
+impl FragmentParser for DmTrackDef2 {
     type T = Self;
 
     const TYPE_ID: u32 = 0x37;
-    const TYPE_NAME: &'static str = "MeshAnimatedVertices";
+    const TYPE_NAME: &'static str = "DmTrackDef2";
 
-    fn parse(input: &[u8]) -> WResult<MeshAnimatedVerticesFragment> {
+    fn parse(input: &[u8]) -> WResult<DmTrackDef2> {
         let (i, (name_reference, flags, vertex_count, frame_count, param1, param2, scale)) =
             tuple((
                 StringReference::parse,
@@ -78,7 +78,7 @@ impl FragmentParser for MeshAnimatedVerticesFragment {
 
         Ok((
             remaining,
-            MeshAnimatedVerticesFragment {
+            DmTrackDef2 {
                 name_reference,
                 flags,
                 vertex_count,
@@ -93,7 +93,7 @@ impl FragmentParser for MeshAnimatedVerticesFragment {
     }
 }
 
-impl Fragment for MeshAnimatedVerticesFragment {
+impl Fragment for DmTrackDef2 {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0631-0x37.frag")[..];
-        let frag = MeshAnimatedVerticesFragment::parse(data).unwrap().1;
+        let frag = DmTrackDef2::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-5038));
         assert_eq!(frag.flags, 0x0);
@@ -155,7 +155,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0631-0x37.frag")[..];
-        let frag = MeshAnimatedVerticesFragment::parse(data).unwrap().1;
+        let frag = DmTrackDef2::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

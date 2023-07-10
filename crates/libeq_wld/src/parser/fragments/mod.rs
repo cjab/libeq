@@ -16,7 +16,7 @@ mod light;
 mod material_def;
 mod material_palette;
 mod dm_sprite_def_2;
-mod mesh_animated_vertices;
+mod dm_track_def_2;
 mod dm_track;
 mod dm_sprite;
 mod track_def;
@@ -75,7 +75,7 @@ pub use light::*;
 pub use material_def::*;
 pub use material_palette::*;
 pub use dm_sprite_def_2::*;
-pub use mesh_animated_vertices::*;
+pub use dm_track_def_2::*;
 pub use dm_track::*;
 pub use dm_sprite::*;
 pub use track_def::*;
@@ -169,7 +169,7 @@ pub enum FragmentType {
     MaterialDef(MaterialDef),
     MaterialPalette(MaterialPalette),
     DmSpriteDef2(DmSpriteDef2),
-    MeshAnimatedVertices(MeshAnimatedVerticesFragment),
+    DmTrackDef2(DmTrackDef2),
     DmTrack(DmTrack),
     DmSprite(DmSprite),
     TrackDef(TrackDef),
@@ -222,7 +222,7 @@ impl Deref for FragmentType {
             Self::MaterialDef(x) => x,
             Self::MaterialPalette(x) => x,
             Self::DmSpriteDef2(x) => x,
-            Self::MeshAnimatedVertices(x) => x,
+            Self::DmTrackDef2(x) => x,
             Self::DmTrack(x) => x,
             Self::DmSprite(x) => x,
             Self::TrackDef(x) => x,

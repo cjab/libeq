@@ -342,9 +342,9 @@ impl<'a> FragmentHeader<'a> {
                 DmRGBTrackDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::DmRGBTrackDef(f.1))),
             ),
-            MeshAnimatedVerticesFragment::TYPE_ID => Some(
-                MeshAnimatedVerticesFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::MeshAnimatedVertices(f.1))),
+            DmTrackDef2::TYPE_ID => Some(
+                DmTrackDef2::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::DmTrackDef2(f.1))),
             ),
             DmTrack::TYPE_ID => Some(
                 DmTrack::parse(&self.field_data)
