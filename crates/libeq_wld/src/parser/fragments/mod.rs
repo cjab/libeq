@@ -8,7 +8,7 @@ mod sprite_3d_def;
 mod sprite_3d;
 mod common;
 mod global_ambient_light_def;
-mod four_d_sprite;
+mod sprite_4d;
 mod four_d_sprite_def;
 mod point_light;
 mod light_def;
@@ -67,7 +67,7 @@ pub use sprite_3d_def::*;
 pub use sprite_3d::*;
 pub use common::*;
 pub use global_ambient_light_def::*;
-pub use four_d_sprite::*;
+pub use sprite_4d::*;
 pub use four_d_sprite_def::*;
 pub use point_light::*;
 pub use light_def::*;
@@ -161,7 +161,7 @@ pub enum FragmentType {
     Sprite3DDef(Sprite3DDef),
     Sprite3D(Sprite3D),
     GlobalAmbientLightDef(GlobalAmbientLightDef),
-    FourDSprite(FourDSpriteFragment),
+    Sprite4D(Sprite4D),
     FourDSpriteDef(FourDSpriteDefFragment),
     PointLight(PointLight),
     LightDef(LightDef),
@@ -214,7 +214,7 @@ impl Deref for FragmentType {
             Self::Sprite3DDef(x) => x,
             Self::Sprite3D(x) => x,
             Self::GlobalAmbientLightDef(x) => x,
-            Self::FourDSprite(x) => x,
+            Self::Sprite4D(x) => x,
             Self::FourDSpriteDef(x) => x,
             Self::PointLight(x) => x,
             Self::LightDef(x) => x,
