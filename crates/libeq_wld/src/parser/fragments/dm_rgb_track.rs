@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, VertexColorFragment, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, DmRGBTrackDef, StringReference, WResult,
 };
 
 use nom::number::complete::le_u32;
@@ -12,14 +12,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// A reference to a [VertexColorFragment].
+/// A reference to a [DmRGBTrackDef].
 ///
 /// **Type ID:** 0x33
 pub struct DmRGBTrack {
     pub name_reference: StringReference,
 
-    /// The [VertexColorFragment] reference.
-    pub reference: FragmentRef<VertexColorFragment>,
+    /// The [DmRGBTrackDef] reference.
+    pub reference: FragmentRef<DmRGBTrackDef>,
 
     /// _Unknown_ - Usually contains 0.
     pub flags: u32,

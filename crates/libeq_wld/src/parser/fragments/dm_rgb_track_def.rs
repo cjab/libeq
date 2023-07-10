@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// **Type ID:** 0x32
-pub struct VertexColorFragment {
+pub struct DmRGBTrackDef {
     pub name_reference: StringReference,
 
     /// _Unknown_ - Usually contains 1.
@@ -45,13 +45,13 @@ pub struct VertexColorFragment {
     pub vertex_colors: Vec<u32>,
 }
 
-impl FragmentParser for VertexColorFragment {
+impl FragmentParser for DmRGBTrackDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x32;
-    const TYPE_NAME: &'static str = "VertexColor";
+    const TYPE_NAME: &'static str = "DmRGBTrackDef";
 
-    fn parse(input: &[u8]) -> WResult<VertexColorFragment> {
+    fn parse(input: &[u8]) -> WResult<DmRGBTrackDef> {
         let (i, (name_reference, data1, vertex_color_count, data2, data3, data4)) =
             tuple((
                 StringReference::parse,
@@ -65,7 +65,7 @@ impl FragmentParser for VertexColorFragment {
 
         Ok((
             remaining,
-            VertexColorFragment {
+            DmRGBTrackDef {
                 name_reference,
                 data1,
                 vertex_color_count,
@@ -78,7 +78,7 @@ impl FragmentParser for VertexColorFragment {
     }
 }
 
-impl Fragment for VertexColorFragment {
+impl Fragment for DmRGBTrackDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/objects/0000-0x32.frag")[..];
-        let frag = VertexColorFragment::parse(data).unwrap().1;
+        let frag = DmRGBTrackDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-1));
         assert_eq!(frag.data1, 1);
@@ -131,7 +131,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/objects/0000-0x32.frag")[..];
-        let frag = VertexColorFragment::parse(data).unwrap().1;
+        let frag = DmRGBTrackDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
