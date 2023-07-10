@@ -14,10 +14,10 @@ use super::{Fragment, FragmentParser, StringReference, WResult};
 /// 4DSPRITEDEF fragment
 ///
 /// **Type ID:** 0x0a
-pub struct FourDSpriteDefFragment {
+pub struct Sprite4DDef {
     pub name_reference: StringReference,
 
-    pub flags: FourDSpriteFlags,
+    pub flags: Sprite4DDefFlags,
 
     /// NUMFRAMES %d
     pub num_frames: u32,
@@ -41,15 +41,15 @@ pub struct FourDSpriteDefFragment {
     pub sprite_fragments: Option<Vec<u32>>,
 }
 
-impl FragmentParser for FourDSpriteDefFragment {
+impl FragmentParser for Sprite4DDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x0a;
-    const TYPE_NAME: &'static str = "FourDSpriteDef";
+    const TYPE_NAME: &'static str = "Sprite4DDef";
 
-    fn parse(input: &[u8]) -> WResult<FourDSpriteDefFragment> {
+    fn parse(input: &[u8]) -> WResult<Sprite4DDef> {
         let (i, name_reference) = StringReference::parse(input)?;
-        let (i, flags) = FourDSpriteFlags::parse(i)?;
+        let (i, flags) = Sprite4DDefFlags::parse(i)?;
         let (i, num_frames) = le_u32(i)?;
         let (i, polygon_fragment) = le_u32(i)?;
 
@@ -85,7 +85,7 @@ impl FragmentParser for FourDSpriteDefFragment {
 
         Ok((
             i,
-            FourDSpriteDefFragment {
+            Sprite4DDef {
                 name_reference,
                 flags,
                 num_frames,
@@ -100,7 +100,7 @@ impl FragmentParser for FourDSpriteDefFragment {
     }
 }
 
-impl Fragment for FourDSpriteDefFragment {
+impl Fragment for Sprite4DDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -140,9 +140,9 @@ impl Fragment for FourDSpriteDefFragment {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-pub struct FourDSpriteFlags(u32);
+pub struct Sprite4DDefFlags(u32);
 
-impl FourDSpriteFlags {
+impl Sprite4DDefFlags {
     const HAS_CENTER_OFFSET: u32 = 0x01;
     const HAS_BOUNDING_RADIUS: u32 = 0x02;
     const HAS_CURRENT_FRAME: u32 = 0x04;
@@ -192,10 +192,10 @@ mod tests {
     fn it_parses() {
         let data =
             &include_bytes!("../../../fixtures/fragments/wldcom/4dspritedef-0004-0x0a.frag")[..];
-        let (remaining, frag) = FourDSpriteDefFragment::parse(data).unwrap();
+        let (remaining, frag) = Sprite4DDef::parse(data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(-28));
-        assert_eq!(frag.flags, FourDSpriteFlags(0x5f));
+        assert_eq!(frag.flags, Sprite4DDefFlags(0x5f));
         assert_eq!(frag.num_frames, 3);
         assert_eq!(frag.polygon_fragment, 4);
         assert_eq!(frag.center_offset, Some((1.1, 1.2, 1.3)));
@@ -211,7 +211,7 @@ mod tests {
     fn it_serializes() {
         let data =
             &include_bytes!("../../../fixtures/fragments/wldcom/4dspritedef-0004-0x0a.frag")[..];
-        let frag = FourDSpriteDefFragment::parse(data).unwrap().1;
+        let frag = Sprite4DDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

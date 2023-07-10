@@ -488,9 +488,9 @@ impl<'a> FragmentHeader<'a> {
                 Sprite4D::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Sprite4D(f.1))),
             ),
-            FourDSpriteDefFragment::TYPE_ID => Some(
-                FourDSpriteDefFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::FourDSpriteDef(f.1))),
+            Sprite4DDef::TYPE_ID => Some(
+                Sprite4DDef::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::Sprite4DDef(f.1))),
             ),
             _ => None,
         };

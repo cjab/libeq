@@ -79,8 +79,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
         FragmentType::Sprite4D(_) => {
             (Sprite4D::TYPE_NAME, Color::Rgb(0xcc, 0x66, 0x66))
         }
-        FragmentType::FourDSpriteDef(_) => (
-            FourDSpriteDefFragment::TYPE_NAME,
+        FragmentType::Sprite4DDef(_) => (
+            Sprite4DDef::TYPE_NAME,
             Color::Rgb(0xee, 0x99, 0x44),
         ),
         FragmentType::PointLight(_) => (PointLight::TYPE_NAME, Color::Rgb(0x00, 0xbf, 0xff)),
