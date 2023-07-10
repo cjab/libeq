@@ -168,8 +168,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             BmInfo::TYPE_NAME,
             Color::Rgb(0xa9, 0xa9, 0xa9),
         ),
-        FragmentType::TextureImagesRtk(_) => (
-            TextureImagesRtkFragment::TYPE_NAME,
+        FragmentType::BmInfoRtk(_) => (
+            BmInfoRtk::TYPE_NAME,
             Color::Rgb(0xa9, 0xa9, 0xa9),
         ),
         FragmentType::SimpleSprite(_) => (
