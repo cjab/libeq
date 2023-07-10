@@ -51,7 +51,7 @@ pub struct HierarchicalSpriteDef {
     pub num_attached_skins: Option<u32>,
 
     /// There are `num_attched_skins` of these. This field only exists if the proper bit in the `flags`
-    /// field is set. These entries generally point to 0x2D [MeshReferenceFragment]s and
+    /// field is set. These entries generally point to 0x2D [DmSprite]s and
     /// outline all of the meshes in the animated model. For example, there might be a mesh
     /// for a model’s body and another one for the head.
     pub dm_sprites: Option<Vec<u32>>,

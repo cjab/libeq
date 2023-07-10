@@ -445,9 +445,9 @@ impl<'a> FragmentHeader<'a> {
                 SimpleSprite::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::SimpleSprite(f.1))),
             ),
-            MeshReferenceFragment::TYPE_ID => Some(
-                MeshReferenceFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::MeshReference(f.1))),
+            DmSprite::TYPE_ID => Some(
+                DmSprite::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::DmSprite(f.1))),
             ),
             SimpleSpriteDef::TYPE_ID => Some(
                 SimpleSpriteDef::parse(&self.field_data).map(|f| (f.0, FragmentType::SimpleSpriteDef(f.1))),

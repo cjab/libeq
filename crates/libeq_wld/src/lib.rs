@@ -42,7 +42,7 @@ pub mod parser;
 
 use parser::{
     FragmentRef, MaterialFragment, MeshAnimatedVerticesFragment, MeshFragment,
-    MeshFragmentFaceEntry, MeshReferenceFragment, ActorDef, Actor,
+    MeshFragmentFaceEntry, DmSprite, ActorDef, Actor,
     RenderMethod, SimpleSpriteDef, SimpleSpriteDefFlags, WldDoc,
 };
 use std::error::Error;
@@ -499,7 +499,7 @@ impl<'a> Model<'a> {
     /// Follow the fragment reference to find the MeshFragment
     fn get_mesh_fragment(&self) -> Option<&MeshFragment> {
         let fragment_ref = *self.fragment.fragment_references.first()?;
-        let fragment_ref: FragmentRef<MeshReferenceFragment> =
+        let fragment_ref: FragmentRef<DmSprite> =
             FragmentRef::new(fragment_ref as i32);
         let fragment = self.doc.get(&fragment_ref)?;
         self.doc.get(&fragment.reference)
