@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [ParticleSpriteDefFragment].
 ///
 /// **Type ID:** 0x0d
-pub struct ParticleSpriteFragment {
+pub struct ParticleSprite {
     pub name_reference: StringReference,
 
     /// The [ParticleSpriteDefFragment] reference.
@@ -25,18 +25,18 @@ pub struct ParticleSpriteFragment {
     pub params1: u32,
 }
 
-impl FragmentParser for ParticleSpriteFragment {
+impl FragmentParser for ParticleSprite {
     type T = Self;
 
     const TYPE_ID: u32 = 0x0d;
     const TYPE_NAME: &'static str = "ParticleSprite";
 
-    fn parse(input: &[u8]) -> WResult<ParticleSpriteFragment> {
+    fn parse(input: &[u8]) -> WResult<ParticleSprite> {
         let (remaining, (name_reference, reference, params1)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
-            ParticleSpriteFragment {
+            ParticleSprite {
                 name_reference,
                 reference,
                 params1,
@@ -45,7 +45,7 @@ impl FragmentParser for ParticleSpriteFragment {
     }
 }
 
-impl Fragment for ParticleSpriteFragment {
+impl Fragment for ParticleSprite {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -78,7 +78,7 @@ mod tests {
         let data = &include_bytes!(
             "../../../fixtures/fragments/wldcom/particle-sprite-0001-0x0d.frag"
         )[..];
-        let frag = ParticleSpriteFragment::parse(data).unwrap().1;
+        let frag = ParticleSprite::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0x0));
         assert_eq!(frag.reference, FragmentRef::new(0x1));
@@ -90,7 +90,7 @@ mod tests {
         let data = &include_bytes!(
             "../../../fixtures/fragments/wldcom/particle-sprite-0001-0x0d.frag"
         )[..];
-        let frag = ParticleSpriteFragment::parse(data).unwrap().1;
+        let frag = ParticleSprite::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

@@ -123,7 +123,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Color::Rgb(0x8b, 0x00, 0x8b),
         ),
         FragmentType::ParticleSprite(_) => (
-            ParticleSpriteFragment::TYPE_NAME,
+            ParticleSprite::TYPE_NAME,
             Color::Rgb(0x26, 0x59, 0x70),
         ),
         FragmentType::ParticleSpriteDef(_) => (

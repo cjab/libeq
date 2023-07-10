@@ -176,7 +176,7 @@ pub enum FragmentType {
     Track(Track),
     ActorDef(ActorDef),
     Actor(Actor),
-    ParticleSprite(ParticleSpriteFragment),
+    ParticleSprite(ParticleSprite),
     ParticleSpriteDef(ParticleSpriteDefFragment),
     ParticleCloudDef(ParticleCloudDef),
     PaletteFile(PaletteFileFragment),
