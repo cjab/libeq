@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 ///                          points may or may not be obsolete.
 ///
 /// **Type ID:** 0x29
-pub struct RegionFlagFragment {
+pub struct Zone {
     pub name_reference: StringReference,
 
     /// _Unknown_ - Usually contains 0.
@@ -53,13 +53,13 @@ pub struct RegionFlagFragment {
     pub user_data: String,
 }
 
-impl FragmentParser for RegionFlagFragment {
+impl FragmentParser for Zone {
     type T = Self;
 
     const TYPE_ID: u32 = 0x29;
-    const TYPE_NAME: &'static str = "RegionFlag";
+    const TYPE_NAME: &'static str = "Zone";
 
-    fn parse(input: &[u8]) -> WResult<RegionFlagFragment> {
+    fn parse(input: &[u8]) -> WResult<Zone> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, region_count) = le_u32(i)?;
@@ -69,7 +69,7 @@ impl FragmentParser for RegionFlagFragment {
 
         Ok((
             i,
-            RegionFlagFragment {
+            Zone {
                 name_reference,
                 flags,
                 region_count,
@@ -81,7 +81,7 @@ impl FragmentParser for RegionFlagFragment {
     }
 }
 
-impl Fragment for RegionFlagFragment {
+impl Fragment for Zone {
     fn into_bytes(&self) -> Vec<u8> {
         let user_data_size = self.user_data_size as usize;
         let padding = (4 - user_data_size % 4) % 4;
@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
-        let frag = RegionFlagFragment::parse(data).unwrap().1;
+        let frag = Zone::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-52603));
         assert_eq!(frag.flags, 0x0);
@@ -134,7 +134,7 @@ mod tests {
     #[test]
     fn it_parses_user_data() {
         let data = &include_bytes!("../../../fixtures/fragments/qeynos/10322-0x29.frag")[..];
-        let frag = RegionFlagFragment::parse(data).unwrap().1;
+        let frag = Zone::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-124807));
         assert_eq!(frag.flags, 0x0);
@@ -150,14 +150,14 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
-        let frag = RegionFlagFragment::parse(data).unwrap().1;
+        let frag = Zone::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
     #[test]
     fn it_serializes_user_data() {
         let data = &include_bytes!("../../../fixtures/fragments/qeynos/10322-0x29.frag")[..];
-        let frag = RegionFlagFragment::parse(data).unwrap().1;
+        let frag = Zone::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
