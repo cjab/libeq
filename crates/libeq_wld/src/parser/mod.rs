@@ -460,9 +460,9 @@ impl<'a> FragmentHeader<'a> {
                 ParticleCloudDefFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::ParticleCloudDef(f.1))),
             ),
-            Unknown0x2eFragment::TYPE_ID => Some(
-                Unknown0x2eFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::Unknown0x2e(f.1))),
+            DmTrackDef::TYPE_ID => Some(
+                DmTrackDef::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::DmTrackDef(f.1))),
             ),
             SphereListFragment::TYPE_ID => Some(
                 SphereListFragment::parse(&self.field_data)

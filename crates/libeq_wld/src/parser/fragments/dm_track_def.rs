@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// An older version of the 0x37 fragment, which describes the animation of individual vertices in a DMSPRITEDEF mesh.
 ///
 /// **Type ID:** 0x2e
-pub struct Unknown0x2eFragment {
+pub struct DmTrackDef {
     pub name_reference: StringReference,
 
     pub flags: u32,
@@ -25,11 +25,11 @@ pub struct Unknown0x2eFragment {
     pub frames: Vec<Vec<(f32, f32, f32)>>,
 }
 
-impl FragmentParser for Unknown0x2eFragment {
+impl FragmentParser for DmTrackDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2e;
-    const TYPE_NAME: &'static str = "Unknown0x2e";
+    const TYPE_NAME: &'static str = "DmTrackDef";
 
     fn parse(input: &[u8]) -> WResult<Self> {
         let (i, name_reference) = StringReference::parse(input)?;
@@ -57,7 +57,7 @@ impl FragmentParser for Unknown0x2eFragment {
     }
 }
 
-impl Fragment for Unknown0x2eFragment {
+impl Fragment for DmTrackDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
