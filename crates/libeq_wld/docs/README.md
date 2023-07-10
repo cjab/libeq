@@ -340,7 +340,7 @@
     <tr>
       <td>0x2f</td>
       <td>47</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/mesh_animated_vertices_reference.rs">MeshAnimatedVerticesReference</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_track.rs">DmTrack</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x2f--mesh-animated-vertices-reference--reference">Mesh Animated Vertices Reference</a></td>
       <td></td>
     </tr>

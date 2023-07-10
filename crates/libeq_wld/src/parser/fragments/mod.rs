@@ -17,7 +17,7 @@ mod material;
 mod material_list;
 mod mesh;
 mod mesh_animated_vertices;
-mod mesh_animated_vertices_reference;
+mod dm_track;
 mod dm_sprite;
 mod track_def;
 mod track;
@@ -76,7 +76,7 @@ pub use material::*;
 pub use material_list::*;
 pub use mesh::*;
 pub use mesh_animated_vertices::*;
-pub use mesh_animated_vertices_reference::*;
+pub use dm_track::*;
 pub use dm_sprite::*;
 pub use track_def::*;
 pub use track::*;
@@ -170,7 +170,7 @@ pub enum FragmentType {
     MaterialList(MaterialListFragment),
     Mesh(MeshFragment),
     MeshAnimatedVertices(MeshAnimatedVerticesFragment),
-    MeshAnimatedVerticesReference(MeshAnimatedVerticesReferenceFragment),
+    DmTrack(DmTrack),
     DmSprite(DmSprite),
     TrackDef(TrackDef),
     Track(Track),
@@ -223,7 +223,7 @@ impl Deref for FragmentType {
             Self::MaterialList(x) => x,
             Self::Mesh(x) => x,
             Self::MeshAnimatedVertices(x) => x,
-            Self::MeshAnimatedVerticesReference(x) => x,
+            Self::DmTrack(x) => x,
             Self::DmSprite(x) => x,
             Self::TrackDef(x) => x,
             Self::Track(x) => x,

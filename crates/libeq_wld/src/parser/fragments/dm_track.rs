@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// A reference to a [MeshAnimatedVerticesFragment].
 ///
 /// **Type ID:** 0x2f
-pub struct MeshAnimatedVerticesReferenceFragment {
+pub struct DmTrack {
     pub name_reference: StringReference,
 
     /// The [MeshAnimatedVerticesFragment] reference.
@@ -25,18 +25,18 @@ pub struct MeshAnimatedVerticesReferenceFragment {
     pub flags: u32,
 }
 
-impl FragmentParser for MeshAnimatedVerticesReferenceFragment {
+impl FragmentParser for DmTrack {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2f;
-    const TYPE_NAME: &'static str = "MeshAnimatedVerticesReference";
+    const TYPE_NAME: &'static str = "DmTrack";
 
-    fn parse(input: &[u8]) -> WResult<MeshAnimatedVerticesReferenceFragment> {
+    fn parse(input: &[u8]) -> WResult<DmTrack> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
-            MeshAnimatedVerticesReferenceFragment {
+            DmTrack {
                 name_reference,
                 reference,
                 flags,
@@ -45,7 +45,7 @@ impl FragmentParser for MeshAnimatedVerticesReferenceFragment {
     }
 }
 
-impl Fragment for MeshAnimatedVerticesReferenceFragment {
+impl Fragment for DmTrack {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0632-0x2f.frag")[..];
-        let frag = MeshAnimatedVerticesReferenceFragment::parse(data)
+        let frag = DmTrack::parse(data)
             .unwrap()
             .1;
 
@@ -87,7 +87,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0632-0x2f.frag")[..];
-        let frag = MeshAnimatedVerticesReferenceFragment::parse(data)
+        let frag = DmTrack::parse(data)
             .unwrap()
             .1;
 

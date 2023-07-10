@@ -346,9 +346,9 @@ impl<'a> FragmentHeader<'a> {
                 MeshAnimatedVerticesFragment::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::MeshAnimatedVertices(f.1))),
             ),
-            MeshAnimatedVerticesReferenceFragment::TYPE_ID => Some(
-                MeshAnimatedVerticesReferenceFragment::parse(&self.field_data)
-                    .map(|f| (f.0, FragmentType::MeshAnimatedVerticesReference(f.1))),
+            DmTrack::TYPE_ID => Some(
+                DmTrack::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::DmTrack(f.1))),
             ),
             AmbientLight::TYPE_ID => Some(
                 AmbientLight::parse(&self.field_data)
