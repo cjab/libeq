@@ -184,8 +184,8 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Sprite2D::TYPE_NAME,
             Color::Rgb(0x80, 0x80, 0x00),
         ),
-        FragmentType::Unknown0x2e(_) => {
-            (Unknown0x2eFragment::TYPE_NAME, Color::Rgb(0x80, 0x50, 0x05))
+        FragmentType::DmTrackDef(_) => {
+            (DmTrackDef::TYPE_NAME, Color::Rgb(0x80, 0x50, 0x05))
         }
         FragmentType::VertexColor(_) => {
             (VertexColorFragment::TYPE_NAME, Color::Rgb(0xdd, 0xa0, 0xdd))

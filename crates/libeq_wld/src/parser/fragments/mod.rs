@@ -40,7 +40,7 @@ mod texture_images_rtk;
 mod simple_sprite;
 mod sprite_2d_def;
 mod sprite_2d;
-mod unknown_0x2e;
+mod dm_track_def;
 mod vertex_color;
 mod vertex_color_reference;
 mod world_vertices;
@@ -99,7 +99,7 @@ pub use texture_images_rtk::*;
 pub use simple_sprite::*;
 pub use sprite_2d_def::*;
 pub use sprite_2d::*;
-pub use unknown_0x2e::*;
+pub use dm_track_def::*;
 pub use vertex_color::*;
 pub use vertex_color_reference::*;
 pub use world_vertices::*;
@@ -193,7 +193,7 @@ pub enum FragmentType {
     SimpleSprite(SimpleSprite),
     Sprite2DDef(Sprite2DDef),
     Sprite2D(Sprite2D),
-    Unknown0x2e(Unknown0x2eFragment),
+    DmTrackDef(DmTrackDef),
     VertexColor(VertexColorFragment),
     VertexColorReference(VertexColorReferenceFragment),
     WorldVertices(WorldVerticesFragment),
@@ -246,7 +246,7 @@ impl Deref for FragmentType {
             Self::SimpleSprite(x) => x,
             Self::Sprite2DDef(x) => x,
             Self::Sprite2D(x) => x,
-            Self::Unknown0x2e(x) => x,
+            Self::DmTrackDef(x) => x,
             Self::VertexColor(x) => x,
             Self::VertexColorReference(x) => x,
             Self::WorldVertices(x) => x,
