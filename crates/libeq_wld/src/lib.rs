@@ -41,9 +41,9 @@
 pub mod parser;
 
 use parser::{
-    FragmentRef, MaterialFragment, MeshAnimatedVerticesFragment, MeshFragment,
-    MeshFragmentFaceEntry, MeshReferenceFragment, ModelFragment, ObjectLocationFragment,
-    RenderMethod, TextureFragment, TextureFragmentFlags, WldDoc,
+    FragmentRef, MaterialDef, DmTrackDef2, DmSpriteDef2,
+    DmSpriteDef2FaceEntry, DmSprite, ActorDef, Actor,
+    RenderMethod, SimpleSpriteDef, SimpleSpriteDefFlags, WldDoc,
 };
 use std::error::Error;
 
@@ -68,7 +68,7 @@ impl Wld {
     /// Iterate over all meshes in the wld file.
     pub fn meshes(&self) -> impl Iterator<Item = Mesh> + '_ {
         self.0
-            .fragment_iter::<MeshFragment>()
+            .fragment_iter::<DmSpriteDef2>()
             .map(move |fragment| Mesh {
                 doc: &self.0,
                 fragment,
@@ -78,7 +78,7 @@ impl Wld {
     /// Iterate over all materials in the wld file.
     pub fn materials(&self) -> impl Iterator<Item = Material> + '_ {
         self.0
-            .fragment_iter::<MaterialFragment>()
+            .fragment_iter::<MaterialDef>()
             .map(move |fragment| Material {
                 doc: &self.0,
                 fragment,
@@ -88,7 +88,7 @@ impl Wld {
     /// Iterate over all the objects in the wld file.
     pub fn objects(&self) -> impl Iterator<Item = ObjectLocation> + '_ {
         self.0
-            .fragment_iter::<ObjectLocationFragment>()
+            .fragment_iter::<Actor>()
             .map(move |fragment| ObjectLocation {
                 doc: &self.0,
                 fragment,
@@ -98,7 +98,7 @@ impl Wld {
     /// Iterate over all the objects in the wld file.
     pub fn models(&self) -> impl Iterator<Item = Model> + '_ {
         self.0
-            .fragment_iter::<ModelFragment>()
+            .fragment_iter::<ActorDef>()
             .map(move |fragment| Model {
                 doc: &self.0,
                 fragment,
@@ -109,7 +109,7 @@ impl Wld {
 #[derive(Debug)]
 pub struct MeshAnimatedVertices<'a> {
     doc: &'a WldDoc,
-    fragment: &'a MeshAnimatedVerticesFragment,
+    fragment: &'a DmTrackDef2,
 }
 
 impl<'a> MeshAnimatedVertices<'a> {
@@ -137,7 +137,7 @@ impl<'a> MeshAnimatedVertices<'a> {
 #[derive(Debug)]
 pub struct Mesh<'a> {
     doc: &'a WldDoc,
-    fragment: &'a MeshFragment,
+    fragment: &'a DmSpriteDef2,
 }
 
 impl<'a> Mesh<'a> {
@@ -283,7 +283,7 @@ impl<'a> Mesh<'a> {
 pub struct Primitive<'a> {
     mesh: &'a Mesh<'a>,
     index: usize,
-    fragments: &'a [MeshFragmentFaceEntry],
+    fragments: &'a [DmSpriteDef2FaceEntry],
     material_idx: usize,
 }
 
@@ -329,7 +329,7 @@ impl<'a> Primitive<'a> {
 #[derive(Debug)]
 pub struct Material<'a> {
     doc: &'a WldDoc,
-    fragment: &'a MaterialFragment,
+    fragment: &'a MaterialDef,
 }
 
 impl<'a> Material<'a> {
@@ -357,7 +357,7 @@ impl<'a> Material<'a> {
 #[derive(Debug)]
 pub struct Texture<'a> {
     doc: &'a WldDoc,
-    fragment: &'a TextureFragment,
+    fragment: &'a SimpleSpriteDef,
 }
 
 impl<'a> Texture<'a> {
@@ -366,7 +366,7 @@ impl<'a> Texture<'a> {
         self.doc.get_string(self.fragment.name_reference)
     }
 
-    pub fn flags(&self) -> &TextureFragmentFlags {
+    pub fn flags(&self) -> &SimpleSpriteDefFlags {
         &self.fragment.flags
     }
 
@@ -376,10 +376,10 @@ impl<'a> Texture<'a> {
         self.fragment
             .frame_references
             .iter()
-            // [TextureFragment]s reference a [TextureImagesFragment]
+            // [SimpleSpriteDef]s reference a [BmInfo]
             .map(move |r| self.doc.get(&r))
             .flat_map(|image| match image {
-                // The [TextureImagesFragment] itself contains a collection of filenames. In
+                // The [BmInfo] itself contains a collection of filenames. In
                 // practice this seems to always be just a single filename.
                 Some(i) => i
                     .entries
@@ -402,7 +402,7 @@ impl<'a> Texture<'a> {
 #[derive(Debug)]
 pub struct ObjectLocation<'a> {
     doc: &'a WldDoc,
-    fragment: &'a ObjectLocationFragment,
+    fragment: &'a Actor,
 }
 
 impl<'a> ObjectLocation<'a> {
@@ -473,7 +473,7 @@ impl<'a> ObjectLocation<'a> {
 #[derive(Debug)]
 pub struct Model<'a> {
     doc: &'a WldDoc,
-    fragment: &'a ModelFragment,
+    fragment: &'a ActorDef,
 }
 
 impl<'a> Model<'a> {
@@ -495,11 +495,11 @@ impl<'a> Model<'a> {
         })
     }
 
-    // FIXME: I think casting the fragments to MeshFragment can be done in some better way, but this works for me at the moment.
-    /// Follow the fragment reference to find the MeshFragment
-    fn get_mesh_fragment(&self) -> Option<&MeshFragment> {
+    // FIXME: I think casting the fragments to DmSpriteDef2 can be done in some better way, but this works for me at the moment.
+    /// Follow the fragment reference to find the DmSpriteDef2
+    fn get_mesh_fragment(&self) -> Option<&DmSpriteDef2> {
         let fragment_ref = *self.fragment.fragment_references.first()?;
-        let fragment_ref: FragmentRef<MeshReferenceFragment> =
+        let fragment_ref: FragmentRef<DmSprite> =
             FragmentRef::new(fragment_ref as i32);
         let fragment = self.doc.get(&fragment_ref)?;
         self.doc.get(&fragment.reference)

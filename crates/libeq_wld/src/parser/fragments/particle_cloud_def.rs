@@ -8,7 +8,7 @@ use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
 
 use super::{
-    BlitSpriteDefinitionFragment, Fragment, FragmentParser, FragmentRef, StringReference, WResult,
+    BlitSpriteDef, Fragment, FragmentParser, FragmentRef, StringReference, WResult,
 };
 
 #[cfg(feature = "serde")]
@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 /// Possible unknowns: gravity, location vec3, bbox
 ///
 /// **Type ID:** 0x34
-pub struct ParticleCloudDefFragment {
+pub struct ParticleCloudDef {
     pub name_reference: StringReference,
 
     /// zaela: setting 0
@@ -85,10 +85,10 @@ pub struct ParticleCloudDefFragment {
     /// Color, BGRX
     pub color: (u8, u8, u8, u8),
 
-    pub blitsprite: FragmentRef<BlitSpriteDefinitionFragment>,
+    pub blitsprite: FragmentRef<BlitSpriteDef>,
 }
 
-impl FragmentParser for ParticleCloudDefFragment {
+impl FragmentParser for ParticleCloudDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x34;
@@ -116,7 +116,7 @@ impl FragmentParser for ParticleCloudDefFragment {
         let (i, spawn_rate) = le_u32(i)?;
         let (i, spawn_scale) = le_f32(i)?;
         let (i, color) = tuple((le_u8, le_u8, le_u8, le_u8))(i)?;
-        let (i, blitsprite) = FragmentRef::<BlitSpriteDefinitionFragment>::parse(i)?;
+        let (i, blitsprite) = FragmentRef::<BlitSpriteDef>::parse(i)?;
 
         Ok((
             i,
@@ -148,7 +148,7 @@ impl FragmentParser for ParticleCloudDefFragment {
     }
 }
 
-impl Fragment for ParticleCloudDefFragment {
+impl Fragment for ParticleCloudDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -221,7 +221,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0051-0x34.frag")[..];
-        let frag = ParticleCloudDefFragment::parse(data).unwrap().1;
+        let frag = ParticleCloudDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-566));
         assert_eq!(frag.unknown_1, 4);
@@ -250,7 +250,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0051-0x34.frag")[..];
-        let frag = ParticleCloudDefFragment::parse(data).unwrap().1;
+        let frag = ParticleCloudDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

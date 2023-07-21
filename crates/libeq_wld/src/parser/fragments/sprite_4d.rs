@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, ParticleSpriteDef, StringReference, WResult,
+    Sprite4DDef, Fragment, FragmentParser, FragmentRef, StringReference, WResult,
 };
 
 use nom::number::complete::le_u32;
@@ -12,31 +12,31 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-/// A reference to a [ParticleSpriteDef].
+/// A reference to a [Sprite4DDef].
 ///
-/// **Type ID:** 0x0d
-pub struct ParticleSprite {
+/// **Type ID:** 0x0b
+pub struct Sprite4D {
     pub name_reference: StringReference,
 
-    /// The [ParticleSpriteDef] reference.
-    pub reference: FragmentRef<ParticleSpriteDef>,
+    /// The [Sprite4DDef] reference.
+    pub reference: FragmentRef<Sprite4DDef>,
 
     /// _Unknown_.
     pub params1: u32,
 }
 
-impl FragmentParser for ParticleSprite {
+impl FragmentParser for Sprite4D {
     type T = Self;
 
-    const TYPE_ID: u32 = 0x0d;
-    const TYPE_NAME: &'static str = "ParticleSprite";
+    const TYPE_ID: u32 = 0x0b;
+    const TYPE_NAME: &'static str = "Sprite4D";
 
-    fn parse(input: &[u8]) -> WResult<ParticleSprite> {
+    fn parse(input: &[u8]) -> WResult<Sprite4D> {
         let (remaining, (name_reference, reference, params1)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
-            ParticleSprite {
+            Sprite4D {
                 name_reference,
                 reference,
                 params1,
@@ -45,7 +45,7 @@ impl FragmentParser for ParticleSprite {
     }
 }
 
-impl Fragment for ParticleSprite {
+impl Fragment for Sprite4D {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -75,22 +75,20 @@ mod tests {
     #[test]
     fn it_has_a_known_name_reference() {
         #![allow(overflowing_literals)]
-        let data = &include_bytes!(
-            "../../../fixtures/fragments/wldcom/particle-sprite-0001-0x0d.frag"
-        )[..];
-        let frag = ParticleSprite::parse(data).unwrap().1;
+        let data =
+            &include_bytes!("../../../fixtures/fragments/wldcom/4dspritedef-0001-0x0b.frag")[..];
+        let frag = Sprite4D::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0x0));
-        assert_eq!(frag.reference, FragmentRef::new(0x1));
+        assert_eq!(frag.reference, FragmentRef::new(-10));
         assert_eq!(frag.params1, 0x0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!(
-            "../../../fixtures/fragments/wldcom/particle-sprite-0001-0x0d.frag"
-        )[..];
-        let frag = ParticleSprite::parse(data).unwrap().1;
+        let data =
+            &include_bytes!("../../../fixtures/fragments/wldcom/4dspritedef-0001-0x0b.frag")[..];
+        let frag = Sprite4D::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

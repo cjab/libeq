@@ -52,108 +52,108 @@ where
 
 pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, Color) {
     match fragment_type {
-        FragmentType::AlternateMesh(_) => (
-            AlternateMeshFragment::TYPE_NAME,
+        FragmentType::DmSpriteDef(_) => (
+            DmSpriteDef::TYPE_NAME,
             Color::Rgb(0xad, 0xff, 0x2f),
         ),
         FragmentType::AmbientLight(_) => (
-            AmbientLightFragment::TYPE_NAME,
+            AmbientLight::TYPE_NAME,
             Color::Rgb(0xa0, 0x20, 0xf0),
         ),
-        FragmentType::BlitSpriteDefinition(_) => (
-            BlitSpriteDefinitionFragment::TYPE_NAME,
+        FragmentType::BlitSpriteDef(_) => (
+            BlitSpriteDef::TYPE_NAME,
             Color::Rgb(0x0f, 0xff, 0xff),
         ),
-        FragmentType::BlitSpriteReference(_) => (
-            BlitSpriteReferenceFragment::TYPE_NAME,
+        FragmentType::BlitSprite(_) => (
+            BlitSprite::TYPE_NAME,
             Color::Rgb(0x0f, 0x2f, 0xff),
         ),
-        FragmentType::BspRegion(_) => (BspRegionFragment::TYPE_NAME, Color::Rgb(0x00, 0xff, 0xff)),
-        FragmentType::BspTree(_) => (BspTreeFragment::TYPE_NAME, Color::Rgb(0x00, 0xfa, 0x9a)),
-        FragmentType::Camera(_) => (CameraFragment::TYPE_NAME, Color::Rgb(0x48, 0x3d, 0x8b)),
-        FragmentType::CameraReference(_) => (
-            CameraReferenceFragment::TYPE_NAME,
+        FragmentType::Region(_) => (Region::TYPE_NAME, Color::Rgb(0x00, 0xff, 0xff)),
+        FragmentType::WorldTree(_) => (WorldTree::TYPE_NAME, Color::Rgb(0x00, 0xfa, 0x9a)),
+        FragmentType::Sprite3DDef(_) => (Sprite3DDef::TYPE_NAME, Color::Rgb(0x48, 0x3d, 0x8b)),
+        FragmentType::Sprite3D(_) => (
+            Sprite3D::TYPE_NAME,
             Color::Rgb(0xb2, 0x22, 0x22),
         ),
-        FragmentType::First(_) => (FirstFragment::TYPE_NAME, Color::Rgb(0x7b, 0x68, 0xee)),
-        FragmentType::FourDSprite(_) => {
-            (FourDSpriteFragment::TYPE_NAME, Color::Rgb(0xcc, 0x66, 0x66))
+        FragmentType::GlobalAmbientLightDef(_) => (GlobalAmbientLightDef::TYPE_NAME, Color::Rgb(0x7b, 0x68, 0xee)),
+        FragmentType::Sprite4D(_) => {
+            (Sprite4D::TYPE_NAME, Color::Rgb(0xcc, 0x66, 0x66))
         }
-        FragmentType::FourDSpriteDef(_) => (
-            FourDSpriteDefFragment::TYPE_NAME,
+        FragmentType::Sprite4DDef(_) => (
+            Sprite4DDef::TYPE_NAME,
             Color::Rgb(0xee, 0x99, 0x44),
         ),
-        FragmentType::LightInfo(_) => (LightInfoFragment::TYPE_NAME, Color::Rgb(0x00, 0xbf, 0xff)),
-        FragmentType::LightSource(_) => {
-            (LightSourceFragment::TYPE_NAME, Color::Rgb(0xff, 0xff, 0x00))
+        FragmentType::PointLight(_) => (PointLight::TYPE_NAME, Color::Rgb(0x00, 0xbf, 0xff)),
+        FragmentType::LightDef(_) => {
+            (LightDef::TYPE_NAME, Color::Rgb(0xff, 0xff, 0x00))
         }
-        FragmentType::LightSourceReference(_) => (
-            LightSourceReferenceFragment::TYPE_NAME,
+        FragmentType::Light(_) => (
+            Light::TYPE_NAME,
             Color::Rgb(0x00, 0xff, 0x00),
         ),
-        FragmentType::Material(_) => (MaterialFragment::TYPE_NAME, Color::Rgb(0xf0, 0xe6, 0x8c)),
-        FragmentType::MaterialList(_) => (
-            MaterialListFragment::TYPE_NAME,
+        FragmentType::MaterialDef(_) => (MaterialDef::TYPE_NAME, Color::Rgb(0xf0, 0xe6, 0x8c)),
+        FragmentType::MaterialPalette(_) => (
+            MaterialPalette::TYPE_NAME,
             Color::Rgb(0x64, 0x95, 0xed),
         ),
-        FragmentType::Mesh(_) => (MeshFragment::TYPE_NAME, Color::Rgb(0xaf, 0xee, 0xee)),
-        FragmentType::MeshAnimatedVertices(_) => (
-            MeshAnimatedVerticesFragment::TYPE_NAME,
+        FragmentType::DmSpriteDef2(_) => (DmSpriteDef2::TYPE_NAME, Color::Rgb(0xaf, 0xee, 0xee)),
+        FragmentType::DmTrackDef2(_) => (
+            DmTrackDef2::TYPE_NAME,
             Color::Rgb(0xff, 0xe4, 0xc4),
         ),
-        FragmentType::MeshAnimatedVerticesReference(_) => (
-            MeshAnimatedVerticesReferenceFragment::TYPE_NAME,
+        FragmentType::DmTrack(_) => (
+            DmTrack::TYPE_NAME,
             Color::Rgb(0xff, 0x00, 0xff),
         ),
-        FragmentType::MeshReference(_) => (
-            MeshReferenceFragment::TYPE_NAME,
+        FragmentType::DmSprite(_) => (
+            DmSprite::TYPE_NAME,
             Color::Rgb(0xff, 0x7f, 0x50),
         ),
-        FragmentType::MobSkeletonPieceTrack(_) => (
-            MobSkeletonPieceTrackFragment::TYPE_NAME,
+        FragmentType::TrackDef(_) => (
+            TrackDef::TYPE_NAME,
             Color::Rgb(0x00, 0x00, 0x8b),
         ),
-        FragmentType::MobSkeletonPieceTrackReference(_) => (
-            MobSkeletonPieceTrackReferenceFragment::TYPE_NAME,
+        FragmentType::Track(_) => (
+            Track::TYPE_NAME,
             Color::Rgb(0x32, 0xcd, 0x32),
         ),
-        FragmentType::Model(_) => (ModelFragment::TYPE_NAME, Color::Rgb(0xda, 0xa5, 0x20)),
-        FragmentType::ObjectLocation(_) => (
-            ObjectLocationFragment::TYPE_NAME,
+        FragmentType::ActorDef(_) => (ActorDef::TYPE_NAME, Color::Rgb(0xda, 0xa5, 0x20)),
+        FragmentType::Actor(_) => (
+            Actor::TYPE_NAME,
             Color::Rgb(0x8b, 0x00, 0x8b),
         ),
         FragmentType::ParticleSprite(_) => (
-            ParticleSpriteFragment::TYPE_NAME,
+            ParticleSprite::TYPE_NAME,
             Color::Rgb(0x26, 0x59, 0x70),
         ),
         FragmentType::ParticleSpriteDef(_) => (
-            ParticleSpriteDefFragment::TYPE_NAME,
+            ParticleSpriteDef::TYPE_NAME,
             Color::Rgb(0x3c, 0x88, 0xab),
         ),
         FragmentType::ParticleCloudDef(_) => (
-            ParticleCloudDefFragment::TYPE_NAME,
+            ParticleCloudDef::TYPE_NAME,
             Color::Rgb(0x80, 0x50, 0x05),
         ),
-        FragmentType::PaletteFile(_) => {
-            (PaletteFileFragment::TYPE_NAME, Color::Rgb(0x6a, 0x7f, 0xb5))
+        FragmentType::DefaultPaletteFile(_) => {
+            (DefaultPaletteFile::TYPE_NAME, Color::Rgb(0x6a, 0x7f, 0xb5))
         }
-        FragmentType::PolygonAnimation(_) => (
-            PolygonAnimationFragment::TYPE_NAME,
+        FragmentType::PolyhedronDef(_) => (
+            PolyhedronDef::TYPE_NAME,
             Color::Rgb(0xff, 0x45, 0x00),
         ),
-        FragmentType::PolygonAnimationReference(_) => (
-            PolygonAnimationReferenceFragment::TYPE_NAME,
+        FragmentType::Polyhedron(_) => (
+            Polyhedron::TYPE_NAME,
             Color::Rgb(0xff, 0x8c, 0x00),
         ),
-        FragmentType::RegionFlag(_) => {
-            (RegionFlagFragment::TYPE_NAME, Color::Rgb(0x00, 0x00, 0xff))
+        FragmentType::Zone(_) => {
+            (Zone::TYPE_NAME, Color::Rgb(0x00, 0x00, 0xff))
         }
-        FragmentType::SkeletonTrackSet(_) => (
-            SkeletonTrackSetFragment::TYPE_NAME,
+        FragmentType::HierarchicalSpriteDef(_) => (
+            HierarchicalSpriteDef::TYPE_NAME,
             Color::Rgb(0x3c, 0xb3, 0x71),
         ),
-        FragmentType::SkeletonTrackSetReference(_) => (
-            SkeletonTrackSetReferenceFragment::TYPE_NAME,
+        FragmentType::HierarchicalSprite(_) => (
+            HierarchicalSprite::TYPE_NAME,
             Color::Rgb(0x00, 0x8b, 0x8b),
         ),
         FragmentType::SphereList(_) => {
@@ -163,43 +163,43 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             SphereListDefFragment::TYPE_NAME,
             Color::Rgb(0x00, 0x8b, 0x8b),
         ),
-        FragmentType::Texture(_) => (TextureFragment::TYPE_NAME, Color::Rgb(0x2f, 0x4f, 0x4f)),
-        FragmentType::TextureImages(_) => (
-            TextureImagesFragment::TYPE_NAME,
+        FragmentType::SimpleSpriteDef(_) => (SimpleSpriteDef::TYPE_NAME, Color::Rgb(0x2f, 0x4f, 0x4f)),
+        FragmentType::BmInfo(_) => (
+            BmInfo::TYPE_NAME,
             Color::Rgb(0xa9, 0xa9, 0xa9),
         ),
-        FragmentType::TextureImagesRtk(_) => (
-            TextureImagesRtkFragment::TYPE_NAME,
+        FragmentType::BmInfoRtk(_) => (
+            BmInfoRtk::TYPE_NAME,
             Color::Rgb(0xa9, 0xa9, 0xa9),
         ),
-        FragmentType::TextureReference(_) => (
-            TextureReferenceFragment::TYPE_NAME,
+        FragmentType::SimpleSprite(_) => (
+            SimpleSprite::TYPE_NAME,
             Color::Rgb(0x8b, 0x45, 0x13),
         ),
-        FragmentType::TwoDimensionalObject(_) => (
-            TwoDimensionalObjectFragment::TYPE_NAME,
+        FragmentType::Sprite2DDef(_) => (
+            Sprite2DDef::TYPE_NAME,
             Color::Rgb(0x00, 0x64, 0x00),
         ),
-        FragmentType::TwoDimensionalObjectReference(_) => (
-            TwoDimensionalObjectReferenceFragment::TYPE_NAME,
+        FragmentType::Sprite2D(_) => (
+            Sprite2D::TYPE_NAME,
             Color::Rgb(0x80, 0x80, 0x00),
         ),
-        FragmentType::Unknown0x2e(_) => {
-            (Unknown0x2eFragment::TYPE_NAME, Color::Rgb(0x80, 0x50, 0x05))
+        FragmentType::DmTrackDef(_) => {
+            (DmTrackDef::TYPE_NAME, Color::Rgb(0x80, 0x50, 0x05))
         }
-        FragmentType::VertexColor(_) => {
-            (VertexColorFragment::TYPE_NAME, Color::Rgb(0xdd, 0xa0, 0xdd))
+        FragmentType::DmRGBTrackDef(_) => {
+            (DmRGBTrackDef::TYPE_NAME, Color::Rgb(0xdd, 0xa0, 0xdd))
         }
-        FragmentType::VertexColorReference(_) => (
-            VertexColorReferenceFragment::TYPE_NAME,
+        FragmentType::DmRGBTrack(_) => (
+            DmRGBTrack::TYPE_NAME,
             Color::Rgb(0xff, 0x14, 0x93),
         ),
         FragmentType::WorldVertices(_) => (
             WorldVerticesFragment::TYPE_NAME,
             Color::Rgb(0x59, 0x48, 0x78),
         ),
-        FragmentType::ZoneUnknown(_) => {
-            (ZoneUnknownFragment::TYPE_NAME, Color::Rgb(0xb0, 0x30, 0x60))
+        FragmentType::Sphere(_) => {
+            (Sphere::TYPE_NAME, Color::Rgb(0xb0, 0x30, 0x60))
         }
     }
 }

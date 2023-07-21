@@ -1,50 +1,50 @@
-mod alternate_mesh;
+mod dm_sprite_def;
 mod ambient_light;
-mod blit_sprite_definition;
-mod blit_sprite_reference;
-mod bsp_region;
-mod bsp_tree;
-mod camera;
-mod camera_reference;
+mod blit_sprite_def;
+mod blit_sprite;
+mod region;
+mod world_tree;
+mod sprite_3d_def;
+mod sprite_3d;
 mod common;
-mod first;
-mod four_d_sprite;
-mod four_d_sprite_def;
-mod light_info;
-mod light_source;
-mod light_source_reference;
-mod material;
-mod material_list;
-mod mesh;
-mod mesh_animated_vertices;
-mod mesh_animated_vertices_reference;
-mod mesh_reference;
-mod mob_skeleton_piece_track;
-mod mob_skeleton_piece_track_reference;
-mod model;
-mod object_location;
-mod palette_file;
+mod global_ambient_light_def;
+mod sprite_4d;
+mod sprite_4d_def;
+mod point_light;
+mod light_def;
+mod light;
+mod material_def;
+mod material_palette;
+mod dm_sprite_def_2;
+mod dm_track_def_2;
+mod dm_track;
+mod dm_sprite;
+mod track_def;
+mod track;
+mod actor_def;
+mod actor;
+mod default_palette_file;
 mod particle_cloud_def;
 mod particle_sprite;
 mod particle_sprite_def;
-mod polygon_animation;
-mod polygon_animation_reference;
-mod region_flag;
-mod skeleton_track_set;
-mod skeleton_track_set_reference;
+mod polyhedron_def;
+mod polyhedron;
+mod zone;
+mod hierarchical_sprite_def;
+mod hierarchical_sprite;
 mod sphere_list;
 mod sphere_list_def;
-mod texture;
-mod texture_images;
-mod texture_images_rtk;
-mod texture_reference;
-mod two_dimensional_object;
-mod two_dimensional_object_reference;
-mod unknown_0x2e;
-mod vertex_color;
-mod vertex_color_reference;
+mod simple_sprite_def;
+mod bm_info;
+mod bm_info_rtk;
+mod simple_sprite;
+mod sprite_2d_def;
+mod sprite_2d;
+mod dm_track_def;
+mod dm_rgb_track_def;
+mod dm_rgb_track;
 mod world_vertices;
-mod zone_unknown;
+mod sphere;
 
 use std::any::Any;
 use std::marker::PhantomData;
@@ -57,53 +57,53 @@ use serde::{Deserialize, Serialize};
 
 use super::{StringReference, WResult};
 
-pub use alternate_mesh::*;
+pub use dm_sprite_def::*;
 pub use ambient_light::*;
-pub use blit_sprite_definition::*;
-pub use blit_sprite_reference::*;
-pub use bsp_region::*;
-pub use bsp_tree::*;
-pub use camera::*;
-pub use camera_reference::*;
+pub use blit_sprite_def::*;
+pub use blit_sprite::*;
+pub use region::*;
+pub use world_tree::*;
+pub use sprite_3d_def::*;
+pub use sprite_3d::*;
 pub use common::*;
-pub use first::*;
-pub use four_d_sprite::*;
-pub use four_d_sprite_def::*;
-pub use light_info::*;
-pub use light_source::*;
-pub use light_source_reference::*;
-pub use material::*;
-pub use material_list::*;
-pub use mesh::*;
-pub use mesh_animated_vertices::*;
-pub use mesh_animated_vertices_reference::*;
-pub use mesh_reference::*;
-pub use mob_skeleton_piece_track::*;
-pub use mob_skeleton_piece_track_reference::*;
-pub use model::*;
-pub use object_location::*;
-pub use palette_file::*;
+pub use global_ambient_light_def::*;
+pub use sprite_4d::*;
+pub use sprite_4d_def::*;
+pub use point_light::*;
+pub use light_def::*;
+pub use light::*;
+pub use material_def::*;
+pub use material_palette::*;
+pub use dm_sprite_def_2::*;
+pub use dm_track_def_2::*;
+pub use dm_track::*;
+pub use dm_sprite::*;
+pub use track_def::*;
+pub use track::*;
+pub use actor_def::*;
+pub use actor::*;
+pub use default_palette_file::*;
 pub use particle_cloud_def::*;
 pub use particle_sprite::*;
 pub use particle_sprite_def::*;
-pub use polygon_animation::*;
-pub use polygon_animation_reference::*;
-pub use region_flag::*;
-pub use skeleton_track_set::*;
-pub use skeleton_track_set_reference::*;
+pub use polyhedron_def::*;
+pub use polyhedron::*;
+pub use zone::*;
+pub use hierarchical_sprite_def::*;
+pub use hierarchical_sprite::*;
 pub use sphere_list::*;
 pub use sphere_list_def::*;
-pub use texture::*;
-pub use texture_images::*;
-pub use texture_images_rtk::*;
-pub use texture_reference::*;
-pub use two_dimensional_object::*;
-pub use two_dimensional_object_reference::*;
-pub use unknown_0x2e::*;
-pub use vertex_color::*;
-pub use vertex_color_reference::*;
+pub use simple_sprite_def::*;
+pub use bm_info::*;
+pub use bm_info_rtk::*;
+pub use simple_sprite::*;
+pub use sprite_2d_def::*;
+pub use sprite_2d::*;
+pub use dm_track_def::*;
+pub use dm_rgb_track_def::*;
+pub use dm_rgb_track::*;
 pub use world_vertices::*;
-pub use zone_unknown::*;
+pub use sphere::*;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -152,52 +152,52 @@ pub trait FragmentParser {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
 pub enum FragmentType {
-    AlternateMesh(AlternateMeshFragment),
-    AmbientLight(AmbientLightFragment),
-    BlitSpriteDefinition(BlitSpriteDefinitionFragment),
-    BlitSpriteReference(BlitSpriteReferenceFragment),
-    BspRegion(BspRegionFragment),
-    BspTree(BspTreeFragment),
-    Camera(CameraFragment),
-    CameraReference(CameraReferenceFragment),
-    First(FirstFragment),
-    FourDSprite(FourDSpriteFragment),
-    FourDSpriteDef(FourDSpriteDefFragment),
-    LightInfo(LightInfoFragment),
-    LightSource(LightSourceFragment),
-    LightSourceReference(LightSourceReferenceFragment),
-    Material(MaterialFragment),
-    MaterialList(MaterialListFragment),
-    Mesh(MeshFragment),
-    MeshAnimatedVertices(MeshAnimatedVerticesFragment),
-    MeshAnimatedVerticesReference(MeshAnimatedVerticesReferenceFragment),
-    MeshReference(MeshReferenceFragment),
-    MobSkeletonPieceTrack(MobSkeletonPieceTrackFragment),
-    MobSkeletonPieceTrackReference(MobSkeletonPieceTrackReferenceFragment),
-    Model(ModelFragment),
-    ObjectLocation(ObjectLocationFragment),
-    ParticleSprite(ParticleSpriteFragment),
-    ParticleSpriteDef(ParticleSpriteDefFragment),
-    ParticleCloudDef(ParticleCloudDefFragment),
-    PaletteFile(PaletteFileFragment),
-    PolygonAnimation(PolygonAnimationFragment),
-    PolygonAnimationReference(PolygonAnimationReferenceFragment),
-    RegionFlag(RegionFlagFragment),
-    SkeletonTrackSet(SkeletonTrackSetFragment),
-    SkeletonTrackSetReference(SkeletonTrackSetReferenceFragment),
+    DmSpriteDef(DmSpriteDef),
+    AmbientLight(AmbientLight),
+    BlitSpriteDef(BlitSpriteDef),
+    BlitSprite(BlitSprite),
+    Region(Region),
+    WorldTree(WorldTree),
+    Sprite3DDef(Sprite3DDef),
+    Sprite3D(Sprite3D),
+    GlobalAmbientLightDef(GlobalAmbientLightDef),
+    Sprite4D(Sprite4D),
+    Sprite4DDef(Sprite4DDef),
+    PointLight(PointLight),
+    LightDef(LightDef),
+    Light(Light),
+    MaterialDef(MaterialDef),
+    MaterialPalette(MaterialPalette),
+    DmSpriteDef2(DmSpriteDef2),
+    DmTrackDef2(DmTrackDef2),
+    DmTrack(DmTrack),
+    DmSprite(DmSprite),
+    TrackDef(TrackDef),
+    Track(Track),
+    ActorDef(ActorDef),
+    Actor(Actor),
+    ParticleSprite(ParticleSprite),
+    ParticleSpriteDef(ParticleSpriteDef),
+    ParticleCloudDef(ParticleCloudDef),
+    DefaultPaletteFile(DefaultPaletteFile),
+    PolyhedronDef(PolyhedronDef),
+    Polyhedron(Polyhedron),
+    Zone(Zone),
+    HierarchicalSpriteDef(HierarchicalSpriteDef),
+    HierarchicalSprite(HierarchicalSprite),
     SphereList(SphereListFragment),
     SphereListDef(SphereListDefFragment),
-    Texture(TextureFragment),
-    TextureImages(TextureImagesFragment),
-    TextureImagesRtk(TextureImagesRtkFragment),
-    TextureReference(TextureReferenceFragment),
-    TwoDimensionalObject(TwoDimensionalObjectFragment),
-    TwoDimensionalObjectReference(TwoDimensionalObjectReferenceFragment),
-    Unknown0x2e(Unknown0x2eFragment),
-    VertexColor(VertexColorFragment),
-    VertexColorReference(VertexColorReferenceFragment),
+    SimpleSpriteDef(SimpleSpriteDef),
+    BmInfo(BmInfo),
+    BmInfoRtk(BmInfoRtk),
+    SimpleSprite(SimpleSprite),
+    Sprite2DDef(Sprite2DDef),
+    Sprite2D(Sprite2D),
+    DmTrackDef(DmTrackDef),
+    DmRGBTrackDef(DmRGBTrackDef),
+    DmRGBTrack(DmRGBTrack),
     WorldVertices(WorldVerticesFragment),
-    ZoneUnknown(ZoneUnknownFragment),
+    Sphere(Sphere),
 }
 
 impl Deref for FragmentType {
@@ -205,52 +205,52 @@ impl Deref for FragmentType {
 
     fn deref(&self) -> &Self::Target {
         match self {
-            Self::AlternateMesh(x) => x,
+            Self::DmSpriteDef(x) => x,
             Self::AmbientLight(x) => x,
-            Self::BlitSpriteDefinition(x) => x,
-            Self::BlitSpriteReference(x) => x,
-            Self::BspRegion(x) => x,
-            Self::BspTree(x) => x,
-            Self::Camera(x) => x,
-            Self::CameraReference(x) => x,
-            Self::First(x) => x,
-            Self::FourDSprite(x) => x,
-            Self::FourDSpriteDef(x) => x,
-            Self::LightInfo(x) => x,
-            Self::LightSource(x) => x,
-            Self::LightSourceReference(x) => x,
-            Self::Material(x) => x,
-            Self::MaterialList(x) => x,
-            Self::Mesh(x) => x,
-            Self::MeshAnimatedVertices(x) => x,
-            Self::MeshAnimatedVerticesReference(x) => x,
-            Self::MeshReference(x) => x,
-            Self::MobSkeletonPieceTrack(x) => x,
-            Self::MobSkeletonPieceTrackReference(x) => x,
-            Self::Model(x) => x,
-            Self::ObjectLocation(x) => x,
+            Self::BlitSpriteDef(x) => x,
+            Self::BlitSprite(x) => x,
+            Self::Region(x) => x,
+            Self::WorldTree(x) => x,
+            Self::Sprite3DDef(x) => x,
+            Self::Sprite3D(x) => x,
+            Self::GlobalAmbientLightDef(x) => x,
+            Self::Sprite4D(x) => x,
+            Self::Sprite4DDef(x) => x,
+            Self::PointLight(x) => x,
+            Self::LightDef(x) => x,
+            Self::Light(x) => x,
+            Self::MaterialDef(x) => x,
+            Self::MaterialPalette(x) => x,
+            Self::DmSpriteDef2(x) => x,
+            Self::DmTrackDef2(x) => x,
+            Self::DmTrack(x) => x,
+            Self::DmSprite(x) => x,
+            Self::TrackDef(x) => x,
+            Self::Track(x) => x,
+            Self::ActorDef(x) => x,
+            Self::Actor(x) => x,
             Self::ParticleSprite(x) => x,
             Self::ParticleSpriteDef(x) => x,
             Self::ParticleCloudDef(x) => x,
-            Self::PaletteFile(x) => x,
-            Self::PolygonAnimation(x) => x,
-            Self::PolygonAnimationReference(x) => x,
-            Self::RegionFlag(x) => x,
-            Self::SkeletonTrackSet(x) => x,
-            Self::SkeletonTrackSetReference(x) => x,
+            Self::DefaultPaletteFile(x) => x,
+            Self::PolyhedronDef(x) => x,
+            Self::Polyhedron(x) => x,
+            Self::Zone(x) => x,
+            Self::HierarchicalSpriteDef(x) => x,
+            Self::HierarchicalSprite(x) => x,
             Self::SphereList(x) => x,
             Self::SphereListDef(x) => x,
-            Self::Texture(x) => x,
-            Self::TextureImages(x) => x,
-            Self::TextureImagesRtk(x) => x,
-            Self::TextureReference(x) => x,
-            Self::TwoDimensionalObject(x) => x,
-            Self::TwoDimensionalObjectReference(x) => x,
-            Self::Unknown0x2e(x) => x,
-            Self::VertexColor(x) => x,
-            Self::VertexColorReference(x) => x,
+            Self::SimpleSpriteDef(x) => x,
+            Self::BmInfo(x) => x,
+            Self::BmInfoRtk(x) => x,
+            Self::SimpleSprite(x) => x,
+            Self::Sprite2DDef(x) => x,
+            Self::Sprite2D(x) => x,
+            Self::DmTrackDef(x) => x,
+            Self::DmRGBTrackDef(x) => x,
+            Self::DmRGBTrack(x) => x,
             Self::WorldVertices(x) => x,
-            Self::ZoneUnknown(x) => x,
+            Self::Sphere(x) => x,
         }
     }
 }

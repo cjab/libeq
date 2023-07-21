@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
-/// Represents a polygon within a [MeshFragment].
+/// Represents a polygon within a [DmSpriteDef2].
 pub struct RenderInfo {
     pub flags: RenderInfoFlags,
 
