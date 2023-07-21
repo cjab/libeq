@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, ParticleSpriteDef, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, HierarchicalSpriteDef, StringReference, WResult,
 };
 
 use nom::number::complete::le_u32;
@@ -11,32 +11,32 @@ use nom::sequence::tuple;
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug)]
-/// A reference to a [ParticleSpriteDef].
+#[derive(Debug, PartialEq)]
+/// A reference to a [HierarchicalSpriteDef].
 ///
-/// **Type ID:** 0x0d
-pub struct ParticleSprite {
+/// **Type ID:** 0x11
+pub struct HierarchicalSprite {
     pub name_reference: StringReference,
 
-    /// The [ParticleSpriteDef] reference.
-    pub reference: FragmentRef<ParticleSpriteDef>,
+    /// The [HierarchicalSpriteDef] reference.
+    pub reference: FragmentRef<HierarchicalSpriteDef>,
 
-    /// _Unknown_.
+    /// _Unknown_ Seems to always contain 0.
     pub params1: u32,
 }
 
-impl FragmentParser for ParticleSprite {
+impl FragmentParser for HierarchicalSprite {
     type T = Self;
 
-    const TYPE_ID: u32 = 0x0d;
-    const TYPE_NAME: &'static str = "ParticleSprite";
+    const TYPE_ID: u32 = 0x11;
+    const TYPE_NAME: &'static str = "HierarchicalSprite";
 
-    fn parse(input: &[u8]) -> WResult<ParticleSprite> {
+    fn parse(input: &[u8]) -> WResult<HierarchicalSprite> {
         let (remaining, (name_reference, reference, params1)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((
             remaining,
-            ParticleSprite {
+            HierarchicalSprite {
                 name_reference,
                 reference,
                 params1,
@@ -45,7 +45,7 @@ impl FragmentParser for ParticleSprite {
     }
 }
 
-impl Fragment for ParticleSprite {
+impl Fragment for HierarchicalSprite {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -73,24 +73,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_has_a_known_name_reference() {
-        #![allow(overflowing_literals)]
-        let data = &include_bytes!(
-            "../../../fixtures/fragments/wldcom/particle-sprite-0001-0x0d.frag"
-        )[..];
-        let frag = ParticleSprite::parse(data).unwrap().1;
+    fn it_parses() {
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/2228-0x11.frag")[..];
+        let frag = HierarchicalSprite::parse(data).unwrap().1;
 
-        assert_eq!(frag.name_reference, StringReference::new(0x0));
-        assert_eq!(frag.reference, FragmentRef::new(0x1));
+        assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.reference, FragmentRef::new(0x0e));
         assert_eq!(frag.params1, 0x0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!(
-            "../../../fixtures/fragments/wldcom/particle-sprite-0001-0x0d.frag"
-        )[..];
-        let frag = ParticleSprite::parse(data).unwrap().1;
+        let data = &include_bytes!("../../../fixtures/fragments/gequip/2228-0x11.frag")[..];
+        let frag = HierarchicalSprite::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
