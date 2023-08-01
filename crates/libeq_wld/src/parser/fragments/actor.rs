@@ -1,9 +1,12 @@
 use std::any::Any;
 
-use super::common::Location;
-use super::{Fragment, FragmentParser, StringReference, WResult, DmRGBTrack, FragmentRef};
+use crate::parser::strings::{decode_string, encode_string};
 
-use nom::number::complete::{le_f32, le_u32};
+use super::common::Location;
+use super::{DmRGBTrack, Fragment, FragmentParser, FragmentRef, Sphere, StringReference, WResult};
+
+use nom::multi::count;
+use nom::number::complete::{le_f32, le_u32, le_u8};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -26,7 +29,7 @@ pub struct Actor {
     /// When used in main zone files, points to a 0x16 fragment.
     /// When used for placeable objects, seems to always contain 0.
     /// This might be due to the difference in the Flags value.
-    pub sphere_reference: u32,
+    pub sphere_reference: FragmentRef<Sphere>,
 
     pub current_action: Option<u32>,
 
@@ -48,14 +51,22 @@ pub struct Actor {
     /// SCALEFACTOR %f
     pub scale_factor: Option<f32>,
 
+    pub sound_name_reference: Option<StringReference>,
+
     /// When used in main zone files, typically contains 0 (might be related to
     /// the Flags value). When used for placeable objects, points to a 0x33 Vertex
     /// Color Reference fragment.
-    pub sound_name_reference: Option<StringReference>,
+    pub vertex_color_reference: Option<FragmentRef<DmRGBTrack>>,
 
-    // Typically contains 30 when used in main zone files and 0 when used for
-    // placeable objects. This field only exists if `fragment2` points to a fragment.
-    pub vertex_color_reference: FragmentRef<DmRGBTrack>,
+    /// Windcatcher:
+    /// Typically contains 30 when used in main zone files and 0 when used for
+    /// placeable objects. This field only exists if `vertex_color_reference` points to a fragment.
+    /// NEW:
+    /// Length of USERDATA string
+    pub user_data_size: u32,
+
+    /// USERDATA %s
+    pub user_data: String,
 }
 
 impl FragmentParser for Actor {
@@ -68,7 +79,7 @@ impl FragmentParser for Actor {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, actor_def_reference) = StringReference::parse(i)?;
         let (i, flags) = ActorInstFlags::parse(i)?;
-        let (i, sphere_reference) = le_u32(i)?;
+        let (i, sphere_reference) = FragmentRef::parse(i)?;
         let (i, current_action) = if flags.has_current_action() {
             le_u32(i).map(|(i, c)| (i, Some(c)))?
         } else {
@@ -94,7 +105,13 @@ impl FragmentParser for Actor {
         } else {
             (i, None)
         };
-        let (i, vertex_color_reference) = FragmentRef::parse(i)?;
+        let (i, vertex_color_reference) = if flags.has_vertex_color_reference() {
+            FragmentRef::parse(i).map(|(rem, f)| (rem, Some(f)))?
+        } else {
+            (i, None)
+        };
+        let (i, user_data_size) = le_u32(i)?;
+        let (i, user_data) = count(le_u8, user_data_size as usize)(i)?;
 
         Ok((
             i,
@@ -108,7 +125,9 @@ impl FragmentParser for Actor {
                 bounding_radius,
                 scale_factor,
                 sound_name_reference,
-                vertex_color_reference
+                vertex_color_reference,
+                user_data_size,
+                user_data: decode_string(&user_data).trim_end_matches("\0").to_string(),
             },
         ))
     }
@@ -116,11 +135,16 @@ impl FragmentParser for Actor {
 
 impl Fragment for Actor {
     fn into_bytes(&self) -> Vec<u8> {
+        let user_data_size = self.user_data_size as usize;
+        let padding = (4 - user_data_size % 4) % 4;
+        let mut user_data = encode_string(&format!("{}{}", &self.user_data, "\0"));
+        user_data.resize(user_data_size + padding, 0);
+
         [
             &self.name_reference.into_bytes()[..],
             &self.actor_def_reference.into_bytes()[..],
             &self.flags.into_bytes()[..],
-            &self.sphere_reference.to_le_bytes()[..],
+            &self.sphere_reference.into_bytes()[..],
             &self
                 .current_action
                 .map_or(vec![], |a| a.to_le_bytes().to_vec())[..],
@@ -132,7 +156,12 @@ impl Fragment for Actor {
                 .scale_factor
                 .map_or(vec![], |s| s.to_le_bytes().to_vec())[..],
             &self.sound_name_reference.map_or(vec![], |s| s.into_bytes())[..],
-            &self.vertex_color_reference.into_bytes()[..],
+            &self
+                .vertex_color_reference
+                .as_ref()
+                .map_or(vec![], |m| m.into_bytes())[..],
+            &self.user_data_size.to_le_bytes()[..],
+            &user_data[..],
         ]
         .concat()
     }
@@ -162,6 +191,7 @@ impl ActorInstFlags {
     const HAS_SOUND: u32 = 0x10;
     const ACTIVE: u32 = 0x20;
     const SPRITE_VOLUME_ONLY: u32 = 0x80;
+    const HAS_VERTEX_COLOR_REFERENCE: u32 = 0x100;
 
     fn parse(input: &[u8]) -> WResult<Self> {
         let (remaining, raw_flags) = le_u32(input)?;
@@ -192,12 +222,17 @@ impl ActorInstFlags {
         self.0 & Self::HAS_SOUND == Self::HAS_SOUND
     }
 
+    /// AppendItemToActiveAIList
     pub fn active(&self) -> bool {
         self.0 & Self::ACTIVE == Self::ACTIVE
     }
 
     pub fn sprite_volume_only(&self) -> bool {
         self.0 & Self::SPRITE_VOLUME_ONLY == Self::SPRITE_VOLUME_ONLY
+    }
+
+    pub fn has_vertex_color_reference(&self) -> bool {
+        self.0 & Self::HAS_VERTEX_COLOR_REFERENCE == Self::HAS_VERTEX_COLOR_REFERENCE
     }
 }
 
@@ -211,9 +246,10 @@ mod tests {
         let (remaining, frag) = Actor::parse(data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(0));
+        // FIXME: this is a FragmentRef
         assert_eq!(frag.actor_def_reference, StringReference::new(4640));
         assert_eq!(frag.flags, ActorInstFlags(46));
-        assert_eq!(frag.sphere_reference, 4641);
+        assert_eq!(frag.sphere_reference, FragmentRef::new(4641));
         assert_eq!(frag.current_action, None);
         assert_eq!(
             frag.location,
@@ -230,8 +266,52 @@ mod tests {
         assert_eq!(frag.bounding_radius, Some(0.5));
         assert_eq!(frag.scale_factor, Some(0.5));
         assert_eq!(frag.sound_name_reference, None);
-        assert_eq!(frag.vertex_color_reference, FragmentRef::new(0));
+        assert_eq!(frag.vertex_color_reference, None);
+        assert_eq!(frag.user_data_size, 0);
+        assert_eq!(frag.user_data, String::new());
         assert_eq!(remaining, vec![]);
+    }
+
+    #[test]
+    fn it_parses_objects() {
+        let data = &include_bytes!("../../../fixtures/fragments/objects/0002-0x15.frag")[..];
+        let (remaining, frag) = Actor::parse(data).unwrap();
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.actor_def_reference, StringReference::new(-10));
+        assert_eq!(frag.flags, ActorInstFlags(814));
+        assert_eq!(frag.sphere_reference, FragmentRef::new(0));
+        assert_eq!(frag.current_action, None);
+        assert_eq!(
+            frag.location,
+            Some(Location {
+                x: -2022.8826,
+                y: -2419.7405,
+                z: 198.36989,
+                rotate_z: 373.0,
+                rotate_y: 0.0,
+                rotate_x: 0.0,
+                unknown: 0
+            })
+        );
+        assert_eq!(frag.bounding_radius, Some(1.0));
+        assert_eq!(frag.scale_factor, Some(1.0));
+        assert_eq!(frag.sound_name_reference, None);
+        assert_eq!(frag.vertex_color_reference, Some(FragmentRef::new(2)));
+        assert_eq!(frag.user_data_size, 0);
+        assert_eq!(frag.user_data, String::new());
+        assert_eq!(remaining, vec![]);
+    }
+
+    #[test]
+    fn it_parses_userdata() {
+        let data =
+            &include_bytes!("../../../fixtures/fragments/wldcom/actorinst-userdata-0000-0x15.frag")
+                [..];
+        let frag = Actor::parse(data).unwrap().1;
+
+        assert_eq!(frag.user_data_size, 5);
+        assert_eq!(frag.user_data, String::from("data"));
     }
 
     #[test]
@@ -245,6 +325,16 @@ mod tests {
     #[test]
     fn it_serializes_objects() {
         let data = &include_bytes!("../../../fixtures/fragments/objects/0002-0x15.frag")[..];
+        let frag = Actor::parse(data).unwrap().1;
+
+        assert_eq!(&frag.into_bytes()[..], data);
+    }
+
+    #[test]
+    fn it_serializes_userdata() {
+        let data =
+            &include_bytes!("../../../fixtures/fragments/wldcom/actorinst-userdata-0000-0x15.frag")
+                [..];
         let frag = Actor::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
