@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    Fragment, FragmentParser, FragmentRef, Light, StringReference, WResult,
-};
+use super::{Fragment, FragmentParser, FragmentRef, Light, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::le_u32;

@@ -7,9 +7,7 @@ use nom::{
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
 
-use super::{
-    BlitSpriteDef, Fragment, FragmentParser, FragmentRef, StringReference, WResult,
-};
+use super::{BlitSpriteDef, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
