@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, DmSpriteDef2, RenderInfo, RenderMethod, StringReference,
+    DmSpriteDef2, Fragment, FragmentParser, FragmentRef, RenderInfo, RenderMethod, StringReference,
     WResult,
 };
 

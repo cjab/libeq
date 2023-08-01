@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    Sprite4DDef, Fragment, FragmentParser, FragmentRef, StringReference, WResult,
-};
+use super::{Fragment, FragmentParser, FragmentRef, Sprite4DDef, StringReference, WResult};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;

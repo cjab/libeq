@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use super::{Fragment, FragmentParser, FragmentRef, DmSpriteDef2, StringReference, WResult};
+use super::{DmSpriteDef2, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
