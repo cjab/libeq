@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    Fragment, FragmentParser, FragmentRef, MaterialPalette, StringReference, WResult,
-};
+use super::{Fragment, FragmentParser, FragmentRef, MaterialPalette, StringReference, WResult};
 
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_u16, le_u32};
@@ -210,10 +208,7 @@ impl FragmentParser for DmSpriteDef {
             count(tuple((le_f32, le_f32, le_f32)), normal_count as usize),
             count(le_u32, color_count as usize),
             count(DmSpriteDefFaceEntry::parse, face_count as usize),
-            count(
-                DmSpriteDefMeshopEntry::parse,
-                meshop_count as usize,
-            ),
+            count(DmSpriteDefMeshopEntry::parse, meshop_count as usize),
             count(
                 tuple((le_u16, le_u16)),
                 skin_assignment_group_count as usize,

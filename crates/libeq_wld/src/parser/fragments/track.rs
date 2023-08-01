@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    Fragment, FragmentParser, FragmentRef, TrackDef, StringReference, WResult,
-};
+use super::{Fragment, FragmentParser, FragmentRef, StringReference, TrackDef, WResult};
 
 use nom::number::complete::le_u32;
 
@@ -116,9 +114,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
-        let frag = Track::parse(data)
-            .unwrap()
-            .1;
+        let frag = Track::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-75));
         assert_eq!(frag.reference, FragmentRef::new(7));
@@ -131,9 +127,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
-        let frag = Track::parse(data)
-            .unwrap()
-            .1;
+        let frag = Track::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }

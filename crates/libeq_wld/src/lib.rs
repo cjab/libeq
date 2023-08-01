@@ -41,9 +41,8 @@
 pub mod parser;
 
 use parser::{
-    FragmentRef, MaterialDef, DmTrackDef2, DmSpriteDef2,
-    DmSpriteDef2FaceEntry, DmSprite, ActorDef, Actor,
-    RenderMethod, SimpleSpriteDef, SimpleSpriteDefFlags, WldDoc,
+    Actor, ActorDef, DmSprite, DmSpriteDef2, DmSpriteDef2FaceEntry, DmTrackDef2, FragmentRef,
+    MaterialDef, RenderMethod, SimpleSpriteDef, SimpleSpriteDefFlags, WldDoc,
 };
 use std::error::Error;
 
@@ -499,8 +498,7 @@ impl<'a> Model<'a> {
     /// Follow the fragment reference to find the DmSpriteDef2
     fn get_mesh_fragment(&self) -> Option<&DmSpriteDef2> {
         let fragment_ref = *self.fragment.fragment_references.first()?;
-        let fragment_ref: FragmentRef<DmSprite> =
-            FragmentRef::new(fragment_ref as i32);
+        let fragment_ref: FragmentRef<DmSprite> = FragmentRef::new(fragment_ref as i32);
         let fragment = self.doc.get(&fragment_ref)?;
         self.doc.get(&fragment.reference)
     }
