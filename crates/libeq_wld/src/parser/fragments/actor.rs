@@ -208,7 +208,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4641-0x15.frag")[..];
-        let frag = Actor::parse(data).unwrap().1;
+        let (remaining, frag) = Actor::parse(data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.actor_def_reference, StringReference::new(4640));
@@ -231,11 +231,20 @@ mod tests {
         assert_eq!(frag.scale_factor, Some(0.5));
         assert_eq!(frag.sound_name_reference, None);
         assert_eq!(frag.vertex_color_reference, FragmentRef::new(0));
+        assert_eq!(remaining, vec![]);
     }
 
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4641-0x15.frag")[..];
+        let frag = Actor::parse(data).unwrap().1;
+
+        assert_eq!(&frag.into_bytes()[..], data);
+    }
+
+    #[test]
+    fn it_serializes_objects() {
+        let data = &include_bytes!("../../../fixtures/fragments/objects/0002-0x15.frag")[..];
         let frag = Actor::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
