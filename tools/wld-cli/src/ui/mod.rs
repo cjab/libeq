@@ -157,7 +157,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Color::Rgb(0x00, 0x8b, 0x8b),
         ),
         FragmentType::SphereList(_) => {
-            (SphereListFragment::TYPE_NAME, Color::Rgb(0x3c, 0xb3, 0x71))
+            (SphereList::TYPE_NAME, Color::Rgb(0x3c, 0xb3, 0x71))
         }
         FragmentType::SphereListDef(_) => (
             SphereListDef::TYPE_NAME,
