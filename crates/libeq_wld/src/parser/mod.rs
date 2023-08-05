@@ -322,7 +322,7 @@ impl<'a> FragmentHeader<'a> {
                         .map(|f| (f.0, FragmentType::BmInfoRtk(f.1))),
                 ),
                 FragmentGame::Tanarus => Some(
-                    WorldVerticesFragment::parse(&self.field_data)
+                    WorldVertices::parse(&self.field_data)
                         .map(|f| (f.0, FragmentType::WorldVertices(f.1))),
                 ),
             },

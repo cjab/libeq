@@ -198,7 +198,7 @@ pub enum FragmentType {
     DmTrackDef(DmTrackDef),
     DmRGBTrackDef(DmRGBTrackDef),
     DmRGBTrack(DmRGBTrack),
-    WorldVertices(WorldVerticesFragment),
+    WorldVertices(WorldVertices),
     Sphere(Sphere),
     DirectionalLight(DirectionalLight),
 }
