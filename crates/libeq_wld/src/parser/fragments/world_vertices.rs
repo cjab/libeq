@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// WORLDVERTICES
 ///
 /// **Type ID:** 0x2c
-pub struct WorldVerticesFragment {
+pub struct WorldVertices {
     pub name_reference: StringReference,
 
     /// NUMVERTICES %d
@@ -22,7 +22,7 @@ pub struct WorldVerticesFragment {
     pub vertices: Vec<(f32, f32, f32)>,
 }
 
-impl FragmentParser for WorldVerticesFragment {
+impl FragmentParser for WorldVertices {
     type T = Self;
 
     const TYPE_ID: u32 = 0x2c;
@@ -44,7 +44,7 @@ impl FragmentParser for WorldVerticesFragment {
     }
 }
 
-impl Fragment for WorldVerticesFragment {
+impl Fragment for WorldVertices {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.num_vertices.to_le_bytes()[..],
@@ -78,7 +78,7 @@ mod tests {
     fn it_parses() {
         let data =
             &include_bytes!("../../../fixtures/fragments/tanarus-thecity/0001-0x2c.frag")[..];
-        let (remaining, frag) = WorldVerticesFragment::parse(data).unwrap();
+        let (remaining, frag) = WorldVertices::parse(data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.num_vertices, 9702);
@@ -91,7 +91,7 @@ mod tests {
     fn it_serializes() {
         let data =
             &include_bytes!("../../../fixtures/fragments/tanarus-thecity/0001-0x2c.frag")[..];
-        let frag = WorldVerticesFragment::parse(data).unwrap().1;
+        let frag = WorldVertices::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
