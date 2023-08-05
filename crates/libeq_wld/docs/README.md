@@ -186,14 +186,14 @@
     <tr>
       <td>0x19</td>
       <td>25</td>
-      <td></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/sphere_list_def.rs">SphereListDef</a></td>
       <td></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#spherelistdefinition---0x19">SPHERELISTDEFINITION</a></td>
     </tr>
     <tr>
       <td>0x1a</td>
       <td>26</td>
-      <td></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/sphere_list.rs">SphereList</a></td>
       <td></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#0x1a">SPHERELIST (ref)</a></td>
     </tr>
@@ -399,6 +399,39 @@
       <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/dm_track_def_2.rs">DmTrackDef2</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x37--mesh-animated-vertices--plain">Mesh Animated Vertices</a></td>
       <td>DMTRACKDEF</td>
+    </tr>
+  </tbody>
+</table>
+
+## Other Fragments
+<table id="other-fragments">
+  <thead>
+    <tr>
+      <th colspan="3">ID</th>
+      <th colspan="2">Name</th>
+    </tr>
+    <tr>
+      <th>Hex</th>
+      <th>Dec</th>
+      <th>Game</th>
+      <th>libeq</th>
+      <th>WLDCOM.EXE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0x2c</td>
+      <td>44</td>
+      <td>Tanarus</td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/world_vertices.rs">WorldVertices</a></td>
+      <td>WORLDVERTICES</td>
+    </tr>
+    <tr>
+      <td>0x2c</td>
+      <td>44</td>
+      <td>Return to Krondor</td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/bm_info_rtk.rs">BmInfoRtk</a></td>
+      <td>BMINFO</td>
     </tr>
   </tbody>
 </table>
