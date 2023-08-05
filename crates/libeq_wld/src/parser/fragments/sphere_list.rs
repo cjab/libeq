@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, SphereListDefFragment, StringReference, WResult,
+    Fragment, FragmentParser, FragmentRef, SphereListDef, StringReference, WResult,
 };
 
 use nom::number::complete::le_u32;
@@ -12,14 +12,14 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-/// A reference to a [SphereListDefFragment].
+/// A reference to a [SphereListDef].
 ///
 /// **Type ID:** 0x1a
 pub struct SphereListFragment {
     pub name_reference: StringReference,
 
-    /// The [SphereListDefFragment] reference.
-    pub reference: FragmentRef<SphereListDefFragment>,
+    /// The [SphereListDef] reference.
+    pub reference: FragmentRef<SphereListDef>,
 
     /// _Unknown_.
     pub params1: u32,
