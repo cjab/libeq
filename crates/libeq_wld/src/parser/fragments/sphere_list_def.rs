@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// SPHERELISTDEFINITION fragment
 ///
 /// **Type ID:** 0x19
-pub struct SphereListDefFragment {
+pub struct SphereListDef {
     pub name_reference: StringReference,
 
     pub flags: SphereListDefFlags,
@@ -32,7 +32,7 @@ pub struct SphereListDefFragment {
     pub spheres: Vec<(f32, f32, f32, f32)>,
 }
 
-impl FragmentParser for SphereListDefFragment {
+impl FragmentParser for SphereListDef {
     type T = Self;
 
     const TYPE_ID: u32 = 0x19;
@@ -67,7 +67,7 @@ impl FragmentParser for SphereListDefFragment {
     }
 }
 
-impl Fragment for SphereListDefFragment {
+impl Fragment for SphereListDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
@@ -135,7 +135,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/tanarus-equip/2907-0x19.frag")[..];
-        let frag = SphereListDefFragment::parse(data).unwrap().1;
+        let frag = SphereListDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-11175));
         assert_eq!(frag.flags, SphereListDefFlags(0x1));
@@ -149,7 +149,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/tanarus-equip/2907-0x19.frag")[..];
-        let frag = SphereListDefFragment::parse(data).unwrap().1;
+        let frag = SphereListDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
