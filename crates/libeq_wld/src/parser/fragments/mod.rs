@@ -185,7 +185,7 @@ pub enum FragmentType {
     Zone(Zone),
     HierarchicalSpriteDef(HierarchicalSpriteDef),
     HierarchicalSprite(HierarchicalSprite),
-    SphereList(SphereListFragment),
+    SphereList(SphereList),
     SphereListDef(SphereListDef),
     SimpleSpriteDef(SimpleSpriteDef),
     BmInfo(BmInfo),

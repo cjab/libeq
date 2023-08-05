@@ -464,8 +464,8 @@ impl<'a> FragmentHeader<'a> {
                 DmTrackDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::DmTrackDef(f.1))),
             ),
-            SphereListFragment::TYPE_ID => Some(
-                SphereListFragment::parse(&self.field_data)
+            SphereList::TYPE_ID => Some(
+                SphereList::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::SphereList(f.1))),
             ),
             SphereListDef::TYPE_ID => Some(
