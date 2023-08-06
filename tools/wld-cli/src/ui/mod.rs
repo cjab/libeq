@@ -200,6 +200,9 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
         ),
         FragmentType::Sphere(_) => {
             (Sphere::TYPE_NAME, Color::Rgb(0xb0, 0x30, 0x60))
+        },
+        FragmentType::DirectionalLight(_) => {
+            (DirectionalLight::TYPE_NAME, Color::Rgb(0x80, 0x80, 0x20))
         }
     }
 }

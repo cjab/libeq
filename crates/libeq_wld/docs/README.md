@@ -312,7 +312,7 @@
     <tr>
       <td>0x2b</td>
       <td>43</td>
-      <td></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/directional_light.rs">DirectionalLight</a></td>
       <td></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#directionallight-static-flag---0x2b">DIRECTIONALLIGHT</a></td>
     </tr>
