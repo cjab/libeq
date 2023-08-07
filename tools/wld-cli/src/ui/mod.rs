@@ -157,10 +157,10 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Color::Rgb(0x00, 0x8b, 0x8b),
         ),
         FragmentType::SphereList(_) => {
-            (SphereListFragment::TYPE_NAME, Color::Rgb(0x3c, 0xb3, 0x71))
+            (SphereList::TYPE_NAME, Color::Rgb(0x3c, 0xb3, 0x71))
         }
         FragmentType::SphereListDef(_) => (
-            SphereListDefFragment::TYPE_NAME,
+            SphereListDef::TYPE_NAME,
             Color::Rgb(0x00, 0x8b, 0x8b),
         ),
         FragmentType::SimpleSpriteDef(_) => (SimpleSpriteDef::TYPE_NAME, Color::Rgb(0x2f, 0x4f, 0x4f)),
@@ -195,7 +195,7 @@ pub fn get_frag_name_and_color(fragment_type: &FragmentType) -> (&'static str, C
             Color::Rgb(0xff, 0x14, 0x93),
         ),
         FragmentType::WorldVertices(_) => (
-            WorldVerticesFragment::TYPE_NAME,
+            WorldVertices::TYPE_NAME,
             Color::Rgb(0x59, 0x48, 0x78),
         ),
         FragmentType::Sphere(_) => {
