@@ -45,6 +45,7 @@ mod dm_rgb_track_def;
 mod dm_rgb_track;
 mod world_vertices;
 mod sphere;
+mod directional_light;
 
 use std::any::Any;
 use std::marker::PhantomData;
@@ -104,6 +105,7 @@ pub use dm_rgb_track_def::*;
 pub use dm_rgb_track::*;
 pub use world_vertices::*;
 pub use sphere::*;
+pub use directional_light::*;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -198,6 +200,7 @@ pub enum FragmentType {
     DmRGBTrack(DmRGBTrack),
     WorldVertices(WorldVerticesFragment),
     Sphere(Sphere),
+    DirectionalLight(DirectionalLight),
 }
 
 impl Deref for FragmentType {
@@ -251,6 +254,7 @@ impl Deref for FragmentType {
             Self::DmRGBTrack(x) => x,
             Self::WorldVertices(x) => x,
             Self::Sphere(x) => x,
+            Self::DirectionalLight(x) => x,
         }
     }
 }

@@ -492,6 +492,10 @@ impl<'a> FragmentHeader<'a> {
                 Sprite4DDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::Sprite4DDef(f.1))),
             ),
+            DirectionalLight::TYPE_ID => Some(
+                DirectionalLight::parse(&self.field_data)
+                    .map(|f| (f.0, FragmentType::DirectionalLight(f.1))),
+            ),
             _ => None,
         };
 
