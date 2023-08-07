@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    Fragment, FragmentParser, FragmentRef, DmTrackDef2, StringReference, WResult,
-};
+use super::{DmTrackDef2, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -75,9 +73,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0632-0x2f.frag")[..];
-        let frag = DmTrack::parse(data)
-            .unwrap()
-            .1;
+        let frag = DmTrack::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(0x0278));
@@ -87,9 +83,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0632-0x2f.frag")[..];
-        let frag = DmTrack::parse(data)
-            .unwrap()
-            .1;
+        let frag = DmTrack::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
