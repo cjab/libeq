@@ -322,7 +322,7 @@ impl<'a> FragmentHeader<'a> {
                         .map(|f| (f.0, FragmentType::BmInfoRtk(f.1))),
                 ),
                 FragmentGame::Tanarus => Some(
-                    WorldVerticesFragment::parse(&self.field_data)
+                    WorldVertices::parse(&self.field_data)
                         .map(|f| (f.0, FragmentType::WorldVertices(f.1))),
                 ),
             },
@@ -464,12 +464,12 @@ impl<'a> FragmentHeader<'a> {
                 DmTrackDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::DmTrackDef(f.1))),
             ),
-            SphereListFragment::TYPE_ID => Some(
-                SphereListFragment::parse(&self.field_data)
+            SphereList::TYPE_ID => Some(
+                SphereList::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::SphereList(f.1))),
             ),
-            SphereListDefFragment::TYPE_ID => Some(
-                SphereListDefFragment::parse(&self.field_data)
+            SphereListDef::TYPE_ID => Some(
+                SphereListDef::parse(&self.field_data)
                     .map(|f| (f.0, FragmentType::SphereListDef(f.1))),
             ),
             ParticleSprite::TYPE_ID => Some(
