@@ -151,7 +151,7 @@
     <tr>
       <td>0x14</td>
       <td>20</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/model.rs">Model</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/actor_def.rs">ActorDef</a></td>
       <td><a href="https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md#0x14--static-or-animated-model-referenceplayer-info--plain">Static or Animated Model Reference/Player Info</a></td>
       <td><a href="https://wld-doc.github.io/object-types/overview/#actordef---0x14">ACTORDEF</a></td>
     </tr>
@@ -375,7 +375,7 @@
     <tr>
       <td>0x34</td>
       <td>52</td>
-      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/unknown_0x34.rs">Unknown0x34</a></td>
+      <td><a href="https://github.com/cjab/libeq/blob/master/crates/libeq_wld/src/parser/fragments/particle_cloud_def.rs">ParticleCloudDef</a></td>
       <td></td>
       <td></td>
     </tr>
