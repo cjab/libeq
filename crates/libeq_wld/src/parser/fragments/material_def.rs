@@ -1,9 +1,7 @@
 use std::any::Any;
 
 use super::common::RenderMethod;
-use super::{
-    Fragment, FragmentParser, FragmentRef, StringReference, SimpleSprite, WResult,
-};
+use super::{Fragment, FragmentParser, FragmentRef, SimpleSprite, StringReference, WResult};
 
 use nom::number::complete::{le_f32, le_u32};
 use nom::sequence::tuple;

@@ -8,7 +8,7 @@ use nom::number::complete::le_f32;
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// SPHERE fragment
 ///
 /// **Type ID:** 0x16

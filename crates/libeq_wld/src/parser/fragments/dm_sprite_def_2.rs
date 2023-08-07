@@ -1,8 +1,7 @@
 use std::any::Any;
 
 use super::{
-    Fragment, FragmentParser, FragmentRef, MaterialPalette,
-    DmTrack, StringReference, WResult,
+    DmTrack, Fragment, FragmentParser, FragmentRef, MaterialPalette, StringReference, WResult,
 };
 
 use nom::multi::count;

@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    Fragment, FragmentParser, FragmentRef, Light, StringReference, WResult,
-};
+use super::{Fragment, FragmentParser, FragmentRef, Light, StringReference, WResult};
 
 use nom::number::complete::{le_f32, le_u32};
 

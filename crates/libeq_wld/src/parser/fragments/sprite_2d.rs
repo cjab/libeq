@@ -1,8 +1,6 @@
 use std::any::Any;
 
-use super::{
-    Fragment, FragmentParser, FragmentRef, StringReference, Sprite2DDef, WResult,
-};
+use super::{Fragment, FragmentParser, FragmentRef, Sprite2DDef, StringReference, WResult};
 
 use nom::number::complete::le_u32;
 use nom::sequence::tuple;
@@ -75,9 +73,7 @@ mod tests {
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/2224-0x07.frag")[..];
-        let frag = Sprite2D::parse(data)
-            .unwrap()
-            .1;
+        let frag = Sprite2D::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(0x07f0));
@@ -87,9 +83,7 @@ mod tests {
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/2224-0x07.frag")[..];
-        let frag = Sprite2D::parse(data)
-            .unwrap()
-            .1;
+        let frag = Sprite2D::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
     }
