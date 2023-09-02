@@ -17,8 +17,9 @@ pub struct MaterialDef {
     pub name_reference: StringReference,
 
     /// Most flags are _unknown_, however:
+    /// * bit 0 - If set then the material is two-sided. This is rarely set.
     /// * bit 1 - If set then the `pair` field exists. This is usually set.
-    pub flags: u32,
+    pub flags: MaterialFlags,
 
     /// Most flags are _unknown_, however:
     // Bit 0 ........ Apparently must be 1 if the texture isn’t transparent.
@@ -44,6 +45,7 @@ pub struct MaterialDef {
     pub reference: FragmentRef<SimpleSprite>,
 
     /// _Unknown_ - This only exists if bit 1 of flags is set. Both fields usually contain 0.
+    ///  Maybe UVShiftPerMs
     pub pair: Option<(u32, f32)>,
 }
 
@@ -55,14 +57,14 @@ impl FragmentParser for MaterialDef {
 
     fn parse(input: &[u8]) -> WResult<'_, MaterialDef> {
         let (i, name_reference) = StringReference::parse(input)?;
-        let (i, flags) = le_u32(i)?;
+        let (i, flags) = MaterialFlags::parse(i)?;
         let (i, render_method) = RenderMethod::parse(i)?;
         let (i, rgb_pen) = le_u32(i)?;
         let (i, brightness) = le_f32(i)?;
         let (i, scaled_ambient) = le_f32(i)?;
         let (i, reference) = FragmentRef::parse(i)?;
 
-        let (i, pair) = if flags & 0x2 == 0x2 {
+        let (i, pair) = if flags.has_pair() {
             tuple((le_u32, le_f32))(i).map(|(rem, p)| (rem, Some(p)))?
         } else {
             (i, None)
@@ -88,7 +90,7 @@ impl Fragment for MaterialDef {
     fn into_bytes(&self) -> Vec<u8> {
         [
             &self.name_reference.into_bytes()[..],
-            &self.flags.to_le_bytes()[..],
+            &self.flags.into_bytes()[..],
             &self.render_method.into_bytes()[..],
             &self.rgb_pen.to_le_bytes()[..],
             &self.brightness.to_le_bytes()[..],
@@ -114,6 +116,32 @@ impl Fragment for MaterialDef {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+pub struct MaterialFlags(u32);
+
+impl MaterialFlags {
+    const IS_TWO_SIDED: u32 = 0x01;
+    const HAS_PAIR: u32 = 0x02;
+
+    fn parse(input: &[u8]) -> WResult<Self> {
+        let (i, raw_flags) = le_u32(input)?;
+        Ok((i, Self(raw_flags)))
+    }
+
+    fn into_bytes(&self) -> Vec<u8> {
+        self.0.to_le_bytes().to_vec()
+    }
+
+    pub fn is_two_sided(&self) -> bool {
+        self.0 & Self::IS_TWO_SIDED == Self::IS_TWO_SIDED
+    }
+
+    pub fn has_pair(&self) -> bool {
+        self.0 & Self::HAS_PAIR == Self::HAS_PAIR
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -124,7 +152,8 @@ mod tests {
         let frag = MaterialDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-22));
-        assert_eq!(frag.flags, 0x02);
+        assert_eq!(frag.flags, MaterialFlags(0x02));
+        assert_eq!(frag.flags.is_two_sided(), false);
         assert_eq!(
             <RenderMethod as std::convert::Into<u32>>::into(frag.render_method),
             0x80000001
@@ -137,8 +166,35 @@ mod tests {
     }
 
     #[test]
+    fn it_parses_two_sided() {
+        let data = &include_bytes!("../../../fixtures/fragments/pofire_chr/4352-0x30.frag")[..];
+        let frag = MaterialDef::parse(data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(-70058));
+        assert_eq!(frag.flags, MaterialFlags(0x03));
+        assert_eq!(frag.flags.is_two_sided(), true);
+        assert_eq!(
+            <RenderMethod as std::convert::Into<u32>>::into(frag.render_method),
+            0x80000013
+        );
+        assert_eq!(frag.rgb_pen, 0xb2b2b2);
+        assert_eq!(frag.brightness, 0.0);
+        assert_eq!(frag.scaled_ambient, 0.75);
+        assert_eq!(frag.reference, FragmentRef::new(4352));
+        assert_eq!(frag.pair, Some((0, 0.0)));
+    }
+
+    #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0004-0x30.frag")[..];
+        let frag = MaterialDef::parse(data).unwrap().1;
+
+        assert_eq!(&frag.into_bytes()[..], data);
+    }
+
+    #[test]
+    fn it_serializes_two_sided() {
+        let data = &include_bytes!("../../../fixtures/fragments/pofire_chr/4352-0x30.frag")[..];
         let frag = MaterialDef::parse(data).unwrap().1;
 
         assert_eq!(&frag.into_bytes()[..], data);
