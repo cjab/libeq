@@ -204,7 +204,7 @@ fn extract(wld_filename: &str, destination: &str, format: &Format) {
                 &wld_doc,
                 ron::ser::PrettyConfig::new().enumerate_arrays(true),
             )
-            .expect("Could not serialize to json")
+            .expect("Could not serialize to ron")
         }
     }
 }
