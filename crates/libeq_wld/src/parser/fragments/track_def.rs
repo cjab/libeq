@@ -202,7 +202,7 @@ impl FrameTransform {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq)]
 /// When compressed from ascii the rotation is converted to a quaternion
-/// The ascii represention is euler angles out of 512
+/// The ascii representation is euler angles out of 512
 pub struct LegacyFrameTransform {
     /// The x component of the rotation quaternion.
     pub rotate_x: f32,
