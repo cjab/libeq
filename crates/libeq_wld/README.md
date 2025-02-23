@@ -41,7 +41,7 @@ for material in wld.materials() {
 Additional WLD file format documentation can be found in the [docs](docs/) directory.
 
 ## Acknowledgements
-This project wouldn't have been possible without Windcatcher's [WLD File Reference](https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/server/zones/customizing-zones/wld-file-reference.md).
+This project wouldn't have been possible without Windcatcher's [WLD File Reference](https://github.com/EQEmu/eqemu-docs-v2/blob/main/docs/client/guides/file-formats/wld-by-windcatcher.md).
 
 Some documentation has been reproduced as comments within the parser module. Names of file
 fragments have been changed when another term from the [glTF reference](https://www.khronos.org/files/gltf20-reference-guide.pdf)
