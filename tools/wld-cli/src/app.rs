@@ -1,8 +1,8 @@
 use std::error::Error;
 
-use crossterm::event::{KeyCode, KeyModifiers};
+use crossterm::event::{self, KeyCode, KeyModifiers};
 
-use crate::handlers::handle_app;
+use crate::handlers::{handle_key_event, handle_mouse_event};
 use crate::{event::Event, event::Events};
 use libeq_wld::parser::WldDoc;
 
@@ -29,15 +29,20 @@ impl App {
 
     pub fn handle_events(&mut self, events: &Events) -> Result<bool, Box<dyn Error>> {
         match events.next()? {
-            // Quit
-            Event::Input(input) if input.code == KeyCode::Char('q') => return Ok(false),
-            Event::Input(input)
-                if input.code == KeyCode::Char('c')
-                    && input.modifiers.contains(KeyModifiers::CONTROL) =>
-            {
-                return Ok(false);
-            }
-            Event::Input(input) => handle_app(input, self),
+            Event::Input(input) => match input {
+                event::Event::Key(key_event) if key_event.code == KeyCode::Char('q') => {
+                    return Ok(false);
+                }
+                event::Event::Key(key_event)
+                    if key_event.code == KeyCode::Char('c')
+                        && key_event.modifiers.contains(KeyModifiers::CONTROL) =>
+                {
+                    return Ok(false);
+                }
+                event::Event::Key(key_event) => handle_key_event(key_event, self),
+                event::Event::Mouse(mouse_event) => handle_mouse_event(mouse_event, self),
+                _ => {}
+            },
             Event::Tick => {}
         }
         Ok(true)
