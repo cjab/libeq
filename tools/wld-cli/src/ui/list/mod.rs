@@ -1,15 +1,14 @@
-use libeq_wld::parser::{fragments::*, FragmentType};
-use tui::{
-    backend::Backend,
+use libeq_wld::parser::FragmentType;
+use ratatui::{
+    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
-    Frame,
 };
 
 use crate::app::{ActiveBlock, App};
-use crate::ui::{get_frag_name_and_color, ACTIVE_BLOCK_COLOR, INACTIVE_BLOCK_COLOR};
+use crate::ui::{ACTIVE_BLOCK_COLOR, INACTIVE_BLOCK_COLOR, get_frag_name_and_color};
 
 fn draw_fragment<'a>(app: &'a App, idx: usize, fragment_type: &FragmentType) -> ListItem<'a> {
     let name = app
@@ -19,7 +18,7 @@ fn draw_fragment<'a>(app: &'a App, idx: usize, fragment_type: &FragmentType) -> 
 
     let (frag_type_name, color) = get_frag_name_and_color(fragment_type);
 
-    let lines = vec![Spans::from(vec![
+    let lines = vec![Line::from(vec![
         Span::styled(format!("{:>5} ", idx + 1), Style::default()),
         Span::styled(
             format!("{}{}", frag_type_name, name),
@@ -29,10 +28,7 @@ fn draw_fragment<'a>(app: &'a App, idx: usize, fragment_type: &FragmentType) -> 
     ListItem::new(lines).style(Style::default().fg(Color::White).bg(Color::Black))
 }
 
-pub fn draw_fragment_list<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
-where
-    B: Backend,
-{
+pub fn draw_fragment_list(f: &mut Frame, app: &App, layout_chunk: Rect) {
     let list_items: Vec<_> = app
         .wld_doc
         .iter()
@@ -50,16 +46,14 @@ where
     );
 }
 
-pub fn draw_selectable_list<B>(
-    f: &mut Frame<B>,
+pub fn draw_selectable_list(
+    f: &mut Frame,
     _app: &App,
     layout_chunk: Rect,
     items: &[ListItem],
     active: bool,
     selected_index: Option<usize>,
-) where
-    B: Backend,
-{
+) {
     let mut state = ListState::default();
     state.select(selected_index);
 
@@ -68,7 +62,7 @@ pub fn draw_selectable_list<B>(
         false => INACTIVE_BLOCK_COLOR,
     };
 
-    let list = List::new(items)
+    let list = List::new(items.to_vec())
         .block(
             Block::default()
                 .borders(Borders::ALL)

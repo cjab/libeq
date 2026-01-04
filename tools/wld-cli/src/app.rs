@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use termion::event::Key;
+use crossterm::event::{KeyCode, KeyModifiers};
 
 use crate::handlers::handle_app;
 use crate::{event::Event, event::Events};
@@ -30,8 +30,13 @@ impl App {
     pub fn handle_events(&mut self, events: &Events) -> Result<bool, Box<dyn Error>> {
         match events.next()? {
             // Quit
-            Event::Input(Key::Char('q')) => return Ok(false),
-            Event::Input(Key::Ctrl('c')) => return Ok(false),
+            Event::Input(input) if input.code == KeyCode::Char('q') => return Ok(false),
+            Event::Input(input)
+                if input.code == KeyCode::Char('c')
+                    && input.modifiers.contains(KeyModifiers::CONTROL) =>
+            {
+                return Ok(false);
+            }
             Event::Input(input) => handle_app(input, self),
             Event::Tick => {}
         }

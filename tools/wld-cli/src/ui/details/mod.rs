@@ -1,25 +1,21 @@
-use ansi_to_tui::ansi_to_text;
+use ansi_to_tui::IntoText as _;
 use hexyl::{BorderStyle, Printer};
-use libeq_wld::parser::{fragments, FragmentType};
-use tui::{
-    backend::Backend,
+use libeq_wld::parser::FragmentType;
+use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::Span,
     widgets::{Block, Borders, Paragraph, Row, Table, Tabs},
-    Frame,
 };
 
-use super::{get_frag_name_and_color, ACTIVE_BLOCK_COLOR, INACTIVE_BLOCK_COLOR};
+use super::{ACTIVE_BLOCK_COLOR, INACTIVE_BLOCK_COLOR, get_frag_name_and_color};
 use crate::app::{ActiveBlock, App};
 
-const TABLE_WIDTHS: [Constraint; 2] = [Constraint::Length(10), Constraint::Length(100)];
+const TABLE_WIDTHS: [Constraint; 2] = [Constraint::Length(100), Constraint::Length(0)];
 const NEWLINE: u8 = 10;
 
-pub fn draw_fragment_details<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
-where
-    B: Backend,
-{
+pub fn draw_fragment_details(f: &mut Frame, app: &App, layout_chunk: Rect) {
     if app.selected_fragment_idx.is_none() {
         return;
     }
@@ -39,28 +35,29 @@ where
     draw_fragment_body(f, app, layout[1], fragment_idx, fragment);
 }
 
-pub fn draw_fragment_header<B>(
-    f: &mut Frame<B>,
+pub fn draw_fragment_header(
+    f: &mut Frame,
     app: &App,
     layout_chunk: Rect,
     fragment_idx: usize,
     fragment: &FragmentType,
-) where
-    B: Backend,
-{
+) {
     let name = app
         .wld_doc
         .get_string(*fragment.name_ref())
         .map_or("".to_string(), |n| format!("{}", n));
     let (frag_type_name, frag_color) = get_frag_name_and_color(fragment);
 
-    let table = Table::new(vec![
-        Row::new(vec![Span::styled(
-            format!("{}", frag_type_name),
-            Style::default().fg(frag_color),
-        )]),
-        Row::new(vec![name]),
-    ])
+    let table = Table::new(
+        vec![
+            Row::new(vec![Span::styled(
+                format!("{}", frag_type_name),
+                Style::default().fg(frag_color),
+            )]),
+            Row::new(vec![name]),
+        ],
+        TABLE_WIDTHS,
+    )
     .block(
         Block::default()
             .title(format!("Header - {}", fragment_idx + 1))
@@ -68,27 +65,24 @@ pub fn draw_fragment_header<B>(
             .border_style(Style::default().fg(INACTIVE_BLOCK_COLOR)),
     )
     .style(Style::default().fg(Color::White))
-    .highlight_style(
+    .row_highlight_style(
         Style::default()
             .bg(Color::LightGreen)
             .add_modifier(Modifier::BOLD),
     )
     .highlight_symbol(">> ")
-    .widths(&[Constraint::Length(100), Constraint::Length(0)])
     .column_spacing(1);
 
     f.render_widget(table, layout_chunk);
 }
 
-pub fn draw_fragment_body<B>(
-    f: &mut Frame<B>,
+pub fn draw_fragment_body(
+    f: &mut Frame,
     app: &App,
     layout_chunk: Rect,
     fragment_idx: usize,
     fragment: &FragmentType,
-) where
-    B: Backend,
-{
+) {
     let border_color = match app.route.active_block {
         ActiveBlock::FragmentDetails => ACTIVE_BLOCK_COLOR,
         _ => INACTIVE_BLOCK_COLOR,
@@ -99,21 +93,15 @@ pub fn draw_fragment_body<B>(
         .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
         .split(layout_chunk);
 
-    let tabs = Tabs::new(
-        ["Fields", "JSON", "Raw"]
-            .iter()
-            .cloned()
-            .map(Spans::from)
-            .collect(),
-    )
-    .block(Block::default())
-    .select(app.detail_body_tab_idx)
-    .style(Style::default().fg(Color::White))
-    .highlight_style(
-        Style::default()
-            .bg(Color::LightGreen)
-            .add_modifier(Modifier::BOLD),
-    );
+    let tabs = Tabs::new(["Fields", "JSON", "Raw"])
+        .block(Block::default())
+        .select(app.detail_body_tab_idx)
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        );
 
     f.render_widget(tabs, layout[0]);
 
@@ -130,15 +118,13 @@ pub fn draw_fragment_body<B>(
     }
 }
 
-pub fn draw_raw_fragment_data<B>(
-    f: &mut Frame<B>,
+pub fn draw_raw_fragment_data(
+    f: &mut Frame,
     app: &App,
     layout_chunk: Rect,
     fragment_idx: usize,
     fragment: &FragmentType,
-) where
-    B: Backend,
-{
+) {
     let border_color = match app.route.active_block {
         ActiveBlock::FragmentDetails => ACTIVE_BLOCK_COLOR,
         _ => INACTIVE_BLOCK_COLOR,
@@ -156,7 +142,7 @@ pub fn draw_raw_fragment_data<B>(
         .collect::<Vec<_>>()
         .join(&[NEWLINE][..]);
 
-    let paragraph = Paragraph::new(ansi_to_text(lines).unwrap()).block(
+    let paragraph = Paragraph::new(lines.into_text().unwrap()).block(
         Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(border_color)),
@@ -164,15 +150,13 @@ pub fn draw_raw_fragment_data<B>(
     f.render_widget(paragraph, layout_chunk);
 }
 
-pub fn draw_json_fragment_data<B>(
-    f: &mut Frame<B>,
+pub fn draw_json_fragment_data(
+    f: &mut Frame,
     app: &App,
     layout_chunk: Rect,
     fragment_idx: usize,
     fragment: &FragmentType,
-) where
-    B: Backend,
-{
+) {
     let border_color = match app.route.active_block {
         ActiveBlock::FragmentDetails => ACTIVE_BLOCK_COLOR,
         _ => INACTIVE_BLOCK_COLOR,
@@ -192,15 +176,13 @@ pub fn draw_json_fragment_data<B>(
     f.render_widget(fields, layout_chunk);
 }
 
-pub fn draw_fragment_fields<B>(
-    f: &mut Frame<B>,
+pub fn draw_fragment_fields(
+    f: &mut Frame,
     app: &App,
     layout_chunk: Rect,
     fragment_idx: usize,
     fragment: &FragmentType,
-) where
-    B: Backend,
-{
+) {
     let border_color = match app.route.active_block {
         ActiveBlock::FragmentDetails => ACTIVE_BLOCK_COLOR,
         _ => INACTIVE_BLOCK_COLOR,
