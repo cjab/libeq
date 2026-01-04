@@ -6,7 +6,7 @@ use std::sync::{
 use std::thread;
 use std::time::Duration;
 
-use crossterm::event::{self, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{self, KeyCode, KeyEventKind};
 
 pub enum Event<I> {
     Input(I),
@@ -16,7 +16,7 @@ pub enum Event<I> {
 /// A small event handler that wrap termion input and tick events. Each event
 /// type is handled in its own thread and returned to a common `Receiver`
 pub struct Events {
-    rx: mpsc::Receiver<Event<KeyEvent>>,
+    rx: mpsc::Receiver<Event<event::Event>>,
     input_handle: thread::JoinHandle<()>,
     ignore_exit_key: Arc<AtomicBool>,
     tick_handle: thread::JoinHandle<()>,
@@ -52,21 +52,28 @@ impl Events {
             thread::spawn(move || {
                 loop {
                     if event::poll(config.tick_rate).is_ok() {
-                        match event::read() {
-                            Ok(event::Event::Key(key_event)) => {
-                                if key_event.kind != KeyEventKind::Release
-                                    && tx.send(Event::Input(key_event)).is_err()
-                                {
-                                    return;
-                                }
+                        if let Ok(evt) = event::read() {
+                            match evt {
+                                event::Event::Key(key_event) => {
+                                    if key_event.kind != KeyEventKind::Release
+                                        && tx.send(Event::Input(evt)).is_err()
+                                    {
+                                        return;
+                                    }
 
-                                if !ignore_exit_key.load(Ordering::Relaxed)
-                                    && key_event.code == config.exit_key
-                                {
-                                    return;
+                                    if !ignore_exit_key.load(Ordering::Relaxed)
+                                        && key_event.code == config.exit_key
+                                    {
+                                        return;
+                                    }
                                 }
+                                event::Event::Mouse(_) => {
+                                    if tx.send(Event::Input(evt)).is_err() {
+                                        return;
+                                    }
+                                }
+                                _ => {}
                             }
-                            _ => {}
                         }
                     }
                 }
@@ -90,7 +97,7 @@ impl Events {
         }
     }
 
-    pub fn next(&self) -> Result<Event<KeyEvent>, mpsc::RecvError> {
+    pub fn next(&self) -> Result<Event<event::Event>, mpsc::RecvError> {
         self.rx.recv()
     }
 
