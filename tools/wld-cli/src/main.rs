@@ -4,16 +4,19 @@ mod handlers;
 mod ui;
 
 use std::fs::{self, File};
-use std::io::{prelude::*, Read};
+use std::io::{Read, prelude::*};
 use std::path::Path;
 use std::{error::Error, io};
 
-use clap::{arg, value_parser, Command, ValueEnum};
+use clap::{Command, ValueEnum, arg, value_parser};
 use colorful::Color;
 use colorful::Colorful;
+use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+use crossterm::execute;
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use hexyl::Printer;
-use termion::{input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
-use tui::{backend::TermionBackend, Terminal};
+use ratatui::crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
+use ratatui::{Terminal, backend::CrosstermBackend};
 
 use crate::{app::App, event::Events};
 use libeq_wld::parser::{self, WldDoc, WldDocError};
@@ -157,10 +160,10 @@ fn explore(wld_filename: &str) -> Result<(), Box<dyn Error>> {
         })
         .expect("Could not read wld file");
 
-    let stdout = io::stdout().into_raw_mode()?;
-    let stdout = MouseTerminal::from(stdout);
-    let stdout = AlternateScreen::from(stdout);
-    let backend = TermionBackend::new(stdout);
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
     let events = Events::new();
@@ -176,6 +179,13 @@ fn explore(wld_filename: &str) -> Result<(), Box<dyn Error>> {
             break;
         }
     }
+
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
 
     Ok(())
 }

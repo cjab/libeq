@@ -246,7 +246,7 @@ impl<'a> Mesh<'a> {
             .face_material_groups
             .iter()
             .enumerate()
-            .map(|(index, (poly_count, ref material_idx))| {
+            .map(|(index, (poly_count, material_idx))| {
                 let count = *poly_count as usize;
                 let next_pos = pos + count;
                 let batch = pos..next_pos;

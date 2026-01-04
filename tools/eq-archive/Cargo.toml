@@ -2,7 +2,7 @@
 name = "eq-archive"
 version = "0.4.0"
 authors = ["Chad Jablonski <chad@jablonski.xyz>"]
-edition = "2021"
+edition = "2024"
 description = "Create and extract EverQuest .s3d archives"
 
 [[bin]]

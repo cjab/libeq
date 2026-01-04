@@ -1,44 +1,44 @@
 use std::cmp;
 
-use termion::event::Key;
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use crate::app::{ActiveBlock, App, RouteId};
 
 const HALF_PAGE_STEP: usize = 25;
 
-pub fn handle_app(key: Key, app: &mut App) {
-    match key {
-        Key::Char('/') => {
+pub fn handle_app(event: KeyEvent, app: &mut App) {
+    match event.code {
+        KeyCode::Char('/') => {
             app.route.active_block = ActiveBlock::FilterInput;
         }
         // Move left
-        Key::Left | Key::Char('h') => match app.route.id {
+        KeyCode::Left | KeyCode::Char('h') => match app.route.id {
             RouteId::Main => {
                 app.route.active_block = ActiveBlock::FragmentList;
             }
         },
         // Move right
-        Key::Right | Key::Char('l') => match app.route.id {
+        KeyCode::Right | KeyCode::Char('l') => match app.route.id {
             RouteId::Main => {
                 app.route.active_block = ActiveBlock::FragmentDetails;
             }
         },
         // Tab
-        Key::Char('\t') => match app.route.id {
+        KeyCode::Tab => match app.route.id {
             RouteId::Main => {
                 app.detail_scroll_pos = (0, 0);
                 app.detail_body_tab_idx = wrap_idx(app.detail_body_tab_idx as i32 + 1, 3);
             }
         },
         // Tab back
-        Key::BackTab => match app.route.id {
+        KeyCode::BackTab => match app.route.id {
             RouteId::Main => {
                 app.detail_scroll_pos = (0, 0);
                 app.detail_body_tab_idx = wrap_idx(app.detail_body_tab_idx as i32 - 1, 3);
             }
         },
         // Move down
-        Key::Down | Key::Char('j') => match app.route.id {
+        KeyCode::Down | KeyCode::Char('j') => match app.route.id {
             RouteId::Main => match app.route.active_block {
                 ActiveBlock::FragmentList => {
                     let fragment_count = app.wld_doc.fragment_count();
@@ -55,7 +55,7 @@ pub fn handle_app(key: Key, app: &mut App) {
             },
         },
         // Move up
-        Key::Up | Key::Char('k') => match app.route.id {
+        KeyCode::Up | KeyCode::Char('k') => match app.route.id {
             RouteId::Main => match app.route.active_block {
                 ActiveBlock::FragmentList => {
                     app.selected_fragment_idx = Some(match app.selected_fragment_idx {
@@ -72,7 +72,8 @@ pub fn handle_app(key: Key, app: &mut App) {
             },
         },
         // Half page down
-        Key::Ctrl('d') => match app.route.id {
+        KeyCode::Char('d') if event.modifiers.contains(KeyModifiers::CONTROL) => match app.route.id
+        {
             RouteId::Main => match app.route.active_block {
                 ActiveBlock::FragmentList => {
                     let fragment_count = app.wld_doc.fragment_count();
@@ -89,7 +90,8 @@ pub fn handle_app(key: Key, app: &mut App) {
             },
         },
         // Half page up
-        Key::Ctrl('u') => match app.route.id {
+        KeyCode::Char('u') if event.modifiers.contains(KeyModifiers::CONTROL) => match app.route.id
+        {
             RouteId::Main => match app.route.active_block {
                 ActiveBlock::FragmentList => {
                     app.selected_fragment_idx = Some(match app.selected_fragment_idx {
@@ -106,7 +108,7 @@ pub fn handle_app(key: Key, app: &mut App) {
                 ActiveBlock::FilterInput => {}
             },
         },
-        Key::Char('G') => match app.route.id {
+        KeyCode::Char('G') => match app.route.id {
             RouteId::Main => match app.route.active_block {
                 ActiveBlock::FragmentList => {
                     let fragment_count = app.wld_doc.fragment_count();
