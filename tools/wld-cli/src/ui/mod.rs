@@ -2,11 +2,10 @@ mod details;
 mod filter;
 mod list;
 
-use tui::{
-    backend::Backend,
+use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::Color,
-    Frame,
 };
 
 use crate::app::{ActiveBlock, App};
@@ -14,19 +13,16 @@ use details::draw_fragment_details;
 use filter::draw_filter;
 use list::draw_fragment_list;
 
-use libeq_wld::parser::{fragments::*, FragmentType};
+use libeq_wld::parser::{FragmentType, fragments::*};
 
 const ACTIVE_BLOCK_COLOR: Color = Color::Yellow;
 const INACTIVE_BLOCK_COLOR: Color = Color::White;
 
-pub fn draw_main_layout<B>(f: &mut Frame<B>, app: &App)
-where
-    B: Backend,
-{
+pub fn draw_main_layout(f: &mut Frame, app: &App) {
     let layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Length(3), Constraint::Min(0)])
-        .split(f.size());
+        .split(f.area());
 
     draw_filter(
         f,
@@ -37,10 +33,7 @@ where
     draw_content(f, app, layout[1]);
 }
 
-pub fn draw_content<B>(f: &mut Frame<B>, app: &App, layout_chunk: Rect)
-where
-    B: Backend,
-{
+pub fn draw_content(f: &mut Frame, app: &App, layout_chunk: Rect) {
     let layout = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(25), Constraint::Percentage(75)].as_ref())
