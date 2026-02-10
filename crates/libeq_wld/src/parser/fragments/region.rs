@@ -117,7 +117,7 @@ impl FragmentParser for Region {
     const TYPE_ID: u32 = 0x22;
     const TYPE_NAME: &'static str = "Region";
 
-    fn parse(input: &[u8]) -> WResult<Region> {
+    fn parse(input: &[u8]) -> WResult<'_, Region> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = RegionFlags::parse(i)?;
         let (i, ambient_light) = FragmentRef::parse(i)?;
@@ -321,7 +321,7 @@ impl RegionFlags {
     const HAS_BYTE_ENTRIES: u32 = 0x80;
     const HAS_MESH_REFERENCE: u32 = 0x100;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, raw_flags) = le_u32(input)?;
         Ok((i, Self(raw_flags)))
     }
@@ -390,7 +390,7 @@ pub struct Wall {
 }
 
 impl Wall {
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, flags) = WallFlags::parse(input)?;
         let (i, num_vertices) = le_u32(i)?;
         let (i, vertex_list) = count(le_u32, num_vertices as usize)(i)?;
@@ -465,7 +465,7 @@ impl WallFlags {
     const HAS_FLOOR: u32 = 0x01;
     const HAS_METHOD_AND_NORMAL: u32 = 0x02;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, raw_flags) = le_u32(input)?;
         Ok((i, Self(raw_flags)))
     }
@@ -526,7 +526,7 @@ pub struct Obstacle {
 }
 
 impl Obstacle {
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, flags) = ObstacleFlags::parse(input)?;
         let (i, next_region) = le_i32(i)?;
         let (i, obstacle_type) = le_i32(i)?;
@@ -626,7 +626,7 @@ impl ObstacleFlags {
     const IS_GEOMETRY_CUTTING: u32 = 0x02;
     const HAS_USER_DATA: u32 = 0x04;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, raw_flags) = le_u32(input)?;
         Ok((i, Self(raw_flags)))
     }
@@ -685,7 +685,7 @@ pub struct VisNode {
 }
 
 impl VisNode {
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, normal_abcd) = tuple((le_f32, le_f32, le_f32, le_f32))(input)?;
         let (i, vis_list_index) = le_u32(i)?;
         let (i, front_tree) = le_u32(i)?;
@@ -779,15 +779,15 @@ impl RangeEntry {
 }
 
 impl VisibleList {
-    fn parse_with_bytes(input: &[u8]) -> WResult<Self> {
+    fn parse_with_bytes(input: &[u8]) -> WResult<'_, Self> {
         Self::parse(input, true)
     }
 
-    fn parse_with_words(input: &[u8]) -> WResult<Self> {
+    fn parse_with_words(input: &[u8]) -> WResult<'_, Self> {
         Self::parse(input, false)
     }
 
-    fn parse(input: &[u8], byte_entries: bool) -> WResult<Self> {
+    fn parse(input: &[u8], byte_entries: bool) -> WResult<'_, Self> {
         let (i, range_count) = le_u16(input)?;
 
         let (i, ranges) = if byte_entries {

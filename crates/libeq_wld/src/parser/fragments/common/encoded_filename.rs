@@ -27,7 +27,7 @@ pub struct EncodedFilename {
 }
 
 impl EncodedFilename {
-    pub fn parse(input: &[u8]) -> WResult<EncodedFilename> {
+    pub fn parse(input: &[u8]) -> WResult<'_, EncodedFilename> {
         let (i, name_length) = le_u16(input)?;
         let (remaining, file_name) = count(le_u8, name_length as usize)(i)?;
         Ok((

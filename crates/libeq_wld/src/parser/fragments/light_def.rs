@@ -63,7 +63,7 @@ impl FragmentParser for LightDef {
     const TYPE_ID: u32 = 0x1b;
     const TYPE_NAME: &'static str = "LightDef";
 
-    fn parse(input: &[u8]) -> WResult<LightDef> {
+    fn parse(input: &[u8]) -> WResult<'_, LightDef> {
         let (i, (name_reference, flags, frame_count)) =
             tuple((StringReference::parse, LightDefFlags::parse, le_u32))(input)?;
 
@@ -156,7 +156,7 @@ impl LightDefFlags {
     const SKIP_FRAMES: u32 = 0x08;
     const HAS_COLOR: u32 = 0x10;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

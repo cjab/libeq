@@ -70,7 +70,7 @@ impl FragmentParser for TrackDef {
     const TYPE_ID: u32 = 0x12;
     const TYPE_NAME: &'static str = "TrackDef";
 
-    fn parse(input: &[u8]) -> WResult<TrackDef> {
+    fn parse(input: &[u8]) -> WResult<'_, TrackDef> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, frame_count) = le_u32(i)?;
@@ -160,7 +160,7 @@ pub struct FrameTransform {
 }
 
 impl FrameTransform {
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, rotate_denominator) = le_i16(input)?;
         let (i, rotate_x_numerator) = le_i16(i)?;
         let (i, rotate_y_numerator) = le_i16(i)?;
@@ -231,7 +231,7 @@ pub struct LegacyFrameTransform {
 }
 
 impl LegacyFrameTransform {
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, shift_denominator) = le_f32(input)?;
         let (i, shift_x_numerator) = le_f32(i)?;
         let (i, shift_y_numerator) = le_f32(i)?;

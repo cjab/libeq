@@ -93,7 +93,7 @@ impl FragmentParser for Sprite2DDef {
     const TYPE_ID: u32 = 0x06;
     const TYPE_NAME: &'static str = "Sprite2DDef";
 
-    fn parse(input: &[u8]) -> WResult<Sprite2DDef> {
+    fn parse(input: &[u8]) -> WResult<'_, Sprite2DDef> {
         let (i, (name_reference, flags, num_frames, num_pitches, sprite_size, sphere_fragment)) =
             tuple((
                 StringReference::parse,
@@ -223,7 +223,7 @@ impl SpriteFlags {
     const SKIP_FRAMES: u32 = 0x40;
     const HAS_DEPTH_SCALE: u32 = 0x80;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }
@@ -283,7 +283,7 @@ pub struct SpritePitch {
 }
 
 impl SpritePitch {
-    fn parse(num_frames: u32, input: &[u8]) -> WResult<SpritePitch> {
+    fn parse(num_frames: u32, input: &[u8]) -> WResult<'_, SpritePitch> {
         let (i, (pitch_cap, num_headings)) = tuple((le_i32, le_u32))(input)?;
         let (remaining, headings) = count(
             |input| SpriteHeading::parse(num_frames, input),
@@ -332,7 +332,7 @@ pub struct SpriteHeading {
 }
 
 impl SpriteHeading {
-    fn parse(num_frames: u32, input: &[u8]) -> WResult<SpriteHeading> {
+    fn parse(num_frames: u32, input: &[u8]) -> WResult<'_, SpriteHeading> {
         let (remaining, (heading_cap, frames)) =
             tuple((le_u32, count(le_u32, num_frames as usize)))(input)?;
         Ok((

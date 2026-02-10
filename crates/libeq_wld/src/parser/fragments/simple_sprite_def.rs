@@ -47,7 +47,7 @@ impl FragmentParser for SimpleSpriteDef {
     const TYPE_ID: u32 = 0x04;
     const TYPE_NAME: &'static str = "SimpleSpriteDef";
 
-    fn parse(input: &[u8]) -> WResult<SimpleSpriteDef> {
+    fn parse(input: &[u8]) -> WResult<'_, SimpleSpriteDef> {
         let (i, (name_reference, flags, frame_count)) =
             tuple((StringReference::parse, SimpleSpriteDefFlags::parse, le_u32))(input)?;
 
@@ -125,7 +125,7 @@ impl SimpleSpriteDefFlags {
     const HAS_SLEEP: u32 = 0x10;
     const HAS_CURRENT_FRAME: u32 = 0x20;
 
-    fn parse(input: &[u8]) -> WResult<SimpleSpriteDefFlags> {
+    fn parse(input: &[u8]) -> WResult<'_, SimpleSpriteDefFlags> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, SimpleSpriteDefFlags(raw_flags)))
     }

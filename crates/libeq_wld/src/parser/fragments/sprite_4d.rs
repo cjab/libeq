@@ -29,7 +29,7 @@ impl FragmentParser for Sprite4D {
     const TYPE_ID: u32 = 0x0b;
     const TYPE_NAME: &'static str = "Sprite4D";
 
-    fn parse(input: &[u8]) -> WResult<Sprite4D> {
+    fn parse(input: &[u8]) -> WResult<'_, Sprite4D> {
         let (remaining, (name_reference, reference, params1)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((

@@ -29,7 +29,7 @@ impl FragmentParser for SphereList {
     const TYPE_ID: u32 = 0x1a;
     const TYPE_NAME: &'static str = "SphereList";
 
-    fn parse(input: &[u8]) -> WResult<SphereList> {
+    fn parse(input: &[u8]) -> WResult<'_, SphereList> {
         let (remaining, (name_reference, reference, params1)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((

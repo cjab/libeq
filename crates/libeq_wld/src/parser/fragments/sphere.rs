@@ -24,7 +24,7 @@ impl FragmentParser for Sphere {
     const TYPE_ID: u32 = 0x16;
     const TYPE_NAME: &'static str = "Sphere";
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (remaining, radius) = le_f32(i)?;
 

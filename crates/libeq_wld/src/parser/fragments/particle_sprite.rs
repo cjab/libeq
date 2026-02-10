@@ -29,7 +29,7 @@ impl FragmentParser for ParticleSprite {
     const TYPE_ID: u32 = 0x0d;
     const TYPE_NAME: &'static str = "ParticleSprite";
 
-    fn parse(input: &[u8]) -> WResult<ParticleSprite> {
+    fn parse(input: &[u8]) -> WResult<'_, ParticleSprite> {
         let (remaining, (name_reference, reference, params1)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((

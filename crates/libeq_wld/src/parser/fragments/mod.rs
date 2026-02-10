@@ -124,7 +124,7 @@ impl<T> FragmentRef<T> {
         }
     }
 
-    pub fn parse(input: &[u8]) -> WResult<FragmentRef<T>> {
+    pub fn parse(input: &[u8]) -> WResult<'_, FragmentRef<T>> {
         let (remaining, frag_ref_idx) = le_i32(input)?;
         Ok((remaining, FragmentRef::new(frag_ref_idx)))
     }
@@ -148,7 +148,7 @@ pub trait FragmentParser {
     type T;
     const TYPE_ID: u32;
     const TYPE_NAME: &'static str;
-    fn parse(input: &[u8]) -> WResult<Self::T>;
+    fn parse(input: &[u8]) -> WResult<'_, Self::T>;
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

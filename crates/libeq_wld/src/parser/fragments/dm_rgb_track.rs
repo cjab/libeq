@@ -29,7 +29,7 @@ impl FragmentParser for DmRGBTrack {
     const TYPE_ID: u32 = 0x33;
     const TYPE_NAME: &'static str = "DmRGBTrack";
 
-    fn parse(input: &[u8]) -> WResult<DmRGBTrack> {
+    fn parse(input: &[u8]) -> WResult<'_, DmRGBTrack> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((

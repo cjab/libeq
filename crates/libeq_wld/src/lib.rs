@@ -65,7 +65,7 @@ impl Wld {
     }
 
     /// Iterate over all meshes in the wld file.
-    pub fn meshes(&self) -> impl Iterator<Item = Mesh> + '_ {
+    pub fn meshes(&self) -> impl Iterator<Item = Mesh<'_>> {
         self.0
             .fragment_iter::<DmSpriteDef2>()
             .map(move |fragment| Mesh {
@@ -75,7 +75,7 @@ impl Wld {
     }
 
     /// Iterate over all materials in the wld file.
-    pub fn materials(&self) -> impl Iterator<Item = Material> + '_ {
+    pub fn materials(&self) -> impl Iterator<Item = Material<'_>> {
         self.0
             .fragment_iter::<MaterialDef>()
             .map(move |fragment| Material {
@@ -85,7 +85,7 @@ impl Wld {
     }
 
     /// Iterate over all the objects in the wld file.
-    pub fn objects(&self) -> impl Iterator<Item = ObjectLocation> + '_ {
+    pub fn objects(&self) -> impl Iterator<Item = ObjectLocation<'_>> {
         self.0
             .fragment_iter::<Actor>()
             .map(move |fragment| ObjectLocation {
@@ -95,7 +95,7 @@ impl Wld {
     }
 
     /// Iterate over all the objects in the wld file.
-    pub fn models(&self) -> impl Iterator<Item = Model> + '_ {
+    pub fn models(&self) -> impl Iterator<Item = Model<'_>> {
         self.0
             .fragment_iter::<ActorDef>()
             .map(move |fragment| Model {
@@ -219,7 +219,7 @@ impl<'a> Mesh<'a> {
     }
 
     /// A list of materials used by this mesh.
-    pub fn materials(&self) -> Vec<Material> {
+    pub fn materials(&self) -> Vec<Material<'_>> {
         let material_list = self
             .doc
             .get(&self.fragment.material_list_ref)
@@ -240,7 +240,7 @@ impl<'a> Mesh<'a> {
     }
 
     /// Primitives belonging to this mesh.
-    pub fn primitives(&self) -> Vec<Primitive> {
+    pub fn primitives(&self) -> Vec<Primitive<'_>> {
         let mut pos = 0;
         self.fragment
             .face_material_groups
@@ -266,7 +266,7 @@ impl<'a> Mesh<'a> {
     }
 
     /// Animated vertices for the mesh
-    pub fn animated_vertices(&self) -> Option<MeshAnimatedVertices> {
+    pub fn animated_vertices(&self) -> Option<MeshAnimatedVertices<'_>> {
         let fragment_ref = &self.fragment.animation_ref;
         let fragment = self.doc.get(&fragment_ref)?;
         let fragment = self.doc.get(&fragment.reference)?;
@@ -315,7 +315,7 @@ impl<'a> Primitive<'a> {
     }
 
     /// The material that this primitive uses.
-    pub fn material(&self) -> Material {
+    pub fn material(&self) -> Material<'_> {
         self.mesh.materials().remove(self.material_idx)
     }
 
@@ -338,7 +338,7 @@ impl<'a> Material<'a> {
     }
 
     /// The color texture for this material.
-    pub fn base_color_texture(&self) -> Option<Texture> {
+    pub fn base_color_texture(&self) -> Option<Texture<'_>> {
         self.doc
             .get(&self.fragment.reference)
             .and_then(|texture_ref| self.doc.get(&texture_ref.reference))
@@ -486,7 +486,7 @@ impl<'a> Model<'a> {
 
     // FIXME: My assumption is that there arent any models with multiple meshes, but my assumption might be wrong.
     /// Get the mesh that this model uses, if any.
-    pub fn mesh(&self) -> Option<Mesh> {
+    pub fn mesh(&self) -> Option<Mesh<'_>> {
         let fragment = self.get_mesh_fragment()?;
         Some(Mesh {
             doc: &self.doc,

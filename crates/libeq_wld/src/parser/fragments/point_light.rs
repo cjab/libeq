@@ -40,7 +40,7 @@ impl FragmentParser for PointLight {
     const TYPE_ID: u32 = 0x28;
     const TYPE_NAME: &'static str = "PointLight";
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, reference) = FragmentRef::parse(i)?;
         let (i, flags) = PointLightFlags::parse(i)?;
@@ -100,7 +100,7 @@ impl PointLightFlags {
     const STATIC_INFLUENCE: u32 = 0x40;
     const HAS_REGIONS: u32 = 0x80;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

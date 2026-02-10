@@ -75,7 +75,7 @@ impl FragmentParser for Actor {
     const TYPE_ID: u32 = 0x15;
     const TYPE_NAME: &'static str = "Actor";
 
-    fn parse(input: &[u8]) -> WResult<Actor> {
+    fn parse(input: &[u8]) -> WResult<'_, Actor> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, actor_def_reference) = StringReference::parse(i)?;
         let (i, flags) = ActorInstFlags::parse(i)?;
@@ -193,7 +193,7 @@ impl ActorInstFlags {
     const SPRITE_VOLUME_ONLY: u32 = 0x80;
     const HAS_VERTEX_COLOR_REFERENCE: u32 = 0x100;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

@@ -51,7 +51,7 @@ impl FragmentParser for ParticleSpriteDef {
     const TYPE_ID: u32 = 0x0c;
     const TYPE_NAME: &'static str = "ParticleSpriteDef";
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = ParticleSpriteDefFlags::parse(i)?;
         let (i, num_vertices) = le_u32(i)?;
@@ -139,7 +139,7 @@ impl ParticleSpriteDefFlags {
     const HAS_CENTER_OFFSET: u32 = 0x01;
     const HAS_BOUNDING_RADIUS: u32 = 0x02;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, raw_flags) = le_u32(input)?;
         Ok((i, Self(raw_flags)))
     }

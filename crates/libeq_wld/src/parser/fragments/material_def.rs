@@ -53,7 +53,7 @@ impl FragmentParser for MaterialDef {
     const TYPE_ID: u32 = 0x30;
     const TYPE_NAME: &'static str = "MaterialDef";
 
-    fn parse(input: &[u8]) -> WResult<MaterialDef> {
+    fn parse(input: &[u8]) -> WResult<'_, MaterialDef> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, render_method) = RenderMethod::parse(i)?;

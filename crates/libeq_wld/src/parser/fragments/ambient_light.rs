@@ -40,7 +40,7 @@ impl FragmentParser for AmbientLight {
     const TYPE_ID: u32 = 0x2a;
     const TYPE_NAME: &'static str = "AmbientLight";
 
-    fn parse(input: &[u8]) -> WResult<AmbientLight> {
+    fn parse(input: &[u8]) -> WResult<'_, AmbientLight> {
         let (i, (name_reference, reference, flags, region_count)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32, le_u32))(input)?;
         let (remaining, regions) = count(le_u32, region_count as usize)(i)?;

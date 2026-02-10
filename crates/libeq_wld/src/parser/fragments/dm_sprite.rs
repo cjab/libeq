@@ -29,7 +29,7 @@ impl FragmentParser for DmSprite {
     const TYPE_ID: u32 = 0x2d;
     const TYPE_NAME: &'static str = "DmSprite";
 
-    fn parse(input: &[u8]) -> WResult<DmSprite> {
+    fn parse(input: &[u8]) -> WResult<'_, DmSprite> {
         let (remaining, (name_reference, reference, params)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((

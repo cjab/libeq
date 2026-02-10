@@ -29,7 +29,7 @@ impl FragmentParser for SimpleSprite {
     const TYPE_ID: u32 = 0x05;
     const TYPE_NAME: &'static str = "SimpleSprite";
 
-    fn parse(input: &[u8]) -> WResult<SimpleSprite> {
+    fn parse(input: &[u8]) -> WResult<'_, SimpleSprite> {
         let (remaining, (name_reference, reference, flags)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((

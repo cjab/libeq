@@ -15,7 +15,7 @@ impl StringReference {
     pub fn new(idx: i32) -> Self {
         Self(idx)
     }
-    pub fn parse(input: &[u8]) -> WResult<Self> {
+    pub fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, idx) = le_i32(input)?;
         Ok((remaining, Self::new(idx)))
     }

@@ -155,7 +155,7 @@ impl FragmentParser for DmSpriteDef {
     const TYPE_ID: u32 = 0x2c;
     const TYPE_NAME: &'static str = "DmSpriteDef";
 
-    fn parse(input: &[u8]) -> WResult<DmSpriteDef> {
+    fn parse(input: &[u8]) -> WResult<'_, DmSpriteDef> {
         let (
             i,
             (
@@ -475,7 +475,7 @@ impl DmSpriteDefFaceEntry {
 }
 
 impl DmSpriteDefFaceEntry {
-    fn parse(input: &[u8]) -> WResult<DmSpriteDefFaceEntry> {
+    fn parse(input: &[u8]) -> WResult<'_, DmSpriteDefFaceEntry> {
         let (remaining, (flags, data, vertex_indexes)) = tuple((
             le_u16,
             tuple((le_u16, le_u16, le_u16, le_u16)),
@@ -532,7 +532,7 @@ impl DmSpriteDefMeshopEntry {
 }
 
 impl DmSpriteDefMeshopEntry {
-    fn parse(input: &[u8]) -> WResult<DmSpriteDefMeshopEntry> {
+    fn parse(input: &[u8]) -> WResult<'_, DmSpriteDefMeshopEntry> {
         let (remaining, type_field) = le_u32(input)?;
 
         let (remaining, offset) = if type_field == 4 {

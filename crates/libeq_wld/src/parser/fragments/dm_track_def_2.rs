@@ -57,7 +57,7 @@ impl FragmentParser for DmTrackDef2 {
     const TYPE_ID: u32 = 0x37;
     const TYPE_NAME: &'static str = "DmTrackDef2";
 
-    fn parse(input: &[u8]) -> WResult<DmTrackDef2> {
+    fn parse(input: &[u8]) -> WResult<'_, DmTrackDef2> {
         let (i, (name_reference, flags, vertex_count, frame_count, param1, param2, scale)) =
             tuple((
                 StringReference::parse,

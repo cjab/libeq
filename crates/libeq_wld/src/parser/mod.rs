@@ -31,7 +31,7 @@ pub struct WldDoc {
 }
 
 impl WldDoc {
-    pub fn parse(input: &[u8]) -> Result<WldDoc, Vec<WldDocError>> {
+    pub fn parse(input: &[u8]) -> Result<WldDoc, Vec<WldDocError<'_>>> {
         let (i, header) = WldHeader::parse(input).map_err(|e| vec![e.into()])?;
 
         let (i, string_hash_data) = take(header.string_hash_size)(i).map_err(|e| vec![e.into()])?;
@@ -61,7 +61,7 @@ impl WldDoc {
         })
     }
 
-    pub fn fragment_headers_by_offset(input: &[u8]) -> BTreeMap<usize, FragmentHeader> {
+    pub fn fragment_headers_by_offset(input: &[u8]) -> BTreeMap<usize, FragmentHeader<'_>> {
         let (i, header) = WldHeader::parse(input)
             .expect(&format!("{:?}", &input[..std::mem::size_of::<WldHeader>()]));
         let (_, i) = i.split_at(header.string_hash_size as usize);
@@ -85,7 +85,7 @@ impl WldDoc {
         fragment_headers
     }
 
-    pub fn dump_raw_fragments(input: &[u8]) -> WResult<Vec<FragmentHeader>> {
+    pub fn dump_raw_fragments(input: &[u8]) -> WResult<'_, Vec<FragmentHeader<'_>>> {
         let (i, header) = WldHeader::parse(input)?;
         let (i, _) = take(header.string_hash_size)(i)?;
         let (i, fragment_headers) =
@@ -113,14 +113,14 @@ impl WldDoc {
     }
 
     /// Iterate over all fragments of a specific type
-    pub fn fragment_iter<'a, T: 'static + Fragment>(&'a self) -> impl Iterator<Item = &'a T> + '_ {
+    pub fn fragment_iter<'a, T: 'static + Fragment>(&'a self) -> impl Iterator<Item = &'a T> + 'a {
         self.fragments
             .iter()
             .filter_map(|f| f.as_any().downcast_ref::<T>())
     }
 
     /// Iterate over all fragments
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a Box<FragmentType>> + '_ {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a Box<FragmentType>> + 'a {
         self.fragments.iter()
     }
 
@@ -224,7 +224,7 @@ pub struct WldHeader {
 }
 
 impl WldHeader {
-    pub fn parse(input: &[u8]) -> WResult<WldHeader> {
+    pub fn parse(input: &[u8]) -> WResult<'_, WldHeader> {
         let (i, magic) = le_u32(input)?;
         let (i, version) = le_u32(i)?;
         let (i, fragment_count) = le_u32(i)?;
@@ -295,7 +295,7 @@ pub struct FragmentHeader<'a> {
 }
 
 impl<'a> FragmentHeader<'a> {
-    pub fn parse(input: &[u8]) -> WResult<FragmentHeader> {
+    pub fn parse(input: &[u8]) -> WResult<'_, FragmentHeader<'_>> {
         let (i, size) = context("size", le_u32)(input)?;
         let (i, fragment_type) = context("fragment_type", le_u32)(i)?;
         let (i, field_data) = context("field_data", take(size))(i)?;

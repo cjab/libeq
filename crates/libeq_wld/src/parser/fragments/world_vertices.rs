@@ -28,7 +28,7 @@ impl FragmentParser for WorldVertices {
     const TYPE_ID: u32 = 0x2c;
     const TYPE_NAME: &'static str = "WorldVertices";
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let name_reference = StringReference::new(0);
         let (i, num_vertices) = le_u32(input)?;
         let (i, vertices) = count(tuple((le_f32, le_f32, le_f32)), num_vertices as usize)(i)?;

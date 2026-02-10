@@ -30,7 +30,7 @@ impl FragmentParser for WorldTree {
     const TYPE_ID: u32 = 0x21;
     const TYPE_NAME: &'static str = "WorldTree";
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, world_node_count) = le_u32(i)?;
         let (i, world_nodes) = count(WorldNode::parse, world_node_count as usize)(i)?;
@@ -95,7 +95,7 @@ pub struct WorldNode {
 }
 
 impl WorldNode {
-    fn parse(input: &[u8]) -> WResult<WorldNode> {
+    fn parse(input: &[u8]) -> WResult<'_, WorldNode> {
         let (i, normal) = tuple((le_f32, le_f32, le_f32))(input)?;
         let (i, split_distance) = le_f32(i)?;
         let (i, region) = FragmentRef::parse(i)?;
