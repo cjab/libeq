@@ -1,5 +1,3 @@
-#![feature(iter_intersperse)]
-
 mod app;
 mod event;
 mod handlers;
