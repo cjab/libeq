@@ -153,10 +153,8 @@ pub fn draw_raw_fragment_data<B>(
     let lines: Vec<u8> = hex
         .split(|c| *c == NEWLINE)
         .take(100)
-        .intersperse(&[NEWLINE])
-        .flatten()
-        .map(|c| *c)
-        .collect();
+        .collect::<Vec<_>>()
+        .join(&[NEWLINE][..]);
 
     let paragraph = Paragraph::new(ansi_to_text(lines).unwrap()).block(
         Block::default()
