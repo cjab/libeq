@@ -32,7 +32,7 @@ impl FragmentParser for BmInfoRtk {
     const TYPE_ID: u32 = 0x2c;
     const TYPE_NAME: &'static str = "BmInfoRtk";
 
-    fn parse(input: &[u8]) -> WResult<BmInfoRtk> {
+    fn parse(input: &[u8]) -> WResult<'_, BmInfoRtk> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, rtk) = le_u32(i)?;
         let (i, size1) = le_u32(i)?;

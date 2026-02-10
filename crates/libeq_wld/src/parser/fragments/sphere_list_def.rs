@@ -38,7 +38,7 @@ impl FragmentParser for SphereListDef {
     const TYPE_ID: u32 = 0x19;
     const TYPE_NAME: &'static str = "SphereListDef";
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = SphereListDefFlags::parse(i)?;
         let (i, num_spheres) = le_u32(i)?;
@@ -114,7 +114,7 @@ pub struct SphereListDefFlags(u32);
 impl SphereListDefFlags {
     const HAS_SCALE_FACTOR: u32 = 0x01;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, raw_flags) = le_u32(input)?;
         Ok((i, Self(raw_flags)))
     }

@@ -42,7 +42,7 @@ impl FragmentParser for BmInfo {
     const TYPE_ID: u32 = 0x03;
     const TYPE_NAME: &'static str = "BmInfo";
 
-    fn parse(input: &[u8]) -> WResult<BmInfo> {
+    fn parse(input: &[u8]) -> WResult<'_, BmInfo> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, entry_count) = le_u32(i)?;
         let (remaining, entries) = count(EncodedFilename::parse, (entry_count + 1) as usize)(i)?;

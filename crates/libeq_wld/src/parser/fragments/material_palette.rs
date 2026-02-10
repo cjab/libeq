@@ -32,7 +32,7 @@ impl FragmentParser for MaterialPalette {
     const TYPE_ID: u32 = 0x31;
     const TYPE_NAME: &'static str = "MaterialPalette";
 
-    fn parse(input: &[u8]) -> WResult<MaterialPalette> {
+    fn parse(input: &[u8]) -> WResult<'_, MaterialPalette> {
         let (i, (name_reference, flags, size1)) =
             tuple((StringReference::parse, le_u32, le_u32))(input)?;
         let (remaining, fragments) = count(FragmentRef::parse, size1 as usize)(i)?;

@@ -51,7 +51,7 @@ impl FragmentParser for DmRGBTrackDef {
     const TYPE_ID: u32 = 0x32;
     const TYPE_NAME: &'static str = "DmRGBTrackDef";
 
-    fn parse(input: &[u8]) -> WResult<DmRGBTrackDef> {
+    fn parse(input: &[u8]) -> WResult<'_, DmRGBTrackDef> {
         let (i, (name_reference, data1, vertex_color_count, data2, data3, data4)) =
             tuple((
                 StringReference::parse,

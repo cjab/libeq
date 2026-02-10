@@ -40,7 +40,7 @@ impl FragmentParser for DirectionalLight {
     const TYPE_ID: u32 = 0x2b;
     const TYPE_NAME: &'static str = "DirectionalLight";
 
-    fn parse(input: &[u8]) -> WResult<DirectionalLight> {
+    fn parse(input: &[u8]) -> WResult<'_, DirectionalLight> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, light_reference) = FragmentRef::parse(i)?;
         let (i, flags) = DirectionalLightFlags::parse(i)?;
@@ -101,7 +101,7 @@ pub struct DirectionalLightFlags(u32);
 impl DirectionalLightFlags {
     const IS_STATIC: u32 = 0x20;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, raw_flags) = le_u32(input)?;
         Ok((i, Self(raw_flags)))
     }

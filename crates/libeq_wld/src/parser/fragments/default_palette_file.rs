@@ -23,7 +23,7 @@ impl FragmentParser for DefaultPaletteFile {
     const TYPE_ID: u32 = 0x01;
     const TYPE_NAME: &'static str = "DefaultPaletteFile";
 
-    fn parse(input: &[u8]) -> WResult<DefaultPaletteFile> {
+    fn parse(input: &[u8]) -> WResult<'_, DefaultPaletteFile> {
         let name_reference = StringReference::new(0);
         let (remainder, entry) = EncodedFilename::parse(input)?;
         Ok((

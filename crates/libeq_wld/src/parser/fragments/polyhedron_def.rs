@@ -51,7 +51,7 @@ impl FragmentParser for PolyhedronDef {
     const TYPE_ID: u32 = 0x17;
     const TYPE_NAME: &'static str = "PolyhedronDef";
 
-    fn parse(input: &[u8]) -> WResult<PolyhedronDef> {
+    fn parse(input: &[u8]) -> WResult<'_, PolyhedronDef> {
         let (i, (name_reference, flags, size1, size2, params1, params2)) = tuple((
             StringReference::parse,
             //le_f32,

@@ -92,7 +92,7 @@ impl FragmentParser for ParticleCloudDef {
     const TYPE_ID: u32 = 0x34;
     const TYPE_NAME: &'static str = "ParticleCloudDef";
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, unknown_1) = le_u32(i)?;
         let (i, unknown_2) = le_u32(i)?;
@@ -201,7 +201,7 @@ pub enum ParticleMovement {
 }
 
 impl ParticleMovement {
-    pub fn parse(input: &[u8]) -> WResult<Self> {
+    pub fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw) = le_u32(input)?;
 
         Ok((remaining, FromPrimitive::from_u32(raw).unwrap()))

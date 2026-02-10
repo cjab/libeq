@@ -193,7 +193,7 @@ impl FragmentParser for DmSpriteDef2 {
     const TYPE_ID: u32 = 0x36;
     const TYPE_NAME: &'static str = "DmSpriteDef2";
 
-    fn parse(input: &[u8]) -> WResult<DmSpriteDef2> {
+    fn parse(input: &[u8]) -> WResult<'_, DmSpriteDef2> {
         let (
             i,
             (
@@ -427,7 +427,7 @@ pub struct DmSpriteDef2FaceEntry {
 }
 
 impl DmSpriteDef2FaceEntry {
-    fn parse(input: &[u8]) -> WResult<DmSpriteDef2FaceEntry> {
+    fn parse(input: &[u8]) -> WResult<'_, DmSpriteDef2FaceEntry> {
         let (remaining, (flags, vertex_indexes)) =
             tuple((le_u16, tuple((le_u16, le_u16, le_u16))))(input)?;
         Ok((
@@ -482,7 +482,7 @@ pub struct DmSpriteDef2MeshOpEntry {
 }
 
 impl DmSpriteDef2MeshOpEntry {
-    fn parse(input: &[u8]) -> WResult<DmSpriteDef2MeshOpEntry> {
+    fn parse(input: &[u8]) -> WResult<'_, DmSpriteDef2MeshOpEntry> {
         let unknown_data = &input[0..4];
         let input = &input[4..];
 

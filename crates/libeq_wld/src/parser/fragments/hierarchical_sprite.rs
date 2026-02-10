@@ -31,7 +31,7 @@ impl FragmentParser for HierarchicalSprite {
     const TYPE_ID: u32 = 0x11;
     const TYPE_NAME: &'static str = "HierarchicalSprite";
 
-    fn parse(input: &[u8]) -> WResult<HierarchicalSprite> {
+    fn parse(input: &[u8]) -> WResult<'_, HierarchicalSprite> {
         let (remaining, (name_reference, reference, params1)) =
             tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
         Ok((

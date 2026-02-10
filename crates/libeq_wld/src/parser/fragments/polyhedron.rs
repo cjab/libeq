@@ -32,7 +32,7 @@ impl FragmentParser for Polyhedron {
     const TYPE_ID: u32 = 0x18;
     const TYPE_NAME: &'static str = "Polyhedron";
 
-    fn parse(input: &[u8]) -> WResult<Polyhedron> {
+    fn parse(input: &[u8]) -> WResult<'_, Polyhedron> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, reference) = FragmentRef::parse(i)?;
         let (i, flags) = PolyhedronFlags::parse(i)?;
@@ -87,7 +87,7 @@ pub struct PolyhedronFlags(u32);
 impl PolyhedronFlags {
     const HAS_SCALE_FACTOR: u32 = 0x01;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

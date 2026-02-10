@@ -46,7 +46,7 @@ pub struct Location {
 }
 
 impl Location {
-    pub fn parse(input: &[u8]) -> WResult<Self> {
+    pub fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, x) = le_f32(input)?;
         let (i, y) = le_f32(i)?;
         let (i, z) = le_f32(i)?;

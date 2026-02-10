@@ -25,7 +25,7 @@ impl FragmentParser for BlitSpriteDef {
     const TYPE_ID: u32 = 0x26;
     const TYPE_NAME: &'static str = "BlitSpriteDef";
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = BlitSpriteDefFlags::parse(i)?;
         let (i, blit_sprite_reference) = le_u32(i)?;
@@ -78,7 +78,7 @@ impl BlitSpriteDefFlags {
         Self(flags)
     }
 
-    pub fn parse(input: &[u8]) -> WResult<Self> {
+    pub fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

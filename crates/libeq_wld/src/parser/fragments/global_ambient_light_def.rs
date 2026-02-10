@@ -19,7 +19,7 @@ impl FragmentParser for GlobalAmbientLightDef {
     const TYPE_ID: u32 = 0x35;
     const TYPE_NAME: &'static str = "GlobalAmbientLightDef";
 
-    fn parse(input: &[u8]) -> WResult<GlobalAmbientLightDef> {
+    fn parse(input: &[u8]) -> WResult<'_, GlobalAmbientLightDef> {
         let (remainder, name_reference) = StringReference::parse(input)?;
         Ok((remainder, GlobalAmbientLightDef { name_reference }))
     }

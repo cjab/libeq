@@ -59,7 +59,7 @@ impl FragmentParser for Zone {
     const TYPE_ID: u32 = 0x29;
     const TYPE_NAME: &'static str = "Zone";
 
-    fn parse(input: &[u8]) -> WResult<Zone> {
+    fn parse(input: &[u8]) -> WResult<'_, Zone> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, region_count) = le_u32(i)?;

@@ -61,7 +61,7 @@ impl FragmentParser for ActorDef {
     const TYPE_ID: u32 = 0x14;
     const TYPE_NAME: &'static str = "ActorDef";
 
-    fn parse(input: &[u8]) -> WResult<ActorDef> {
+    fn parse(input: &[u8]) -> WResult<'_, ActorDef> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = ActorDefFlags::parse(i)?;
         let (i, callback_name_reference) = StringReference::parse(i)?;
@@ -152,7 +152,7 @@ impl ActorDefFlags {
     const ACTIVE_GEOMETRY: u32 = 0x40;
     const SPRITE_VOLUME_ONLY: u32 = 0x80;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }
@@ -191,7 +191,7 @@ pub struct Action {
 }
 
 impl Action {
-    pub fn parse(input: &[u8]) -> WResult<Self> {
+    pub fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, levels_of_detail_count) = le_u32(input)?;
         let (i, unknown) = le_u32(i)?;
         let (i, levels_of_detail_distances) = count(le_f32, levels_of_detail_count as usize)(i)?;

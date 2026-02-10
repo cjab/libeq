@@ -52,7 +52,7 @@ pub struct RenderInfo {
 }
 
 impl RenderInfo {
-    pub fn parse(input: &[u8]) -> WResult<Self> {
+    pub fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, flags) = RenderInfoFlags::parse(input)?;
         let (i, pen) = if flags.has_pen() {
             le_u32(i).map(|(i, p2)| (i, Some(p2)))?
@@ -134,7 +134,7 @@ impl RenderInfoFlags {
         Self(flags)
     }
 
-    pub fn parse(input: &[u8]) -> WResult<Self> {
+    pub fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }
@@ -181,7 +181,7 @@ pub struct UvInfo {
 }
 
 impl UvInfo {
-    fn parse(input: &[u8]) -> WResult<UvInfo> {
+    fn parse(input: &[u8]) -> WResult<'_, UvInfo> {
         let (i, uv_origin) = tuple((le_f32, le_f32, le_f32))(input)?;
         let (i, u_axis) = tuple((le_f32, le_f32, le_f32))(i)?;
         let (i, v_axis) = tuple((le_f32, le_f32, le_f32))(i)?;
@@ -220,7 +220,7 @@ pub struct UvMap {
 }
 
 impl UvMap {
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, entry_count) = le_u32(input)?;
         let (i, entries) = count(tuple((le_f32, le_f32)), entry_count as usize)(i)?;
 
@@ -262,7 +262,7 @@ pub enum RenderMethod {
 }
 
 impl RenderMethod {
-    pub fn parse(input: &[u8]) -> WResult<Self> {
+    pub fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
 
         Ok((remaining, Self::from_u32(raw_flags)))

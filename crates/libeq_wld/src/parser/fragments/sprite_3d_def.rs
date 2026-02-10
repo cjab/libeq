@@ -53,7 +53,7 @@ impl FragmentParser for Sprite3DDef {
     const TYPE_ID: u32 = 0x08;
     const TYPE_NAME: &'static str = "Sprite3DDef";
 
-    fn parse(input: &[u8]) -> WResult<Sprite3DDef> {
+    fn parse(input: &[u8]) -> WResult<'_, Sprite3DDef> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = ThreeDSpriteFlags::parse(i)?;
         let (i, vertex_count) = le_u32(i)?;
@@ -148,7 +148,7 @@ pub struct BspNodeEntry {
 }
 
 impl BspNodeEntry {
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, vertex_count) = le_u32(input)?;
         let (i, front_tree) = le_u32(i)?;
         let (i, back_tree) = le_u32(i)?;
@@ -194,7 +194,7 @@ impl ThreeDSpriteFlags {
     const HAS_CENTER_OFFSET: u32 = 0x01;
     const HAS_BOUNDING_RADIUS: u32 = 0x02;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

@@ -31,7 +31,7 @@ impl FragmentParser for DmTrackDef {
     const TYPE_ID: u32 = 0x2e;
     const TYPE_NAME: &'static str = "DmTrackDef";
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, name_reference) = StringReference::parse(input)?;
 
         let (i, (flags, vertex_count, frame_count, sleep, param1)) =

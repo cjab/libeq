@@ -30,7 +30,7 @@ impl FragmentParser for Track {
     const TYPE_ID: u32 = 0x13;
     const TYPE_NAME: &'static str = "Track";
 
-    fn parse(input: &[u8]) -> WResult<Track> {
+    fn parse(input: &[u8]) -> WResult<'_, Track> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, reference) = FragmentRef::parse(i)?;
         let (i, flags) = TrackInstanceFlags::parse(i)?;
@@ -85,7 +85,7 @@ impl TrackInstanceFlags {
     const REVERSE: u32 = 0x02;
     const INTERPOLATE: u32 = 0x04;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }

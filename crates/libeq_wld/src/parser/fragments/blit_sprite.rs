@@ -24,7 +24,7 @@ impl FragmentParser for BlitSprite {
     const TYPE_ID: u32 = 0x27;
     const TYPE_NAME: &'static str = "BlitSprite";
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, blit_sprite_reference) = le_u32(i)?;
         let (i, unknown) = le_i32(i)?;

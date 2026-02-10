@@ -66,7 +66,7 @@ impl FragmentParser for HierarchicalSpriteDef {
     const TYPE_ID: u32 = 0x10;
     const TYPE_NAME: &'static str = "HierarchicalSpriteDef";
 
-    fn parse(input: &[u8]) -> WResult<HierarchicalSpriteDef> {
+    fn parse(input: &[u8]) -> WResult<'_, HierarchicalSpriteDef> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = HierarchicalSpriteDefFlags::parse(i)?;
         let (i, num_dags) = le_u32(i)?;
@@ -177,7 +177,7 @@ pub struct Dag {
 }
 
 impl Dag {
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, name_reference) = le_i32(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, track_reference) = le_u32(i)?;
@@ -270,7 +270,7 @@ impl HierarchicalSpriteDefFlags {
     const HAS_BOUNDING_RADIUS: u32 = 0x02;
     const UNKNOWN_FLAG: u32 = 0x200;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw_flags) = le_u32(input)?;
         Ok((remaining, Self(raw_flags)))
     }
