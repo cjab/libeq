@@ -1,6 +1,7 @@
+use nom::IResult;
+use nom::Parser;
 use nom::bytes::complete::take;
 use nom::number::complete::le_u32;
-use nom::IResult;
 
 #[derive(Debug, Default)]
 pub struct Block {
@@ -18,7 +19,7 @@ impl Block {
     pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
         let (i, compressed_size) = le_u32(input)?;
         let (i, uncompressed_size) = le_u32(i)?;
-        let (i, compressed_data) = take(compressed_size)(i)?;
+        let (i, compressed_data) = take(compressed_size).parse(i)?;
 
         Ok((
             i,
