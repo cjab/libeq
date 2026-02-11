@@ -2,9 +2,9 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_i16, le_u16, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -58,23 +58,24 @@ impl FragmentParser for DmTrackDef2 {
     const TYPE_NAME: &'static str = "DmTrackDef2";
 
     fn parse(input: &[u8]) -> WResult<'_, DmTrackDef2> {
-        let (i, (name_reference, flags, vertex_count, frame_count, param1, param2, scale)) =
-            tuple((
-                StringReference::parse,
-                le_u32,
-                le_u16,
-                le_u16,
-                le_u16,
-                le_u16,
-                le_u16,
-            ))(input)?;
-        let (remaining, (frames, size6)) = tuple((
+        let (i, (name_reference, flags, vertex_count, frame_count, param1, param2, scale)) = (
+            StringReference::parse,
+            le_u32,
+            le_u16,
+            le_u16,
+            le_u16,
+            le_u16,
+            le_u16,
+        )
+            .parse(input)?;
+        let (remaining, (frames, size6)) = (
             count(
-                count(tuple((le_i16, le_i16, le_i16)), vertex_count as usize),
+                count((le_i16, le_i16, le_i16), vertex_count as usize),
                 frame_count as usize,
             ),
             le_u16,
-        ))(i)?;
+        )
+            .parse(i)?;
 
         Ok((
             remaining,

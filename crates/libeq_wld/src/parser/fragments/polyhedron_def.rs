@@ -2,9 +2,9 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -52,7 +52,7 @@ impl FragmentParser for PolyhedronDef {
     const TYPE_NAME: &'static str = "PolyhedronDef";
 
     fn parse(input: &[u8]) -> WResult<'_, PolyhedronDef> {
-        let (i, (name_reference, flags, size1, size2, params1, params2)) = tuple((
+        let (i, (name_reference, flags, size1, size2, params1, params2)) = (
             StringReference::parse,
             //le_f32,
             le_u32,
@@ -60,17 +60,18 @@ impl FragmentParser for PolyhedronDef {
             le_u32,
             le_f32,
             le_f32,
-        ))(input)?;
+        )
+            .parse(input)?;
 
-        let (i, entries1) = count(tuple((le_f32, le_f32, le_f32)), size1 as usize)(i)?;
+        let (i, entries1) = count((le_f32, le_f32, le_f32), size1 as usize).parse(i)?;
 
         let entry2 = |input| {
             let (i, entry_size) = le_u32(input)?;
-            let (i, entries) = count(le_u32, entry_size as usize)(i)?;
+            let (i, entries) = count(le_u32, entry_size as usize).parse(i)?;
             Ok((i, (entry_size, entries)))
         };
 
-        let (remaining, entries2) = count(entry2, size2 as usize)(i)?;
+        let (remaining, entries2) = count(entry2, size2 as usize).parse(i)?;
 
         Ok((
             remaining,

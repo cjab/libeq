@@ -2,9 +2,9 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, FragmentRef, MaterialDef, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::le_u32;
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -34,8 +34,8 @@ impl FragmentParser for MaterialPalette {
 
     fn parse(input: &[u8]) -> WResult<'_, MaterialPalette> {
         let (i, (name_reference, flags, size1)) =
-            tuple((StringReference::parse, le_u32, le_u32))(input)?;
-        let (remaining, fragments) = count(FragmentRef::parse, size1 as usize)(i)?;
+            (StringReference::parse, le_u32, le_u32).parse(input)?;
+        let (remaining, fragments) = count(FragmentRef::parse, size1 as usize).parse(i)?;
         Ok((
             remaining,
             MaterialPalette {

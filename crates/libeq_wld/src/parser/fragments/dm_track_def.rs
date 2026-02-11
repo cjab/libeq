@@ -1,7 +1,7 @@
 use super::{Fragment, FragmentParser, StringReference, WResult};
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 use std::any::Any;
 
 #[cfg(feature = "serde")]
@@ -35,12 +35,13 @@ impl FragmentParser for DmTrackDef {
         let (i, name_reference) = StringReference::parse(input)?;
 
         let (i, (flags, vertex_count, frame_count, sleep, param1)) =
-            tuple((le_u32, le_u32, le_u32, le_u32, le_u32))(i)?;
+            (le_u32, le_u32, le_u32, le_u32, le_u32).parse(i)?;
 
         let (i, frames) = count(
-            count(tuple((le_f32, le_f32, le_f32)), vertex_count as usize),
+            count((le_f32, le_f32, le_f32), vertex_count as usize),
             frame_count as usize,
-        )(i)?;
+        )
+        .parse(i)?;
 
         Ok((
             i,

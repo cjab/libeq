@@ -6,12 +6,13 @@ use core::fmt::Debug;
 use std::collections::BTreeMap;
 
 use itertools::{Either, Itertools};
-use nom::bytes::complete::take;
-pub use nom::error::{context, ErrorKind, VerboseError, VerboseErrorKind};
-use nom::multi::count;
-use nom::number::complete::{le_i32, le_u32};
 use nom::IResult;
 use nom::Offset;
+use nom::Parser;
+use nom::bytes::complete::take;
+pub use nom::error::{ErrorKind, context};
+use nom::multi::count;
+use nom::number::complete::{le_i32, le_u32};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -34,12 +35,14 @@ impl WldDoc {
     pub fn parse(input: &[u8]) -> Result<WldDoc, Vec<WldDocError<'_>>> {
         let (i, header) = WldHeader::parse(input).map_err(|e| vec![e.into()])?;
 
-        let (i, string_hash_data) = take(header.string_hash_size)(i).map_err(|e| vec![e.into()])?;
+        let (i, string_hash_data) = take(header.string_hash_size)
+            .parse(i)
+            .map_err(|e| vec![e.into()])?;
         let strings = StringHash::new(string_hash_data);
 
-        let (_i, fragment_headers) =
-            count(FragmentHeader::parse, header.fragment_count as usize)(i)
-                .map_err(|e| vec![e.into()])?;
+        let (_i, fragment_headers) = count(FragmentHeader::parse, header.fragment_count as usize)
+            .parse(i)
+            .map_err(|e| vec![e.into()])?;
 
         let (fragments, errors): (Vec<_>, Vec<_>) = fragment_headers
             .into_iter()
@@ -87,9 +90,9 @@ impl WldDoc {
 
     pub fn dump_raw_fragments(input: &[u8]) -> WResult<'_, Vec<FragmentHeader<'_>>> {
         let (i, header) = WldHeader::parse(input)?;
-        let (i, _) = take(header.string_hash_size)(i)?;
+        let (i, _) = take(header.string_hash_size).parse(i)?;
         let (i, fragment_headers) =
-            count(FragmentHeader::parse, header.fragment_count as usize)(i)?;
+            count(FragmentHeader::parse, header.fragment_count as usize).parse(i)?;
 
         Ok((i, fragment_headers))
     }
@@ -296,9 +299,9 @@ pub struct FragmentHeader<'a> {
 
 impl<'a> FragmentHeader<'a> {
     pub fn parse(input: &[u8]) -> WResult<'_, FragmentHeader<'_>> {
-        let (i, size) = context("size", le_u32)(input)?;
-        let (i, fragment_type) = context("fragment_type", le_u32)(i)?;
-        let (i, field_data) = context("field_data", take(size))(i)?;
+        let (i, size) = context("size", le_u32).parse(input)?;
+        let (i, fragment_type) = context("fragment_type", le_u32).parse(i)?;
+        let (i, field_data) = context("field_data", take(size)).parse(i)?;
 
         Ok((
             i,
@@ -517,7 +520,7 @@ impl<'a> FragmentHeader<'a> {
             return FragmentGame::ReturnToKrondor;
         }
 
-        match le_i32::<_, VerboseError<&[u8]>>(self.field_data) {
+        match le_i32::<_, nom::error::Error<&[u8]>>(self.field_data) {
             Ok((_, n)) if n > 0 => FragmentGame::Tanarus,
             _ => FragmentGame::EverQuest,
         }

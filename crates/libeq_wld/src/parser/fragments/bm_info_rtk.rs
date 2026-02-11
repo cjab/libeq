@@ -3,6 +3,7 @@ use std::any::Any;
 use super::common::EncodedFilename;
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::le_u32;
 
@@ -37,7 +38,7 @@ impl FragmentParser for BmInfoRtk {
         let (i, rtk) = le_u32(i)?;
         let (i, size1) = le_u32(i)?;
         // TODO: This is hardcoded to one entry, is this all we need?
-        let (remaining, entries) = count(EncodedFilename::parse, (size1 + 1) as usize)(i)?;
+        let (remaining, entries) = count(EncodedFilename::parse, (size1 + 1) as usize).parse(i)?;
         Ok((
             remaining,
             BmInfoRtk {

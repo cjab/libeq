@@ -2,8 +2,8 @@ use std::any::Any;
 
 use super::{DmRGBTrackDef, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
 
+use nom::Parser;
 use nom::number::complete::le_u32;
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -31,7 +31,7 @@ impl FragmentParser for DmRGBTrack {
 
     fn parse(input: &[u8]) -> WResult<'_, DmRGBTrack> {
         let (remaining, (name_reference, reference, flags)) =
-            tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
+            (StringReference::parse, FragmentRef::parse, le_u32).parse(input)?;
         Ok((
             remaining,
             DmRGBTrack {

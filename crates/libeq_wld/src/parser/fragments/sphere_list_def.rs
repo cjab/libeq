@@ -2,9 +2,9 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -48,10 +48,8 @@ impl FragmentParser for SphereListDef {
         } else {
             (i, None)
         };
-        let (i, spheres) = count(
-            tuple((le_f32, le_f32, le_f32, le_f32)),
-            num_spheres as usize,
-        )(i)?;
+        let (i, spheres) =
+            count((le_f32, le_f32, le_f32, le_f32), num_spheres as usize).parse(i)?;
 
         Ok((
             i,

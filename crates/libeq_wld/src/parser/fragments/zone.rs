@@ -4,8 +4,9 @@ use crate::parser::strings::{decode_string, encode_string};
 
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
-use nom::number::complete::{le_u32, le_u8};
+use nom::number::complete::{le_u8, le_u32};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -63,9 +64,9 @@ impl FragmentParser for Zone {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, flags) = le_u32(i)?;
         let (i, region_count) = le_u32(i)?;
-        let (i, regions) = count(le_u32, region_count as usize)(i)?;
+        let (i, regions) = count(le_u32, region_count as usize).parse(i)?;
         let (i, user_data_size) = le_u32(i)?;
-        let (i, user_data) = count(le_u8, user_data_size as usize)(i)?;
+        let (i, user_data) = count(le_u8, user_data_size as usize).parse(i)?;
 
         Ok((
             i,

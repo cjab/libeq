@@ -3,6 +3,7 @@ use std::any::Any;
 use super::common::Location;
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
 
@@ -78,8 +79,8 @@ impl FragmentParser for ActorDef {
         } else {
             (i, None)
         };
-        let (i, actions) = count(Action::parse, action_count as usize)(i)?;
-        let (i, fragment_references) = count(le_u32, fragment_reference_count as usize)(i)?;
+        let (i, actions) = count(Action::parse, action_count as usize).parse(i)?;
+        let (i, fragment_references) = count(le_u32, fragment_reference_count as usize).parse(i)?;
         let (i, unknown) = le_u32(i)?;
 
         Ok((
@@ -194,7 +195,8 @@ impl Action {
     pub fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, levels_of_detail_count) = le_u32(input)?;
         let (i, unknown) = le_u32(i)?;
-        let (i, levels_of_detail_distances) = count(le_f32, levels_of_detail_count as usize)(i)?;
+        let (i, levels_of_detail_distances) =
+            count(le_f32, levels_of_detail_count as usize).parse(i)?;
 
         Ok((
             i,

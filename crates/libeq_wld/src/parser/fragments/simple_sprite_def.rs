@@ -2,9 +2,9 @@ use std::any::Any;
 
 use super::{BmInfo, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::le_u32;
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -49,7 +49,7 @@ impl FragmentParser for SimpleSpriteDef {
 
     fn parse(input: &[u8]) -> WResult<'_, SimpleSpriteDef> {
         let (i, (name_reference, flags, frame_count)) =
-            tuple((StringReference::parse, SimpleSpriteDefFlags::parse, le_u32))(input)?;
+            (StringReference::parse, SimpleSpriteDefFlags::parse, le_u32).parse(input)?;
 
         //TODO: Is this a thing? Find an example.
         let (i, _current_frame) = if flags.has_current_frame() {
@@ -67,7 +67,8 @@ impl FragmentParser for SimpleSpriteDef {
             (i, None)
         };
 
-        let (remaining, frame_references) = count(FragmentRef::parse, frame_count as usize)(i)?;
+        let (remaining, frame_references) =
+            count(FragmentRef::parse, frame_count as usize).parse(i)?;
 
         Ok((
             remaining,

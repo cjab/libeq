@@ -3,9 +3,9 @@ use std::fmt;
 
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -65,7 +65,7 @@ impl FragmentParser for LightDef {
 
     fn parse(input: &[u8]) -> WResult<'_, LightDef> {
         let (i, (name_reference, flags, frame_count)) =
-            tuple((StringReference::parse, LightDefFlags::parse, le_u32))(input)?;
+            (StringReference::parse, LightDefFlags::parse, le_u32).parse(input)?;
 
         let (i, current_frame) = if flags.has_current_frame() {
             le_u32(i).map(|(i, flags)| (i, Some(flags)))?
@@ -80,14 +80,16 @@ impl FragmentParser for LightDef {
         };
 
         let (i, light_levels) = if flags.has_light_levels() {
-            count(le_f32, frame_count as usize)(i)
+            count(le_f32, frame_count as usize)
+                .parse(i)
                 .map(|(i, light_levels)| (i, Some(light_levels)))?
         } else {
             (i, None)
         };
 
         let (remaining, colors) = if flags.has_color() {
-            count(tuple((le_f32, le_f32, le_f32)), frame_count as usize)(i)
+            count((le_f32, le_f32, le_f32), frame_count as usize)
+                .parse(i)
                 .map(|(i, colors)| (i, Some(colors)))?
         } else {
             (i, None)

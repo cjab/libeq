@@ -4,8 +4,8 @@ use super::{
     Fragment, FragmentParser, FragmentRef, HierarchicalSpriteDef, StringReference, WResult,
 };
 
+use nom::Parser;
 use nom::number::complete::le_u32;
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -33,7 +33,7 @@ impl FragmentParser for HierarchicalSprite {
 
     fn parse(input: &[u8]) -> WResult<'_, HierarchicalSprite> {
         let (remaining, (name_reference, reference, params1)) =
-            tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
+            (StringReference::parse, FragmentRef::parse, le_u32).parse(input)?;
         Ok((
             remaining,
             HierarchicalSprite {

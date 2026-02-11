@@ -2,6 +2,7 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_u32};
 
@@ -75,11 +76,12 @@ impl FragmentParser for TrackDef {
         let (i, flags) = le_u32(i)?;
         let (i, frame_count) = le_u32(i)?;
         let (i, frame_transforms, legacy_frame_transforms) = if flags & 0x08 == 0x08 {
-            let (i, frame_transforms) = count(FrameTransform::parse, frame_count as usize)(i)?;
+            let (i, frame_transforms) =
+                count(FrameTransform::parse, frame_count as usize).parse(i)?;
             (i, Some(frame_transforms), None)
         } else {
             let (i, legacy_frame_transforms) =
-                count(LegacyFrameTransform::parse, frame_count as usize)(i)?;
+                count(LegacyFrameTransform::parse, frame_count as usize).parse(i)?;
             (i, None, Some(legacy_frame_transforms))
         };
 

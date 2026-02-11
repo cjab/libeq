@@ -2,8 +2,8 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, FragmentRef, Sprite4DDef, StringReference, WResult};
 
+use nom::Parser;
 use nom::number::complete::le_u32;
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -31,7 +31,7 @@ impl FragmentParser for Sprite4D {
 
     fn parse(input: &[u8]) -> WResult<'_, Sprite4D> {
         let (remaining, (name_reference, reference, params1)) =
-            tuple((StringReference::parse, FragmentRef::parse, le_u32))(input)?;
+            (StringReference::parse, FragmentRef::parse, le_u32).parse(input)?;
         Ok((
             remaining,
             Sprite4D {

@@ -5,9 +5,9 @@ use super::{
     WResult,
 };
 
+use nom::Parser;
 use nom::multi::count;
-use nom::number::complete::{le_f32, le_i32, le_u16, le_u32, le_u8};
-use nom::sequence::tuple;
+use nom::number::complete::{le_f32, le_i32, le_u8, le_u16, le_u32};
 
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
@@ -130,9 +130,9 @@ impl FragmentParser for Region {
         let (i, num_vis_node) = le_u32(i)?;
         let (i, num_vis_list) = le_u32(i)?;
         let (i, region_vertices) =
-            count(tuple((le_f32, le_f32, le_f32)), num_region_vertex as usize)(i)?;
+            count((le_f32, le_f32, le_f32), num_region_vertex as usize).parse(i)?;
         let (i, proximal_regions) =
-            count(tuple((le_u32, le_f32)), num_proximal_regions as usize)(i)?;
+            count((le_u32, le_f32), num_proximal_regions as usize).parse(i)?;
 
         // Not 100% on the num_walls == 0 check. It looks like num_render_vertices can contain the sum of rendered wall vertices.
         // TODO: Find a region with both walls and render vertices
@@ -142,21 +142,21 @@ impl FragmentParser for Region {
             0
         };
 
-        let (i, render_vertices) = count(
-            tuple((le_f32, le_f32, le_f32)),
-            render_vertices_count as usize,
-        )(i)?;
-        let (i, walls) = count(Wall::parse, num_walls as usize)(i)?;
-        let (i, obstacles) = count(Obstacle::parse, num_obstacles as usize)(i)?;
-        let (i, vis_nodes) = count(VisNode::parse, num_vis_node as usize)(i)?;
+        let (i, render_vertices) =
+            count((le_f32, le_f32, le_f32), render_vertices_count as usize).parse(i)?;
+        let (i, walls) = count(Wall::parse, num_walls as usize).parse(i)?;
+        let (i, obstacles) = count(Obstacle::parse, num_obstacles as usize).parse(i)?;
+        let (i, vis_nodes) = count(VisNode::parse, num_vis_node as usize).parse(i)?;
         let (i, visible_lists) = if flags.has_byte_entries() {
-            count(VisibleList::parse_with_bytes, num_vis_list as usize)(i)?
+            count(VisibleList::parse_with_bytes, num_vis_list as usize).parse(i)?
         } else {
-            count(VisibleList::parse_with_words, num_vis_list as usize)(i)?
+            count(VisibleList::parse_with_words, num_vis_list as usize).parse(i)?
         };
 
         let (i, sphere) = if flags.has_sphere() {
-            tuple((le_f32, le_f32, le_f32, le_f32))(i).map(|(rem, f)| (rem, Some(f)))?
+            (le_f32, le_f32, le_f32, le_f32)
+                .parse(i)
+                .map(|(rem, f)| (rem, Some(f)))?
         } else {
             (i, None)
         };
@@ -174,7 +174,7 @@ impl FragmentParser for Region {
         };
 
         let (i, user_data_size) = le_u32(i)?;
-        let (i, user_data) = count(le_u8, user_data_size as usize)(i)?;
+        let (i, user_data) = count(le_u8, user_data_size as usize).parse(i)?;
 
         let (i, mesh_reference) = if flags.has_mesh_reference() {
             FragmentRef::parse(i).map(|(rem, f)| (rem, Some(f)))?
@@ -393,7 +393,7 @@ impl Wall {
     fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, flags) = WallFlags::parse(input)?;
         let (i, num_vertices) = le_u32(i)?;
-        let (i, vertex_list) = count(le_u32, num_vertices as usize)(i)?;
+        let (i, vertex_list) = count(le_u32, num_vertices as usize).parse(i)?;
 
         let (i, render_method) = if flags.has_method_and_normal() {
             RenderMethod::parse(i).map(|(rem, m)| (rem, Some(m)))?
@@ -408,7 +408,9 @@ impl Wall {
         };
 
         let (i, normal_abcd) = if flags.has_method_and_normal() {
-            tuple((le_f32, le_f32, le_f32, le_f32))(i).map(|(rem, n)| (rem, Some(n)))?
+            (le_f32, le_f32, le_f32, le_f32)
+                .parse(i)
+                .map(|(rem, n)| (rem, Some(n)))?
         } else {
             (i, None)
         };
@@ -541,13 +543,17 @@ impl Obstacle {
         };
 
         let (i, vertex_list) = if let Some(vertex_list_size) = num_vertices {
-            count(le_u32, vertex_list_size as usize)(i).map(|(rem, v)| (rem, Some(v)))?
+            count(le_u32, vertex_list_size as usize)
+                .parse(i)
+                .map(|(rem, v)| (rem, Some(v)))?
         } else {
             (i, None)
         };
 
         let (i, normal_abcd) = if obstacle_type == ObstacleType::EdgePolygonNormalAbcd {
-            tuple((le_f32, le_f32, le_f32, le_f32))(i).map(|(rem, n)| (rem, Some(n)))?
+            (le_f32, le_f32, le_f32, le_f32)
+                .parse(i)
+                .map(|(rem, n)| (rem, Some(n)))?
         } else {
             (i, None)
         };
@@ -565,7 +571,9 @@ impl Obstacle {
         };
 
         let (i, user_data) = if let Some(data_size) = user_data_size {
-            count(le_u8, data_size as usize)(i).map(|(rem, u)| (rem, Some(u)))?
+            count(le_u8, data_size as usize)
+                .parse(i)
+                .map(|(rem, u)| (rem, Some(u)))?
         } else {
             (i, None)
         };
@@ -686,7 +694,7 @@ pub struct VisNode {
 
 impl VisNode {
     fn parse(input: &[u8]) -> WResult<'_, Self> {
-        let (i, normal_abcd) = tuple((le_f32, le_f32, le_f32, le_f32))(input)?;
+        let (i, normal_abcd) = (le_f32, le_f32, le_f32, le_f32).parse(input)?;
         let (i, vis_list_index) = le_u32(i)?;
         let (i, front_tree) = le_u32(i)?;
         let (i, back_tree) = le_u32(i)?;
@@ -791,23 +799,27 @@ impl VisibleList {
         let (i, range_count) = le_u16(input)?;
 
         let (i, ranges) = if byte_entries {
-            count(le_u8, range_count as usize)(i).map(|(rem, e)| {
-                (
-                    rem,
-                    e.into_iter()
-                        .map(|r| RangeEntry::Byte(r))
-                        .collect::<Vec<_>>(),
-                )
-            })?
+            count(le_u8, range_count as usize)
+                .parse(i)
+                .map(|(rem, e)| {
+                    (
+                        rem,
+                        e.into_iter()
+                            .map(|r| RangeEntry::Byte(r))
+                            .collect::<Vec<_>>(),
+                    )
+                })?
         } else {
-            count(le_u16, range_count as usize)(i).map(|(rem, e)| {
-                (
-                    rem,
-                    e.into_iter()
-                        .map(|r| RangeEntry::Word(r))
-                        .collect::<Vec<_>>(),
-                )
-            })?
+            count(le_u16, range_count as usize)
+                .parse(i)
+                .map(|(rem, e)| {
+                    (
+                        rem,
+                        e.into_iter()
+                            .map(|r| RangeEntry::Word(r))
+                            .collect::<Vec<_>>(),
+                    )
+                })?
         };
 
         Ok((
@@ -867,10 +879,12 @@ mod tests {
         assert_eq!(frag.visible_lists[0].range_count, 14);
         assert_eq!(
             frag.visible_lists[0].ranges,
-            vec![254u8, 242, 24, 202, 86, 81, 39, 218, 87, 63, 44, 10, 19, 216]
-                .iter()
-                .map(|i| RangeEntry::Byte(*i))
-                .collect::<Vec<_>>()
+            vec![
+                254u8, 242, 24, 202, 86, 81, 39, 218, 87, 63, 44, 10, 19, 216
+            ]
+            .iter()
+            .map(|i| RangeEntry::Byte(*i))
+            .collect::<Vec<_>>()
         );
         assert_eq!(
             frag.sphere,

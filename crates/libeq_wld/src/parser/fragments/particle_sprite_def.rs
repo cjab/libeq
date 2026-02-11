@@ -2,9 +2,9 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, RenderInfo, RenderMethod, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -57,7 +57,9 @@ impl FragmentParser for ParticleSpriteDef {
         let (i, num_vertices) = le_u32(i)?;
         let (i, unknown) = le_u32(i)?;
         let (i, center_offset) = if flags.has_center_offset() {
-            tuple((le_f32, le_f32, le_f32))(i).map(|(i, p3)| (i, Some(p3)))?
+            (le_f32, le_f32, le_f32)
+                .parse(i)
+                .map(|(i, p3)| (i, Some(p3)))?
         } else {
             (i, None)
         };
@@ -66,10 +68,10 @@ impl FragmentParser for ParticleSpriteDef {
         } else {
             (i, None)
         };
-        let (i, vertices) = count(tuple((le_f32, le_f32, le_f32)), num_vertices as usize)(i)?;
+        let (i, vertices) = count((le_f32, le_f32, le_f32), num_vertices as usize).parse(i)?;
         let (i, render_method) = RenderMethod::parse(i)?;
         let (i, render_info) = RenderInfo::parse(i)?;
-        let (i, pen) = count(le_u32, num_vertices as usize)(i)?;
+        let (i, pen) = count(le_u32, num_vertices as usize).parse(i)?;
 
         Ok((
             i,

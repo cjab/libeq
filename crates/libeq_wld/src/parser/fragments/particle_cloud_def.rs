@@ -1,8 +1,8 @@
 use std::any::Any;
 
 use nom::{
-    number::complete::{le_f32, le_u32, le_u8},
-    sequence::tuple,
+    Parser,
+    number::complete::{le_f32, le_u8, le_u32},
 };
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
@@ -113,7 +113,7 @@ impl FragmentParser for ParticleCloudDef {
         let (i, spawn_normal_y) = le_f32(i)?;
         let (i, spawn_rate) = le_u32(i)?;
         let (i, spawn_scale) = le_f32(i)?;
-        let (i, color) = tuple((le_u8, le_u8, le_u8, le_u8))(i)?;
+        let (i, color) = (le_u8, le_u8, le_u8, le_u8).parse(i)?;
         let (i, blitsprite) = FragmentRef::<BlitSpriteDef>::parse(i)?;
 
         Ok((
