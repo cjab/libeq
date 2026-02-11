@@ -439,19 +439,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "env_logger"
-version = "0.9.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a12e6657c4c97ebab115a42dcee77225f7f482cdd841cf7088c657a42e9e00e7"
-dependencies = [
- "atty",
- "humantime 2.3.0",
- "log",
- "regex",
- "termcolor",
-]
-
-[[package]]
 name = "eq-archive"
 version = "0.4.0"
 dependencies = [
@@ -759,9 +746,7 @@ name = "libeq_wld"
 version = "0.3.0"
 dependencies = [
  "encoding_rs",
- "env_logger 0.9.3",
  "itertools 0.10.5",
- "log",
  "nom 8.0.0",
  "num-derive",
  "num-traits",

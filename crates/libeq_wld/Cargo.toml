@@ -11,8 +11,6 @@ categories = ["game-development", "graphics", "parsing", "rendering::data-format
 license = "MIT"
 
 [dependencies]
-log = "0.4.14"
-env_logger = "0.9"
 nom = "8.0.0"
 num-traits = "0.2"
 num-derive = "0.4.2"
