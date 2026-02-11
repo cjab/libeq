@@ -14,7 +14,7 @@ use colorful::Colorful;
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use hexyl::Printer;
+use hexyl::PrinterBuilder;
 use ratatui::crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use ratatui::{Terminal, backend::CrosstermBackend};
 
@@ -142,7 +142,7 @@ fn print_error(error: &WldDocError) -> Result<(), std::io::Error> {
                 hex_offset, dec_offset
             )?;
             write!(out, "Dumping fragment body...\n")?;
-            let mut hex_printer = Printer::new(&mut out, true, hexyl::BorderStyle::Unicode, true);
+            let mut hex_printer = PrinterBuilder::new(&mut out).build();
             hex_printer.print_all(header.field_data).unwrap();
         }
         WldDocError::UnknownFragment { index, header } => {
@@ -158,7 +158,7 @@ fn print_error(error: &WldDocError) -> Result<(), std::io::Error> {
                 header.size
             )?;
             write!(out, "Dumping fragment body...\n")?;
-            let mut hex_printer = Printer::new(&mut out, true, hexyl::BorderStyle::Unicode, true);
+            let mut hex_printer = PrinterBuilder::new(&mut out).build();
             hex_printer.print_all(header.field_data).unwrap();
         }
     }
