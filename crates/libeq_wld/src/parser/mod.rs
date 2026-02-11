@@ -28,7 +28,7 @@ pub type WResult<'a, O> = IResult<&'a [u8], O, WldDocError<'a>>;
 pub struct WldDoc {
     header: WldHeader,
     strings: StringHash,
-    fragments: Vec<Box<FragmentType>>,
+    fragments: Vec<FragmentType>,
 }
 
 impl WldDoc {
@@ -49,7 +49,7 @@ impl WldDoc {
             .enumerate()
             .map(|(idx, h)| h.parse_body(idx))
             .partition_map(|res| match res {
-                Ok(frag) => Either::Left(Box::new(frag)),
+                Ok(frag) => Either::Left(frag),
                 Err(e) => Either::Right(e),
             });
 
@@ -114,7 +114,7 @@ impl WldDoc {
 
     /// Get a fragment given an index
     pub fn at(&self, idx: usize) -> Option<&FragmentType> {
-        self.fragments.get(idx).map(|f| f.as_ref())
+        self.fragments.get(idx)
     }
 
     /// Iterate over all fragments of a specific type
@@ -125,7 +125,7 @@ impl WldDoc {
     }
 
     /// Iterate over all fragments
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a Box<FragmentType>> + 'a {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a FragmentType> + 'a {
         self.fragments.iter()
     }
 
