@@ -124,7 +124,7 @@ impl MaterialFlags {
     const IS_TWO_SIDED: u32 = 0x01;
     const HAS_PAIR: u32 = 0x02;
 
-    fn parse(input: &[u8]) -> WResult<Self> {
+    fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, raw_flags) = le_u32(input)?;
         Ok((i, Self(raw_flags)))
     }
