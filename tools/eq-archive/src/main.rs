@@ -4,33 +4,31 @@ use std::fs;
 use std::io::{self, prelude::*};
 use std::path::{Path, PathBuf};
 
-use clap::{ArgGroup, CommandFactory, ErrorKind, Parser};
+use clap::{ArgGroup, CommandFactory, Parser};
 
 use libeq_archive::EqArchive;
 
 const SUPPORTED_EXTS: [&str; 2] = ["s3d", "pfs"];
 
 #[derive(Parser)]
-#[clap(author, version, about, long_about = None)]
-#[clap(group(
+#[command(author, version, about, long_about = None)]
+#[command(group(
     ArgGroup::new("action")
         .required(true)
         .args(&["extract", "create"])))]
 struct Cli {
     /// Extract archive
-    #[clap(short = 'x', long, action)]
+    #[arg(short = 'x', long)]
     extract: bool,
 
     /// Create a new archive
-    #[clap(short, long, action)]
+    #[arg(short, long)]
     create: bool,
 
     /// Source archive when extracting or directory when creating
-    #[clap(value_parser)]
     source: PathBuf,
 
     /// Destination directory when extracting or archive when creating
-    #[clap(value_parser)]
     destination: PathBuf,
 }
 
@@ -53,7 +51,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             CliError::Archive(archive_error) => format!("{:?}", archive_error),
         };
         let mut cmd = Cli::command();
-        cmd.error(ErrorKind::InvalidValue, message).exit();
+        cmd.error(clap::error::ErrorKind::InvalidValue, message)
+            .exit();
     };
 
     Ok(())
