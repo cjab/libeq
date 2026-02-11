@@ -1,9 +1,10 @@
 use std::collections::BTreeMap;
 
+use nom::IResult;
+use nom::Parser;
 use nom::bytes::complete::take;
 use nom::multi::{count, fold_many0};
 use nom::number::complete::le_u32;
-use nom::IResult;
 
 use super::{Block, Footer, Header, IndexEntry};
 
@@ -41,7 +42,7 @@ impl Archive {
         let (i, header) = Header::parse(input)?;
         let (i, all_block_data) = take(header.index_offset - Header::SIZE as u32)(i)?;
         let (i, index_entry_count) = le_u32(i)?;
-        let (i, index_entries) = count(IndexEntry::parse, index_entry_count as usize)(i)?;
+        let (i, index_entries) = count(IndexEntry::parse, index_entry_count as usize).parse(i)?;
 
         let (i, footer) = if i.len() > 0 {
             Footer::parse(i).map(|(i, f)| (i, Some(f)))?
@@ -58,7 +59,8 @@ impl Archive {
                 blocks.insert(offset, block);
                 (next_offset, blocks)
             },
-        )(all_block_data)?;
+        )
+        .parse(all_block_data)?;
 
         Ok((
             i,

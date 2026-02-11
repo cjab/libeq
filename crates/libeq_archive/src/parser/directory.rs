@@ -1,6 +1,7 @@
+use nom::IResult;
+use nom::Parser;
 use nom::multi::{count, length_data};
 use nom::number::complete::le_u32;
-use nom::IResult;
 
 #[derive(Debug, PartialEq)]
 pub struct Directory {
@@ -10,7 +11,7 @@ pub struct Directory {
 impl Directory {
     pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
         let (i, file_count) = le_u32(input)?;
-        let (i, filenames) = count(directory_string, file_count as usize)(i)?;
+        let (i, filenames) = count(directory_string, file_count as usize).parse(i)?;
         Ok((
             i,
             Self {
@@ -40,7 +41,7 @@ impl Directory {
 }
 
 fn directory_string(input: &[u8]) -> IResult<&[u8], String> {
-    let (i, data) = length_data(le_u32)(input)?;
+    let (i, data) = length_data(le_u32).parse(input)?;
     Ok((
         i,
         String::from_utf8(Vec::from(data))

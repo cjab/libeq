@@ -1,6 +1,7 @@
+use nom::IResult;
+use nom::Parser;
 use nom::bytes::complete::take;
 use nom::number::complete::le_u32;
-use nom::IResult;
 
 #[derive(Debug, Default, PartialEq)]
 pub struct Footer {
@@ -13,7 +14,7 @@ impl Footer {
     pub const FOOTER_STRING: [u8; 5] = *b"STEVE";
 
     pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
-        let (i, footer_string) = take(5usize)(input)?;
+        let (i, footer_string) = take(5usize).parse(input)?;
         let (i, timestamp) = le_u32(i)?;
 
         Ok((

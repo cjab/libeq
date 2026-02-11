@@ -1,5 +1,5 @@
-use nom::number::complete::le_u32;
 use nom::IResult;
+use nom::number::complete::le_u32;
 
 #[derive(Debug, Default)]
 pub struct IndexEntry {
