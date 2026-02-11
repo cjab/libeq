@@ -668,8 +668,8 @@ enum ObstacleType {
 }
 
 impl ObstacleType {
-    fn to_bytes(&self) -> Vec<u8> {
-        (*self as i32).to_le_bytes().to_vec()
+    fn to_bytes(self) -> Vec<u8> {
+        (self as i32).to_le_bytes().to_vec()
     }
 }
 

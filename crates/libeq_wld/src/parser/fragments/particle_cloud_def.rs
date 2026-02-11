@@ -207,8 +207,8 @@ impl ParticleMovement {
         Ok((remaining, FromPrimitive::from_u32(raw).unwrap()))
     }
 
-    fn to_bytes(&self) -> Vec<u8> {
-        (*self as u32).to_le_bytes().to_vec()
+    fn to_bytes(self) -> Vec<u8> {
+        (self as u32).to_le_bytes().to_vec()
     }
 }
 
