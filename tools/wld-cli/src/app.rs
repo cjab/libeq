@@ -9,7 +9,6 @@ use libeq_wld::parser::WldDoc;
 pub struct App {
     pub wld_doc: WldDoc,
     pub route: Route,
-    pub filter_input: String,
     pub selected_fragment_idx: Option<usize>,
     pub detail_scroll_pos: (u16, u16),
     pub detail_body_tab_idx: usize,
@@ -23,7 +22,6 @@ impl App {
             selected_fragment_idx: None,
             detail_body_tab_idx: 0,
             detail_scroll_pos: (0, 0),
-            filter_input: String::default(),
         }
     }
 
