@@ -2,9 +2,9 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, FragmentRef, Light, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -44,9 +44,9 @@ impl FragmentParser for DirectionalLight {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, light_reference) = FragmentRef::parse(i)?;
         let (i, flags) = DirectionalLightFlags::parse(i)?;
-        let (i, normal) = tuple((le_f32, le_f32, le_f32))(i)?;
+        let (i, normal) = (le_f32, le_f32, le_f32).parse(i)?;
         let (i, num_regions) = le_u32(i)?;
-        let (remainder, regions) = count(le_u32, num_regions as usize)(i)?;
+        let (remainder, regions) = count(le_u32, num_regions as usize).parse(i)?;
 
         Ok((
             remainder,

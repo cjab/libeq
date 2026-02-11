@@ -4,9 +4,9 @@ use super::{
     DmTrack, Fragment, FragmentParser, FragmentRef, MaterialPalette, StringReference, WResult,
 };
 
+use nom::Parser;
 use nom::multi::count;
-use nom::number::complete::{le_f32, le_i16, le_i8, le_u16, le_u32, le_u8};
-use nom::sequence::tuple;
+use nom::number::complete::{le_f32, le_i8, le_i16, le_u8, le_u16, le_u32};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -219,18 +219,18 @@ impl FragmentParser for DmSpriteDef2 {
                 meshop_count,
                 scale,
             ),
-        ) = tuple((
+        ) = (
             StringReference::parse,
             le_u32,
             FragmentRef::parse,
             FragmentRef::parse,
             FragmentRef::parse,
             FragmentRef::parse,
-            tuple((le_f32, le_f32, le_f32)),
-            tuple((le_u32, le_u32, le_u32)),
+            (le_f32, le_f32, le_f32),
+            (le_u32, le_u32, le_u32),
             le_f32,
-            tuple((le_f32, le_f32, le_f32)),
-            tuple((le_f32, le_f32, le_f32)),
+            (le_f32, le_f32, le_f32),
+            (le_f32, le_f32, le_f32),
             le_u16,
             le_u16,
             le_u16,
@@ -241,7 +241,8 @@ impl FragmentParser for DmSpriteDef2 {
             le_u16,
             le_u16,
             le_u16,
-        ))(input)?;
+        )
+            .parse(input)?;
 
         let (
             remaining,
@@ -256,23 +257,18 @@ impl FragmentParser for DmSpriteDef2 {
                 vertex_material_groups,
                 meshops,
             ),
-        ) = tuple((
-            count(tuple((le_i16, le_i16, le_i16)), position_count as usize),
-            count(tuple((le_i16, le_i16)), texture_coordinate_count as usize),
-            count(tuple((le_i8, le_i8, le_i8)), normal_count as usize),
+        ) = (
+            count((le_i16, le_i16, le_i16), position_count as usize),
+            count((le_i16, le_i16), texture_coordinate_count as usize),
+            count((le_i8, le_i8, le_i8), normal_count as usize),
             count(le_u32, color_count as usize),
             count(DmSpriteDef2FaceEntry::parse, face_count as usize),
-            count(
-                tuple((le_u16, le_u16)),
-                skin_assignment_groups_count as usize,
-            ),
-            count(tuple((le_u16, le_u16)), face_material_groups_count as usize),
-            count(
-                tuple((le_u16, le_u16)),
-                vertex_material_groups_count as usize,
-            ),
+            count((le_u16, le_u16), skin_assignment_groups_count as usize),
+            count((le_u16, le_u16), face_material_groups_count as usize),
+            count((le_u16, le_u16), vertex_material_groups_count as usize),
             count(DmSpriteDef2MeshOpEntry::parse, meshop_count as usize),
-        ))(i)?;
+        )
+            .parse(i)?;
 
         // Note - There's trailing zeroes here which are not read.
 
@@ -429,7 +425,7 @@ pub struct DmSpriteDef2FaceEntry {
 impl DmSpriteDef2FaceEntry {
     fn parse(input: &[u8]) -> WResult<'_, DmSpriteDef2FaceEntry> {
         let (remaining, (flags, vertex_indexes)) =
-            tuple((le_u16, tuple((le_u16, le_u16, le_u16))))(input)?;
+            (le_u16, (le_u16, le_u16, le_u16)).parse(input)?;
         Ok((
             remaining,
             DmSpriteDef2FaceEntry {
@@ -486,7 +482,7 @@ impl DmSpriteDef2MeshOpEntry {
         let unknown_data = &input[0..4];
         let input = &input[4..];
 
-        let (i, (param1, type_field)) = tuple((le_u8, le_u8))(input)?;
+        let (i, (param1, type_field)) = (le_u8, le_u8).parse(input)?;
 
         let (unknown_data, offset) = if type_field == 4 {
             le_f32(unknown_data).map(|(i, offset)| (i, Some(offset)))?
@@ -495,7 +491,8 @@ impl DmSpriteDef2MeshOpEntry {
         };
 
         let (_, (index1, index2)) = if type_field != 4 {
-            tuple((le_u16, le_u16))(unknown_data)
+            (le_u16, le_u16)
+                .parse(unknown_data)
                 .map(|(i, (index1, index2))| (i, (Some(index1), Some(index2))))?
         } else {
             (unknown_data, (None, None))

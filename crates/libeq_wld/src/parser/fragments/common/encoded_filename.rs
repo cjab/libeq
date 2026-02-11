@@ -1,8 +1,9 @@
 use super::WResult;
 use crate::parser::strings::{decode_string, encode_string};
 
+use nom::Parser;
 use nom::multi::count;
-use nom::number::complete::{le_u16, le_u8};
+use nom::number::complete::{le_u8, le_u16};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -29,7 +30,7 @@ pub struct EncodedFilename {
 impl EncodedFilename {
     pub fn parse(input: &[u8]) -> WResult<'_, EncodedFilename> {
         let (i, name_length) = le_u16(input)?;
-        let (remaining, file_name) = count(le_u8, name_length as usize)(i)?;
+        let (remaining, file_name) = count(le_u8, name_length as usize).parse(i)?;
         Ok((
             remaining,
             EncodedFilename {

@@ -2,9 +2,9 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, FragmentRef, Light, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::le_u32;
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -42,8 +42,8 @@ impl FragmentParser for AmbientLight {
 
     fn parse(input: &[u8]) -> WResult<'_, AmbientLight> {
         let (i, (name_reference, reference, flags, region_count)) =
-            tuple((StringReference::parse, FragmentRef::parse, le_u32, le_u32))(input)?;
-        let (remaining, regions) = count(le_u32, region_count as usize)(i)?;
+            (StringReference::parse, FragmentRef::parse, le_u32, le_u32).parse(input)?;
+        let (remaining, regions) = count(le_u32, region_count as usize).parse(i)?;
 
         Ok((
             remaining,

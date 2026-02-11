@@ -3,6 +3,7 @@ use std::any::Any;
 use super::common::EncodedFilename;
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::le_u32;
 
@@ -45,7 +46,8 @@ impl FragmentParser for BmInfo {
     fn parse(input: &[u8]) -> WResult<'_, BmInfo> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, entry_count) = le_u32(i)?;
-        let (remaining, entries) = count(EncodedFilename::parse, (entry_count + 1) as usize)(i)?;
+        let (remaining, entries) =
+            count(EncodedFilename::parse, (entry_count + 1) as usize).parse(i)?;
         Ok((
             remaining,
             BmInfo {

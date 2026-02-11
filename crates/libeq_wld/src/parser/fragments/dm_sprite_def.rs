@@ -2,9 +2,9 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, FragmentRef, MaterialPalette, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i16, le_u16, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -174,7 +174,7 @@ impl FragmentParser for DmSpriteDef {
                 center,
                 params1,
             ),
-        ) = tuple((
+        ) = (
             StringReference::parse,
             le_u32,
             le_u32,
@@ -187,9 +187,10 @@ impl FragmentParser for DmSpriteDef {
             le_u32,
             FragmentRef::parse,
             le_u32,
-            tuple((le_f32, le_f32, le_f32)),
-            tuple((le_f32, le_f32, le_f32)),
-        ))(input)?;
+            (le_f32, le_f32, le_f32),
+            (le_f32, le_f32, le_f32),
+        )
+            .parse(input)?;
 
         let (
             i,
@@ -202,18 +203,16 @@ impl FragmentParser for DmSpriteDef {
                 meshops,
                 skin_assignment_groups,
             ),
-        ) = tuple((
-            count(tuple((le_f32, le_f32, le_f32)), vertex_count as usize),
-            count(tuple((le_f32, le_f32)), texture_coordinate_count as usize),
-            count(tuple((le_f32, le_f32, le_f32)), normal_count as usize),
+        ) = (
+            count((le_f32, le_f32, le_f32), vertex_count as usize),
+            count((le_f32, le_f32), texture_coordinate_count as usize),
+            count((le_f32, le_f32, le_f32), normal_count as usize),
             count(le_u32, color_count as usize),
             count(DmSpriteDefFaceEntry::parse, face_count as usize),
             count(DmSpriteDefMeshopEntry::parse, meshop_count as usize),
-            count(
-                tuple((le_u16, le_u16)),
-                skin_assignment_group_count as usize,
-            ),
-        ))(i)?;
+            count((le_u16, le_u16), skin_assignment_group_count as usize),
+        )
+            .parse(i)?;
 
         let (i, size8) = if flags & 0x200 == 0x200 {
             // Bit 9 is set
@@ -224,7 +223,9 @@ impl FragmentParser for DmSpriteDef {
 
         let (i, data8) = if flags & 0x200 == 0x200 {
             // Bit 9 is set
-            count(le_u32, size8.unwrap() as usize)(i).map(|(i, data8)| (i, Some(data8)))?
+            count(le_u32, size8.unwrap() as usize)
+                .parse(i)
+                .map(|(i, data8)| (i, Some(data8)))?
         } else {
             (i, None)
         };
@@ -239,9 +240,10 @@ impl FragmentParser for DmSpriteDef {
         let (i, face_material_groups) = if flags & 0x800 == 0x800 {
             // Bit 11 set
             count(
-                tuple((le_u16, le_u16)),
+                (le_u16, le_u16),
                 face_material_group_count.unwrap() as usize,
-            )(i)
+            )
+            .parse(i)
             .map(|(i, face_material_groups)| (i, Some(face_material_groups)))?
         } else {
             (i, None)
@@ -258,9 +260,10 @@ impl FragmentParser for DmSpriteDef {
         let (i, vertex_material_groups) = if flags & 0x1000 == 0x1000 {
             // Bit 12 set
             count(
-                tuple((le_u16, le_u16)),
+                (le_u16, le_u16),
                 vertex_material_group_count.unwrap() as usize,
-            )(i)
+            )
+            .parse(i)
             .map(|(i, vertex_material_groups)| (i, Some(vertex_material_groups)))?
         } else {
             (i, None)
@@ -268,14 +271,17 @@ impl FragmentParser for DmSpriteDef {
 
         let (i, params2) = if flags & 0x2000 == 0x2000 {
             // Bit 13 set
-            tuple((le_u32, le_u32, le_u32))(i).map(|(i, params2)| (i, Some(params2)))?
+            (le_u32, le_u32, le_u32)
+                .parse(i)
+                .map(|(i, params2)| (i, Some(params2)))?
         } else {
             (i, None)
         };
 
         let (i, params3) = if flags & 0x4000 == 0x4000 {
             // Bit 14 set
-            tuple((le_f32, le_f32, le_f32, le_f32, le_f32, le_f32))(i)
+            (le_f32, le_f32, le_f32, le_f32, le_f32, le_f32)
+                .parse(i)
                 .map(|(i, params3)| (i, Some(params3)))?
         } else {
             (i, None)
@@ -476,11 +482,12 @@ impl DmSpriteDefFaceEntry {
 
 impl DmSpriteDefFaceEntry {
     fn parse(input: &[u8]) -> WResult<'_, DmSpriteDefFaceEntry> {
-        let (remaining, (flags, data, vertex_indexes)) = tuple((
+        let (remaining, (flags, data, vertex_indexes)) = (
             le_u16,
-            tuple((le_u16, le_u16, le_u16, le_u16)),
-            tuple((le_u16, le_u16, le_u16)),
-        ))(input)?;
+            (le_u16, le_u16, le_u16, le_u16),
+            (le_u16, le_u16, le_u16),
+        )
+            .parse(input)?;
         Ok((
             remaining,
             DmSpriteDefFaceEntry {
@@ -547,7 +554,7 @@ impl DmSpriteDefMeshopEntry {
             (remaining, None)
         };
 
-        let (remaining, (param1, param2)) = tuple((le_u16, le_u16))(remaining)?;
+        let (remaining, (param1, param2)) = (le_u16, le_u16).parse(remaining)?;
 
         Ok((
             remaining,

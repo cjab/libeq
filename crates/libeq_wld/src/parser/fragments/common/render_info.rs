@@ -1,8 +1,8 @@
 use super::WResult;
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
@@ -182,9 +182,9 @@ pub struct UvInfo {
 
 impl UvInfo {
     fn parse(input: &[u8]) -> WResult<'_, UvInfo> {
-        let (i, uv_origin) = tuple((le_f32, le_f32, le_f32))(input)?;
-        let (i, u_axis) = tuple((le_f32, le_f32, le_f32))(i)?;
-        let (i, v_axis) = tuple((le_f32, le_f32, le_f32))(i)?;
+        let (i, uv_origin) = (le_f32, le_f32, le_f32).parse(input)?;
+        let (i, u_axis) = (le_f32, le_f32, le_f32).parse(i)?;
+        let (i, v_axis) = (le_f32, le_f32, le_f32).parse(i)?;
 
         Ok((
             i,
@@ -222,7 +222,7 @@ pub struct UvMap {
 impl UvMap {
     fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, entry_count) = le_u32(input)?;
-        let (i, entries) = count(tuple((le_f32, le_f32)), entry_count as usize)(i)?;
+        let (i, entries) = count((le_f32, le_f32), entry_count as usize).parse(i)?;
 
         Ok((
             i,

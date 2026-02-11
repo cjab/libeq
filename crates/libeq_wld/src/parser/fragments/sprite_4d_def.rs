@@ -1,8 +1,8 @@
 use std::any::Any;
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -54,7 +54,9 @@ impl FragmentParser for Sprite4DDef {
         let (i, polygon_fragment) = le_u32(i)?;
 
         let (i, center_offset) = if flags.has_center_offset() {
-            tuple((le_f32, le_f32, le_f32))(i).map(|(i, p3)| (i, Some(p3)))?
+            (le_f32, le_f32, le_f32)
+                .parse(i)
+                .map(|(i, p3)| (i, Some(p3)))?
         } else {
             (i, None)
         };
@@ -78,7 +80,9 @@ impl FragmentParser for Sprite4DDef {
         };
 
         let (i, sprite_fragments) = if flags.has_sprites() {
-            count(le_u32, num_frames as usize)(i).map(|(rem, v)| (rem, Some(v)))?
+            count(le_u32, num_frames as usize)
+                .parse(i)
+                .map(|(rem, v)| (rem, Some(v)))?
         } else {
             (i, None)
         };

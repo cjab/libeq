@@ -5,8 +5,9 @@ use crate::parser::strings::{decode_string, encode_string};
 use super::common::Location;
 use super::{DmRGBTrack, Fragment, FragmentParser, FragmentRef, Sphere, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
-use nom::number::complete::{le_f32, le_u32, le_u8};
+use nom::number::complete::{le_f32, le_u8, le_u32};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -111,7 +112,7 @@ impl FragmentParser for Actor {
             (i, None)
         };
         let (i, user_data_size) = le_u32(i)?;
-        let (i, user_data) = count(le_u8, user_data_size as usize)(i)?;
+        let (i, user_data) = count(le_u8, user_data_size as usize).parse(i)?;
 
         Ok((
             i,

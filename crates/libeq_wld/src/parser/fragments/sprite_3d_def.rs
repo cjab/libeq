@@ -3,9 +3,9 @@ use std::any::Any;
 use super::common::{RenderInfo, RenderMethod};
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -60,7 +60,9 @@ impl FragmentParser for Sprite3DDef {
         let (i, bsp_node_count) = le_u32(i)?;
         let (i, sphere_list_reference) = le_u32(i)?;
         let (i, center_offset) = if flags.has_center_offset() {
-            tuple((le_f32, le_f32, le_f32))(i).map(|(i, b)| (i, Some(b)))?
+            (le_f32, le_f32, le_f32)
+                .parse(i)
+                .map(|(i, b)| (i, Some(b)))?
         } else {
             (i, None)
         };
@@ -69,8 +71,8 @@ impl FragmentParser for Sprite3DDef {
         } else {
             (i, None)
         };
-        let (i, vertices) = count(tuple((le_f32, le_f32, le_f32)), vertex_count as usize)(i)?;
-        let (i, bsp_nodes) = count(BspNodeEntry::parse, bsp_node_count as usize)(i)?;
+        let (i, vertices) = count((le_f32, le_f32, le_f32), vertex_count as usize).parse(i)?;
+        let (i, bsp_nodes) = count(BspNodeEntry::parse, bsp_node_count as usize).parse(i)?;
 
         Ok((
             i,
@@ -152,7 +154,7 @@ impl BspNodeEntry {
         let (i, vertex_count) = le_u32(input)?;
         let (i, front_tree) = le_u32(i)?;
         let (i, back_tree) = le_u32(i)?;
-        let (i, vertex_indices) = count(le_u32, vertex_count as usize)(i)?;
+        let (i, vertex_indices) = count(le_u32, vertex_count as usize).parse(i)?;
         let (i, render_method) = RenderMethod::parse(i)?;
         let (i, render_info) = RenderInfo::parse(i)?;
 

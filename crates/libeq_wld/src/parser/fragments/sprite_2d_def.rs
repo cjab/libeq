@@ -1,8 +1,8 @@
 use std::any::Any;
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i32, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -94,15 +94,15 @@ impl FragmentParser for Sprite2DDef {
     const TYPE_NAME: &'static str = "Sprite2DDef";
 
     fn parse(input: &[u8]) -> WResult<'_, Sprite2DDef> {
-        let (i, (name_reference, flags, num_frames, num_pitches, sprite_size, sphere_fragment)) =
-            tuple((
-                StringReference::parse,
-                SpriteFlags::parse,
-                le_u32,
-                le_u32,
-                tuple((le_f32, le_f32)),
-                le_u32,
-            ))(input)?;
+        let (i, (name_reference, flags, num_frames, num_pitches, sprite_size, sphere_fragment)) = (
+            StringReference::parse,
+            SpriteFlags::parse,
+            le_u32,
+            le_u32,
+            (le_f32, le_f32),
+            le_u32,
+        )
+            .parse(input)?;
 
         let (i, depth_scale) = if flags.has_depth_scale() {
             le_f32(i).map(|(i, p2)| (i, Some(p2)))?
@@ -111,7 +111,9 @@ impl FragmentParser for Sprite2DDef {
         };
 
         let (i, center_offset) = if flags.has_center_offset() {
-            tuple((le_f32, le_f32, le_f32))(i).map(|(i, p3)| (i, Some(p3)))?
+            (le_f32, le_f32, le_f32)
+                .parse(i)
+                .map(|(i, p3)| (i, Some(p3)))?
         } else {
             (i, None)
         };
@@ -137,10 +139,11 @@ impl FragmentParser for Sprite2DDef {
         let (i, pitches) = count(
             |input| SpritePitch::parse(num_frames, input),
             num_pitches as usize,
-        )(i)?;
+        )
+        .parse(i)?;
 
         let (remaining, (render_method, render_info)) =
-            tuple((RenderMethod::parse, RenderInfo::parse))(i)?;
+            (RenderMethod::parse, RenderInfo::parse).parse(i)?;
 
         Ok((
             remaining,
@@ -284,11 +287,12 @@ pub struct SpritePitch {
 
 impl SpritePitch {
     fn parse(num_frames: u32, input: &[u8]) -> WResult<'_, SpritePitch> {
-        let (i, (pitch_cap, num_headings)) = tuple((le_i32, le_u32))(input)?;
+        let (i, (pitch_cap, num_headings)) = (le_i32, le_u32).parse(input)?;
         let (remaining, headings) = count(
             |input| SpriteHeading::parse(num_frames, input),
             num_headings as usize,
-        )(i)?;
+        )
+        .parse(i)?;
 
         Ok((
             remaining,
@@ -334,7 +338,7 @@ pub struct SpriteHeading {
 impl SpriteHeading {
     fn parse(num_frames: u32, input: &[u8]) -> WResult<'_, SpriteHeading> {
         let (remaining, (heading_cap, frames)) =
-            tuple((le_u32, count(le_u32, num_frames as usize)))(input)?;
+            (le_u32, count(le_u32, num_frames as usize)).parse(input)?;
         Ok((
             remaining,
             SpriteHeading {

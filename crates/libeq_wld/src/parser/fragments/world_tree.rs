@@ -2,9 +2,9 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, FragmentRef, Region, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -33,7 +33,7 @@ impl FragmentParser for WorldTree {
     fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, name_reference) = StringReference::parse(input)?;
         let (i, world_node_count) = le_u32(i)?;
-        let (i, world_nodes) = count(WorldNode::parse, world_node_count as usize)(i)?;
+        let (i, world_nodes) = count(WorldNode::parse, world_node_count as usize).parse(i)?;
 
         Ok((
             i,
@@ -96,7 +96,7 @@ pub struct WorldNode {
 
 impl WorldNode {
     fn parse(input: &[u8]) -> WResult<'_, WorldNode> {
-        let (i, normal) = tuple((le_f32, le_f32, le_f32))(input)?;
+        let (i, normal) = (le_f32, le_f32, le_f32).parse(input)?;
         let (i, split_distance) = le_f32(i)?;
         let (i, region) = FragmentRef::parse(i)?;
         let (i, front_tree) = FragmentRef::parse(i)?;

@@ -2,9 +2,9 @@ use std::any::Any;
 
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_i32, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -73,7 +73,9 @@ impl FragmentParser for HierarchicalSpriteDef {
         let (i, collision_volume_reference) = le_u32(i)?;
 
         let (i, center_offset) = if flags.has_center_offset() {
-            tuple((le_u32, le_u32, le_u32))(i).map(|(i, p1)| (i, Some(p1)))?
+            (le_u32, le_u32, le_u32)
+                .parse(i)
+                .map(|(i, p1)| (i, Some(p1)))?
         } else {
             (i, None)
         };
@@ -84,7 +86,7 @@ impl FragmentParser for HierarchicalSpriteDef {
             (i, None)
         };
 
-        let (i, dags) = count(Dag::parse, num_dags as usize)(i)?;
+        let (i, dags) = count(Dag::parse, num_dags as usize).parse(i)?;
 
         let (i, num_attached_skins) = if flags.has_unknown_flag() {
             le_u32(i).map(|(i, size2)| (i, Some(size2)))?
@@ -95,7 +97,8 @@ impl FragmentParser for HierarchicalSpriteDef {
         let (remaining, (dm_sprites, link_skin_updates_to_dag_index)) = if flags.has_unknown_flag()
         {
             let size = num_attached_skins.unwrap_or(0) as usize;
-            tuple((count(le_u32, size), count(le_u32, size)))(i)
+            (count(le_u32, size), count(le_u32, size))
+                .parse(i)
                 .map(|(i, (f3, d3))| (i, (Some(f3), Some(d3))))?
         } else {
             (i, (None, None))
@@ -183,7 +186,7 @@ impl Dag {
         let (i, track_reference) = le_u32(i)?;
         let (i, mesh_or_sprite_reference) = le_u32(i)?;
         let (i, num_sub_dags) = le_u32(i)?;
-        let (remaining, sub_dags) = count(le_u32, num_sub_dags as usize)(i)?;
+        let (remaining, sub_dags) = count(le_u32, num_sub_dags as usize).parse(i)?;
 
         Ok((
             remaining,

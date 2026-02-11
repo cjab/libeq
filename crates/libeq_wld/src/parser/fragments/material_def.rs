@@ -3,8 +3,8 @@ use std::any::Any;
 use super::common::RenderMethod;
 use super::{Fragment, FragmentParser, FragmentRef, SimpleSprite, StringReference, WResult};
 
+use nom::Parser;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -65,7 +65,7 @@ impl FragmentParser for MaterialDef {
         let (i, reference) = FragmentRef::parse(i)?;
 
         let (i, pair) = if flags.has_pair() {
-            tuple((le_u32, le_f32))(i).map(|(rem, p)| (rem, Some(p)))?
+            (le_u32, le_f32).parse(i).map(|(rem, p)| (rem, Some(p)))?
         } else {
             (i, None)
         };

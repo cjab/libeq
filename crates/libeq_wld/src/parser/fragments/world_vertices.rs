@@ -1,7 +1,7 @@
 use super::{Fragment, FragmentParser, StringReference, WResult};
+use nom::Parser;
 use nom::multi::count;
 use nom::number::complete::{le_f32, le_u32};
-use nom::sequence::tuple;
 use std::any::Any;
 
 #[cfg(feature = "serde")]
@@ -31,7 +31,7 @@ impl FragmentParser for WorldVertices {
     fn parse(input: &[u8]) -> WResult<'_, Self> {
         let name_reference = StringReference::new(0);
         let (i, num_vertices) = le_u32(input)?;
-        let (i, vertices) = count(tuple((le_f32, le_f32, le_f32)), num_vertices as usize)(i)?;
+        let (i, vertices) = count((le_f32, le_f32, le_f32), num_vertices as usize).parse(i)?;
 
         Ok((
             i,
