@@ -1,5 +1,5 @@
 use ansi_to_tui::IntoText as _;
-use hexyl::{BorderStyle, Printer};
+use hexyl::PrinterBuilder;
 use libeq_wld::parser::FragmentType;
 use ratatui::{
     Frame,
@@ -131,7 +131,7 @@ pub fn draw_raw_fragment_data(
     };
 
     let mut hex = vec![];
-    let mut hex_printer = Printer::new(&mut hex, true, BorderStyle::Unicode, true);
+    let mut hex_printer = PrinterBuilder::new(&mut hex).build();
     hex_printer
         .print_all(&fragment.into_bytes()[..])
         .expect("Error printing hex");
