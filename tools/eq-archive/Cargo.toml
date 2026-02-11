@@ -14,5 +14,3 @@ test = false
 libeq_archive = { path = "../../crates/libeq_archive", version = "0.4.0" }
 clap = { version = "3.2.12", features = ["derive"] }
 colorful = "0.2.1"
-log = "0.4"
-env_logger = "0.8"
