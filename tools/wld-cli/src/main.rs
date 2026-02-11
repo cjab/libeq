@@ -136,20 +136,20 @@ fn print_error(error: &WldDocError) -> Result<(), std::io::Error> {
             )?;
             let hex_offset = format!("0x{:02x}", offset).color(Color::DarkSeaGreen2);
             let dec_offset = format!("{}", offset).color(Color::DarkSeaGreen2);
-            write!(
+            writeln!(
                 out,
-                "encountered at body offset: {} ({})\n",
+                "encountered at body offset: {} ({})",
                 hex_offset, dec_offset
             )?;
-            write!(out, "Dumping fragment body...\n")?;
+            writeln!(out, "Dumping fragment body...")?;
             let mut hex_printer = PrinterBuilder::new(&mut out).build();
             hex_printer.print_all(header.field_data).unwrap();
         }
         WldDocError::UnknownFragment { index, header } => {
             write!(out, "\n{}\n", "Unknown Fragment".color(Color::Yellow))?;
-            write!(
+            writeln!(
                 out,
-                "{} 0x{:02x}, {} {} {} {}\n",
+                "{} 0x{:02x}, {} {} {} {}",
                 "type:".color(Color::Grey54),
                 header.fragment_type,
                 "index:".color(Color::Grey54),
@@ -157,7 +157,7 @@ fn print_error(error: &WldDocError) -> Result<(), std::io::Error> {
                 "size:".color(Color::Grey54),
                 header.size
             )?;
-            write!(out, "Dumping fragment body...\n")?;
+            writeln!(out, "Dumping fragment body...")?;
             let mut hex_printer = PrinterBuilder::new(&mut out).build();
             hex_printer.print_all(header.field_data).unwrap();
         }
@@ -234,10 +234,8 @@ fn extract(wld_filename: &str, destination: &str, format: &Format) {
 }
 
 fn extract_raw(wld_filename: &str, destination: &str) {
-    fs::create_dir_all(&destination).expect(&format!(
-        "Could not create destination directory: {}",
-        destination
-    ));
+    fs::create_dir_all(destination).unwrap_or_else(|_| panic!("Could not create destination directory: {}",
+        destination));
 
     let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
     let (_, raw_fragments) =
@@ -251,23 +249,23 @@ fn extract_raw(wld_filename: &str, destination: &str) {
         .expect("Could not read wld file");
 
     let header_path = Path::new(destination).join("0000--header.bin");
-    let mut file = File::create(&header_path).expect(&format!("Failed to create header file"));
+    let mut file = File::create(&header_path).expect("Failed to create header file");
     file.write_all(&wld.header_bytes()).unwrap();
 
     let strings_path = Path::new(destination).join("0000--strings.bin");
-    let mut file = File::create(&strings_path).expect(&format!("Failed to create strings file"));
+    let mut file = File::create(&strings_path).expect("Failed to create strings file");
     file.write_all(&wld.strings_bytes()).unwrap();
 
     for (i, fragment_header) in raw_fragments.iter().enumerate() {
         let filename = format!("{:04}-{:#04x}.frag", i, fragment_header.fragment_type);
         let dest = Path::new(destination).join(filename);
-        let mut file = File::create(&dest).expect(&format!("Failed to create file: {:?}", dest));
+        let mut file = File::create(&dest).unwrap_or_else(|_| panic!("Failed to create file: {:?}", dest));
         file.write_all(fragment_header.field_data).unwrap();
     }
 }
 
 fn create(source: &str, wld_filename: &str, format: &Format) {
-    let mut reader = File::open(source).expect(&format!("Could not open source file: {}", source));
+    let mut reader = File::open(source).unwrap_or_else(|_| panic!("Could not open source file: {}", source));
     let wld_doc: WldDoc = match format {
         Format::Raw => {
             let mut buff = vec![];

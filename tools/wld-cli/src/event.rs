@@ -51,8 +51,8 @@ impl Events {
 
             thread::spawn(move || {
                 loop {
-                    if event::poll(config.tick_rate).is_ok() {
-                        if let Ok(evt) = event::read() {
+                    if event::poll(config.tick_rate).is_ok()
+                        && let Ok(evt) = event::read() {
                             match evt {
                                 event::Event::Key(key_event) => {
                                     if key_event.kind != KeyEventKind::Release
@@ -75,7 +75,6 @@ impl Events {
                                 _ => {}
                             }
                         }
-                    }
                 }
             })
         };

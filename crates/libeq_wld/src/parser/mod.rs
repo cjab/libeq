@@ -53,7 +53,7 @@ impl WldDoc {
                 Err(e) => Either::Right(e),
             });
 
-        if errors.len() > 0 {
+        if !errors.is_empty() {
             return Err(errors);
         }
 
@@ -66,7 +66,7 @@ impl WldDoc {
 
     pub fn fragment_headers_by_offset(input: &[u8]) -> BTreeMap<usize, FragmentHeader<'_>> {
         let (i, header) = WldHeader::parse(input)
-            .expect(&format!("{:?}", &input[..std::mem::size_of::<WldHeader>()]));
+            .unwrap_or_else(|_| panic!("{:?}", &input[..std::mem::size_of::<WldHeader>()]));
         let (_, i) = i.split_at(header.string_hash_size as usize);
 
         //let (i, _): (&[u8], &[u8]) =
@@ -74,14 +74,12 @@ impl WldDoc {
 
         let mut fragment_headers = BTreeMap::new();
         let mut remaining = i;
-        for idx in (0..header.fragment_count).into_iter() {
+        for idx in 0..header.fragment_count  {
             let offset = input.len() - remaining.len();
             println!("Parsing fragment header {} at offset {:#10x}", idx, offset);
 
-            let (x, fragment_header) = FragmentHeader::parse(remaining).expect(&format!(
-                "Failed to parse fragment header {} at offset {:#10x}",
-                idx, offset
-            ));
+            let (x, fragment_header) = FragmentHeader::parse(remaining).unwrap_or_else(|_| panic!("Failed to parse fragment header {} at offset {:#10x}",
+                idx, offset));
             fragment_headers.insert(offset, fragment_header);
             remaining = x;
         }
@@ -317,164 +315,164 @@ impl<'a> FragmentHeader<'a> {
         let parsed = match self.fragment_type {
             DmSpriteDef::TYPE_ID => match self.detect_0x2c_variant() {
                 FragmentGame::EverQuest => Some(
-                    DmSpriteDef::parse(&self.field_data)
+                    DmSpriteDef::parse(self.field_data)
                         .map(|f| (f.0, FragmentType::DmSpriteDef(f.1))),
                 ),
                 FragmentGame::ReturnToKrondor => Some(
-                    BmInfoRtk::parse(&self.field_data).map(|f| (f.0, FragmentType::BmInfoRtk(f.1))),
+                    BmInfoRtk::parse(self.field_data).map(|f| (f.0, FragmentType::BmInfoRtk(f.1))),
                 ),
                 FragmentGame::Tanarus => Some(
-                    WorldVertices::parse(&self.field_data)
+                    WorldVertices::parse(self.field_data)
                         .map(|f| (f.0, FragmentType::WorldVertices(f.1))),
                 ),
             },
             BlitSpriteDef::TYPE_ID => Some(
-                BlitSpriteDef::parse(&self.field_data)
+                BlitSpriteDef::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::BlitSpriteDef(f.1))),
             ),
             BlitSprite::TYPE_ID => Some(
-                BlitSprite::parse(&self.field_data).map(|f| (f.0, FragmentType::BlitSprite(f.1))),
+                BlitSprite::parse(self.field_data).map(|f| (f.0, FragmentType::BlitSprite(f.1))),
             ),
             DmRGBTrack::TYPE_ID => Some(
-                DmRGBTrack::parse(&self.field_data).map(|f| (f.0, FragmentType::DmRGBTrack(f.1))),
+                DmRGBTrack::parse(self.field_data).map(|f| (f.0, FragmentType::DmRGBTrack(f.1))),
             ),
             DmRGBTrackDef::TYPE_ID => Some(
-                DmRGBTrackDef::parse(&self.field_data)
+                DmRGBTrackDef::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::DmRGBTrackDef(f.1))),
             ),
             DmTrackDef2::TYPE_ID => Some(
-                DmTrackDef2::parse(&self.field_data).map(|f| (f.0, FragmentType::DmTrackDef2(f.1))),
+                DmTrackDef2::parse(self.field_data).map(|f| (f.0, FragmentType::DmTrackDef2(f.1))),
             ),
             DmTrack::TYPE_ID => {
-                Some(DmTrack::parse(&self.field_data).map(|f| (f.0, FragmentType::DmTrack(f.1))))
+                Some(DmTrack::parse(self.field_data).map(|f| (f.0, FragmentType::DmTrack(f.1))))
             }
             AmbientLight::TYPE_ID => Some(
-                AmbientLight::parse(&self.field_data)
+                AmbientLight::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::AmbientLight(f.1))),
             ),
             Zone::TYPE_ID => {
-                Some(Zone::parse(&self.field_data).map(|f| (f.0, FragmentType::Zone(f.1))))
+                Some(Zone::parse(self.field_data).map(|f| (f.0, FragmentType::Zone(f.1))))
             }
             PointLight::TYPE_ID => Some(
-                PointLight::parse(&self.field_data).map(|f| (f.0, FragmentType::PointLight(f.1))),
+                PointLight::parse(self.field_data).map(|f| (f.0, FragmentType::PointLight(f.1))),
             ),
             Light::TYPE_ID => {
-                Some(Light::parse(&self.field_data).map(|f| (f.0, FragmentType::Light(f.1))))
+                Some(Light::parse(self.field_data).map(|f| (f.0, FragmentType::Light(f.1))))
             }
             LightDef::TYPE_ID => {
-                Some(LightDef::parse(&self.field_data).map(|f| (f.0, FragmentType::LightDef(f.1))))
+                Some(LightDef::parse(self.field_data).map(|f| (f.0, FragmentType::LightDef(f.1))))
             }
             Polyhedron::TYPE_ID => Some(
-                Polyhedron::parse(&self.field_data).map(|f| (f.0, FragmentType::Polyhedron(f.1))),
+                Polyhedron::parse(self.field_data).map(|f| (f.0, FragmentType::Polyhedron(f.1))),
             ),
             PolyhedronDef::TYPE_ID => Some(
-                PolyhedronDef::parse(&self.field_data)
+                PolyhedronDef::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::PolyhedronDef(f.1))),
             ),
             GlobalAmbientLightDef::TYPE_ID => Some(
-                GlobalAmbientLightDef::parse(&self.field_data)
+                GlobalAmbientLightDef::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::GlobalAmbientLightDef(f.1))),
             ),
             Sphere::TYPE_ID => {
-                Some(Sphere::parse(&self.field_data).map(|f| (f.0, FragmentType::Sphere(f.1))))
+                Some(Sphere::parse(self.field_data).map(|f| (f.0, FragmentType::Sphere(f.1))))
             }
             HierarchicalSprite::TYPE_ID => Some(
-                HierarchicalSprite::parse(&self.field_data)
+                HierarchicalSprite::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::HierarchicalSprite(f.1))),
             ),
             Sprite3D::TYPE_ID => {
-                Some(Sprite3D::parse(&self.field_data).map(|f| (f.0, FragmentType::Sprite3D(f.1))))
+                Some(Sprite3D::parse(self.field_data).map(|f| (f.0, FragmentType::Sprite3D(f.1))))
             }
             Sprite3DDef::TYPE_ID => Some(
-                Sprite3DDef::parse(&self.field_data).map(|f| (f.0, FragmentType::Sprite3DDef(f.1))),
+                Sprite3DDef::parse(self.field_data).map(|f| (f.0, FragmentType::Sprite3DDef(f.1))),
             ),
             Sprite2D::TYPE_ID => {
-                Some(Sprite2D::parse(&self.field_data).map(|f| (f.0, FragmentType::Sprite2D(f.1))))
+                Some(Sprite2D::parse(self.field_data).map(|f| (f.0, FragmentType::Sprite2D(f.1))))
             }
             Sprite2DDef::TYPE_ID => Some(
-                Sprite2DDef::parse(&self.field_data).map(|f| (f.0, FragmentType::Sprite2DDef(f.1))),
+                Sprite2DDef::parse(self.field_data).map(|f| (f.0, FragmentType::Sprite2DDef(f.1))),
             ),
             Actor::TYPE_ID => {
-                Some(Actor::parse(&self.field_data).map(|f| (f.0, FragmentType::Actor(f.1))))
+                Some(Actor::parse(self.field_data).map(|f| (f.0, FragmentType::Actor(f.1))))
             }
             Track::TYPE_ID => {
-                Some(Track::parse(&self.field_data).map(|f| (f.0, FragmentType::Track(f.1))))
+                Some(Track::parse(self.field_data).map(|f| (f.0, FragmentType::Track(f.1))))
             }
             TrackDef::TYPE_ID => {
-                Some(TrackDef::parse(&self.field_data).map(|f| (f.0, FragmentType::TrackDef(f.1))))
+                Some(TrackDef::parse(self.field_data).map(|f| (f.0, FragmentType::TrackDef(f.1))))
             }
             HierarchicalSpriteDef::TYPE_ID => Some(
-                HierarchicalSpriteDef::parse(&self.field_data)
+                HierarchicalSpriteDef::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::HierarchicalSpriteDef(f.1))),
             ),
             ActorDef::TYPE_ID => {
-                Some(ActorDef::parse(&self.field_data).map(|f| (f.0, FragmentType::ActorDef(f.1))))
+                Some(ActorDef::parse(self.field_data).map(|f| (f.0, FragmentType::ActorDef(f.1))))
             }
             WorldTree::TYPE_ID => Some(
-                WorldTree::parse(&self.field_data).map(|f| (f.0, FragmentType::WorldTree(f.1))),
+                WorldTree::parse(self.field_data).map(|f| (f.0, FragmentType::WorldTree(f.1))),
             ),
             Region::TYPE_ID => {
-                Some(Region::parse(&self.field_data).map(|f| (f.0, FragmentType::Region(f.1))))
+                Some(Region::parse(self.field_data).map(|f| (f.0, FragmentType::Region(f.1))))
             }
             DmSpriteDef2::TYPE_ID => Some(
-                DmSpriteDef2::parse(&self.field_data)
+                DmSpriteDef2::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::DmSpriteDef2(f.1))),
             ),
             MaterialPalette::TYPE_ID => Some(
-                MaterialPalette::parse(&self.field_data)
+                MaterialPalette::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::MaterialPalette(f.1))),
             ),
             MaterialDef::TYPE_ID => Some(
-                MaterialDef::parse(&self.field_data).map(|f| (f.0, FragmentType::MaterialDef(f.1))),
+                MaterialDef::parse(self.field_data).map(|f| (f.0, FragmentType::MaterialDef(f.1))),
             ),
             SimpleSprite::TYPE_ID => Some(
-                SimpleSprite::parse(&self.field_data)
+                SimpleSprite::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::SimpleSprite(f.1))),
             ),
             DmSprite::TYPE_ID => {
-                Some(DmSprite::parse(&self.field_data).map(|f| (f.0, FragmentType::DmSprite(f.1))))
+                Some(DmSprite::parse(self.field_data).map(|f| (f.0, FragmentType::DmSprite(f.1))))
             }
             SimpleSpriteDef::TYPE_ID => Some(
-                SimpleSpriteDef::parse(&self.field_data)
+                SimpleSpriteDef::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::SimpleSpriteDef(f.1))),
             ),
             BmInfo::TYPE_ID => {
-                Some(BmInfo::parse(&self.field_data).map(|f| (f.0, FragmentType::BmInfo(f.1))))
+                Some(BmInfo::parse(self.field_data).map(|f| (f.0, FragmentType::BmInfo(f.1))))
             }
             ParticleCloudDef::TYPE_ID => Some(
-                ParticleCloudDef::parse(&self.field_data)
+                ParticleCloudDef::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::ParticleCloudDef(f.1))),
             ),
             DmTrackDef::TYPE_ID => Some(
-                DmTrackDef::parse(&self.field_data).map(|f| (f.0, FragmentType::DmTrackDef(f.1))),
+                DmTrackDef::parse(self.field_data).map(|f| (f.0, FragmentType::DmTrackDef(f.1))),
             ),
             SphereList::TYPE_ID => Some(
-                SphereList::parse(&self.field_data).map(|f| (f.0, FragmentType::SphereList(f.1))),
+                SphereList::parse(self.field_data).map(|f| (f.0, FragmentType::SphereList(f.1))),
             ),
             SphereListDef::TYPE_ID => Some(
-                SphereListDef::parse(&self.field_data)
+                SphereListDef::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::SphereListDef(f.1))),
             ),
             ParticleSprite::TYPE_ID => Some(
-                ParticleSprite::parse(&self.field_data)
+                ParticleSprite::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::ParticleSprite(f.1))),
             ),
             ParticleSpriteDef::TYPE_ID => Some(
-                ParticleSpriteDef::parse(&self.field_data)
+                ParticleSpriteDef::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::ParticleSpriteDef(f.1))),
             ),
             DefaultPaletteFile::TYPE_ID => Some(
-                DefaultPaletteFile::parse(&self.field_data)
+                DefaultPaletteFile::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::DefaultPaletteFile(f.1))),
             ),
             Sprite4D::TYPE_ID => {
-                Some(Sprite4D::parse(&self.field_data).map(|f| (f.0, FragmentType::Sprite4D(f.1))))
+                Some(Sprite4D::parse(self.field_data).map(|f| (f.0, FragmentType::Sprite4D(f.1))))
             }
             Sprite4DDef::TYPE_ID => Some(
-                Sprite4DDef::parse(&self.field_data).map(|f| (f.0, FragmentType::Sprite4DDef(f.1))),
+                Sprite4DDef::parse(self.field_data).map(|f| (f.0, FragmentType::Sprite4DDef(f.1))),
             ),
             DirectionalLight::TYPE_ID => Some(
-                DirectionalLight::parse(&self.field_data)
+                DirectionalLight::parse(self.field_data)
                     .map(|f| (f.0, FragmentType::DirectionalLight(f.1))),
             ),
             _ => None,
@@ -506,7 +504,7 @@ impl<'a> FragmentHeader<'a> {
         [
             &self.size.to_le_bytes()[..],
             &self.fragment_type.to_le_bytes()[..],
-            &self.field_data,
+            self.field_data,
         ]
         .concat()
     }

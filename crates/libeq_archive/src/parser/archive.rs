@@ -44,7 +44,7 @@ impl Archive {
         let (i, index_entry_count) = le_u32(i)?;
         let (i, index_entries) = count(IndexEntry::parse, index_entry_count as usize).parse(i)?;
 
-        let (i, footer) = if i.len() > 0 {
+        let (i, footer) = if !i.is_empty() {
             Footer::parse(i).map(|(i, f)| (i, Some(f)))?
         } else {
             (i, None)

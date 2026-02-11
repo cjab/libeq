@@ -805,7 +805,7 @@ impl VisibleList {
                     (
                         rem,
                         e.into_iter()
-                            .map(|r| RangeEntry::Byte(r))
+                            .map(RangeEntry::Byte)
                             .collect::<Vec<_>>(),
                     )
                 })?
@@ -816,7 +816,7 @@ impl VisibleList {
                     (
                         rem,
                         e.into_iter()
-                            .map(|r| RangeEntry::Word(r))
+                            .map(RangeEntry::Word)
                             .collect::<Vec<_>>(),
                     )
                 })?

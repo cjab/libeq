@@ -119,7 +119,7 @@ fn up_event(app: &mut App) {
         RouteId::Main => match app.route.active_block {
             ActiveBlock::FragmentList => {
                 app.selected_fragment_idx = Some(match app.selected_fragment_idx {
-                    Some(i) => cmp::max(i as i32 - 1, 0 as i32) as usize,
+                    Some(i) => cmp::max(i as i32 - 1, 0_i32) as usize,
                     None => 0,
                 });
                 app.detail_scroll_pos = (0, 0);
@@ -149,5 +149,5 @@ fn right_event(app: &mut App) {
 }
 
 fn wrap_idx(idx: i32, idx_max: i32) -> usize {
-    (((idx % idx_max) + idx_max) % idx_max).abs() as usize
+    (((idx % idx_max) + idx_max) % idx_max).unsigned_abs() as usize
 }
