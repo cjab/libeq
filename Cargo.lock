@@ -233,12 +233,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
-name = "colorful"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffb474a9c3219a8254ead020421ecf1b90427f29b55f6aae9a2471fa62c126ef"
-
-[[package]]
 name = "compact_str"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -456,7 +450,6 @@ name = "eq-archive"
 version = "0.4.0"
 dependencies = [
  "clap",
- "colorful",
  "libeq_archive",
 ]
 
@@ -1921,7 +1914,6 @@ version = "0.4.0"
 dependencies = [
  "ansi-to-tui",
  "clap",
- "colorful",
  "crossterm",
  "hexyl",
  "libeq_archive",
