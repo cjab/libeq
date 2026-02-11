@@ -11,12 +11,12 @@ categories = ["game-development", "graphics", "parsing", "rendering::data-format
 license = "MIT"
 
 [dependencies]
-nom = "8.0.0"
+nom.workspace = true
 num-traits = "0.2"
 num-derive = "0.4.2"
 encoding_rs = "0.8"
 itertools = "0.14.0"
-serde = { version = "1", features = ["derive"], optional = true }
+serde = { workspace = true, optional = true }
 
 [features]
 serde = ["dep:serde"]
