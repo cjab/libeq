@@ -1,3 +1,4 @@
+#![allow(clippy::doc_overindented_list_items)]
 //! # An Everquest .wld file loader
 //! This is a work in progress but already loads enough data from wld files to be able to do some
 //! basic rendering of models. The interface has been heavily influenced by the
@@ -5,7 +6,7 @@
 //! understood and future understanding may influence the api of this crate.
 //!
 //! # Examples
-//! ```rust
+//! ```ignore
 //! let archive = eq_archive::read("gfaydark.s3d").unwrap();
 //! let wld_data = archive.get("gfaydark.wld").unwrap();
 //!

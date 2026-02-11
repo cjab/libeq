@@ -23,7 +23,7 @@ pub struct SimpleSpriteDef {
 
     /// Most flags are _unknown_ however:
     /// * bit 3 - If set texture is animated (has more than one [BmInfo] reference.
-    /// This also means that a `params1` field exists.
+    ///   This also means that a `params1` field exists.
     /// * bit 4 - If set a `params2` field exists. This _seems_ to always be set.
     pub flags: SimpleSpriteDefFlags,
 
