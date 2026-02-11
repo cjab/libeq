@@ -5,7 +5,5 @@ authors = ["Chad Jablonski <chad@jablonski.xyz>"]
 edition = "2024"
 
 [dependencies]
-log = "0.4.11"
-env_logger = "0.7"
 flate2 = "1.0.23"
 nom = "7.1.1"
