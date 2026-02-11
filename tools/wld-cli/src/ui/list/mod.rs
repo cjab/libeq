@@ -33,7 +33,7 @@ pub fn draw_fragment_list(f: &mut Frame, app: &App, layout_chunk: Rect) {
         .wld_doc
         .iter()
         .enumerate()
-        .map(|(idx, f)| draw_fragment(&app, idx, f))
+        .map(|(idx, f)| draw_fragment(app, idx, f))
         .collect();
 
     draw_selectable_list(

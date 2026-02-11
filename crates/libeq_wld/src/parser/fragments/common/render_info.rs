@@ -281,7 +281,7 @@ impl RenderMethod {
                     | ((*lighting as u32) << 2)
                     | ((*shading as u32) << 5)
                     | ((*texture_style as u32) << 7)
-                    | ((*unknown_bits as u32) << 11)
+                    | (*unknown_bits << 11)
             }
             Self::UserDefined { material_type } => (*material_type as u32) | 0x80000000,
         }

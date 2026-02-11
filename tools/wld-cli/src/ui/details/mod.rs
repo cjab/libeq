@@ -45,13 +45,13 @@ pub fn draw_fragment_header(
     let name = app
         .wld_doc
         .get_string(*fragment.name_ref())
-        .map_or("".to_string(), |n| format!("{}", n));
+        .map_or("".to_string(), |n| n.to_string());
     let (frag_type_name, frag_color) = get_frag_name_and_color(fragment);
 
     let table = Table::new(
         vec![
             Row::new(vec![Span::styled(
-                format!("{}", frag_type_name),
+                frag_type_name.to_string(),
                 Style::default().fg(frag_color),
             )]),
             Row::new(vec![name]),
@@ -83,7 +83,7 @@ pub fn draw_fragment_body(
     fragment_idx: usize,
     fragment: &FragmentType,
 ) {
-    let border_color = match app.route.active_block {
+    let _border_color = match app.route.active_block {
         ActiveBlock::FragmentDetails => ACTIVE_BLOCK_COLOR,
         _ => INACTIVE_BLOCK_COLOR,
     };
@@ -122,7 +122,7 @@ pub fn draw_raw_fragment_data(
     f: &mut Frame,
     app: &App,
     layout_chunk: Rect,
-    fragment_idx: usize,
+    _fragment_idx: usize,
     fragment: &FragmentType,
 ) {
     let border_color = match app.route.active_block {
@@ -154,7 +154,7 @@ pub fn draw_json_fragment_data(
     f: &mut Frame,
     app: &App,
     layout_chunk: Rect,
-    fragment_idx: usize,
+    _fragment_idx: usize,
     fragment: &FragmentType,
 ) {
     let border_color = match app.route.active_block {
@@ -180,7 +180,7 @@ pub fn draw_fragment_fields(
     f: &mut Frame,
     app: &App,
     layout_chunk: Rect,
-    fragment_idx: usize,
+    _fragment_idx: usize,
     fragment: &FragmentType,
 ) {
     let border_color = match app.route.active_block {

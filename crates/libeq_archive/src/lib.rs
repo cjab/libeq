@@ -272,7 +272,7 @@ impl From<nom::Err<nom::error::Error<&[u8]>>> for Error {
 fn filename_crc(filename: &str) -> u32 {
     filename
         .bytes()
-        .chain(vec![0u8].into_iter()) // Add null string terminator back in
+        .chain(vec![0u8]) // Add null string terminator back in
         .fold(0, |crc, byte| {
             let idx = ((crc >> 24) ^ (byte as u32)) & 0xff;
             (crc << 8) ^ CRC_TABLE[idx as usize]

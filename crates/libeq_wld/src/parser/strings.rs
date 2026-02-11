@@ -72,7 +72,7 @@ impl StringHash {
         let mut encoded_string = encode_string(&decoded_string);
         let size = encoded_string.len();
         // String data must be padded so that it aligns on 4 bytes
-        if (size % 4) > 0 {
+        if !size.is_multiple_of(4) {
             let padding = 4 - (size % 4);
             encoded_string.resize(size + padding, 0);
         }
@@ -81,7 +81,7 @@ impl StringHash {
 
     pub fn get(&self, string_reference: StringReference) -> Option<&str> {
         self.0
-            .get(&(string_reference.0.abs() as usize))
+            .get(&(string_reference.0.unsigned_abs() as usize))
             .map(|s| s.as_ref())
     }
 }
