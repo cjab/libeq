@@ -4,11 +4,11 @@ mod handlers;
 mod ui;
 
 use std::fs::{self, File};
-use std::io::{Read, prelude::*};
+use std::io::{prelude::*, Read};
 use std::path::Path;
 use std::{error::Error, io};
 
-use clap::{Command, ValueEnum, arg, value_parser};
+use clap::{arg, value_parser, Command, ValueEnum};
 use colorful::Color;
 use colorful::Colorful;
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
@@ -16,7 +16,7 @@ use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use hexyl::Printer;
 use ratatui::crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
-use ratatui::{Terminal, backend::CrosstermBackend};
+use ratatui::{backend::CrosstermBackend, Terminal};
 
 use crate::{app::App, event::Events};
 use libeq_wld::parser::{self, WldDoc, WldDocError};
@@ -61,8 +61,6 @@ fn cli() -> Command<'static> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    env_logger::init();
-
     match cli().get_matches().subcommand() {
         Some(("explore", sub_matches)) => {
             let wld_file = sub_matches.value_of("WLD_FILE").expect("required");
