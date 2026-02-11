@@ -515,19 +515,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "env_logger"
-version = "0.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
-dependencies = [
- "atty",
- "humantime",
- "log",
- "regex",
- "termcolor",
-]
-
-[[package]]
 name = "eq-archive"
 version = "0.4.0"
 dependencies = [
@@ -693,12 +680,6 @@ dependencies = [
  "clap 2.34.0",
  "libc",
 ]
-
-[[package]]
-name = "humantime"
-version = "2.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "135b12329e5e3ce057a9f972339ea52bc954fe1e9358ef27f95e89716fbc5424"
 
 [[package]]
 name = "ident_case"
@@ -2010,11 +1991,9 @@ dependencies = [
  "clap 3.2.25",
  "colorful 0.2.2",
  "crossterm",
- "env_logger",
  "hexyl",
  "libeq_archive",
  "libeq_wld",
- "log",
  "ratatui",
  "ron",
  "serde_json",
