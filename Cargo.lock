@@ -414,25 +414,12 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44533bbbb3bb3c1fa17d9f2e4e38bbbaf8396ba82193c4cb1b6445d711445d36"
-dependencies = [
- "atty",
- "humantime 1.3.0",
- "log",
- "regex",
- "termcolor",
-]
-
-[[package]]
-name = "env_logger"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
 dependencies = [
  "atty",
- "humantime 2.3.0",
+ "humantime",
  "log",
  "regex",
  "termcolor",
@@ -444,7 +431,7 @@ version = "0.4.0"
 dependencies = [
  "clap 3.2.25",
  "colorful",
- "env_logger 0.8.4",
+ "env_logger",
  "libeq_archive",
  "log",
 ]
@@ -609,15 +596,6 @@ dependencies = [
 
 [[package]]
 name = "humantime"
-version = "1.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df004cfca50ef23c36850aaaa59ad52cc70d0e90243c3c7737a4dd32dc7a3c4f"
-dependencies = [
- "quick-error",
-]
-
-[[package]]
-name = "humantime"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "135b12329e5e3ce057a9f972339ea52bc954fe1e9358ef27f95e89716fbc5424"
@@ -726,9 +704,7 @@ dependencies = [
 name = "libeq_archive"
 version = "0.4.0"
 dependencies = [
- "env_logger 0.7.1",
  "flate2",
- "log",
  "nom 7.1.3",
 ]
 
@@ -1098,12 +1074,6 @@ checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
 ]
-
-[[package]]
-name = "quick-error"
-version = "1.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
 
 [[package]]
 name = "quote"
@@ -1928,7 +1898,7 @@ dependencies = [
  "clap 3.2.25",
  "colorful",
  "crossterm",
- "env_logger 0.8.4",
+ "env_logger",
  "hexyl",
  "libeq_archive",
  "libeq_wld",
