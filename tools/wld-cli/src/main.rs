@@ -9,10 +9,9 @@ use std::path::Path;
 use std::{error::Error, io};
 
 use clap::{Command, ValueEnum, arg, value_parser};
-use colorful::Color;
-use colorful::Colorful;
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::execute;
+use crossterm::style::{Color, Stylize};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use hexyl::PrinterBuilder;
 use ratatui::crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
@@ -124,18 +123,18 @@ fn print_error(error: &WldDocError) -> Result<(), std::io::Error> {
             header,
             message,
         } => {
-            write!(out, "\n{}\n", "Failed Fragment".color(Color::Red))?;
-            write!(out, "{}", message.clone().color(Color::LightPink1))?;
+            write!(out, "\n{}\n", "Failed Fragment".red())?;
+            write!(out, "{}", message.clone().with(Color::AnsiValue(217)))?;
             write!(
                 out,
                 "\n{} 0x{:02x}, {} {}\n",
-                "type:".color(Color::Grey54),
+                "type:".with(Color::AnsiValue(245)),
                 header.fragment_type,
-                "index:".color(Color::Grey54),
+                "index:".with(Color::AnsiValue(245)),
                 index
             )?;
-            let hex_offset = format!("0x{:02x}", offset).color(Color::DarkSeaGreen2);
-            let dec_offset = format!("{}", offset).color(Color::DarkSeaGreen2);
+            let hex_offset = format!("0x{:02x}", offset).with(Color::AnsiValue(151));
+            let dec_offset = format!("{}", offset).with(Color::AnsiValue(151));
             writeln!(
                 out,
                 "encountered at body offset: {} ({})",
@@ -146,15 +145,15 @@ fn print_error(error: &WldDocError) -> Result<(), std::io::Error> {
             hex_printer.print_all(header.field_data).unwrap();
         }
         WldDocError::UnknownFragment { index, header } => {
-            write!(out, "\n{}\n", "Unknown Fragment".color(Color::Yellow))?;
+            write!(out, "\n{}\n", "Unknown Fragment".yellow())?;
             writeln!(
                 out,
                 "{} 0x{:02x}, {} {} {} {}",
-                "type:".color(Color::Grey54),
+                "type:".with(Color::AnsiValue(245)),
                 header.fragment_type,
-                "index:".color(Color::Grey54),
+                "index:".with(Color::AnsiValue(245)),
                 index,
-                "size:".color(Color::Grey54),
+                "size:".with(Color::AnsiValue(245)),
                 header.size
             )?;
             writeln!(out, "Dumping fragment body...")?;
