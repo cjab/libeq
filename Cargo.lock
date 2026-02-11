@@ -662,15 +662,6 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.10.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
@@ -746,7 +737,7 @@ name = "libeq_wld"
 version = "0.3.0"
 dependencies = [
  "encoding_rs",
- "itertools 0.10.5",
+ "itertools",
  "nom 8.0.0",
  "num-derive",
  "num-traits",
@@ -1168,7 +1159,7 @@ dependencies = [
  "compact_str",
  "hashbrown 0.16.1",
  "indoc",
- "itertools 0.14.0",
+ "itertools",
  "kasuari",
  "lru",
  "strum",
@@ -1220,7 +1211,7 @@ dependencies = [
  "hashbrown 0.16.1",
  "indoc",
  "instability",
- "itertools 0.14.0",
+ "itertools",
  "line-clipping",
  "ratatui-core",
  "strum",
@@ -1689,7 +1680,7 @@ version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16b380a1238663e5f8a691f9039c73e1cdae598a30e9855f541d29b08b53e9a5"
 dependencies = [
- "itertools 0.14.0",
+ "itertools",
  "unicode-segmentation",
  "unicode-width 0.2.2",
 ]
