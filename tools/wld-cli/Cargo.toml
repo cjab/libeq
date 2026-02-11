@@ -13,7 +13,7 @@ test = false
 libeq_wld = { path = "../../crates/libeq_wld", version = "0.3.0", features = ["serde"] }
 libeq_archive = { path = "../../crates/libeq_archive", version = "0.4.0" }
 clap = { version = "4.5", features = ["derive"] }
-colorful = "0.2.1"
+colorful = "0.3"
 ratatui = "0.30.0"
 crossterm = "0.29.0"
 hexyl = "0.8.0"
