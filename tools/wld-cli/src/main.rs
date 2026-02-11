@@ -4,11 +4,11 @@ mod handlers;
 mod ui;
 
 use std::fs::{self, File};
-use std::io::{Read, prelude::*};
+use std::io::{prelude::*, Read};
 use std::path::Path;
 use std::{error::Error, io};
 
-use clap::{Command, ValueEnum, arg, value_parser};
+use clap::{arg, value_parser, Command, ValueEnum};
 use colorful::Color;
 use colorful::Colorful;
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
@@ -16,7 +16,7 @@ use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use hexyl::PrinterBuilder;
 use ratatui::crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
-use ratatui::{Terminal, backend::CrosstermBackend};
+use ratatui::{backend::CrosstermBackend, Terminal};
 
 use crate::{app::App, event::Events};
 use libeq_wld::parser::{self, WldDoc, WldDocError};
@@ -221,13 +221,14 @@ fn extract(wld_filename: &str, destination: &str, format: &Format) {
             serde_json::to_writer_pretty(out, &wld_doc).expect("Could not serialize to json")
         }
         Format::Ron => {
-            let out = fs::File::create(destination).expect("Could not create destination file");
-            ron::ser::to_writer_pretty(
-                out,
+            let mut out = fs::File::create(destination).expect("Could not create destination file");
+            let ron_string = ron::ser::to_string_pretty(
                 &wld_doc,
                 ron::ser::PrettyConfig::new().enumerate_arrays(true),
             )
-            .expect("Could not serialize to ron")
+            .expect("Could not serialize to ron");
+            out.write_all(ron_string.as_bytes())
+                .expect("Could not write to destination file")
         }
     }
 }
