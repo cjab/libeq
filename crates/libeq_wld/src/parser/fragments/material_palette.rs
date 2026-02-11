@@ -49,15 +49,15 @@ impl FragmentParser for MaterialPalette {
 }
 
 impl Fragment for MaterialPalette {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.size1.to_le_bytes()[..],
             &self
                 .fragments
                 .iter()
-                .flat_map(|f| f.into_bytes())
+                .flat_map(|f| f.to_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
@@ -98,6 +98,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0130-0x31.frag")[..];
         let frag = MaterialPalette::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

@@ -79,9 +79,9 @@ impl FragmentParser for DmRGBTrackDef {
 }
 
 impl Fragment for DmRGBTrackDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.data1.to_le_bytes()[..],
             &self.vertex_color_count.to_le_bytes()[..],
             &self.data2.to_le_bytes()[..],
@@ -133,6 +133,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/objects/0000-0x32.frag")[..];
         let frag = DmRGBTrackDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

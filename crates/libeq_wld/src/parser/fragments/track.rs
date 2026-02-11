@@ -53,11 +53,11 @@ impl FragmentParser for Track {
 }
 
 impl Fragment for Track {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.reference.into_bytes()[..],
-            &self.flags.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.reference.to_bytes()[..],
+            &self.flags.to_bytes()[..],
             &self.sleep.map_or(vec![], |s| s.to_le_bytes().to_vec())[..],
         ]
         .concat()
@@ -90,7 +90,7 @@ impl TrackInstanceFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -129,6 +129,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
         let frag = Track::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

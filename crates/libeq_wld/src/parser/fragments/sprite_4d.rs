@@ -44,10 +44,10 @@ impl FragmentParser for Sprite4D {
 }
 
 impl Fragment for Sprite4D {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.reference.to_bytes()[..],
             &self.params1.to_le_bytes()[..],
         ]
         .concat()
@@ -88,6 +88,6 @@ mod tests {
             &include_bytes!("../../../fixtures/fragments/wldcom/4dspritedef-0001-0x0b.frag")[..];
         let frag = Sprite4D::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

@@ -325,7 +325,7 @@ impl FragmentParser for DmSpriteDef {
 }
 
 impl Fragment for DmSpriteDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         let vertices = self
             .vertices
             .iter()
@@ -347,12 +347,12 @@ impl Fragment for DmSpriteDef {
         let faces = self
             .faces
             .iter()
-            .flat_map(|p| p.into_bytes())
+            .flat_map(|p| p.to_bytes())
             .collect::<Vec<_>>();
         let meshops = self
             .meshops
             .iter()
-            .flat_map(|d| d.into_bytes())
+            .flat_map(|d| d.to_bytes())
             .collect::<Vec<_>>();
 
         let data8 = self.data8.as_ref().map_or(vec![], |i| {
@@ -378,7 +378,7 @@ impl Fragment for DmSpriteDef {
         });
 
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.vertex_count.to_le_bytes()[..],
             &self.texture_coordinate_count.to_le_bytes()[..],
@@ -388,7 +388,7 @@ impl Fragment for DmSpriteDef {
             &self.meshop_count.to_le_bytes()[..],
             &self.fragment1.to_le_bytes()[..],
             &self.skin_assignment_group_count.to_le_bytes()[..],
-            &self.material_list_ref.into_bytes()[..],
+            &self.material_list_ref.to_bytes()[..],
             &self.fragment3.to_le_bytes()[..],
             &self.center.0.to_le_bytes()[..],
             &self.center.1.to_le_bytes()[..],
@@ -465,7 +465,7 @@ pub struct DmSpriteDefFaceEntry {
 }
 
 impl DmSpriteDefFaceEntry {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.flags.to_le_bytes()[..],
             &self.data.0.to_le_bytes()[..],
@@ -524,7 +524,7 @@ pub struct DmSpriteDefMeshopEntry {
 }
 
 impl DmSpriteDefMeshopEntry {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.type_field.to_le_bytes()[..],
             &self
@@ -662,6 +662,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
         let frag = DmSpriteDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

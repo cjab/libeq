@@ -41,9 +41,9 @@ impl FragmentParser for BlitSprite {
 }
 
 impl Fragment for BlitSprite {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.blit_sprite_reference.to_le_bytes()[..],
             &self.unknown.to_le_bytes()[..],
         ]

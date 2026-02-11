@@ -83,8 +83,7 @@ fn extract(source: PathBuf, destination: PathBuf) -> Result<(), CliError> {
     for (filename, data) in archive.iter() {
         let path = destination_path.join(filename);
         let mut file = fs::File::create(&path).map_err(CliError::Destination)?;
-        file.write_all(data)
-            .map_err(CliError::Destination)?;
+        file.write_all(data).map_err(CliError::Destination)?;
     }
 
     Ok(())
@@ -98,8 +97,7 @@ fn create(source: PathBuf, destination: PathBuf) -> Result<(), CliError> {
     }
 
     let source_dir = fs::read_dir(&source).map_err(CliError::Source)?;
-    let mut archive_file =
-        fs::File::create(&destination).map_err(CliError::Destination)?;
+    let mut archive_file = fs::File::create(&destination).map_err(CliError::Destination)?;
     let mut archive = EqArchive::new();
     for entry in source_dir {
         let entry = entry.map_err(CliError::Source)?;
@@ -107,8 +105,7 @@ fn create(source: PathBuf, destination: PathBuf) -> Result<(), CliError> {
         let filename = entry.file_name().to_str().unwrap().to_string();
         let mut file = fs::File::open(&path).map_err(CliError::Source)?;
         let mut data = Vec::new();
-        file.read_to_end(&mut data)
-            .map_err(CliError::Source)?;
+        file.read_to_end(&mut data).map_err(CliError::Source)?;
         archive.push(&filename, &data);
     }
     let bytes = archive.to_bytes().map_err(CliError::Archive)?;

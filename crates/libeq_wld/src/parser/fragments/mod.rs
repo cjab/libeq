@@ -129,16 +129,16 @@ impl<T> FragmentRef<T> {
         Ok((remaining, FragmentRef::new(frag_ref_idx)))
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         match self {
-            Self::Name(string_ref, _) => string_ref.into_bytes(),
+            Self::Name(string_ref, _) => string_ref.to_bytes(),
             Self::Index(idx, _) => idx.to_le_bytes().to_vec(),
         }
     }
 }
 
 pub trait Fragment {
-    fn into_bytes(&self) -> Vec<u8>;
+    fn to_bytes(&self) -> Vec<u8>;
     fn as_any(&self) -> &dyn Any;
     fn name_ref(&self) -> &StringReference;
     fn type_id(&self) -> u32;

@@ -47,14 +47,14 @@ impl FragmentParser for WorldTree {
 }
 
 impl Fragment for WorldTree {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.world_node_count.to_le_bytes()[..],
             &self
                 .world_nodes
                 .iter()
-                .flat_map(|e| e.into_bytes())
+                .flat_map(|e| e.to_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
@@ -114,15 +114,15 @@ impl WorldNode {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.normal.0.to_le_bytes()[..],
             &self.normal.1.to_le_bytes()[..],
             &self.normal.2.to_le_bytes()[..],
             &self.split_distance.to_le_bytes()[..],
-            &self.region.into_bytes()[..],
-            &self.front_tree.into_bytes()[..],
-            &self.back_tree.into_bytes()[..],
+            &self.region.to_bytes()[..],
+            &self.front_tree.to_bytes()[..],
+            &self.back_tree.to_bytes()[..],
         ]
         .concat()
     }
@@ -152,6 +152,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
         let frag = WorldTree::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

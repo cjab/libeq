@@ -44,10 +44,10 @@ impl FragmentParser for DmTrack {
 }
 
 impl Fragment for DmTrack {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.reference.to_bytes()[..],
             &self.flags.to_le_bytes()[..],
         ]
         .concat()
@@ -85,6 +85,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0632-0x2f.frag")[..];
         let frag = DmTrack::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

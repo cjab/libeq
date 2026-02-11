@@ -85,10 +85,10 @@ impl FragmentParser for SimpleSpriteDef {
 }
 
 impl Fragment for SimpleSpriteDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.flags.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.flags.to_bytes()[..],
             &self.frame_count.to_le_bytes()[..],
             &self
                 .current_frame
@@ -97,7 +97,7 @@ impl Fragment for SimpleSpriteDef {
             &self
                 .frame_references
                 .iter()
-                .flat_map(|f| f.into_bytes())
+                .flat_map(|f| f.to_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
@@ -131,7 +131,7 @@ impl SimpleSpriteDefFlags {
         Ok((remaining, SimpleSpriteDefFlags(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -181,6 +181,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0002-0x04.frag")[..];
         let frag = SimpleSpriteDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

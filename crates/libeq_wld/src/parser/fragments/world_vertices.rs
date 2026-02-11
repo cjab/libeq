@@ -45,7 +45,7 @@ impl FragmentParser for WorldVertices {
 }
 
 impl Fragment for WorldVertices {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.num_vertices.to_le_bytes()[..],
             &self
@@ -93,6 +93,6 @@ mod tests {
             &include_bytes!("../../../fixtures/fragments/tanarus-thecity/0001-0x2c.frag")[..];
         let frag = WorldVertices::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

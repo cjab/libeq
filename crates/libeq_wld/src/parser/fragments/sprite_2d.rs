@@ -44,10 +44,10 @@ impl FragmentParser for Sprite2D {
 }
 
 impl Fragment for Sprite2D {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.reference.to_bytes()[..],
             &self.flags.to_le_bytes()[..],
         ]
         .concat()
@@ -85,6 +85,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/2224-0x07.frag")[..];
         let frag = Sprite2D::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

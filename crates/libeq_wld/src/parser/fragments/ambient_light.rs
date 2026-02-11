@@ -59,10 +59,10 @@ impl FragmentParser for AmbientLight {
 }
 
 impl Fragment for AmbientLight {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.reference.to_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.region_count.to_le_bytes()[..],
             &self
@@ -108,6 +108,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4637-0x2a.frag")[..];
         let frag = AmbientLight::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

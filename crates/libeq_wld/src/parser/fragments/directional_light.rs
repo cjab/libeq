@@ -63,11 +63,11 @@ impl FragmentParser for DirectionalLight {
 }
 
 impl Fragment for DirectionalLight {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.light_reference.into_bytes()[..],
-            &self.flags.into_bytes(),
+            &self.name_reference.to_bytes()[..],
+            &self.light_reference.to_bytes()[..],
+            &self.flags.to_bytes(),
             &self.normal.0.to_le_bytes()[..],
             &self.normal.1.to_le_bytes()[..],
             &self.normal.2.to_le_bytes()[..],
@@ -106,7 +106,7 @@ impl DirectionalLightFlags {
         Ok((i, Self(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -162,6 +162,6 @@ mod tests {
                 [..];
         let frag = DirectionalLight::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

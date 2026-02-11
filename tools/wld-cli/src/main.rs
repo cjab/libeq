@@ -234,8 +234,8 @@ fn extract(wld_filename: &str, destination: &str, format: &Format) {
 }
 
 fn extract_raw(wld_filename: &str, destination: &str) {
-    fs::create_dir_all(destination).unwrap_or_else(|_| panic!("Could not create destination directory: {}",
-        destination));
+    fs::create_dir_all(destination)
+        .unwrap_or_else(|_| panic!("Could not create destination directory: {}", destination));
 
     let wld_data = read_wld_file(wld_filename).expect("Could not read wld file");
     let (_, raw_fragments) =
@@ -259,13 +259,15 @@ fn extract_raw(wld_filename: &str, destination: &str) {
     for (i, fragment_header) in raw_fragments.iter().enumerate() {
         let filename = format!("{:04}-{:#04x}.frag", i, fragment_header.fragment_type);
         let dest = Path::new(destination).join(filename);
-        let mut file = File::create(&dest).unwrap_or_else(|_| panic!("Failed to create file: {:?}", dest));
+        let mut file =
+            File::create(&dest).unwrap_or_else(|_| panic!("Failed to create file: {:?}", dest));
         file.write_all(fragment_header.field_data).unwrap();
     }
 }
 
 fn create(source: &str, wld_filename: &str, format: &Format) {
-    let mut reader = File::open(source).unwrap_or_else(|_| panic!("Could not open source file: {}", source));
+    let mut reader =
+        File::open(source).unwrap_or_else(|_| panic!("Could not open source file: {}", source));
     let wld_doc: WldDoc = match format {
         Format::Raw => {
             let mut buff = vec![];
@@ -285,7 +287,7 @@ fn create(source: &str, wld_filename: &str, format: &Format) {
         Format::Ron => ron::de::from_reader(reader).expect("Could not deserialize from ron"),
     };
     let mut out = File::create(wld_filename).expect("Could not create wld file");
-    out.write_all(&wld_doc.into_bytes())
+    out.write_all(&wld_doc.to_bytes())
         .expect("Failed to write to wld file");
 }
 

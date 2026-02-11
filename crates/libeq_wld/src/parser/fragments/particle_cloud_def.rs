@@ -147,12 +147,12 @@ impl FragmentParser for ParticleCloudDef {
 }
 
 impl Fragment for ParticleCloudDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.unknown_1.to_le_bytes()[..],
             &self.unknown_2.to_le_bytes()[..],
-            &self.particle_movement.into_bytes()[..],
+            &self.particle_movement.to_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.simultaneous_particles.to_le_bytes()[..],
             &self.unknown_6.to_le_bytes()[..],
@@ -173,7 +173,7 @@ impl Fragment for ParticleCloudDef {
             &self.color.1.to_le_bytes()[..],
             &self.color.2.to_le_bytes()[..],
             &self.color.3.to_le_bytes()[..],
-            &self.blitsprite.into_bytes()[..],
+            &self.blitsprite.to_bytes()[..],
         ]
         .concat()
     }
@@ -207,7 +207,7 @@ impl ParticleMovement {
         Ok((remaining, FromPrimitive::from_u32(raw).unwrap()))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         (*self as u32).to_le_bytes().to_vec()
     }
 }
@@ -250,6 +250,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0051-0x34.frag")[..];
         let frag = ParticleCloudDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

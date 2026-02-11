@@ -40,7 +40,7 @@ impl EncodedFilename {
         ))
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         [
             &self.name_length.to_le_bytes()[..],
             &encode_string(&format!("{}{}", &self.file_name, "\0"))[..],

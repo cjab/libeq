@@ -69,7 +69,7 @@ impl Location {
         ))
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         [
             &self.x.to_le_bytes()[..],
             &self.y.to_le_bytes()[..],

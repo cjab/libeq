@@ -99,9 +99,9 @@ impl RenderInfo {
         ))
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.flags.into_bytes()[..],
+            &self.flags.to_bytes()[..],
             &self.pen.map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
             &self.brightness.map_or(vec![], |b| b.to_le_bytes().to_vec())[..],
             &self
@@ -110,8 +110,8 @@ impl RenderInfo {
             &self
                 .simple_sprite_reference
                 .map_or(vec![], |p| p.to_le_bytes().to_vec())[..],
-            &self.uv_info.as_ref().map_or(vec![], |u| u.into_bytes())[..],
-            &self.uv_map.as_ref().map_or(vec![], |u| u.into_bytes())[..],
+            &self.uv_info.as_ref().map_or(vec![], |u| u.to_bytes())[..],
+            &self.uv_map.as_ref().map_or(vec![], |u| u.to_bytes())[..],
         ]
         .concat()
     }
@@ -139,7 +139,7 @@ impl RenderInfoFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -196,7 +196,7 @@ impl UvInfo {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.uv_origin.0.to_le_bytes()[..],
             &self.uv_origin.1.to_le_bytes()[..],
@@ -233,7 +233,7 @@ impl UvMap {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.entry_count.to_le_bytes()[..],
             &self
@@ -303,7 +303,7 @@ impl RenderMethod {
         }
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         match self {
             Self::UserDefined { .. } => self.as_u32().to_le_bytes().to_vec(),
             Self::Standard { .. } => self.as_u32().to_le_bytes().to_vec(),

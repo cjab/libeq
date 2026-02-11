@@ -60,15 +60,15 @@ impl FragmentParser for BmInfo {
 }
 
 impl Fragment for BmInfo {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         let entry_count: u32 = (self.entries.len() - 1).try_into().unwrap();
         let bytes = [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &entry_count.to_le_bytes()[..],
             &self
                 .entries
                 .iter()
-                .flat_map(|e| e.into_bytes())
+                .flat_map(|e| e.to_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat();
@@ -130,7 +130,7 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0029-0x03.frag")[..];
         let frag = BmInfo::parse(data).unwrap().1;
 
-        assert_eq!([frag.into_bytes(), vec![0]].concat(), data);
+        assert_eq!([frag.to_bytes(), vec![0]].concat(), data);
     }
 
     #[test]
@@ -138,6 +138,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/twilight/0000-0x03.frag")[..];
         let frag = BmInfo::parse(data).unwrap().1;
 
-        assert_eq!([frag.into_bytes(), vec![0]].concat(), data);
+        assert_eq!([frag.to_bytes(), vec![0]].concat(), data);
     }
 }
