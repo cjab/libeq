@@ -20,7 +20,7 @@ impl StringReference {
         Ok((remaining, Self::new(idx)))
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 }
@@ -67,7 +67,7 @@ impl StringHash {
         ))
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         let decoded_string: String = self.0.values().cloned().map(|s| s + "\0").collect();
         let mut encoded_string = encode_string(&decoded_string);
         let size = encoded_string.len();
@@ -104,7 +104,7 @@ mod tests {
     fn it_serializes() {
         let data = &include_bytes!("../../fixtures/gfaydark/strings.bin")[..];
         let string_hash = StringHash::new(data);
-        let serialized = string_hash.into_bytes();
+        let serialized = string_hash.to_bytes();
         assert_eq!(data, serialized);
     }
 }

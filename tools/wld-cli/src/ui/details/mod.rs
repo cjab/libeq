@@ -133,7 +133,7 @@ pub fn draw_raw_fragment_data(
     let mut hex = vec![];
     let mut hex_printer = PrinterBuilder::new(&mut hex).build();
     hex_printer
-        .print_all(&fragment.into_bytes()[..])
+        .print_all(&fragment.to_bytes()[..])
         .expect("Error printing hex");
 
     let lines: Vec<u8> = hex

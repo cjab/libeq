@@ -59,9 +59,9 @@ impl FragmentParser for DmTrackDef {
 }
 
 impl Fragment for DmTrackDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.flags.to_be_bytes()[..],
             &self.vertex_count.to_le_bytes()[..],
             &self.frame_count.to_le_bytes()[..],

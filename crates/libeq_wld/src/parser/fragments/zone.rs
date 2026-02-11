@@ -83,13 +83,13 @@ impl FragmentParser for Zone {
 }
 
 impl Fragment for Zone {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         let user_data_size = self.user_data_size as usize;
         let padding = (4 - user_data_size % 4) % 4;
         let mut user_data = encode_string(&format!("{}{}", &self.user_data, "\0"));
         user_data.resize(user_data_size + padding, 0);
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.region_count.to_le_bytes()[..],
             &self
@@ -153,13 +153,13 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
         let frag = Zone::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
     #[test]
     fn it_serializes_user_data() {
         let data = &include_bytes!("../../../fixtures/fragments/qeynos/10322-0x29.frag")[..];
         let frag = Zone::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

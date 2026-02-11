@@ -99,17 +99,19 @@ impl FragmentParser for TrackDef {
 }
 
 impl Fragment for TrackDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.frame_count.to_le_bytes()[..],
-            &self.frame_transforms.as_ref().map_or(vec![], |ft| {
-                ft.iter().flat_map(|f| f.into_bytes()).collect()
-            })[..],
-            &self.legacy_frame_transforms.as_ref().map_or(vec![], |ft| {
-                ft.iter().flat_map(|f| f.into_bytes()).collect()
-            })[..],
+            &self
+                .frame_transforms
+                .as_ref()
+                .map_or(vec![], |ft| ft.iter().flat_map(|f| f.to_bytes()).collect())[..],
+            &self
+                .legacy_frame_transforms
+                .as_ref()
+                .map_or(vec![], |ft| ft.iter().flat_map(|f| f.to_bytes()).collect())[..],
         ]
         .concat()
     }
@@ -186,7 +188,7 @@ impl FrameTransform {
             },
         ))
     }
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.rotate_denominator.to_le_bytes()[..],
             &self.rotate_x_numerator.to_le_bytes()[..],
@@ -257,7 +259,7 @@ impl LegacyFrameTransform {
             },
         ))
     }
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.shift_denominator.to_le_bytes()[..],
             &self.shift_x_numerator.to_le_bytes()[..],
@@ -305,7 +307,7 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
         let frag = TrackDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 
     #[test]
@@ -337,7 +339,7 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip_beta/0652-0x12.frag")[..];
         let frag = TrackDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 
     #[test]
@@ -369,6 +371,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/rtk/0002-0x12.frag")[..];
         let frag = TrackDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

@@ -95,9 +95,9 @@ impl FragmentParser for DmTrackDef2 {
 }
 
 impl Fragment for DmTrackDef2 {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.flags.to_le_bytes()[..],
             &self.vertex_count.to_le_bytes()[..],
             &self.frame_count.to_le_bytes()[..],
@@ -158,6 +158,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0631-0x37.frag")[..];
         let frag = DmTrackDef2::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

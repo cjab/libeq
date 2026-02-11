@@ -168,10 +168,10 @@ impl FragmentParser for Sprite2DDef {
 }
 
 impl Fragment for Sprite2DDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.flags.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.flags.to_bytes()[..],
             &self.num_frames.to_le_bytes()[..],
             &self.num_pitches.to_le_bytes()[..],
             &self.sprite_size.0.to_le_bytes()[..],
@@ -193,10 +193,10 @@ impl Fragment for Sprite2DDef {
             &self
                 .pitches
                 .iter()
-                .flat_map(|p| p.into_bytes())
+                .flat_map(|p| p.to_bytes())
                 .collect::<Vec<_>>()[..],
-            &self.render_method.into_bytes()[..],
-            &self.render_info.into_bytes()[..],
+            &self.render_method.to_bytes()[..],
+            &self.render_info.to_bytes()[..],
         ]
         .concat()
     }
@@ -231,7 +231,7 @@ impl SpriteFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -304,14 +304,14 @@ impl SpritePitch {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.pitch_cap.to_le_bytes()[..],
             &self.num_headings.to_le_bytes()[..],
             &self
                 .headings
                 .iter()
-                .flat_map(|h| h.into_bytes())
+                .flat_map(|h| h.to_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
@@ -348,7 +348,7 @@ impl SpriteHeading {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.heading_cap.to_le_bytes()[..],
             &self
@@ -418,6 +418,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
         let frag = Sprite2DDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

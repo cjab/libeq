@@ -135,32 +135,32 @@ impl FragmentParser for Actor {
 }
 
 impl Fragment for Actor {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         let user_data_size = self.user_data_size as usize;
         let padding = (4 - user_data_size % 4) % 4;
         let mut user_data = encode_string(&format!("{}{}", &self.user_data, "\0"));
         user_data.resize(user_data_size + padding, 0);
 
         [
-            &self.name_reference.into_bytes()[..],
-            &self.actor_def_reference.into_bytes()[..],
-            &self.flags.into_bytes()[..],
-            &self.sphere_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.actor_def_reference.to_bytes()[..],
+            &self.flags.to_bytes()[..],
+            &self.sphere_reference.to_bytes()[..],
             &self
                 .current_action
                 .map_or(vec![], |a| a.to_le_bytes().to_vec())[..],
-            &self.location.as_ref().map_or(vec![], |l| l.into_bytes())[..],
+            &self.location.as_ref().map_or(vec![], |l| l.to_bytes())[..],
             &self
                 .bounding_radius
                 .map_or(vec![], |b| b.to_le_bytes().to_vec())[..],
             &self
                 .scale_factor
                 .map_or(vec![], |s| s.to_le_bytes().to_vec())[..],
-            &self.sound_name_reference.map_or(vec![], |s| s.into_bytes())[..],
+            &self.sound_name_reference.map_or(vec![], |s| s.to_bytes())[..],
             &self
                 .vertex_color_reference
                 .as_ref()
-                .map_or(vec![], |m| m.into_bytes())[..],
+                .map_or(vec![], |m| m.to_bytes())[..],
             &self.user_data_size.to_le_bytes()[..],
             &user_data[..],
         ]
@@ -199,7 +199,7 @@ impl ActorInstFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -320,7 +320,7 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4641-0x15.frag")[..];
         let frag = Actor::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 
     #[test]
@@ -328,7 +328,7 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/objects/0002-0x15.frag")[..];
         let frag = Actor::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 
     #[test]
@@ -338,6 +338,6 @@ mod tests {
                 [..];
         let frag = Actor::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

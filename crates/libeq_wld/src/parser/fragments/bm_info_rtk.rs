@@ -52,15 +52,15 @@ impl FragmentParser for BmInfoRtk {
 }
 
 impl Fragment for BmInfoRtk {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.rtk.to_le_bytes()[..],
             &self.size1.to_le_bytes()[..],
             &self
                 .entries
                 .iter()
-                .flat_map(|e| e.into_bytes())
+                .flat_map(|e| e.to_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
@@ -102,6 +102,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/rtk/0000-0x2c.frag")[..];
         let frag = BmInfoRtk::parse(data).unwrap().1;
 
-        assert_eq!([frag.into_bytes(), vec![0]].concat(), data);
+        assert_eq!([frag.to_bytes(), vec![0]].concat(), data);
     }
 }

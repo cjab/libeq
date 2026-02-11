@@ -87,15 +87,15 @@ impl FragmentParser for MaterialDef {
 }
 
 impl Fragment for MaterialDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.flags.into_bytes()[..],
-            &self.render_method.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.flags.to_bytes()[..],
+            &self.render_method.to_bytes()[..],
             &self.rgb_pen.to_le_bytes()[..],
             &self.brightness.to_le_bytes()[..],
             &self.scaled_ambient.to_le_bytes()[..],
-            &self.reference.into_bytes()[..],
+            &self.reference.to_bytes()[..],
             &self
                 .pair
                 .map_or(vec![], |p| [p.0.to_le_bytes(), p.1.to_le_bytes()].concat())[..],
@@ -129,7 +129,7 @@ impl MaterialFlags {
         Ok((i, Self(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -189,7 +189,7 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0004-0x30.frag")[..];
         let frag = MaterialDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 
     #[test]
@@ -197,6 +197,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/pofire_chr/4352-0x30.frag")[..];
         let frag = MaterialDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

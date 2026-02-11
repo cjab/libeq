@@ -74,12 +74,16 @@ impl WldDoc {
 
         let mut fragment_headers = BTreeMap::new();
         let mut remaining = i;
-        for idx in 0..header.fragment_count  {
+        for idx in 0..header.fragment_count {
             let offset = input.len() - remaining.len();
             println!("Parsing fragment header {} at offset {:#10x}", idx, offset);
 
-            let (x, fragment_header) = FragmentHeader::parse(remaining).unwrap_or_else(|_| panic!("Failed to parse fragment header {} at offset {:#10x}",
-                idx, offset));
+            let (x, fragment_header) = FragmentHeader::parse(remaining).unwrap_or_else(|_| {
+                panic!(
+                    "Failed to parse fragment header {} at offset {:#10x}",
+                    idx, offset
+                )
+            });
             fragment_headers.insert(offset, fragment_header);
             remaining = x;
         }
@@ -161,21 +165,21 @@ impl WldDoc {
     }
 
     pub fn header_bytes(&self) -> Vec<u8> {
-        self.header.into_bytes()
+        self.header.to_bytes()
     }
 
     pub fn strings_bytes(&self) -> Vec<u8> {
-        self.strings.into_bytes()
+        self.strings.to_bytes()
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         [
-            self.header.into_bytes(),
-            self.strings.into_bytes(),
+            self.header.to_bytes(),
+            self.strings.to_bytes(),
             self.fragments
                 .iter()
                 .flat_map(|f| {
-                    let mut field_data = f.into_bytes();
+                    let mut field_data = f.to_bytes();
                     let size = field_data.len();
                     // Field data must be padded so that it aligns on 4 bytes
                     if (size % 4) > 0 {
@@ -186,7 +190,7 @@ impl WldDoc {
                         fragment_type: f.type_id(),
                         field_data: &field_data[..],
                     }
-                    .into_bytes()
+                    .to_bytes()
                 })
                 .collect(),
             // What is this?
@@ -248,7 +252,7 @@ impl WldHeader {
         ))
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         [
             &self.magic.to_le_bytes()[..],
             &self.version.to_le_bytes()[..],
@@ -408,9 +412,9 @@ impl<'a> FragmentHeader<'a> {
             ActorDef::TYPE_ID => {
                 Some(ActorDef::parse(self.field_data).map(|f| (f.0, FragmentType::ActorDef(f.1))))
             }
-            WorldTree::TYPE_ID => Some(
-                WorldTree::parse(self.field_data).map(|f| (f.0, FragmentType::WorldTree(f.1))),
-            ),
+            WorldTree::TYPE_ID => {
+                Some(WorldTree::parse(self.field_data).map(|f| (f.0, FragmentType::WorldTree(f.1))))
+            }
             Region::TYPE_ID => {
                 Some(Region::parse(self.field_data).map(|f| (f.0, FragmentType::Region(f.1))))
             }
@@ -500,7 +504,7 @@ impl<'a> FragmentHeader<'a> {
         }
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         [
             &self.size.to_le_bytes()[..],
             &self.fragment_type.to_le_bytes()[..],
@@ -551,19 +555,19 @@ mod tests {
         let data = &include_bytes!("../../fixtures/gfaydark.wld")[..];
         let wld_doc = WldDoc::parse(data).unwrap();
 
-        let serialized_data = wld_doc.into_bytes();
+        let serialized_data = wld_doc.to_bytes();
         let deserialized_doc = WldDoc::parse(&serialized_data).unwrap();
 
         assert_eq!(wld_doc.header, deserialized_doc.header);
         assert_eq!(wld_doc.strings, deserialized_doc.strings);
         assert_eq!(wld_doc.fragments.len(), deserialized_doc.fragments.len());
         assert_eq!(
-            wld_doc.fragments.first().unwrap().into_bytes(),
-            deserialized_doc.fragments.first().unwrap().into_bytes()
+            wld_doc.fragments.first().unwrap().to_bytes(),
+            deserialized_doc.fragments.first().unwrap().to_bytes()
         );
         assert_eq!(
-            wld_doc.fragments.last().unwrap().into_bytes(),
-            deserialized_doc.fragments.last().unwrap().into_bytes()
+            wld_doc.fragments.last().unwrap().to_bytes(),
+            deserialized_doc.fragments.last().unwrap().to_bytes()
         );
     }
 

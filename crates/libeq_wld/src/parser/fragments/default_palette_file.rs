@@ -37,8 +37,8 @@ impl FragmentParser for DefaultPaletteFile {
 }
 
 impl Fragment for DefaultPaletteFile {
-    fn into_bytes(&self) -> Vec<u8> {
-        let entry = &self.entry.into_bytes()[..];
+    fn to_bytes(&self) -> Vec<u8> {
+        let entry = &self.entry.to_bytes()[..];
         let padding_size = (4 - entry.len() % 4) % 4;
         let padding: Vec<u8> = vec![0; padding_size];
 
@@ -84,6 +84,6 @@ mod tests {
             &include_bytes!("../../../fixtures/fragments/tanarus-thecity/0000-0x01.frag")[..];
         let frag = DefaultPaletteFile::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

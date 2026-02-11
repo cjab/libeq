@@ -311,22 +311,22 @@ impl FragmentParser for DmSpriteDef2 {
 }
 
 impl Fragment for DmSpriteDef2 {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         let meshops = &self
             .meshops
             .iter()
-            .flat_map(|d| d.into_bytes())
+            .flat_map(|d| d.to_bytes())
             .collect::<Vec<_>>()[..];
         let padding_size = (4 - meshops.len() % 4) % 4;
         let padding: Vec<u8> = vec![0; padding_size];
 
         [
-            &self.name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
             &self.flags.to_le_bytes()[..],
-            &self.material_list_ref.into_bytes()[..],
-            &self.animation_ref.into_bytes()[..],
-            &self.fragment3.into_bytes()[..],
-            &self.fragment4.into_bytes()[..],
+            &self.material_list_ref.to_bytes()[..],
+            &self.animation_ref.to_bytes()[..],
+            &self.fragment3.to_bytes()[..],
+            &self.fragment4.to_bytes()[..],
             &self.center.0.to_le_bytes()[..],
             &self.center.1.to_le_bytes()[..],
             &self.center.2.to_le_bytes()[..],
@@ -373,7 +373,7 @@ impl Fragment for DmSpriteDef2 {
             &self
                 .faces
                 .iter()
-                .flat_map(|p| p.into_bytes())
+                .flat_map(|p| p.to_bytes())
                 .collect::<Vec<_>>()[..],
             &self
                 .skin_assignment_groups
@@ -435,7 +435,7 @@ impl DmSpriteDef2FaceEntry {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.flags.to_le_bytes()[..],
             &self.vertex_indexes.0.to_le_bytes()[..],
@@ -510,7 +510,7 @@ impl DmSpriteDef2MeshOpEntry {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.index1.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
             &self.index2.map_or(vec![], |i| i.to_le_bytes().to_vec())[..],
@@ -599,7 +599,7 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
         let frag = DmSpriteDef2::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 
     #[test]
@@ -607,6 +607,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/global_chr/0177-0x36.frag")[..];
         let frag = DmSpriteDef2::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

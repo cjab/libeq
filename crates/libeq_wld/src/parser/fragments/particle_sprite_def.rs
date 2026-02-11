@@ -92,10 +92,10 @@ impl FragmentParser for ParticleSpriteDef {
 }
 
 impl Fragment for ParticleSpriteDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.flags.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.flags.to_bytes()[..],
             &self.num_vertices.to_le_bytes()[..],
             &self.unknown.to_le_bytes()[..],
             &self.center_offset.map_or(vec![], |c| {
@@ -109,8 +109,8 @@ impl Fragment for ParticleSpriteDef {
                 .iter()
                 .flat_map(|v| [v.0.to_le_bytes(), v.1.to_le_bytes(), v.2.to_le_bytes()].concat())
                 .collect::<Vec<_>>()[..],
-            &self.render_method.into_bytes()[..],
-            &self.render_info.into_bytes()[..],
+            &self.render_method.to_bytes()[..],
+            &self.render_info.to_bytes()[..],
             &self
                 .pen
                 .iter()
@@ -146,7 +146,7 @@ impl ParticleSpriteDefFlags {
         Ok((i, Self(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -212,6 +212,6 @@ mod tests {
         )[..];
         let frag = ParticleSpriteDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

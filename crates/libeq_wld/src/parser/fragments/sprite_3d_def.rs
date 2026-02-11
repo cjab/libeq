@@ -92,10 +92,10 @@ impl FragmentParser for Sprite3DDef {
 }
 
 impl Fragment for Sprite3DDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.flags.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.flags.to_bytes()[..],
             &self.vertex_count.to_le_bytes()[..],
             &self.bsp_node_count.to_le_bytes()[..],
             &self.sphere_list_reference.to_le_bytes()[..],
@@ -113,7 +113,7 @@ impl Fragment for Sprite3DDef {
             &self
                 .bsp_nodes
                 .iter()
-                .flat_map(|node| node.into_bytes())
+                .flat_map(|node| node.to_bytes())
                 .collect::<Vec<_>>()[..],
         ]
         .concat()
@@ -171,7 +171,7 @@ impl BspNodeEntry {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.vertex_count.to_le_bytes()[..],
             &self.front_tree.to_le_bytes()[..],
@@ -181,8 +181,8 @@ impl BspNodeEntry {
                 .iter()
                 .flat_map(|idx| idx.to_le_bytes())
                 .collect::<Vec<_>>()[..],
-            &self.render_method.into_bytes()[..],
-            &self.render_info.into_bytes()[..],
+            &self.render_method.to_bytes()[..],
+            &self.render_info.to_bytes()[..],
         ]
         .concat()
     }
@@ -201,7 +201,7 @@ impl ThreeDSpriteFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -267,6 +267,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1729-0x08.frag")[..];
         let frag = Sprite3DDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

@@ -44,10 +44,10 @@ impl FragmentParser for DmSprite {
 }
 
 impl Fragment for DmSprite {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.reference.to_bytes()[..],
             &self.params.to_le_bytes()[..],
         ]
         .concat()
@@ -85,6 +85,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gequip/0012-0x2d.frag")[..];
         let frag = DmSprite::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

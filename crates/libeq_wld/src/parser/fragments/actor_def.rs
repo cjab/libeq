@@ -103,22 +103,22 @@ impl FragmentParser for ActorDef {
 }
 
 impl Fragment for ActorDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.flags.into_bytes()[..],
-            &self.callback_name_reference.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.flags.to_bytes()[..],
+            &self.callback_name_reference.to_bytes()[..],
             &self.action_count.to_le_bytes()[..],
             &self.fragment_reference_count.to_le_bytes()[..],
             &self.bounds_reference.to_le_bytes()[..],
             &self
                 .current_action
                 .map_or(vec![], |c| c.to_le_bytes().to_vec())[..],
-            &self.location.as_ref().map_or(vec![], |l| l.into_bytes())[..],
+            &self.location.as_ref().map_or(vec![], |l| l.to_bytes())[..],
             &self
                 .actions
                 .iter()
-                .flat_map(|a| a.into_bytes())
+                .flat_map(|a| a.to_bytes())
                 .collect::<Vec<_>>()[..],
             &self
                 .fragment_references
@@ -158,7 +158,7 @@ impl ActorDefFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -208,7 +208,7 @@ impl Action {
         ))
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         [
             &self.levels_of_detail_count.to_le_bytes()[..],
             &self.unknown.to_le_bytes()[..],
@@ -256,6 +256,6 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4639-0x14.frag")[..];
         let frag = ActorDef::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }

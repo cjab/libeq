@@ -44,10 +44,10 @@ impl FragmentParser for BlitSpriteDef {
 }
 
 impl Fragment for BlitSpriteDef {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.name_reference.into_bytes()[..],
-            &self.flags.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.flags.to_bytes()[..],
             &self.blit_sprite_reference.to_le_bytes()[..],
             &self.unknown.to_le_bytes()[..],
         ]
@@ -83,7 +83,7 @@ impl BlitSpriteDefFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    pub fn into_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 

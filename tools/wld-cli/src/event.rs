@@ -52,29 +52,30 @@ impl Events {
             thread::spawn(move || {
                 loop {
                     if event::poll(config.tick_rate).is_ok()
-                        && let Ok(evt) = event::read() {
-                            match evt {
-                                event::Event::Key(key_event) => {
-                                    if key_event.kind != KeyEventKind::Release
-                                        && tx.send(Event::Input(evt)).is_err()
-                                    {
-                                        return;
-                                    }
+                        && let Ok(evt) = event::read()
+                    {
+                        match evt {
+                            event::Event::Key(key_event) => {
+                                if key_event.kind != KeyEventKind::Release
+                                    && tx.send(Event::Input(evt)).is_err()
+                                {
+                                    return;
+                                }
 
-                                    if !ignore_exit_key.load(Ordering::Relaxed)
-                                        && key_event.code == config.exit_key
-                                    {
-                                        return;
-                                    }
+                                if !ignore_exit_key.load(Ordering::Relaxed)
+                                    && key_event.code == config.exit_key
+                                {
+                                    return;
                                 }
-                                event::Event::Mouse(_) => {
-                                    if tx.send(Event::Input(evt)).is_err() {
-                                        return;
-                                    }
-                                }
-                                _ => {}
                             }
+                            event::Event::Mouse(_) => {
+                                if tx.send(Event::Input(evt)).is_err() {
+                                    return;
+                                }
+                            }
+                            _ => {}
                         }
+                    }
                 }
             })
         };

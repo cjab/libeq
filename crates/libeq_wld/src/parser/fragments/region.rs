@@ -215,11 +215,11 @@ impl FragmentParser for Region {
 }
 
 impl Fragment for Region {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         let bytes = [
-            &self.name_reference.into_bytes()[..],
-            &self.flags.into_bytes()[..],
-            &self.ambient_light.into_bytes()[..],
+            &self.name_reference.to_bytes()[..],
+            &self.flags.to_bytes()[..],
+            &self.ambient_light.to_bytes()[..],
             &self.num_region_vertex.to_le_bytes()[..],
             &self.num_proximal_regions.to_le_bytes()[..],
             &self.num_render_vertices.to_le_bytes()[..],
@@ -246,22 +246,22 @@ impl Fragment for Region {
             &self
                 .walls
                 .iter()
-                .flat_map(|w| w.into_bytes())
+                .flat_map(|w| w.to_bytes())
                 .collect::<Vec<_>>()[..],
             &self
                 .obstacles
                 .iter()
-                .flat_map(|o| o.into_bytes())
+                .flat_map(|o| o.to_bytes())
                 .collect::<Vec<_>>()[..],
             &self
                 .vis_nodes
                 .iter()
-                .flat_map(|v| v.into_bytes())
+                .flat_map(|v| v.to_bytes())
                 .collect::<Vec<_>>()[..],
             &self
                 .visible_lists
                 .iter()
-                .flat_map(|v| v.into_bytes())
+                .flat_map(|v| v.to_bytes())
                 .collect::<Vec<_>>()[..],
             &self.sphere.map_or(vec![], |s| {
                 [
@@ -283,7 +283,7 @@ impl Fragment for Region {
             &self
                 .mesh_reference
                 .as_ref()
-                .map_or(vec![], |m| m.into_bytes())[..],
+                .map_or(vec![], |m| m.to_bytes())[..],
         ]
         .concat();
 
@@ -326,7 +326,7 @@ impl RegionFlags {
         Ok((i, Self(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -428,23 +428,20 @@ impl Wall {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.flags.into_bytes()[..],
+            &self.flags.to_bytes()[..],
             &self.num_vertices.to_le_bytes()[..],
             &self
                 .vertex_list
                 .iter()
                 .flat_map(|v| v.to_le_bytes())
                 .collect::<Vec<_>>()[..],
-            &self
-                .render_method
-                .as_ref()
-                .map_or(vec![], |m| m.into_bytes())[..],
+            &self.render_method.as_ref().map_or(vec![], |m| m.to_bytes())[..],
             &self
                 .render_info
                 .as_ref()
-                .map_or(vec![], |i| i.into_bytes().to_vec())[..],
+                .map_or(vec![], |i| i.to_bytes().to_vec())[..],
             &self.normal_abcd.map_or(vec![], |m| {
                 [
                     m.0.to_le_bytes(),
@@ -472,7 +469,7 @@ impl WallFlags {
         Ok((i, Self(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -594,11 +591,11 @@ impl Obstacle {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
-            &self.flags.into_bytes()[..],
+            &self.flags.to_bytes()[..],
             &self.next_region.to_le_bytes()[..],
-            &self.obstacle_type.into_bytes()[..],
+            &self.obstacle_type.to_bytes()[..],
             &self
                 .num_vertices
                 .map_or(vec![], |n| n.to_le_bytes().to_vec())[..],
@@ -639,7 +636,7 @@ impl ObstacleFlags {
         Ok((i, Self(raw_flags)))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -671,7 +668,7 @@ enum ObstacleType {
 }
 
 impl ObstacleType {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         (*self as i32).to_le_bytes().to_vec()
     }
 }
@@ -710,7 +707,7 @@ impl VisNode {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.normal_abcd.0.to_le_bytes()[..],
             &self.normal_abcd.1.to_le_bytes()[..],
@@ -778,7 +775,7 @@ enum RangeEntry {
 }
 
 impl RangeEntry {
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         match self {
             Self::Byte(b) => vec![*b],
             Self::Word(u) => u.to_le_bytes().to_vec(),
@@ -801,25 +798,11 @@ impl VisibleList {
         let (i, ranges) = if byte_entries {
             count(le_u8, range_count as usize)
                 .parse(i)
-                .map(|(rem, e)| {
-                    (
-                        rem,
-                        e.into_iter()
-                            .map(RangeEntry::Byte)
-                            .collect::<Vec<_>>(),
-                    )
-                })?
+                .map(|(rem, e)| (rem, e.into_iter().map(RangeEntry::Byte).collect::<Vec<_>>()))?
         } else {
             count(le_u16, range_count as usize)
                 .parse(i)
-                .map(|(rem, e)| {
-                    (
-                        rem,
-                        e.into_iter()
-                            .map(RangeEntry::Word)
-                            .collect::<Vec<_>>(),
-                    )
-                })?
+                .map(|(rem, e)| (rem, e.into_iter().map(RangeEntry::Word).collect::<Vec<_>>()))?
         };
 
         Ok((
@@ -831,13 +814,13 @@ impl VisibleList {
         ))
     }
 
-    fn into_bytes(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
         [
             &self.range_count.to_le_bytes()[..],
             &self
                 .ranges
                 .iter()
-                .flat_map(|r| r.into_bytes())
+                .flat_map(|r| r.to_bytes())
                 .collect::<Vec<_>>(),
         ]
         .concat()
@@ -1014,7 +997,7 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1731-0x22.frag")[..];
         let frag = Region::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 
     #[test]
@@ -1022,7 +1005,7 @@ mod tests {
         let data = &include_bytes!("../../../fixtures/fragments/gfaydark/3260-0x22.frag")[..];
         let frag = Region::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 
     #[test]
@@ -1031,6 +1014,6 @@ mod tests {
             &include_bytes!("../../../fixtures/fragments/tanarus-thecity/8000-0x22.frag")[..];
         let frag = Region::parse(data).unwrap().1;
 
-        assert_eq!(&frag.into_bytes()[..], data);
+        assert_eq!(&frag.to_bytes()[..], data);
     }
 }
