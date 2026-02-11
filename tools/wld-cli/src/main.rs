@@ -4,11 +4,11 @@ mod handlers;
 mod ui;
 
 use std::fs::{self, File};
-use std::io::{prelude::*, Read};
+use std::io::{Read, prelude::*};
 use std::path::Path;
 use std::{error::Error, io};
 
-use clap::{arg, value_parser, Command, ValueEnum};
+use clap::{Command, ValueEnum, arg, value_parser};
 use colorful::Color;
 use colorful::Colorful;
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
@@ -16,7 +16,7 @@ use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use hexyl::PrinterBuilder;
 use ratatui::crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
-use ratatui::{backend::CrosstermBackend, Terminal};
+use ratatui::{Terminal, backend::CrosstermBackend};
 
 use crate::{app::App, event::Events};
 use libeq_wld::parser::{self, WldDoc, WldDocError};
