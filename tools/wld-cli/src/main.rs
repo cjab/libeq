@@ -4,11 +4,11 @@ mod handlers;
 mod ui;
 
 use std::fs::{self, File};
-use std::io::{prelude::*, Read};
+use std::io::{Read, prelude::*};
 use std::path::Path;
 use std::{error::Error, io};
 
-use clap::{arg, value_parser, Command, ValueEnum};
+use clap::{Command, ValueEnum, arg, value_parser};
 use colorful::Color;
 use colorful::Colorful;
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
@@ -16,7 +16,7 @@ use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use hexyl::Printer;
 use ratatui::crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
-use ratatui::{backend::CrosstermBackend, Terminal};
+use ratatui::{Terminal, backend::CrosstermBackend};
 
 use crate::{app::App, event::Events};
 use libeq_wld::parser::{self, WldDoc, WldDocError};
@@ -28,48 +28,56 @@ enum Format {
     Ron,
 }
 
-fn cli() -> Command<'static> {
+fn cli() -> Command {
     Command::new("wld-cli")
         .version("0.1.0")
-        .author("Chad Jablonski <chad@jablonski.xyz>")
         .about("Work with data from EverQuest .wld files")
         .arg_required_else_help(true)
         .subcommand(
             Command::new("explore")
                 .about("Display a TUI interface listing all fragments in the file")
-                .arg(arg!(<WLD_FILE> "The wld file to explore").required(true)),
+                .arg(arg!(<WLD_FILE> "The wld file to explore")),
         )
         .subcommand(
             Command::new("extract")
                 .about("Extract fragments from the wld file")
-                .arg(arg!(-f --format <FORMAT> "Format to extract to").value_parser(value_parser!(Format)).default_value("raw").required(false))
-                .arg(arg!(<WLD_FILE> "The source wld file").required(true))
-                .arg(arg!(<DESTINATION> "The target destination").required(true))
+                .arg(arg!(-f --format <FORMAT> "Format to extract to").value_parser(value_parser!(Format)).default_value("raw"))
+                .arg(arg!(<WLD_FILE> "The source wld file"))
+                .arg(arg!(<DESTINATION> "The target destination")),
         )
         .subcommand(
             Command::new("create")
                 .about("Create a wld file from a source directory of fragments")
-                .arg(arg!(-f --format <FORMAT> "Format to extract to").value_parser(value_parser!(Format)).default_value("raw").required(false))
-                .arg(arg!(<SOURCE> "The source directory containing a header, strings, and fragment files").required(true))
-                .arg(arg!(<WLD_FILE> "The destination .wld file").required(true)),
+                .arg(arg!(-f --format <FORMAT> "Format to extract to").value_parser(value_parser!(Format)).default_value("raw"))
+                .arg(arg!(<SOURCE> "The source directory containing a header, strings, and fragment files"))
+                .arg(arg!(<WLD_FILE> "The destination .wld file")),
         )
         .subcommand(
             Command::new("stats")
                 .about("Display stats about the wld file")
-                .arg(arg!(<WLD_FILE> "The wld file").required(true)),
+                .arg(arg!(<WLD_FILE> "The wld file")),
         )
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     match cli().get_matches().subcommand() {
         Some(("explore", sub_matches)) => {
-            let wld_file = sub_matches.value_of("WLD_FILE").expect("required");
+            let wld_file = sub_matches
+                .get_one::<String>("WLD_FILE")
+                .map(String::as_str)
+                .expect("required");
             println!("EXPLORE: {:?}", wld_file);
             explore(wld_file)?;
         }
         Some(("extract", sub_matches)) => {
-            let wld_file = sub_matches.value_of("WLD_FILE").expect("required");
-            let destination = sub_matches.value_of("DESTINATION").expect("required");
+            let wld_file = sub_matches
+                .get_one::<String>("WLD_FILE")
+                .map(String::as_str)
+                .expect("required");
+            let destination = sub_matches
+                .get_one::<String>("DESTINATION")
+                .map(String::as_str)
+                .expect("required");
             let format = sub_matches.get_one::<Format>("format").expect("required");
             println!(
                 "EXTRACT: {:?} -> {:?} -- FORMAT {:?}",
@@ -78,14 +86,23 @@ fn main() -> Result<(), Box<dyn Error>> {
             extract(wld_file, destination, format);
         }
         Some(("create", sub_matches)) => {
-            let source = sub_matches.value_of("SOURCE").expect("required");
-            let wld_file = sub_matches.value_of("WLD_FILE").expect("required");
+            let source = sub_matches
+                .get_one::<String>("SOURCE")
+                .map(String::as_str)
+                .expect("required");
+            let wld_file = sub_matches
+                .get_one::<String>("WLD_FILE")
+                .map(String::as_str)
+                .expect("required");
             let format = sub_matches.get_one::<Format>("format").expect("required");
             println!("CREATE: {:?} -> {:?}", source, wld_file);
             create(source, wld_file, format);
         }
         Some(("stats", sub_matches)) => {
-            let wld_file = sub_matches.value_of("WLD_FILE").expect("required");
+            let wld_file = sub_matches
+                .get_one::<String>("WLD_FILE")
+                .map(String::as_str)
+                .expect("required");
             stats(wld_file)?;
         }
         Some(_) => (),
