@@ -9,6 +9,9 @@ pub struct IndexEntry {
 }
 
 impl IndexEntry {
+    pub const SIZE: u32 = 12;
+    pub const DIRECTORY_CRC: u32 = 0xffffffff;
+
     pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
         let (i, filename_crc) = le_u32(input)?;
         let (i, data_offset) = le_u32(i)?;
