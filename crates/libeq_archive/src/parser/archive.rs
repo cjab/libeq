@@ -40,7 +40,7 @@ pub struct Archive {
 impl Archive {
     pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
         let (i, header) = Header::parse(input)?;
-        let (i, all_block_data) = take(header.index_offset - Header::SIZE as u32)(i)?;
+        let (i, all_block_data) = take(header.index_offset - Header::SIZE)(i)?;
         let (i, index_entry_count) = le_u32(i)?;
         let (i, index_entries) = count(IndexEntry::parse, index_entry_count as usize).parse(i)?;
 
@@ -53,7 +53,7 @@ impl Archive {
         let (_, (_, blocks)) = fold_many0(
             Block::parse,
             // (current offset into the file, the block tree we're building)
-            || (Header::SIZE, BTreeMap::new()),
+            || (Header::SIZE as usize, BTreeMap::new()),
             |(offset, mut blocks), block| {
                 let next_offset = offset + block.size();
                 blocks.insert(offset, block);
@@ -117,7 +117,7 @@ mod tests {
         );
         assert_eq!(
             archive.blocks.values().map(|b| b.size()).sum::<usize>(),
-            (archive.header.index_offset - Header::SIZE as u32) as usize
+            (archive.header.index_offset - Header::SIZE) as usize
         );
         assert_eq!(archive.index_entries.len(), 41);
         assert_eq!(

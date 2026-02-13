@@ -11,7 +11,7 @@ pub struct Header {
 impl Header {
     pub const MAGIC_NUMBER: u32 = u32::from_le_bytes(*b"PFS ");
     pub const VERSION: u32 = 0x00020000;
-    pub const SIZE: usize = 12;
+    pub const SIZE: u32 = 12;
 
     pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
         let (i, index_offset) = le_u32(input)?;
