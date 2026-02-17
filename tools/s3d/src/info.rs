@@ -1,8 +1,9 @@
 use std::fs;
 
+use crate::fmt::{format_number, format_size};
 use crate::open_archive;
 
-pub fn run(files: &[String]) {
+pub fn run(files: &[String], human: bool) {
     for (i, path) in files.iter().enumerate() {
         if i > 0 {
             println!();
@@ -29,10 +30,16 @@ pub fn run(files: &[String]) {
         };
 
         println!("{}:", path);
-        println!("  size:          {}", file_size);
+        println!("  size:          {}", format_size(file_size, human));
         println!("  format:        PFS (version {:#010x})", info.version);
-        println!("  files:         {}", info.file_count);
-        println!("  index offset:  {}", info.index_offset);
+        println!(
+            "  files:         {}",
+            format_number(info.file_count as u64, human)
+        );
+        println!(
+            "  index offset:  {}",
+            format_number(info.index_offset as u64, human)
+        );
 
         match info.footer_string {
             Some(s) => {

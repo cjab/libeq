@@ -6,6 +6,7 @@ use libeq_archive::EqArchiveReader;
 
 mod create;
 mod extract;
+mod fmt;
 mod info;
 mod list;
 mod verify;
@@ -35,6 +36,7 @@ enum Command {
     },
     Info {
         files: Vec<String>,
+        human: bool,
     },
 }
 
@@ -181,8 +183,12 @@ fn parse_args() -> Result<Command, lexopt::Error> {
         }
         "info" => {
             let mut files = Vec::new();
+            let mut human = false;
             while let Some(arg) = parser.next()? {
                 match arg {
+                    Short('h') | Long("human-readable") => {
+                        human = true;
+                    }
                     Value(val) => files.push(val.string()?),
                     other => return Err(other.unexpected()),
                 }
@@ -190,7 +196,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
             if files.is_empty() {
                 return Err("info requires at least one file".into());
             }
-            Ok(Command::Info { files })
+            Ok(Command::Info { files, human })
         }
         _ => Err(format!("unknown subcommand: {}", subcommand).into()),
     }
@@ -240,6 +246,6 @@ fn main() {
                 process::exit(1);
             }
         }
-        Command::Info { ref files } => info::run(files),
+        Command::Info { ref files, human } => info::run(files, human),
     }
 }

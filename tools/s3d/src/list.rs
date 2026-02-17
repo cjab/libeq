@@ -1,5 +1,4 @@
-use libeq_archive::FileInfo;
-
+use crate::fmt::{format_number, format_ratio, format_size, format_total_ratio};
 use crate::open_archive;
 
 pub fn run(files: &[String], verbosity: u8, human: bool) {
@@ -131,7 +130,7 @@ fn list_very_verbose(files: &[String], human: bool) {
             let ratio = format_ratio(&info);
             println!(
                 "{:>10}  {:>10}  {:>12}  {:>6}  {:>5}  {}",
-                format_offset(info.data_offset as u64, human),
+                format_number(info.data_offset as u64, human),
                 format_size(info.compressed_size as u64, human),
                 format_size(info.uncompressed_size as u64, human),
                 info.block_count,
@@ -149,7 +148,7 @@ fn list_very_verbose(files: &[String], human: bool) {
                 let ratio = format_ratio(&info);
                 println!(
                     "{:>10}  {:>10}  {:>12}  {:>6}  {:>5}  [directory]",
-                    format_offset(info.data_offset as u64, human),
+                    format_number(info.data_offset as u64, human),
                     format_size(info.compressed_size as u64, human),
                     format_size(info.uncompressed_size as u64, human),
                     info.block_count,
@@ -179,60 +178,4 @@ fn list_very_verbose(files: &[String], human: bool) {
             file_count
         );
     }
-}
-
-fn format_ratio(info: &FileInfo) -> String {
-    if info.uncompressed_size > 0 {
-        format!(
-            "{:.1}%",
-            info.compressed_size as f64 / info.uncompressed_size as f64 * 100.0
-        )
-    } else {
-        "0.0%".to_string()
-    }
-}
-
-fn format_total_ratio(compressed: u64, uncompressed: u64) -> String {
-    if uncompressed > 0 {
-        format!("{:.1}%", compressed as f64 / uncompressed as f64 * 100.0)
-    } else {
-        "0.0%".to_string()
-    }
-}
-
-fn format_size(bytes: u64, human: bool) -> String {
-    if !human {
-        return bytes.to_string();
-    }
-    const K: f64 = 1024.0;
-    const M: f64 = K * 1024.0;
-    const G: f64 = M * 1024.0;
-    let b = bytes as f64;
-    if b >= G {
-        format!("{:.1}G", b / G)
-    } else if b >= M {
-        format!("{:.1}M", b / M)
-    } else if b >= K {
-        format!("{:.1}K", b / K)
-    } else {
-        bytes.to_string()
-    }
-}
-
-fn format_offset(offset: u64, human: bool) -> String {
-    if !human {
-        return offset.to_string();
-    }
-    let s = offset.to_string();
-    if s.len() <= 3 {
-        return s;
-    }
-    let mut result = String::with_capacity(s.len() + s.len() / 3);
-    for (i, c) in s.chars().enumerate() {
-        if i > 0 && (s.len() - i).is_multiple_of(3) {
-            result.push(',');
-        }
-        result.push(c);
-    }
-    result
 }
