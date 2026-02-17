@@ -1,12 +1,12 @@
-mod archive;
 mod block;
+mod block_header;
 mod directory;
 mod footer;
 mod header;
 mod index_entry;
 
-pub use archive::Archive;
 pub use block::Block;
+pub use block_header::BlockHeader;
 pub use directory::Directory;
 pub use footer::Footer;
 pub use header::Header;

@@ -1,6 +1,6 @@
 use crate::parser::IndexEntry;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct FilenameCrc(u32);
 
 impl FilenameCrc {
@@ -27,6 +27,12 @@ impl From<&str> for FilenameCrc {
 impl From<u32> for FilenameCrc {
     fn from(raw: u32) -> Self {
         FilenameCrc(raw)
+    }
+}
+
+impl From<FilenameCrc> for u32 {
+    fn from(crc: FilenameCrc) -> u32 {
+        crc.0
     }
 }
 

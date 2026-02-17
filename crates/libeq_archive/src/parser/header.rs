@@ -1,5 +1,6 @@
-use nom::IResult;
-use nom::number::complete::le_u32;
+use std::io::Read;
+
+use crate::error::Error;
 
 #[derive(Debug, Default, PartialEq)]
 pub struct Header {
@@ -13,19 +14,20 @@ impl Header {
     pub const VERSION: u32 = 0x00020000;
     pub const SIZE: u32 = 12;
 
-    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
-        let (i, index_offset) = le_u32(input)?;
-        let (i, magic_number) = le_u32(i)?;
-        let (i, version) = le_u32(i)?;
+    pub fn read(reader: &mut impl Read) -> Result<Self, Error> {
+        let mut buf = [0u8; 4];
+        reader.read_exact(&mut buf)?;
+        let index_offset = u32::from_le_bytes(buf);
+        reader.read_exact(&mut buf)?;
+        let magic_number = u32::from_le_bytes(buf);
+        reader.read_exact(&mut buf)?;
+        let version = u32::from_le_bytes(buf);
 
-        Ok((
-            i,
-            Header {
-                index_offset,
-                magic_number,
-                version,
-            },
-        ))
+        Ok(Self {
+            index_offset,
+            magic_number,
+            version,
+        })
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
@@ -43,18 +45,15 @@ mod tests {
     use super::*;
 
     use std::fs::File;
-    use std::io::Read;
+    use std::io::{Cursor, Read};
 
     // Fixture created with:
     // `dd bs=1 count=12 if=gfaydark.s3d of=gfaydark/header.bin`
 
     #[test]
-    fn it_parses() {
+    fn it_reads() {
         let mut fixture = File::open("fixtures/gfaydark/header.bin").unwrap();
-        let mut fixture_data = Vec::new();
-        fixture.read_to_end(&mut fixture_data).unwrap();
-
-        let (_, header) = Header::parse(&fixture_data).unwrap();
+        let header = Header::read(&mut fixture).unwrap();
 
         assert_eq!(header.index_offset, 0x219dbf);
         assert_eq!(header.magic_number, u32::from_le_bytes(*b"PFS "));
@@ -66,8 +65,8 @@ mod tests {
         let mut fixture = File::open("fixtures/gfaydark/header.bin").unwrap();
         let mut fixture_data = Vec::new();
         fixture.read_to_end(&mut fixture_data).unwrap();
-
-        let (_, header) = Header::parse(&fixture_data).unwrap();
+        let mut cursor = Cursor::new(&fixture_data);
+        let header = Header::read(&mut cursor).unwrap();
 
         assert_eq!(header.to_bytes(), fixture_data);
     }

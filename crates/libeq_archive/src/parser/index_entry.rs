@@ -1,5 +1,6 @@
-use nom::IResult;
-use nom::number::complete::le_u32;
+use std::io::Read;
+
+use crate::error::Error;
 
 #[derive(Debug, Default)]
 pub struct IndexEntry {
@@ -9,22 +10,26 @@ pub struct IndexEntry {
 }
 
 impl IndexEntry {
-    pub const SIZE: u32 = 12;
-    pub const DIRECTORY_CRC: u32 = 0xffffffff;
+    // All original .s3d files that I have seen use this as the CRC
+    // for the directory file. I have no idea what string it corresponds to
+    // (if any). The EQZip tool appears to use 0xffffffff in place of this.
+    // So any archives written with that tool will currently fail.
+    pub const DIRECTORY_CRC: u32 = 0x61580ac9;
 
-    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
-        let (i, filename_crc) = le_u32(input)?;
-        let (i, data_offset) = le_u32(i)?;
-        let (i, uncompressed_size) = le_u32(i)?;
+    pub fn read(reader: &mut impl Read) -> Result<Self, Error> {
+        let mut buf = [0u8; 4];
+        reader.read_exact(&mut buf)?;
+        let filename_crc = u32::from_le_bytes(buf);
+        reader.read_exact(&mut buf)?;
+        let data_offset = u32::from_le_bytes(buf);
+        reader.read_exact(&mut buf)?;
+        let uncompressed_size = u32::from_le_bytes(buf);
 
-        Ok((
-            i,
-            IndexEntry {
-                uncompressed_size,
-                filename_crc,
-                data_offset,
-            },
-        ))
+        Ok(Self {
+            filename_crc,
+            data_offset,
+            uncompressed_size,
+        })
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
@@ -42,18 +47,15 @@ mod tests {
     use super::*;
 
     use std::fs::File;
-    use std::io::Read;
+    use std::io::{Cursor, Read};
 
     // Fixture created with:
     // `dd bs=1 skip=2203555 count=12 if=gfaydark.s3d of=gfaydark/index-entry.bin`
 
     #[test]
-    fn it_parses() {
+    fn it_reads() {
         let mut fixture = File::open("fixtures/gfaydark/index-entry.bin").unwrap();
-        let mut fixture_data = Vec::new();
-        fixture.read_to_end(&mut fixture_data).unwrap();
-
-        let (_, index_entry) = IndexEntry::parse(&fixture_data).unwrap();
+        let index_entry = IndexEntry::read(&mut fixture).unwrap();
 
         assert_eq!(index_entry.filename_crc, 0xffe57ac0);
         assert_eq!(index_entry.data_offset, 0x25fe5);
@@ -65,8 +67,8 @@ mod tests {
         let mut fixture = File::open("fixtures/gfaydark/index-entry.bin").unwrap();
         let mut fixture_data = Vec::new();
         fixture.read_to_end(&mut fixture_data).unwrap();
-
-        let (_, index_entry) = IndexEntry::parse(&fixture_data).unwrap();
+        let mut cursor = Cursor::new(&fixture_data);
+        let index_entry = IndexEntry::read(&mut cursor).unwrap();
 
         assert_eq!(index_entry.to_bytes(), fixture_data);
     }

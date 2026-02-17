@@ -1,7 +1,8 @@
-use nom::IResult;
-use nom::Parser;
-use nom::multi::{count, length_data};
-use nom::number::complete::le_u32;
+use std::io::Read;
+
+use crate::error::Error;
+
+const MAX_FILENAME_LENGTH: u32 = 1024; // 1KB filename
 
 #[derive(Debug, PartialEq)]
 pub struct Directory {
@@ -9,15 +10,14 @@ pub struct Directory {
 }
 
 impl Directory {
-    pub fn parse(input: &[u8]) -> IResult<&[u8], Self> {
-        let (i, file_count) = le_u32(input)?;
-        let (i, filenames) = count(directory_string, file_count as usize).parse(i)?;
-        Ok((
-            i,
-            Self {
-                filenames: filenames.to_vec(),
-            },
-        ))
+    pub fn read(reader: &mut impl Read) -> Result<Self, Error> {
+        let mut buf = [0u8; 4];
+        reader.read_exact(&mut buf)?;
+        let file_count = u32::from_le_bytes(buf);
+        let filenames = (0..file_count)
+            .map(|_| directory_string(reader))
+            .collect::<Result<Vec<_>, Error>>()?;
+        Ok(Self { filenames })
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
@@ -40,16 +40,24 @@ impl Directory {
     }
 }
 
-fn directory_string(input: &[u8]) -> IResult<&[u8], String> {
-    let (i, data) = length_data(le_u32).parse(input)?;
-    Ok((
-        i,
-        String::from_utf8(Vec::from(data))
-            .unwrap()
-            // Strings stored in directory are null terminated
-            .trim_end_matches('\0')
-            .to_string(),
-    ))
+fn directory_string(reader: &mut impl Read) -> Result<String, Error> {
+    let mut buf = [0u8; 4];
+    reader.read_exact(&mut buf)?;
+    let length = u32::from_le_bytes(buf);
+    if length > MAX_FILENAME_LENGTH {
+        return Err(Error::CorruptArchive(format!(
+            "directory contains filename of length {}, this exceeds the max of {}",
+            length, MAX_FILENAME_LENGTH
+        )));
+    }
+    let mut string_data = vec![0u8; length as usize];
+    reader.read_exact(&mut string_data)?;
+
+    Ok(String::from_utf8(string_data)
+        .map_err(|_| Error::CorruptArchive("Invalid utf8 data in file directory".into()))?
+        // Strings stored in directory are null terminated
+        .trim_end_matches('\0')
+        .to_string())
 }
 
 #[cfg(test)]
@@ -57,15 +65,12 @@ mod tests {
     use super::*;
 
     use std::fs::File;
-    use std::io::Read;
+    use std::io::{Cursor, Read};
 
     #[test]
-    fn it_parses() {
+    fn it_reads() {
         let mut fixture = File::open("fixtures/gfaydark/directory.bin").unwrap();
-        let mut fixture_data = Vec::new();
-        fixture.read_to_end(&mut fixture_data).unwrap();
-
-        let (_, directory) = Directory::parse(&fixture_data).unwrap();
+        let directory = Directory::read(&mut fixture).unwrap();
 
         assert_eq!(
             directory,
@@ -121,8 +126,8 @@ mod tests {
         let mut fixture = File::open("fixtures/gfaydark/directory.bin").unwrap();
         let mut fixture_data = Vec::new();
         fixture.read_to_end(&mut fixture_data).unwrap();
-
-        let (_, directory) = Directory::parse(&fixture_data).unwrap();
+        let mut cursor = Cursor::new(&fixture_data);
+        let directory = Directory::read(&mut cursor).unwrap();
 
         assert_eq!(directory.to_bytes(), fixture_data)
     }
