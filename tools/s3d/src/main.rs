@@ -1,8 +1,11 @@
+use std::fs::File;
 use std::process;
 
 use lexopt::prelude::*;
+use libeq_archive::EqArchiveReader;
 
 mod list;
+mod verify;
 
 enum Command {
     List {
@@ -10,6 +13,24 @@ enum Command {
         verbosity: u8,
         human: bool,
     },
+    Verify {
+        files: Vec<String>,
+        verbose: bool,
+    },
+}
+
+pub(crate) fn open_archive(path: &str) -> Option<(EqArchiveReader<File>, Vec<String>)> {
+    let file = File::open(path)
+        .map_err(|e| eprintln!("{}: {}", path, e))
+        .ok()?;
+    let mut reader = EqArchiveReader::open(file)
+        .map_err(|e| eprintln!("{}: {}", path, e))
+        .ok()?;
+    let filenames = reader
+        .filenames()
+        .map_err(|e| eprintln!("{}: {}", path, e))
+        .ok()?;
+    Some((reader, filenames))
 }
 
 fn parse_args() -> Result<Command, lexopt::Error> {
@@ -18,7 +39,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
     let subcommand = match parser.next()? {
         Some(Value(val)) => val.string()?,
         Some(other) => return Err(other.unexpected()),
-        None => return Err("expected subcommand: list".into()),
+        None => return Err("expected subcommand: list, verify".into()),
     };
 
     match subcommand.as_str() {
@@ -47,6 +68,23 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 human,
             })
         }
+        "verify" => {
+            let mut files = Vec::new();
+            let mut verbose = false;
+            while let Some(arg) = parser.next()? {
+                match arg {
+                    Short('v') | Long("verbose") => {
+                        verbose = true;
+                    }
+                    Value(val) => files.push(val.string()?),
+                    other => return Err(other.unexpected()),
+                }
+            }
+            if files.is_empty() {
+                return Err("verify requires at least one file".into());
+            }
+            Ok(Command::Verify { files, verbose })
+        }
         _ => Err(format!("unknown subcommand: {}", subcommand).into()),
     }
 }
@@ -66,5 +104,13 @@ fn main() {
             verbosity,
             human,
         } => list::run(files, verbosity, human),
+        Command::Verify {
+            ref files,
+            verbose,
+        } => {
+            if !verify::run(files, verbose) {
+                process::exit(1);
+            }
+        }
     }
 }

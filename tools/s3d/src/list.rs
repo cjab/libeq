@@ -1,20 +1,6 @@
-use std::fs::File;
+use libeq_archive::FileInfo;
 
-use libeq_archive::{EqArchiveReader, FileInfo};
-
-fn open_archive(path: &str) -> Option<(EqArchiveReader<File>, Vec<String>)> {
-    let file = File::open(path)
-        .map_err(|e| eprintln!("{}: {}", path, e))
-        .ok()?;
-    let mut reader = EqArchiveReader::open(file)
-        .map_err(|e| eprintln!("{}: {}", path, e))
-        .ok()?;
-    let filenames = reader
-        .filenames()
-        .map_err(|e| eprintln!("{}: {}", path, e))
-        .ok()?;
-    Some((reader, filenames))
-}
+use crate::open_archive;
 
 pub fn run(files: &[String], verbosity: u8, human: bool) {
     match verbosity {
