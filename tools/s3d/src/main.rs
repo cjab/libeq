@@ -16,6 +16,7 @@ enum Command {
     Verify {
         files: Vec<String>,
         verbose: bool,
+        round_trip: bool,
     },
 }
 
@@ -71,10 +72,14 @@ fn parse_args() -> Result<Command, lexopt::Error> {
         "verify" => {
             let mut files = Vec::new();
             let mut verbose = false;
+            let mut round_trip = false;
             while let Some(arg) = parser.next()? {
                 match arg {
                     Short('v') | Long("verbose") => {
                         verbose = true;
+                    }
+                    Short('r') | Long("round-trip") => {
+                        round_trip = true;
                     }
                     Value(val) => files.push(val.string()?),
                     other => return Err(other.unexpected()),
@@ -83,7 +88,11 @@ fn parse_args() -> Result<Command, lexopt::Error> {
             if files.is_empty() {
                 return Err("verify requires at least one file".into());
             }
-            Ok(Command::Verify { files, verbose })
+            Ok(Command::Verify {
+                files,
+                verbose,
+                round_trip,
+            })
         }
         _ => Err(format!("unknown subcommand: {}", subcommand).into()),
     }
@@ -107,8 +116,9 @@ fn main() {
         Command::Verify {
             ref files,
             verbose,
+            round_trip,
         } => {
-            if !verify::run(files, verbose) {
+            if !verify::run(files, verbose, round_trip) {
                 process::exit(1);
             }
         }
