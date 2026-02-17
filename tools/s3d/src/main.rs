@@ -7,6 +7,7 @@ use libeq_archive::EqArchiveReader;
 mod create;
 mod extract;
 mod fmt;
+mod get;
 mod info;
 mod list;
 mod verify;
@@ -34,6 +35,10 @@ enum Command {
         verbose: bool,
         force: bool,
     },
+    Get {
+        archive: String,
+        filename: String,
+    },
     Info {
         files: Vec<String>,
         human: bool,
@@ -60,7 +65,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
     let subcommand = match parser.next()? {
         Some(Value(val)) => val.string()?,
         Some(other) => return Err(other.unexpected()),
-        None => return Err("expected subcommand: list, verify, extract, create, info".into()),
+        None => return Err("expected subcommand: list, verify, extract, create, get, info".into()),
     };
 
     match subcommand.as_str() {
@@ -181,6 +186,28 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 force,
             })
         }
+        "get" => {
+            let mut archive = None;
+            let mut filename = None;
+            while let Some(arg) = parser.next()? {
+                match arg {
+                    Value(val) => {
+                        let s = val.string()?;
+                        if archive.is_none() {
+                            archive = Some(s);
+                        } else if filename.is_none() {
+                            filename = Some(s);
+                        } else {
+                            return Err("get accepts exactly one filename".into());
+                        }
+                    }
+                    other => return Err(other.unexpected()),
+                }
+            }
+            let archive = archive.ok_or("get requires an archive file")?;
+            let filename = filename.ok_or("get requires a filename")?;
+            Ok(Command::Get { archive, filename })
+        }
         "info" => {
             let mut files = Vec::new();
             let mut human = false;
@@ -243,6 +270,14 @@ fn main() {
             force,
         } => {
             if !create::run(archive, inputs, verbose, force) {
+                process::exit(1);
+            }
+        }
+        Command::Get {
+            ref archive,
+            ref filename,
+        } => {
+            if !get::run(archive, filename) {
                 process::exit(1);
             }
         }
