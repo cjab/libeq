@@ -11,6 +11,14 @@ use crate::write::EqArchiveWriter;
 // Limits
 const MAX_ENTRY_COUNT: u32 = 100_000; // 100k files
 
+#[derive(Debug, Eq, PartialEq)]
+pub struct FileInfo {
+    pub data_offset: u32,
+    pub compressed_size: u32,
+    pub uncompressed_size: u32,
+    pub block_count: u32,
+}
+
 pub struct EqArchiveReader<R> {
     reader: R,
     index: HashMap<FilenameCrc, IndexEntry>,
@@ -41,15 +49,32 @@ impl<R: Read + Seek> EqArchiveReader<R> {
     }
 
     pub fn get_reader(&mut self, filename: &str) -> Result<Option<EqFileReader>, Error> {
-        let Some(blocks) = self.get_blocks(filename)? else {
+        let Some(blocks) = self.get_blocks_for(filename)? else {
             return Ok(None);
         };
         Ok(Some(EqFileReader::new(blocks)?))
     }
 
+    pub fn info(&mut self, filename: &str) -> Result<Option<FileInfo>, Error> {
+        let crc = FilenameCrc::new(filename);
+        let Some(entry) = self.index.get(&crc) else {
+            return Ok(None);
+        };
+        let data_offset = entry.data_offset;
+        let uncompressed_size = entry.uncompressed_size;
+
+        let headers = self.read_block_headers(data_offset, uncompressed_size)?;
+        Ok(Some(FileInfo {
+            data_offset,
+            compressed_size: headers.iter().map(|h| h.compressed_size).sum(),
+            uncompressed_size,
+            block_count: headers.len() as u32,
+        }))
+    }
+
     pub fn filenames(&mut self) -> Result<Vec<String>, Error> {
         let blocks =
-            self.read_raw_blocks(self.directory.data_offset, self.directory.uncompressed_size)?;
+            self.read_blocks(self.directory.data_offset, self.directory.uncompressed_size)?;
         let mut data = Vec::with_capacity(self.directory.uncompressed_size as usize);
         let mut reader = EqFileReader::new(blocks)?;
         reader.read_to_end(&mut data)?;
@@ -63,7 +88,7 @@ impl<R: Read + Seek> EqArchiveReader<R> {
             .filenames()?
             .iter()
             .map(|name| {
-                let blocks = self.get_blocks(name)?.ok_or_else(|| {
+                let blocks = self.get_blocks_for(name)?.ok_or_else(|| {
                     Error::CorruptArchive(format!("missing index entry for {}", name))
                 })?;
                 Ok((name.clone(), blocks))
@@ -82,7 +107,7 @@ impl<R: Read + Seek> EqArchiveReader<R> {
         // an archive that hasn't been modified and reproduce the original file at
         // the bit level. This is a nice property for testing.
         let directory =
-            self.read_raw_blocks(self.directory.data_offset, self.directory.uncompressed_size)?;
+            self.read_blocks(self.directory.data_offset, self.directory.uncompressed_size)?;
 
         Ok(EqArchiveWriter::from_existing(
             entries,
@@ -91,7 +116,7 @@ impl<R: Read + Seek> EqArchiveReader<R> {
         ))
     }
 
-    fn get_blocks(&mut self, filename: &str) -> Result<Option<Vec<Block>>, Error> {
+    fn get_blocks_for(&mut self, filename: &str) -> Result<Option<Vec<Block>>, Error> {
         let crc = FilenameCrc::new(filename);
         let Some(entry) = self.index.get(&crc) else {
             return Ok(None);
@@ -105,11 +130,31 @@ impl<R: Read + Seek> EqArchiveReader<R> {
             )));
         }
 
-        self.read_raw_blocks(entry.data_offset, entry.uncompressed_size)
+        self.read_blocks(entry.data_offset, entry.uncompressed_size)
             .map(Some)
     }
 
-    fn read_raw_blocks(
+    fn read_block_headers(
+        &mut self,
+        data_offset: u32,
+        uncompressed_size: u32,
+    ) -> Result<Vec<BlockHeader>, Error> {
+        let mut collected: u32 = 0;
+        let mut headers = Vec::new();
+        self.reader.seek(SeekFrom::Start(data_offset as u64))?;
+
+        while collected < uncompressed_size {
+            let header = BlockHeader::read(&mut self.reader)?;
+            collected += header.uncompressed_size;
+            self.reader
+                .seek(SeekFrom::Current(header.compressed_size as i64))?;
+            headers.push(header);
+        }
+
+        Ok(headers)
+    }
+
+    fn read_blocks(
         &mut self,
         data_offset: u32,
         uncompressed_size: u32,

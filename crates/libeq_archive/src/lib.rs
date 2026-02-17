@@ -16,7 +16,7 @@
 //!
 //! // Iterate over files in the archive
 //! let files: Vec<_> = filenames.iter().map(|name| {
-//!     (name, reader.get(name).unwrap())
+//!     (name, reader.get(name).unwrap(), reader.info(name).unwrap())
 //! }).collect();
 //!
 //! let mut writer = reader.to_writer().unwrap();
@@ -43,6 +43,7 @@ mod write;
 pub use error::Error;
 pub use read::EqArchiveReader;
 pub use read::EqFileReader;
+pub use read::FileInfo;
 pub use write::EqArchiveWriter;
 
 #[cfg(test)]
@@ -99,5 +100,39 @@ mod tests {
         for t in &test_files {
             assert!(editor.filenames().iter().any(|f| t.0 == f));
         }
+    }
+
+    #[test]
+    fn info() {
+        let test_files = [
+            ("test-file0", [0xde, 0xad, 0xbe, 0xef]),
+            ("test-file1", [0xca, 0xfe, 0xba, 0xbe]),
+        ];
+        let mut writer = EqArchiveWriter::new();
+        for f in &test_files {
+            writer.push(f.0, f.1);
+        }
+        let bytes = writer.to_bytes().unwrap();
+
+        let mut reader = EqArchiveReader::open(Cursor::new(bytes)).unwrap();
+        assert_eq!(
+            reader.info("test-file0").unwrap().unwrap(),
+            FileInfo {
+                data_offset: 12,
+                compressed_size: 12,
+                uncompressed_size: 4,
+                block_count: 1
+            }
+        );
+        assert_eq!(
+            reader.info("test-file1").unwrap().unwrap(),
+            FileInfo {
+                data_offset: 32,
+                compressed_size: 12,
+                uncompressed_size: 4,
+                block_count: 1
+            }
+        );
+        assert_eq!(reader.info("missing-file").unwrap(), None);
     }
 }
