@@ -41,6 +41,7 @@ mod read;
 mod write;
 
 pub use error::Error;
+pub use read::ArchiveInfo;
 pub use read::EqArchiveReader;
 pub use read::EqFileReader;
 pub use read::FileInfo;

@@ -19,6 +19,15 @@ pub struct FileInfo {
     pub block_count: u32,
 }
 
+#[derive(Debug)]
+pub struct ArchiveInfo {
+    pub version: u32,
+    pub index_offset: u32,
+    pub file_count: u32,
+    pub footer_string: Option<[u8; 5]>,
+    pub timestamp: Option<u32>,
+}
+
 pub struct EqArchiveReader<R> {
     reader: R,
     index: HashMap<FilenameCrc, IndexEntry>,
@@ -37,6 +46,18 @@ impl EqArchiveReader<Cursor<Vec<u8>>> {
 impl<R: Read + Seek> EqArchiveReader<R> {
     pub fn open(reader: R) -> Result<Self, Error> {
         from_reader(reader)
+    }
+
+    pub fn archive_info(&mut self) -> Result<ArchiveInfo, Error> {
+        self.reader.seek(SeekFrom::Start(0))?;
+        let header = Header::read(&mut self.reader)?;
+        Ok(ArchiveInfo {
+            version: header.version,
+            index_offset: header.index_offset,
+            file_count: self.index.len() as u32,
+            footer_string: self.footer.as_ref().map(|f| f.footer_string),
+            timestamp: self.footer.as_ref().map(|f| f.timestamp),
+        })
     }
 
     pub fn get(&mut self, filename: &str) -> Result<Option<Vec<u8>>, Error> {
