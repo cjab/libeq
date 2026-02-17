@@ -1,0 +1,8 @@
+[package]
+name = "s3d"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+libeq_archive.workspace = true
+lexopt = "0.3"
