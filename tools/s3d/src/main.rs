@@ -6,6 +6,7 @@ use libeq_archive::EqArchiveReader;
 
 mod create;
 mod extract;
+mod info;
 mod list;
 mod verify;
 
@@ -32,6 +33,9 @@ enum Command {
         verbose: bool,
         force: bool,
     },
+    Info {
+        files: Vec<String>,
+    },
 }
 
 pub(crate) fn open_archive(path: &str) -> Option<(EqArchiveReader<File>, Vec<String>)> {
@@ -54,7 +58,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
     let subcommand = match parser.next()? {
         Some(Value(val)) => val.string()?,
         Some(other) => return Err(other.unexpected()),
-        None => return Err("expected subcommand: list, verify, extract, create".into()),
+        None => return Err("expected subcommand: list, verify, extract, create, info".into()),
     };
 
     match subcommand.as_str() {
@@ -175,6 +179,19 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 force,
             })
         }
+        "info" => {
+            let mut files = Vec::new();
+            while let Some(arg) = parser.next()? {
+                match arg {
+                    Value(val) => files.push(val.string()?),
+                    other => return Err(other.unexpected()),
+                }
+            }
+            if files.is_empty() {
+                return Err("info requires at least one file".into());
+            }
+            Ok(Command::Info { files })
+        }
         _ => Err(format!("unknown subcommand: {}", subcommand).into()),
     }
 }
@@ -223,5 +240,6 @@ fn main() {
                 process::exit(1);
             }
         }
+        Command::Info { ref files } => info::run(files),
     }
 }
