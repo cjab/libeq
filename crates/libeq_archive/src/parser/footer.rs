@@ -16,7 +16,7 @@ impl Footer {
         reader.read_exact(&mut footer_string)?;
         let mut buf = [0u8; 4];
         reader.read_exact(&mut buf)?;
-        let timestamp = u32::from_le_bytes(buf);
+        let timestamp = u32::from_be_bytes(buf);
 
         Ok(Self {
             footer_string,
@@ -25,7 +25,7 @@ impl Footer {
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
-        [&self.footer_string[..], &self.timestamp.to_le_bytes()].concat()
+        [&self.footer_string[..], &self.timestamp.to_be_bytes()].concat()
     }
 }
 
@@ -45,7 +45,7 @@ mod tests {
         let footer = Footer::read(&mut fixture).unwrap();
 
         assert_eq!(&footer.footer_string, b"STEVE");
-        assert_eq!(footer.timestamp, 0x5b28ad36);
+        assert_eq!(footer.timestamp, 0x36ad285b);
     }
 
     #[test]
