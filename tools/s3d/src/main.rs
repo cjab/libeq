@@ -4,6 +4,7 @@ use std::process;
 use lexopt::prelude::*;
 use libeq_archive::EqArchiveReader;
 
+mod extract;
 mod list;
 mod verify;
 
@@ -17,6 +18,12 @@ enum Command {
         files: Vec<String>,
         verbose: bool,
         round_trip: bool,
+    },
+    Extract {
+        archive: String,
+        files: Vec<String>,
+        output: Option<String>,
+        verbose: bool,
     },
 }
 
@@ -40,7 +47,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
     let subcommand = match parser.next()? {
         Some(Value(val)) => val.string()?,
         Some(other) => return Err(other.unexpected()),
-        None => return Err("expected subcommand: list, verify".into()),
+        None => return Err("expected subcommand: list, verify, extract".into()),
     };
 
     match subcommand.as_str() {
@@ -94,6 +101,38 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 round_trip,
             })
         }
+        "extract" => {
+            let mut archive = None;
+            let mut files = Vec::new();
+            let mut output = None;
+            let mut verbose = false;
+            while let Some(arg) = parser.next()? {
+                match arg {
+                    Short('v') | Long("verbose") => {
+                        verbose = true;
+                    }
+                    Short('o') | Long("output") => {
+                        output = Some(parser.value()?.string()?);
+                    }
+                    Value(val) => {
+                        let s = val.string()?;
+                        if archive.is_none() {
+                            archive = Some(s);
+                        } else {
+                            files.push(s);
+                        }
+                    }
+                    other => return Err(other.unexpected()),
+                }
+            }
+            let archive = archive.ok_or("extract requires an archive file")?;
+            Ok(Command::Extract {
+                archive,
+                files,
+                output,
+                verbose,
+            })
+        }
         _ => Err(format!("unknown subcommand: {}", subcommand).into()),
     }
 }
@@ -119,6 +158,16 @@ fn main() {
             round_trip,
         } => {
             if !verify::run(files, verbose, round_trip) {
+                process::exit(1);
+            }
+        }
+        Command::Extract {
+            ref archive,
+            ref files,
+            ref output,
+            verbose,
+        } => {
+            if !extract::run(archive, files, output.as_deref(), verbose) {
                 process::exit(1);
             }
         }
