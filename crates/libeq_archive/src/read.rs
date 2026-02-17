@@ -72,6 +72,18 @@ impl<R: Read + Seek> EqArchiveReader<R> {
         }))
     }
 
+    pub fn directory_info(&mut self) -> Result<FileInfo, Error> {
+        let data_offset = self.directory.data_offset;
+        let uncompressed_size = self.directory.uncompressed_size;
+        let headers = self.read_block_headers(data_offset, uncompressed_size)?;
+        Ok(FileInfo {
+            data_offset,
+            compressed_size: headers.iter().map(|h| h.compressed_size).sum(),
+            uncompressed_size,
+            block_count: headers.len() as u32,
+        })
+    }
+
     pub fn filenames(&mut self) -> Result<Vec<String>, Error> {
         let blocks =
             self.read_blocks(self.directory.data_offset, self.directory.uncompressed_size)?;
