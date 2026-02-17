@@ -5,7 +5,11 @@ use lexopt::prelude::*;
 mod list;
 
 enum Command {
-    List { files: Vec<String>, verbosity: u8 },
+    List {
+        files: Vec<String>,
+        verbosity: u8,
+        human: bool,
+    },
 }
 
 fn parse_args() -> Result<Command, lexopt::Error> {
@@ -21,10 +25,14 @@ fn parse_args() -> Result<Command, lexopt::Error> {
         "list" => {
             let mut files = Vec::new();
             let mut verbosity: u8 = 0;
+            let mut human = false;
             while let Some(arg) = parser.next()? {
                 match arg {
                     Short('v') | Long("verbose") => {
                         verbosity = verbosity.saturating_add(1).min(2);
+                    }
+                    Short('h') | Long("human-readable") => {
+                        human = true;
                     }
                     Value(val) => files.push(val.string()?),
                     other => return Err(other.unexpected()),
@@ -33,7 +41,11 @@ fn parse_args() -> Result<Command, lexopt::Error> {
             if files.is_empty() {
                 return Err("list requires at least one file".into());
             }
-            Ok(Command::List { files, verbosity })
+            Ok(Command::List {
+                files,
+                verbosity,
+                human,
+            })
         }
         _ => Err(format!("unknown subcommand: {}", subcommand).into()),
     }
@@ -52,6 +64,7 @@ fn main() {
         Command::List {
             ref files,
             verbosity,
-        } => list::run(files, verbosity),
+            human,
+        } => list::run(files, verbosity, human),
     }
 }

@@ -16,11 +16,11 @@ fn open_archive(path: &str) -> Option<(EqArchiveReader<File>, Vec<String>)> {
     Some((reader, filenames))
 }
 
-pub fn run(files: &[String], verbosity: u8) {
+pub fn run(files: &[String], verbosity: u8, human: bool) {
     match verbosity {
         0 => list(files),
-        1 => list_verbose(files),
-        _ => list_very_verbose(files),
+        1 => list_verbose(files, human),
+        _ => list_very_verbose(files, human),
     }
 }
 
@@ -42,7 +42,7 @@ fn list(files: &[String]) {
     }
 }
 
-fn list_verbose(files: &[String]) {
+fn list_verbose(files: &[String], human: bool) {
     for (i, path) in files.iter().enumerate() {
         if i > 0 {
             println!();
@@ -80,7 +80,10 @@ fn list_verbose(files: &[String]) {
             let ratio = format_ratio(&info);
             println!(
                 "{:>10}  {:>12}  {:>5}  {}",
-                info.compressed_size, info.uncompressed_size, ratio, name
+                format_size(info.compressed_size as u64, human),
+                format_size(info.uncompressed_size as u64, human),
+                ratio,
+                name
             );
 
             total_compressed += info.compressed_size as u64;
@@ -88,14 +91,7 @@ fn list_verbose(files: &[String]) {
             file_count += 1;
         }
 
-        let total_ratio = if total_uncompressed > 0 {
-            format!(
-                "{:.1}%",
-                total_compressed as f64 / total_uncompressed as f64 * 100.0
-            )
-        } else {
-            "0.0%".to_string()
-        };
+        let total_ratio = format_total_ratio(total_compressed, total_uncompressed);
 
         println!(
             "{:>10}  {:>12}  {:>5}",
@@ -103,12 +99,15 @@ fn list_verbose(files: &[String]) {
         );
         println!(
             "{:>10}  {:>12}  {:>5}  {} files",
-            total_compressed, total_uncompressed, total_ratio, file_count
+            format_size(total_compressed, human),
+            format_size(total_uncompressed, human),
+            total_ratio,
+            file_count
         );
     }
 }
 
-fn list_very_verbose(files: &[String]) {
+fn list_very_verbose(files: &[String], human: bool) {
     for (i, path) in files.iter().enumerate() {
         if i > 0 {
             println!();
@@ -122,7 +121,7 @@ fn list_very_verbose(files: &[String]) {
         }
 
         println!(
-            "{:>8}  {:>10}  {:>12}  {:>6}  {:>5}  name",
+            "{:>10}  {:>10}  {:>12}  {:>6}  {:>5}  name",
             "offset", "compressed", "uncompressed", "blocks", "ratio"
         );
 
@@ -145,10 +144,10 @@ fn list_very_verbose(files: &[String]) {
 
             let ratio = format_ratio(&info);
             println!(
-                "{:>8}  {:>10}  {:>12}  {:>6}  {:>5}  {}",
-                info.data_offset,
-                info.compressed_size,
-                info.uncompressed_size,
+                "{:>10}  {:>10}  {:>12}  {:>6}  {:>5}  {}",
+                format_offset(info.data_offset as u64, human),
+                format_size(info.compressed_size as u64, human),
+                format_size(info.uncompressed_size as u64, human),
                 info.block_count,
                 ratio,
                 name
@@ -159,22 +158,20 @@ fn list_very_verbose(files: &[String]) {
             file_count += 1;
         }
 
-        let total_ratio = if total_uncompressed > 0 {
-            format!(
-                "{:.1}%",
-                total_compressed as f64 / total_uncompressed as f64 * 100.0
-            )
-        } else {
-            "0.0%".to_string()
-        };
+        let total_ratio = format_total_ratio(total_compressed, total_uncompressed);
 
         println!(
-            "{:>8}  {:>10}  {:>12}  {:>6}  {:>5}",
+            "{:>10}  {:>10}  {:>12}  {:>6}  {:>5}",
             "", "----------", "------------", "", "-----"
         );
         println!(
-            "{:>8}  {:>10}  {:>12}  {:>6}  {:>5}  {} files",
-            "", total_compressed, total_uncompressed, "", total_ratio, file_count
+            "{:>10}  {:>10}  {:>12}  {:>6}  {:>5}  {} files",
+            "",
+            format_size(total_compressed, human),
+            format_size(total_uncompressed, human),
+            "",
+            total_ratio,
+            file_count
         );
     }
 }
@@ -188,4 +185,49 @@ fn format_ratio(info: &FileInfo) -> String {
     } else {
         "0.0%".to_string()
     }
+}
+
+fn format_total_ratio(compressed: u64, uncompressed: u64) -> String {
+    if uncompressed > 0 {
+        format!("{:.1}%", compressed as f64 / uncompressed as f64 * 100.0)
+    } else {
+        "0.0%".to_string()
+    }
+}
+
+fn format_size(bytes: u64, human: bool) -> String {
+    if !human {
+        return bytes.to_string();
+    }
+    const K: f64 = 1024.0;
+    const M: f64 = K * 1024.0;
+    const G: f64 = M * 1024.0;
+    let b = bytes as f64;
+    if b >= G {
+        format!("{:.1}G", b / G)
+    } else if b >= M {
+        format!("{:.1}M", b / M)
+    } else if b >= K {
+        format!("{:.1}K", b / K)
+    } else {
+        bytes.to_string()
+    }
+}
+
+fn format_offset(offset: u64, human: bool) -> String {
+    if !human {
+        return offset.to_string();
+    }
+    let s = offset.to_string();
+    if s.len() <= 3 {
+        return s;
+    }
+    let mut result = String::with_capacity(s.len() + s.len() / 3);
+    for (i, c) in s.chars().enumerate() {
+        if i > 0 && (s.len() - i) % 3 == 0 {
+            result.push(',');
+        }
+        result.push(c);
+    }
+    result
 }
