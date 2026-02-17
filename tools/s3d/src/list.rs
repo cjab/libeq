@@ -144,6 +144,25 @@ fn list_very_verbose(files: &[String], human: bool) {
             file_count += 1;
         }
 
+        match reader.directory_info() {
+            Ok(info) => {
+                let ratio = format_ratio(&info);
+                println!(
+                    "{:>10}  {:>10}  {:>12}  {:>6}  {:>5}  [directory]",
+                    format_offset(info.data_offset as u64, human),
+                    format_size(info.compressed_size as u64, human),
+                    format_size(info.uncompressed_size as u64, human),
+                    info.block_count,
+                    ratio
+                );
+                total_compressed += info.compressed_size as u64;
+                total_uncompressed += info.uncompressed_size as u64;
+            }
+            Err(e) => {
+                eprintln!("{}: [directory]: {}", path, e);
+            }
+        }
+
         let total_ratio = format_total_ratio(total_compressed, total_uncompressed);
 
         println!(
@@ -151,7 +170,7 @@ fn list_very_verbose(files: &[String], human: bool) {
             "", "----------", "------------", "", "-----"
         );
         println!(
-            "{:>10}  {:>10}  {:>12}  {:>6}  {:>5}  {} files",
+            "{:>10}  {:>10}  {:>12}  {:>6}  {:>5}  {} files + directory",
             "",
             format_size(total_compressed, human),
             format_size(total_uncompressed, human),
