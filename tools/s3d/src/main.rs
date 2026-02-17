@@ -4,6 +4,7 @@ use std::process;
 use lexopt::prelude::*;
 use libeq_archive::EqArchiveReader;
 
+mod create;
 mod extract;
 mod list;
 mod verify;
@@ -24,6 +25,12 @@ enum Command {
         files: Vec<String>,
         output: Option<String>,
         verbose: bool,
+    },
+    Create {
+        archive: String,
+        inputs: Vec<String>,
+        verbose: bool,
+        force: bool,
     },
 }
 
@@ -47,7 +54,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
     let subcommand = match parser.next()? {
         Some(Value(val)) => val.string()?,
         Some(other) => return Err(other.unexpected()),
-        None => return Err("expected subcommand: list, verify, extract".into()),
+        None => return Err("expected subcommand: list, verify, extract, create".into()),
     };
 
     match subcommand.as_str() {
@@ -133,6 +140,41 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 verbose,
             })
         }
+        "create" => {
+            let mut archive = None;
+            let mut inputs = Vec::new();
+            let mut verbose = false;
+            let mut force = false;
+            while let Some(arg) = parser.next()? {
+                match arg {
+                    Short('v') | Long("verbose") => {
+                        verbose = true;
+                    }
+                    Short('f') | Long("force") => {
+                        force = true;
+                    }
+                    Value(val) => {
+                        let s = val.string()?;
+                        if archive.is_none() {
+                            archive = Some(s);
+                        } else {
+                            inputs.push(s);
+                        }
+                    }
+                    other => return Err(other.unexpected()),
+                }
+            }
+            let archive = archive.ok_or("create requires an archive file")?;
+            if inputs.is_empty() {
+                return Err("create requires at least one input file or directory".into());
+            }
+            Ok(Command::Create {
+                archive,
+                inputs,
+                verbose,
+                force,
+            })
+        }
         _ => Err(format!("unknown subcommand: {}", subcommand).into()),
     }
 }
@@ -168,6 +210,16 @@ fn main() {
             verbose,
         } => {
             if !extract::run(archive, files, output.as_deref(), verbose) {
+                process::exit(1);
+            }
+        }
+        Command::Create {
+            ref archive,
+            ref inputs,
+            verbose,
+            force,
+        } => {
+            if !create::run(archive, inputs, verbose, force) {
                 process::exit(1);
             }
         }
