@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 libeq_archive.workspace = true
 lexopt = "0.3"
+time-format = "1.2"

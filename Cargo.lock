@@ -1266,6 +1266,7 @@ version = "0.1.0"
 dependencies = [
  "lexopt",
  "libeq_archive",
+ "time-format",
 ]
 
 [[package]]
@@ -1586,6 +1587,12 @@ name = "time-core"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7694e1cfe791f8d31026952abf09c69ca6f6fa4e1a1229e18988f06a04a12dca"
+
+[[package]]
+name = "time-format"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "caa08af685f978227b475da86d38312cd1acd5024338bf53a1ab9a799219507d"
 
 [[package]]
 name = "typeid"

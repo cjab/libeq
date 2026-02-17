@@ -1,4 +1,5 @@
 use libeq_archive::FileInfo;
+use time_format::{components_utc, strftime_utc};
 
 pub(crate) fn format_ratio(info: &FileInfo) -> String {
     if info.uncompressed_size > 0 {
@@ -54,4 +55,53 @@ pub(crate) fn format_number(n: u64, human: bool) -> String {
         result.push(c);
     }
     result
+}
+
+const MONTH_NAMES: [&str; 12] = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+];
+
+fn ordinal_suffix(day: u8) -> &'static str {
+    match (day % 10, day % 100) {
+        (1, 11) | (2, 12) | (3, 13) => "th",
+        (1, _) => "st",
+        (2, _) => "nd",
+        (3, _) => "rd",
+        _ => "th",
+    }
+}
+
+pub(crate) fn format_timestamp(ts: u32, human: bool) -> String {
+    if human {
+        let Ok(c) = components_utc(ts as i64) else {
+            return ts.to_string();
+        };
+        let month = MONTH_NAMES[c.month as usize - 1];
+        let suffix = ordinal_suffix(c.month_day);
+        let (hour, ampm) = match c.hour {
+            0 => (12, "AM"),
+            1..=11 => (c.hour, "AM"),
+            12 => (12, "PM"),
+            _ => (c.hour - 12, "PM"),
+        };
+        format!(
+            "{} {}{}, {} {}:{:02} {} UTC",
+            month, c.month_day, suffix, c.year, hour, c.min, ampm
+        )
+    } else {
+        let formatted = strftime_utc("%Y-%m-%d %H:%M:%S UTC", ts as i64)
+            .unwrap_or_else(|_| "unknown".to_string());
+        format!("{} ({})", ts, formatted)
+    }
 }

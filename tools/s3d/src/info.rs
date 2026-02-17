@@ -1,6 +1,6 @@
 use std::fs;
 
-use crate::fmt::{format_number, format_size};
+use crate::fmt::{format_number, format_size, format_timestamp};
 use crate::open_archive;
 
 pub fn run(files: &[String], human: bool) {
@@ -52,7 +52,7 @@ pub fn run(files: &[String], human: bool) {
         }
 
         if let Some(ts) = info.timestamp {
-            println!("  timestamp:     {} (unix)", ts);
+            println!("  timestamp:     {}", format_timestamp(ts, human));
         }
     }
 }
