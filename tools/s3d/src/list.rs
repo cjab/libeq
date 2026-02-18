@@ -1,6 +1,27 @@
 use crate::fmt::{format_number, format_ratio, format_size, format_total_ratio};
 use crate::open_archive;
 
+const HELP: &str = "\
+s3d list — List archive contents
+
+Usage: s3d list [options] <archive>...
+
+Options:
+  -v, --verbose          Show compressed/uncompressed sizes and ratio
+  -vv                    Also show offsets and block counts
+  -r, --raw              Show raw numeric values
+  -h, --help             Show this help
+
+Aliases: ls";
+
+pub fn print_help() {
+    println!("{}", HELP);
+}
+
+pub fn eprint_help() {
+    eprintln!("{}", HELP);
+}
+
 pub fn run(files: &[String], verbosity: u8, human: bool) {
     match verbosity {
         0 => list(files),

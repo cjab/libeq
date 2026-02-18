@@ -16,12 +16,11 @@ enum Command {
     List {
         files: Vec<String>,
         verbosity: u8,
-        human: bool,
+        raw: bool,
     },
     Verify {
         files: Vec<String>,
         verbose: bool,
-        round_trip: bool,
     },
     Extract {
         archive: String,
@@ -41,8 +40,31 @@ enum Command {
     },
     Info {
         files: Vec<String>,
-        human: bool,
+        raw: bool,
     },
+}
+
+const HELP: &str = "\
+s3d — EverQuest archive tool
+
+Usage: s3d <command> [options] [args]
+
+Commands:
+  list    (ls)   List archive contents
+  verify  (v)    Verify archive integrity
+  extract (x)    Extract files from archive
+  create  (c)    Create archive from files
+  get            Extract single file to stdout
+  info    (i)    Display archive metadata
+
+Run 's3d <command> --help' for more information.";
+
+fn print_help() {
+    println!("{}", HELP);
+}
+
+fn eprint_help() {
+    eprintln!("{}", HELP);
 }
 
 pub(crate) fn open_archive(path: &str) -> Option<(EqArchiveReader<File>, Vec<String>)> {
@@ -64,60 +86,69 @@ fn parse_args() -> Result<Command, lexopt::Error> {
 
     let subcommand = match parser.next()? {
         Some(Value(val)) => val.string()?,
+        Some(Short('h') | Long("help")) => {
+            print_help();
+            process::exit(0);
+        }
         Some(other) => return Err(other.unexpected()),
-        None => return Err("expected subcommand: list, verify, extract, create, get, info".into()),
+        None => {
+            eprint_help();
+            process::exit(1);
+        }
     };
 
     match subcommand.as_str() {
         "list" | "ls" => {
             let mut files = Vec::new();
             let mut verbosity: u8 = 0;
-            let mut human = false;
+            let mut raw = false;
             while let Some(arg) = parser.next()? {
                 match arg {
                     Short('v') | Long("verbose") => {
                         verbosity = verbosity.saturating_add(1).min(2);
                     }
-                    Short('h') | Long("human-readable") => {
-                        human = true;
+                    Short('r') | Long("raw") => {
+                        raw = true;
+                    }
+                    Short('h') | Long("help") => {
+                        list::print_help();
+                        process::exit(0);
                     }
                     Value(val) => files.push(val.string()?),
                     other => return Err(other.unexpected()),
                 }
             }
             if files.is_empty() {
-                return Err("list requires at least one file".into());
+                list::eprint_help();
+                process::exit(1);
             }
             Ok(Command::List {
                 files,
                 verbosity,
-                human,
+                raw,
             })
         }
         "verify" | "v" => {
             let mut files = Vec::new();
             let mut verbose = false;
-            let mut round_trip = false;
             while let Some(arg) = parser.next()? {
                 match arg {
                     Short('v') | Long("verbose") => {
                         verbose = true;
                     }
-                    Short('r') | Long("round-trip") => {
-                        round_trip = true;
+                    Short('h') | Long("help") => {
+                        verify::print_help();
+                        process::exit(0);
                     }
                     Value(val) => files.push(val.string()?),
                     other => return Err(other.unexpected()),
                 }
             }
             if files.is_empty() {
-                return Err("verify requires at least one file".into());
+                verify::eprint_help();
+                process::exit(1);
             }
-            Ok(Command::Verify {
-                files,
-                verbose,
-                round_trip,
-            })
+            Ok(Command::Verify { files, verbose })
         }
         "extract" | "x" => {
             let mut archive = None;
@@ -132,6 +163,10 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                     Short('o') | Long("output") => {
                         output = Some(parser.value()?.string()?);
                     }
+                    Short('h') | Long("help") => {
+                        extract::print_help();
+                        process::exit(0);
+                    }
                     Value(val) => {
                         let s = val.string()?;
                         if archive.is_none() {
@@ -143,7 +178,10 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                     other => return Err(other.unexpected()),
                 }
             }
-            let archive = archive.ok_or("extract requires an archive file")?;
+            let Some(archive) = archive else {
+                extract::eprint_help();
+                process::exit(1);
+            };
             Ok(Command::Extract {
                 archive,
                 files,
@@ -164,6 +202,10 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                     Short('f') | Long("force") => {
                         force = true;
                     }
+                    Short('h') | Long("help") => {
+                        create::print_help();
+                        process::exit(0);
+                    }
                     Value(val) => {
                         let s = val.string()?;
                         if archive.is_none() {
@@ -175,10 +217,11 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                     other => return Err(other.unexpected()),
                 }
             }
-            let archive = archive.ok_or("create requires an archive file")?;
-            if inputs.is_empty() {
-                return Err("create requires at least one input file or directory".into());
+            if archive.is_none() || inputs.is_empty() {
+                create::eprint_help();
+                process::exit(1);
             }
+            let archive = archive.unwrap();
             Ok(Command::Create {
                 archive,
                 inputs,
@@ -191,6 +234,10 @@ fn parse_args() -> Result<Command, lexopt::Error> {
             let mut filename = None;
             while let Some(arg) = parser.next()? {
                 match arg {
+                    Short('h') | Long("help") => {
+                        get::print_help();
+                        process::exit(0);
+                    }
                     Value(val) => {
                         let s = val.string()?;
                         if archive.is_none() {
@@ -204,28 +251,68 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                     other => return Err(other.unexpected()),
                 }
             }
-            let archive = archive.ok_or("get requires an archive file")?;
-            let filename = filename.ok_or("get requires a filename")?;
+            if archive.is_none() || filename.is_none() {
+                get::eprint_help();
+                process::exit(1);
+            }
+            let archive = archive.unwrap();
+            let filename = filename.unwrap();
             Ok(Command::Get { archive, filename })
         }
         "info" | "i" => {
             let mut files = Vec::new();
-            let mut human = false;
+            let mut raw = false;
             while let Some(arg) = parser.next()? {
                 match arg {
-                    Short('h') | Long("human-readable") => {
-                        human = true;
+                    Short('r') | Long("raw") => {
+                        raw = true;
+                    }
+                    Short('h') | Long("help") => {
+                        info::print_help();
+                        process::exit(0);
                     }
                     Value(val) => files.push(val.string()?),
                     other => return Err(other.unexpected()),
                 }
             }
             if files.is_empty() {
-                return Err("info requires at least one file".into());
+                info::eprint_help();
+                process::exit(1);
             }
-            Ok(Command::Info { files, human })
+            Ok(Command::Info { files, raw })
         }
-        _ => Err(format!("unknown subcommand: {}", subcommand).into()),
+        "help" => {
+            // s3d help <subcommand>
+            match parser.next()? {
+                Some(Value(val)) => {
+                    let sub = val.string()?;
+                    match sub.as_str() {
+                        "list" | "ls" => list::print_help(),
+                        "verify" | "v" => verify::print_help(),
+                        "extract" | "x" => extract::print_help(),
+                        "create" | "c" => create::print_help(),
+                        "get" => get::print_help(),
+                        "info" | "i" => info::print_help(),
+                        _ => {
+                            eprintln!("unknown subcommand: {}", sub);
+                            print_help();
+                            process::exit(1);
+                        }
+                    }
+                    process::exit(0);
+                }
+                _ => {
+                    print_help();
+                    process::exit(0);
+                }
+            }
+        }
+        _ => {
+            eprintln!("unknown subcommand: {}", subcommand);
+            eprintln!();
+            eprint_help();
+            process::exit(1);
+        }
     }
 }
 
@@ -242,14 +329,10 @@ fn main() {
         Command::List {
             ref files,
             verbosity,
-            human,
-        } => list::run(files, verbosity, human),
-        Command::Verify {
-            ref files,
-            verbose,
-            round_trip,
-        } => {
-            if !verify::run(files, verbose, round_trip) {
+            raw,
+        } => list::run(files, verbosity, !raw),
+        Command::Verify { ref files, verbose } => {
+            if !verify::run(files, verbose) {
                 process::exit(1);
             }
         }
@@ -281,6 +364,6 @@ fn main() {
                 process::exit(1);
             }
         }
-        Command::Info { ref files, human } => info::run(files, human),
+        Command::Info { ref files, raw } => info::run(files, !raw),
     }
 }

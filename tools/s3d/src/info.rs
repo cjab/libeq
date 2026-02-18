@@ -3,6 +3,25 @@ use std::fs;
 use crate::fmt::{format_number, format_size, format_timestamp};
 use crate::open_archive;
 
+const HELP: &str = "\
+s3d info — Display archive metadata
+
+Usage: s3d info [options] <archive>...
+
+Options:
+  -r, --raw              Show raw numeric values
+  -h, --help             Show this help
+
+Aliases: i";
+
+pub fn print_help() {
+    println!("{}", HELP);
+}
+
+pub fn eprint_help() {
+    eprintln!("{}", HELP);
+}
+
 pub fn run(files: &[String], human: bool) {
     for (i, path) in files.iter().enumerate() {
         if i > 0 {

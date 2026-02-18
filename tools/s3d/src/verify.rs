@@ -4,8 +4,29 @@ use libeq_archive::EqArchiveReader;
 
 use crate::open_archive;
 
+const HELP: &str = "\
+s3d verify — Verify archive integrity
+
+Usage: s3d verify [options] <archive>...
+
+Reads every file entry and performs a bitwise round-trip check.
+
+Options:
+  -v, --verbose          Show per-file results
+  -h, --help             Show this help
+
+Aliases: v";
+
+pub fn print_help() {
+    println!("{}", HELP);
+}
+
+pub fn eprint_help() {
+    eprintln!("{}", HELP);
+}
+
 /// Verify all files in the given archives. Returns true if all passed.
-pub fn run(files: &[String], verbose: bool, round_trip: bool) -> bool {
+pub fn run(files: &[String], verbose: bool) -> bool {
     let mut all_ok = true;
 
     for (i, path) in files.iter().enumerate() {
@@ -13,11 +34,7 @@ pub fn run(files: &[String], verbose: bool, round_trip: bool) -> bool {
             println!();
         }
 
-        if !verify_read(path, verbose) {
-            all_ok = false;
-        }
-
-        if round_trip && !verify_round_trip(path) {
+        if !verify_archive(path, verbose) {
             all_ok = false;
         }
     }
@@ -25,7 +42,8 @@ pub fn run(files: &[String], verbose: bool, round_trip: bool) -> bool {
     all_ok
 }
 
-fn verify_read(path: &str, verbose: bool) -> bool {
+fn verify_archive(path: &str, verbose: bool) -> bool {
+    // Phase 1: Read check — decompress every file, verify sizes
     let Some((mut reader, filenames)) = open_archive(path) else {
         return false;
     };
@@ -92,17 +110,13 @@ fn verify_read(path: &str, verbose: bool) -> bool {
         passed += 1;
     }
 
-    let total = passed + failed;
-    if failed == 0 {
-        println!("{}: {} files OK", path, passed);
-        true
-    } else {
-        println!("{}: {}/{} files OK, {} failed", path, passed, total, failed);
-        false
+    if failed > 0 {
+        let total = passed + failed;
+        eprintln!("{}: {}/{} files OK, {} failed", path, passed, total, failed);
+        return false;
     }
-}
 
-fn verify_round_trip(path: &str) -> bool {
+    // Phase 2: Round-trip check — read entire archive, serialize back, compare bytes
     let original = match std::fs::read(path) {
         Ok(bytes) => bytes,
         Err(e) => {
@@ -111,7 +125,7 @@ fn verify_round_trip(path: &str) -> bool {
         }
     };
 
-    let mut reader = match EqArchiveReader::read(Cursor::new(&original)) {
+    let mut rt_reader = match EqArchiveReader::read(Cursor::new(&original)) {
         Ok(r) => r,
         Err(e) => {
             eprintln!("{}: round-trip: failed to parse: {}", path, e);
@@ -119,7 +133,7 @@ fn verify_round_trip(path: &str) -> bool {
         }
     };
 
-    let writer = match reader.to_writer() {
+    let writer = match rt_reader.to_writer() {
         Ok(w) => w,
         Err(e) => {
             eprintln!("{}: round-trip: failed to convert to writer: {}", path, e);
@@ -135,10 +149,7 @@ fn verify_round_trip(path: &str) -> bool {
         }
     };
 
-    if original == roundtripped {
-        println!("{}: round-trip OK ({} bytes)", path, original.len());
-        true
-    } else {
+    if original != roundtripped {
         let first_diff = original
             .iter()
             .zip(roundtripped.iter())
@@ -152,6 +163,14 @@ fn verify_round_trip(path: &str) -> bool {
             roundtripped.len(),
             first_diff
         );
-        false
+        return false;
     }
+
+    println!(
+        "{}: {} files OK, round-trip OK ({} bytes)",
+        path,
+        passed,
+        original.len()
+    );
+    true
 }

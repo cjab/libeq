@@ -5,6 +5,30 @@ use std::path::{Path, PathBuf};
 
 use libeq_archive::EqArchiveWriter;
 
+const HELP: &str = "\
+s3d create — Create archive from files
+
+Usage: s3d create [options] <archive> <files|dirs>...
+
+Creates a new archive from the given files and directories.
+Directories are traversed recursively; files are flattened
+to basenames.
+
+Options:
+  -f, --force            Overwrite existing archive
+  -v, --verbose          Print filenames as added
+  -h, --help             Show this help
+
+Aliases: c";
+
+pub fn print_help() {
+    println!("{}", HELP);
+}
+
+pub fn eprint_help() {
+    eprintln!("{}", HELP);
+}
+
 /// Create a new archive from input files and directories. Returns true if all succeeded.
 pub fn run(archive: &str, inputs: &[String], verbose: bool, force: bool) -> bool {
     if !force && Path::new(archive).exists() {

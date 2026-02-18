@@ -2,6 +2,22 @@ use std::io::{self, Write};
 
 use crate::open_archive;
 
+const HELP: &str = "\
+s3d get — Extract single file to stdout
+
+Usage: s3d get <archive> <filename>
+
+Writes the raw contents of a single file to stdout.
+Errors are printed to stderr.";
+
+pub fn print_help() {
+    println!("{}", HELP);
+}
+
+pub fn eprint_help() {
+    eprintln!("{}", HELP);
+}
+
 pub fn run(archive: &str, filename: &str) -> bool {
     let Some((mut reader, _filenames)) = open_archive(archive) else {
         return false;

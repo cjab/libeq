@@ -3,6 +3,29 @@ use std::path::Path;
 
 use crate::open_archive;
 
+const HELP: &str = "\
+s3d extract — Extract files from archive
+
+Usage: s3d extract [options] <archive> [files...]
+
+Extracts files from an archive. If no filenames are given,
+all files are extracted.
+
+Options:
+  -o, --output <dir>     Output directory (created if needed)
+  -v, --verbose          Print filenames as extracted
+  -h, --help             Show this help
+
+Aliases: x";
+
+pub fn print_help() {
+    println!("{}", HELP);
+}
+
+pub fn eprint_help() {
+    eprintln!("{}", HELP);
+}
+
 pub fn run(archive: &str, files: &[String], output: Option<&str>, verbose: bool) -> bool {
     let Some((mut reader, all_filenames)) = open_archive(archive) else {
         return false;
