@@ -1,5 +1,6 @@
+use jiff::Timestamp;
+use jiff::tz::TimeZone;
 use libeq_archive::FileInfo;
-use time_format::{components_utc, strftime_utc};
 
 pub(crate) fn format_ratio(info: &FileInfo) -> String {
     if info.uncompressed_size > 0 {
@@ -57,6 +58,16 @@ pub(crate) fn format_number(n: u64, human: bool) -> String {
     result
 }
 
+const DAY_NAMES: [&str; 7] = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+];
+
 const MONTH_NAMES: [&str; 12] = [
     "January",
     "February",
@@ -72,8 +83,9 @@ const MONTH_NAMES: [&str; 12] = [
     "December",
 ];
 
-fn ordinal_suffix(day: u8) -> &'static str {
-    match (day % 10, day % 100) {
+fn ordinal_suffix(day: i8) -> &'static str {
+    let d = day as u8;
+    match (d % 10, d % 100) {
         (1, 11) | (2, 12) | (3, 13) => "th",
         (1, _) => "st",
         (2, _) => "nd",
@@ -82,26 +94,90 @@ fn ordinal_suffix(day: u8) -> &'static str {
     }
 }
 
+/// Returns the timezone abbreviation (e.g. "PST", "EST") for a zoned datetime,
+/// falling back to a UTC offset string (e.g. "UTC-8") if unavailable.
+fn tz_abbrev(ts: &Timestamp, tz: &TimeZone) -> String {
+    let zdt = ts.to_zoned(tz.clone());
+    jiff::fmt::strtime::format("%Z", &zdt).unwrap_or_else(|_| format_offset(zdt.offset()))
+}
+
+fn format_offset(offset: jiff::tz::Offset) -> String {
+    let total_seconds = offset.seconds();
+    let hours = total_seconds / 3600;
+    let minutes = (total_seconds.abs() % 3600) / 60;
+    if minutes == 0 {
+        format!("UTC{:+}", hours)
+    } else {
+        format!("UTC{:+}:{:02}", hours, minutes)
+    }
+}
+
+/// Formats a timestamp as an aligned human-readable date/time string.
+/// Weekday is padded to 9 chars (length of "Wednesday") and month to 9 chars
+/// (length of "September") so multiple lines align when stacked.
+fn format_human_datetime(ts: &Timestamp, tz: &TimeZone) -> String {
+    let zdt = ts.to_zoned(tz.clone());
+    let dt = zdt.datetime();
+    let weekday = DAY_NAMES[zdt.weekday().to_monday_zero_offset() as usize];
+    let month = MONTH_NAMES[dt.month() as usize - 1];
+    let day = dt.day();
+    let suffix = ordinal_suffix(day);
+    let year = dt.year();
+    let hour = dt.hour();
+    let minute = dt.minute();
+    let (hour12, ampm) = match hour {
+        0 => (12, "AM"),
+        1..=11 => (hour, "AM"),
+        12 => (12, "PM"),
+        _ => (hour - 12, "PM"),
+    };
+    let abbrev = tz_abbrev(ts, tz);
+
+    format!(
+        "{:<9}  {:<9} {}{}, {} {:>2}:{:02} {} {}",
+        weekday, month, day, suffix, year, hour12, minute, ampm, abbrev
+    )
+}
+
+fn format_compact_datetime(ts: &Timestamp, tz: &TimeZone) -> String {
+    let zdt = ts.to_zoned(tz.clone());
+    let dt = zdt.datetime();
+    let abbrev = tz_abbrev(ts, tz);
+    format!(
+        "{:04}-{:02}-{:02} {:02}:{:02}:{:02} {}",
+        dt.year(),
+        dt.month(),
+        dt.day(),
+        dt.hour(),
+        dt.minute(),
+        dt.second(),
+        abbrev
+    )
+}
+
 pub(crate) fn format_timestamp(ts: u32, human: bool) -> String {
+    let Ok(timestamp) = Timestamp::from_second(ts as i64) else {
+        return ts.to_string();
+    };
+
+    let local_tz = TimeZone::system();
+
     if human {
-        let Ok(c) = components_utc(ts as i64) else {
-            return ts.to_string();
-        };
-        let month = MONTH_NAMES[c.month as usize - 1];
-        let suffix = ordinal_suffix(c.month_day);
-        let (hour, ampm) = match c.hour {
-            0 => (12, "AM"),
-            1..=11 => (c.hour, "AM"),
-            12 => (12, "PM"),
-            _ => (c.hour - 12, "PM"),
-        };
+        // Line 1: user's local time
+        // Line 2: UTC (indented to align with value column)
+        // Line 3: San Diego time with historical note (indented)
+        let local = format_human_datetime(&timestamp, &local_tz);
+        let utc = format_human_datetime(&timestamp, &TimeZone::UTC);
+        let san_diego_tz = TimeZone::get("America/Los_Angeles").unwrap_or_else(|_| TimeZone::UTC);
+        let san_diego = format_human_datetime(&timestamp, &san_diego_tz);
+
         format!(
-            "{} {}{}, {} {}:{:02} {} UTC",
-            month, c.month_day, suffix, c.year, hour, c.min, ampm
+            "{} (local time)\n                 {}\n                 {} — Verant Interactive, San Diego, CA",
+            local, utc, san_diego
         )
     } else {
-        let formatted = strftime_utc("%Y-%m-%d %H:%M:%S UTC", ts as i64)
-            .unwrap_or_else(|_| "unknown".to_string());
+        // Default: raw value + user's local time compact
+        let formatted = format_compact_datetime(&timestamp, &local_tz);
         format!("{} ({})", ts, formatted)
     }
 }
