@@ -69,7 +69,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
     };
 
     match subcommand.as_str() {
-        "list" => {
+        "list" | "ls" => {
             let mut files = Vec::new();
             let mut verbosity: u8 = 0;
             let mut human = false;
@@ -94,7 +94,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 human,
             })
         }
-        "verify" => {
+        "verify" | "v" => {
             let mut files = Vec::new();
             let mut verbose = false;
             let mut round_trip = false;
@@ -119,7 +119,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 round_trip,
             })
         }
-        "extract" => {
+        "extract" | "x" => {
             let mut archive = None;
             let mut files = Vec::new();
             let mut output = None;
@@ -151,7 +151,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 verbose,
             })
         }
-        "create" => {
+        "create" | "c" => {
             let mut archive = None;
             let mut inputs = Vec::new();
             let mut verbose = false;
@@ -208,7 +208,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
             let filename = filename.ok_or("get requires a filename")?;
             Ok(Command::Get { archive, filename })
         }
-        "info" => {
+        "info" | "i" => {
             let mut files = Vec::new();
             let mut human = false;
             while let Some(arg) = parser.next()? {
