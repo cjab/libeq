@@ -36,6 +36,7 @@
 //!
 mod crc;
 mod error;
+mod new_write;
 mod parser;
 mod read;
 mod write;
@@ -46,6 +47,8 @@ pub use read::EqArchiveReader;
 pub use read::EqFileReader;
 pub use read::FileInfo;
 pub use write::EqArchiveWriter;
+
+pub use new_write::EqArchiveWriter as Asdf;
 
 #[cfg(test)]
 mod tests {

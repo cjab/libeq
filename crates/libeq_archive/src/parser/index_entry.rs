@@ -2,7 +2,7 @@ use std::io::Read;
 
 use crate::error::Error;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct IndexEntry {
     pub filename_crc: u32,
     pub data_offset: u32,

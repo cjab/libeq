@@ -2,11 +2,21 @@ use std::io::Read;
 
 use crate::error::Error;
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Header {
     pub index_offset: u32,
     pub magic_number: u32,
     pub version: u32,
+}
+
+impl Default for Header {
+    fn default() -> Self {
+        Self {
+            index_offset: 0,
+            magic_number: Self::MAGIC_NUMBER,
+            version: Self::VERSION,
+        }
+    }
 }
 
 impl Header {

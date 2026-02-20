@@ -43,6 +43,9 @@ impl EqArchiveReader<Cursor<Vec<u8>>> {
     }
 }
 
+//----------------------
+// Public API
+//----------------------
 impl<R: Read + Seek> EqArchiveReader<R> {
     pub fn open(reader: R) -> Result<Self, Error> {
         from_reader(reader)
@@ -70,44 +73,37 @@ impl<R: Read + Seek> EqArchiveReader<R> {
     }
 
     pub fn get_reader(&mut self, filename: &str) -> Result<Option<EqFileReader>, Error> {
-        let Some(blocks) = self.get_blocks_for(filename)? else {
+        let Some(entry) = self.get_index_entry(filename)? else {
             return Ok(None);
         };
-        Ok(Some(EqFileReader::new(blocks)?))
+        Ok(Some(EqFileReader::new(self.read_blocks(entry)?)?))
     }
 
     pub fn info(&mut self, filename: &str) -> Result<Option<FileInfo>, Error> {
-        let crc = FilenameCrc::new(filename);
-        let Some(entry) = self.index.get(&crc) else {
+        let Some(entry) = self.get_index_entry(filename)?.map(|x| x.clone()) else {
             return Ok(None);
         };
-        let data_offset = entry.data_offset;
-        let uncompressed_size = entry.uncompressed_size;
-
-        let headers = self.read_block_headers(data_offset, uncompressed_size)?;
+        let headers = self.read_block_headers(entry)?;
         Ok(Some(FileInfo {
-            data_offset,
+            data_offset: entry.data_offset,
             compressed_size: headers.iter().map(|h| h.compressed_size).sum(),
-            uncompressed_size,
+            uncompressed_size: entry.uncompressed_size,
             block_count: headers.len() as u32,
         }))
     }
 
     pub fn directory_info(&mut self) -> Result<FileInfo, Error> {
-        let data_offset = self.directory.data_offset;
-        let uncompressed_size = self.directory.uncompressed_size;
-        let headers = self.read_block_headers(data_offset, uncompressed_size)?;
+        let headers = self.read_block_headers(self.directory)?;
         Ok(FileInfo {
-            data_offset,
+            data_offset: self.directory.data_offset,
             compressed_size: headers.iter().map(|h| h.compressed_size).sum(),
-            uncompressed_size,
+            uncompressed_size: self.directory.uncompressed_size,
             block_count: headers.len() as u32,
         })
     }
 
     pub fn filenames(&mut self) -> Result<Vec<String>, Error> {
-        let blocks =
-            self.read_blocks(self.directory.data_offset, self.directory.uncompressed_size)?;
+        let blocks = self.read_blocks(self.directory)?;
         let mut data = Vec::with_capacity(self.directory.uncompressed_size as usize);
         let mut reader = EqFileReader::new(blocks)?;
         reader.read_to_end(&mut data)?;
@@ -121,9 +117,13 @@ impl<R: Read + Seek> EqArchiveReader<R> {
             .filenames()?
             .iter()
             .map(|name| {
-                let blocks = self.get_blocks_for(name)?.ok_or_else(|| {
-                    Error::CorruptArchive(format!("missing index entry for {}", name))
-                })?;
+                let Some(entry) = self.get_index_entry(name)? else {
+                    return Err(Error::CorruptArchive(format!(
+                        "missing index entry for {}",
+                        name
+                    )));
+                };
+                let blocks = self.read_blocks(entry)?;
                 Ok((name.clone(), blocks))
             })
             .collect::<Result<Vec<_>, Error>>()?;
@@ -139,8 +139,7 @@ impl<R: Read + Seek> EqArchiveReader<R> {
         // The directory isn't totally necessary but having it allows us to write
         // an archive that hasn't been modified and reproduce the original file at
         // the bit level. This is a nice property for testing.
-        let directory =
-            self.read_blocks(self.directory.data_offset, self.directory.uncompressed_size)?;
+        let directory = self.read_blocks(self.directory)?;
 
         Ok(EqArchiveWriter::from_existing(
             entries,
@@ -148,8 +147,106 @@ impl<R: Read + Seek> EqArchiveReader<R> {
             self.footer.clone(),
         ))
     }
+}
 
-    fn get_blocks_for(&mut self, filename: &str) -> Result<Option<Vec<Block>>, Error> {
+//----------------------
+// Block iters
+//----------------------
+struct BlockIterState<'a, R> {
+    reader: &'a mut R,
+    blocks_read: usize,
+    max_blocks: usize,
+    uncompressed_read: usize,
+    uncompressed: usize,
+}
+
+impl<'a, R: Read + Seek> BlockIterState<'a, R> {
+    fn new(entry: &IndexEntry, reader: &'a mut R) -> Self {
+        BlockIterState {
+            reader: reader,
+            blocks_read: 0,
+            max_blocks: (entry.uncompressed_size as usize)
+                .div_ceil(BlockHeader::MAX_UNCOMPRESSED_SIZE),
+            uncompressed_read: 0,
+            uncompressed: entry.uncompressed_size as usize,
+        }
+    }
+
+    fn next_header(&mut self) -> Option<Result<BlockHeader, Error>> {
+        let remaining = self.uncompressed.saturating_sub(self.uncompressed_read);
+        if remaining == 0 {
+            return None;
+        }
+
+        let header = match BlockHeader::read(&mut self.reader) {
+            Ok(h) => h,
+            Err(e) => return Some(Err(e)),
+        };
+        self.blocks_read += 1;
+        self.uncompressed_read = self
+            .uncompressed_read
+            .saturating_add(header.uncompressed_size as usize);
+
+        if (header.uncompressed_size as usize) > remaining {
+            return Some(Err(Error::CorruptArchive(
+                "block uncompressed size exceeds expected total".into(),
+            )));
+        }
+        if self.blocks_read > self.max_blocks {
+            return Some(Err(Error::CorruptArchive(
+                "too many blocks for entry".into(),
+            )));
+        }
+
+        Some(Ok(header))
+    }
+}
+
+pub struct BlockHeaderIter<'a, R>(BlockIterState<'a, R>);
+
+impl<'a, R: Read + Seek> Iterator for BlockHeaderIter<'a, R> {
+    type Item = Result<BlockHeader, Error>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let header = match self.0.next_header()? {
+            Ok(h) => h,
+            Err(e) => return Some(Err(e)),
+        };
+        // Seek past the compressed data
+        if let Err(e) = self
+            .0
+            .reader
+            .seek(SeekFrom::Current(header.compressed_size as i64))
+        {
+            return Some(Err(e.into()));
+        };
+        Some(Ok(header))
+    }
+}
+
+pub struct BlockIter<'a, R>(BlockIterState<'a, R>);
+
+impl<'a, R: Read + Seek> Iterator for BlockIter<'a, R> {
+    type Item = Result<Block, Error>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let header = match self.0.next_header()? {
+            Ok(h) => h,
+            Err(e) => return Some(Err(e)),
+        };
+        let block = match Block::read(header, &mut self.0.reader) {
+            Ok(h) => h,
+            Err(e) => return Some(Err(e)),
+        };
+        Some(Ok(block))
+    }
+}
+
+//----------------------
+// Block operations
+//----------------------
+impl<R: Read + Seek> EqArchiveReader<R> {
+    fn get_index_entry(&self, filename: &str) -> Result<Option<IndexEntry>, Error> {
         let crc = FilenameCrc::new(filename);
         let Some(entry) = self.index.get(&crc) else {
             return Ok(None);
@@ -163,61 +260,30 @@ impl<R: Read + Seek> EqArchiveReader<R> {
             )));
         }
 
-        self.read_blocks(entry.data_offset, entry.uncompressed_size)
-            .map(Some)
+        Ok(Some(*entry))
     }
 
-    fn read_block_headers(
-        &mut self,
-        data_offset: u32,
-        uncompressed_size: u32,
-    ) -> Result<Vec<BlockHeader>, Error> {
-        let mut collected: u32 = 0;
-        let mut headers = Vec::new();
-        self.reader.seek(SeekFrom::Start(data_offset as u64))?;
-
-        while collected < uncompressed_size {
-            let header = BlockHeader::read(&mut self.reader)?;
-            collected += header.uncompressed_size;
-            self.reader
-                .seek(SeekFrom::Current(header.compressed_size as i64))?;
-            headers.push(header);
-        }
-
-        Ok(headers)
+    fn iter_block_headers(&mut self, entry: &IndexEntry) -> Result<BlockHeaderIter<'_, R>, Error> {
+        self.reader
+            .seek(SeekFrom::Start(entry.data_offset as u64))?;
+        Ok(BlockHeaderIter(BlockIterState::new(
+            entry,
+            &mut self.reader,
+        )))
     }
 
-    fn read_blocks(
-        &mut self,
-        data_offset: u32,
-        uncompressed_size: u32,
-    ) -> Result<Vec<Block>, Error> {
-        let max_blocks = (uncompressed_size as usize).div_ceil(BlockHeader::MAX_UNCOMPRESSED_SIZE);
-        let mut collected: u32 = 0;
-        let mut blocks = Vec::with_capacity(max_blocks);
-        let mut block_count = 0;
-        self.reader.seek(SeekFrom::Start(data_offset as u64))?;
+    fn iter_blocks(&mut self, entry: &IndexEntry) -> Result<BlockIter<'_, R>, Error> {
+        self.reader
+            .seek(SeekFrom::Start(entry.data_offset as u64))?;
+        Ok(BlockIter(BlockIterState::new(entry, &mut self.reader)))
+    }
 
-        while collected < uncompressed_size {
-            if block_count > max_blocks {
-                return Err(Error::CorruptArchive("too many blocks for entry".into()));
-            }
+    fn read_block_headers(&mut self, entry: IndexEntry) -> Result<Vec<BlockHeader>, Error> {
+        self.iter_block_headers(&entry)?.collect()
+    }
 
-            let block_header = BlockHeader::read(&mut self.reader)?;
-            let uncompressed = block_header.uncompressed_size;
-            if collected + uncompressed > uncompressed_size {
-                return Err(Error::CorruptArchive(
-                    "block uncompressed size exceeds expected total".into(),
-                ));
-            }
-
-            let block = Block::read(block_header, &mut self.reader)?;
-            blocks.push(block);
-            block_count += 1;
-            collected += uncompressed;
-        }
-
-        Ok(blocks)
+    fn read_blocks(&mut self, entry: IndexEntry) -> Result<Vec<Block>, Error> {
+        self.iter_blocks(&entry)?.collect()
     }
 }
 
