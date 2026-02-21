@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::io::{Cursor, Read, Seek, SeekFrom, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -7,12 +6,11 @@ use flate2::write::ZlibEncoder;
 
 use crate::crc::FilenameCrc;
 use crate::error::Error;
-use crate::parser::{Block, BlockHeader, Directory, Footer, Header, IndexEntry};
+use crate::parser::{BlockHeader, Directory, Footer, Header, IndexEntry};
 
 pub struct EqArchiveWriter<W> {
     writer: W,
     entries: Vec<(String, IndexEntry)>,
-    removed: HashSet<String>,
     directory: Option<IndexEntry>,
     footer: Option<Footer>,
 }
@@ -21,11 +19,10 @@ pub struct EqArchiveWriter<W> {
 // Public API
 //----------------------
 impl<W: Read + Write + Seek> EqArchiveWriter<W> {
-    pub fn create(mut writer: W) -> Result<Self, Error> {
+    pub fn create(writer: W) -> Result<Self, Error> {
         let mut new = Self {
             writer,
             entries: Vec::new(),
-            removed: HashSet::new(),
             directory: None,
             footer: None,
         };
@@ -45,9 +42,21 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
         if replaced {
             self.entries.retain(|(f, _)| f != &filename)
         };
-        // Clear the directory, we now need to generate a new one
+        // Clear the directory, inserting a file invalidated it.
+        // We now need to generate a new one at finish.
         self.directory = None;
-        self.write_file(&mut reader)?;
+
+        let data_offset = self.writer.stream_position()? as u32;
+        let uncompressed_size = self.write_file(&mut reader)?;
+        let filename_crc = FilenameCrc::new(&filename).into();
+        self.entries.push((
+            filename,
+            IndexEntry {
+                data_offset,
+                uncompressed_size,
+                filename_crc,
+            },
+        ));
         Ok(replaced)
     }
 
@@ -55,6 +64,8 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
         let removed = self.entries.iter().any(|(f, _)| f == filename);
         if removed {
             self.entries.retain(|(f, _)| f != filename);
+            // Clear the directory, removing a file invalidated it.
+            // We now need to generate a new one at finish.
             self.directory = None;
         };
         removed
@@ -64,12 +75,14 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
         self.entries.iter().map(|(name, _)| name.clone()).collect()
     }
 
-    pub fn finish(&mut self) -> Result<(), Error> {
+    pub fn finish(mut self) -> Result<(), Error> {
+        let was_modified = self.directory.is_none();
         // At this point we assume that the header and all file blocks
         // have been written. We just need to compact, skipping any removed
-        // files and then write the index and footer.
+        // files and then write the directory, index, and footer.
+        self.write_directory()?;
         self.write_index()?;
-        self.write_footer()?;
+        self.write_footer(was_modified)?;
         Ok(())
     }
 }
@@ -83,16 +96,18 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
         Ok(())
     }
 
-    fn write_file(&mut self, reader: &mut impl Read) -> Result<(), Error> {
+    fn write_file(&mut self, reader: &mut impl Read) -> Result<u32, Error> {
         let mut chunk = Vec::with_capacity(BlockHeader::MAX_UNCOMPRESSED_SIZE);
         let mut buf = Vec::with_capacity(BlockHeader::MAX_COMPRESSED_SIZE);
+        let mut file_size = 0;
         loop {
             chunk.clear();
             let uncompressed_size = reader
                 .take(BlockHeader::MAX_UNCOMPRESSED_SIZE as u64)
                 .read_to_end(&mut chunk)? as u32;
+            file_size += uncompressed_size;
             if uncompressed_size == 0 {
-                return Ok(());
+                return Ok(file_size);
             }
             buf.clear();
             let mut encoder = ZlibEncoder::new(&mut buf, Compression::default());
@@ -119,10 +134,9 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
         let mut filenames = self.filenames();
         filenames.sort_by_key(|f| FilenameCrc::new(f));
         let dir = Directory { filenames }.to_bytes();
-        let uncompressed_size = dir.len() as u32;
         let data_offset = self.writer.stream_position()? as u32;
         let mut cursor = Cursor::new(dir);
-        self.write_file(&mut cursor)?;
+        let uncompressed_size = self.write_file(&mut cursor)?;
 
         // And also create the associated index,
         // to be written later in the index section by write_index.
@@ -142,15 +156,6 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
         self.writer.write_all(&index_offset.to_le_bytes())?;
         self.writer.seek(SeekFrom::Start(index_offset as u64))?;
 
-        // Then seek back and write the entry/file count
-        let entry_count = self.entries.len() as u32;
-        self.writer.write_all(&entry_count.to_le_bytes())?;
-        self.entries.sort_by_key(|(_, e)| e.filename_crc);
-
-        // Followed by all compressed file blocks
-        for (_, entry) in self.entries.iter() {
-            self.writer.write_all(&entry.to_bytes())?;
-        }
         let Some(dir) = self.directory else {
             // This means that for whatever reason we tried to write
             // the index before writing the directory file.
@@ -158,24 +163,37 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
                 "directory index does not exist".into(),
             ));
         };
-        self.writer.write_all(&dir.to_bytes())?;
+
+        let mut all_entries: Vec<_> = self.entries.iter().map(|(_, e)| *e).collect();
+        all_entries.push(dir);
+        all_entries.sort_by_key(|e| e.filename_crc);
+
+        // Then seek forward again and write the entry/file count,
+        let entry_count = all_entries.len() as u32;
+        self.writer.write_all(&entry_count.to_le_bytes())?;
+
+        // Followed by all index entries
+        for entry in all_entries.iter() {
+            self.writer.write_all(&entry.to_bytes())?;
+        }
+
         Ok(())
     }
 
-    fn write_footer(&mut self) -> Result<(), Error> {
-        let bytes = match (&self.directory, &self.footer) {
+    fn write_footer(&mut self, was_modified: bool) -> Result<(), Error> {
+        let bytes = match (was_modified, &self.footer) {
             // Preserve the footer if it exists and no changes have been made
-            (Some(_), Some(f)) => f.to_bytes(),
+            (false, Some(f)) => f.to_bytes(),
             // Update the timestamp if footer exists and changes have been made
-            (None, Some(f)) => Footer {
+            (true, Some(f)) => Footer {
                 footer_string: f.footer_string,
                 timestamp: current_unix_timestamp(),
             }
             .to_bytes(),
             // If the original archive had no footer do not add one
-            (Some(_), None) => vec![],
+            (false, None) => vec![],
             // This is a new archive may as well add a footer
-            (None, None) => Footer {
+            (true, None) => Footer {
                 footer_string: Footer::FOOTER_STRING,
                 timestamp: current_unix_timestamp(),
             }
