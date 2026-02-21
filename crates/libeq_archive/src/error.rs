@@ -11,3 +11,12 @@ pub enum Error {
     #[error("File not found: {0}")]
     FileNotFound(String),
 }
+
+impl From<Error> for std::io::Error {
+    fn from(e: Error) -> Self {
+        match e {
+            Error::IO(io_err) => io_err,
+            other => std::io::Error::new(std::io::ErrorKind::Other, other),
+        }
+    }
+}

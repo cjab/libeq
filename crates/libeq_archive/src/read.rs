@@ -8,7 +8,6 @@ use crate::error::Error;
 use crate::parser::{Block, BlockHeader, Directory, Footer, Header, IndexEntry};
 use crate::write::EqArchiveWriter;
 
-// Limits
 const MAX_ENTRY_COUNT: u32 = 100_000; // 100k files
 
 #[derive(Debug, Eq, PartialEq)]
@@ -35,6 +34,9 @@ pub struct EqArchiveReader<R> {
     footer: Option<Footer>,
 }
 
+//----------------------
+// Public API
+//----------------------
 impl EqArchiveReader<Cursor<Vec<u8>>> {
     pub fn read<R: Read>(mut reader: R) -> Result<Self, Error> {
         let mut buf = Vec::new();
@@ -43,9 +45,6 @@ impl EqArchiveReader<Cursor<Vec<u8>>> {
     }
 }
 
-//----------------------
-// Public API
-//----------------------
 impl<R: Read + Seek> EqArchiveReader<R> {
     pub fn open(reader: R) -> Result<Self, Error> {
         from_reader(reader)
@@ -72,18 +71,21 @@ impl<R: Read + Seek> EqArchiveReader<R> {
         Ok(Some(buf))
     }
 
-    pub fn get_reader(&mut self, filename: &str) -> Result<Option<EqFileReader>, Error> {
+    pub fn get_reader(&mut self, filename: &str) -> Result<Option<impl Read>, Error> {
         let Some(entry) = self.get_index_entry(filename)? else {
             return Ok(None);
         };
-        Ok(Some(EqFileReader::new(self.read_blocks(entry)?)?))
+        Ok(Some(EqFileReader::new(self.iter_blocks(&entry)?)?))
     }
 
     pub fn info(&mut self, filename: &str) -> Result<Option<FileInfo>, Error> {
         let Some(entry) = self.get_index_entry(filename)?.map(|x| x.clone()) else {
             return Ok(None);
         };
-        let headers = self.read_block_headers(entry)?;
+        let headers: Vec<_> = self
+            .iter_block_headers(&entry)?
+            .collect::<Result<_, Error>>()?;
+
         Ok(Some(FileInfo {
             data_offset: entry.data_offset,
             compressed_size: headers.iter().map(|h| h.compressed_size).sum(),
@@ -93,18 +95,23 @@ impl<R: Read + Seek> EqArchiveReader<R> {
     }
 
     pub fn directory_info(&mut self) -> Result<FileInfo, Error> {
-        let headers = self.read_block_headers(self.directory)?;
+        let dir = self.directory;
+        let headers: Vec<_> = self
+            .iter_block_headers(&dir)?
+            .collect::<Result<_, Error>>()?;
         Ok(FileInfo {
-            data_offset: self.directory.data_offset,
+            data_offset: dir.data_offset,
             compressed_size: headers.iter().map(|h| h.compressed_size).sum(),
-            uncompressed_size: self.directory.uncompressed_size,
+            uncompressed_size: dir.uncompressed_size,
             block_count: headers.len() as u32,
         })
     }
 
     pub fn filenames(&mut self) -> Result<Vec<String>, Error> {
-        let blocks = self.read_blocks(self.directory)?;
-        let mut data = Vec::with_capacity(self.directory.uncompressed_size as usize);
+        let dir = self.directory;
+        let dir_size = dir.uncompressed_size;
+        let blocks = self.iter_blocks(&dir)?;
+        let mut data = Vec::with_capacity(dir_size as usize);
         let mut reader = EqFileReader::new(blocks)?;
         reader.read_to_end(&mut data)?;
         let mut cursor = Cursor::new(data);
@@ -278,10 +285,6 @@ impl<R: Read + Seek> EqArchiveReader<R> {
         Ok(BlockIter(BlockIterState::new(entry, &mut self.reader)))
     }
 
-    fn read_block_headers(&mut self, entry: IndexEntry) -> Result<Vec<BlockHeader>, Error> {
-        self.iter_block_headers(&entry)?.collect()
-    }
-
     fn read_blocks(&mut self, entry: IndexEntry) -> Result<Vec<Block>, Error> {
         self.iter_blocks(&entry)?.collect()
     }
@@ -348,26 +351,25 @@ fn from_reader<S: Read + Seek>(mut reader: S) -> Result<EqArchiveReader<S>, Erro
     })
 }
 
-pub struct EqFileReader {
-    blocks: std::vec::IntoIter<Block>,
+pub struct EqFileReader<I: Iterator<Item = Result<Block, Error>>> {
+    blocks: I,
     curr: Cursor<Vec<u8>>,
 }
 
-impl EqFileReader {
-    fn new(blocks: Vec<Block>) -> Result<Self, Error> {
-        let mut block_iter = blocks.into_iter();
-        let initial_data = match block_iter.next() {
-            Some(block) => decompress_block(&block)?,
+impl<I: Iterator<Item = Result<Block, Error>>> EqFileReader<I> {
+    fn new(mut blocks: I) -> Result<Self, Error> {
+        let initial_data = match blocks.next() {
+            Some(block) => decompress_block(&block?)?,
             None => Cursor::new(Vec::new()),
         };
         Ok(Self {
-            blocks: block_iter,
+            blocks,
             curr: initial_data,
         })
     }
 }
 
-impl Read for EqFileReader {
+impl<I: Iterator<Item = Result<Block, Error>>> Read for EqFileReader<I> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         let n = self.curr.read(buf)?;
         if n > 0 {
@@ -375,7 +377,7 @@ impl Read for EqFileReader {
         }
 
         if let Some(block) = self.blocks.next() {
-            self.curr = decompress_block(&block)?;
+            self.curr = decompress_block(&block?)?;
             self.read(buf)
         } else {
             Ok(0)
