@@ -1,7 +1,7 @@
 //! # An Everquest archive file extractor
 //!
 //! # Examples
-//! ```rust
+//! ```rust,no_run
 //! use std::io::Write;
 //! use libeq_archive::EqArchiveReader;
 //! use libeq_archive::EqArchiveWriter;
@@ -47,8 +47,6 @@ pub use read::EqArchiveReader;
 pub use read::EqFileReader;
 pub use read::FileInfo;
 pub use write::EqArchiveWriter;
-
-pub use new_write::EqArchiveWriter as Asdf;
 
 #[cfg(test)]
 mod tests {

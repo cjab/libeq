@@ -29,22 +29,21 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
         }
     }
 
-    pub(crate) fn from_reader(
-        existing: Vec<(String, Vec<Block>)>,
-        directory: Vec<Block>,
-        footer: Option<Footer>,
-    ) -> Self {
-        EqArchiveWriter {
-            existing,
-            directory: Some(directory),
-            footer,
-            ..EqArchiveWriter::default()
-        }
-    }
+    //pub(crate) fn from_reader(
+    //    existing: Vec<(String, Vec<Block>)>,
+    //    directory: Vec<Block>,
+    //    footer: Option<Footer>,
+    //) -> Self {
+    //    EqArchiveWriter {
+    //        existing,
+    //        directory: Some(directory),
+    //        footer,
+    //        ..EqArchiveWriter::default()
+    //    }
+    //}
 
-    pub fn push(&mut self, filename: impl Into<String>, data: impl Into<Vec<u8>>) {
+    pub fn push(&mut self, filename: impl Into<String>, reader: impl Read) -> Result<(), Error> {
         let filename = filename.into();
-        let data = data.into();
         self.remove(&filename);
         // Clear the directory, we now need to generate a new one
         self.directory = None;
@@ -53,10 +52,8 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
     }
 
     pub fn remove(&mut self, filename: &str) {
-        // Clear the directory, we now need to generate a new one
+        self.removed.insert(filename.into());
         self.directory = None;
-        self.existing.retain(|(f, _)| f != filename);
-        self.added.retain(|(f, _)| f != filename);
     }
 
     pub fn filenames(&self) -> Vec<String> {
@@ -179,16 +176,31 @@ fn current_unix_timestamp() -> u32 {
         .as_secs() as u32
 }
 
-fn encode(data: &[u8]) -> Result<Vec<Block>, Error> {
-    let mut blocks = Vec::new();
-    for chunk in data.chunks(BlockHeader::MAX_UNCOMPRESSED_SIZE) {
-        let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
-        encoder.write_all(chunk)?;
-        let compressed_data = encoder.finish()?;
-        blocks.push(Block {
-            uncompressed_size: chunk.len() as u32,
-            compressed_data,
-        })
+fn encode_block(block: &Block, writer: &mut impl Write) -> Result<(), Error> {
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    encoder.write_all(&block.to_bytes())?;
+    let compressed_data = encoder.finish()?;
+    writer.write_all(&compressed_data)?;
+    Ok(())
+}
+
+fn encode(reader: &mut impl Read, writer: &mut impl Write) -> Result<(), Error> {
+    let mut chunk = Vec::with_capacity(BlockHeader::MAX_UNCOMPRESSED_SIZE);
+    let mut compressed = Vec::with_capacity(BlockHeader::MAX_COMPRESSED_SIZE);
+    loop {
+        chunk.clear();
+        let n = reader
+            .take(BlockHeader::MAX_UNCOMPRESSED_SIZE as u64)
+            .read_to_end(&mut chunk)?;
+        if n == 0 {
+            return Ok(());
+        }
+        compressed.clear();
+        let mut encoder = ZlibEncoder::new(&mut compressed, Compression::default());
+        let header = BlockHeader {
+            compressed_size:
+        };
+        encoder.write_all(&chunk)?;
+        writer.write_all(&encoder.finish()?);
     }
-    Ok(blocks)
 }
