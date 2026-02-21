@@ -170,7 +170,7 @@ struct BlockIterState<'a, R> {
 impl<'a, R: Read + Seek> BlockIterState<'a, R> {
     fn new(entry: &IndexEntry, reader: &'a mut R) -> Self {
         BlockIterState {
-            reader: reader,
+            reader,
             blocks_read: 0,
             max_blocks: (entry.uncompressed_size as usize)
                 .div_ceil(BlockHeader::MAX_UNCOMPRESSED_SIZE),
