@@ -83,7 +83,7 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
         self.entries.iter().map(|(name, _)| name.clone()).collect()
     }
 
-    pub fn finish(mut self) -> Result<(), Error> {
+    pub fn finish(mut self) -> Result<W, Error> {
         let was_modified = self.directory.is_none();
         // At this point we assume that the header and all file blocks
         // have been written. We just need to write the directory, index,
@@ -91,7 +91,7 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
         self.write_directory()?;
         self.write_index()?;
         self.write_footer(was_modified)?;
-        Ok(())
+        Ok(self.writer)
     }
 }
 

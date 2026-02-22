@@ -2,7 +2,7 @@
 //!
 //! # Examples
 //! ```rust,no_run
-//! use std::io::Write;
+//! use std::io::{Cursor, Write};
 //! use libeq_archive::EqArchiveReader;
 //! use libeq_archive::EqArchiveWriter;
 //!
@@ -19,18 +19,14 @@
 //!     (name, reader.get(name).unwrap(), reader.info(name).unwrap())
 //! }).collect();
 //!
-//! let mut writer = reader.to_writer().unwrap();
+//! let new_file = std::fs::File::create("gfaydark-new.s3d").unwrap();
+//! let mut writer = reader.to_writer(new_file).unwrap();
 //!
 //! // Add a new file
-//! writer.push("new-file", [0xde, 0xad, 0xbe, 0xef]);
+//! writer.insert("new-file", Cursor::new(vec![0xde, 0xad, 0xbe, 0xef]));
 //!
-//! // Remove a file
-//! writer.remove("palette.bmp");
-//!
-//! // Write the new archive
-//! let mut out = std::fs::File::create("gfaydark-new.s3d").unwrap();
-//! let bytes = writer.to_bytes().unwrap();
-//! out.write_all(&bytes).unwrap();
+//! // Finish the new archive
+//! writer.finish();
 //!
 //! ```
 //!
@@ -55,14 +51,15 @@ mod tests {
     #[test]
     fn crud() {
         let test_files = [
-            ("test-file0", [0xde, 0xad, 0xbe, 0xef]),
-            ("test-file1", [0xca, 0xfe, 0xba, 0xbe]),
+            ("test-file0", vec![0xde, 0xad, 0xbe, 0xef]),
+            ("test-file1", vec![0xca, 0xfe, 0xba, 0xbe]),
         ];
 
         // Create
-        let mut writer = EqArchiveWriter::new();
+        let bytes = Vec::new();
+        let mut writer = EqArchiveWriter::create(Cursor::new(bytes)).unwrap();
         for f in &test_files {
-            writer.push(f.0, f.1);
+            writer.insert(f.0, Cursor::new(&f.1)).unwrap();
         }
         let filenames = writer.filenames();
 
@@ -70,23 +67,25 @@ mod tests {
         for t in &test_files {
             assert!(filenames.iter().any(|f| t.0 == f));
         }
-        let bytes = writer.to_bytes().unwrap();
+        let bytes = writer.finish().unwrap().into_inner();
 
         // Read
         let mut reader = EqArchiveReader::open(Cursor::new(bytes)).unwrap();
-        let filenames = writer.filenames();
 
         assert_eq!(filenames.len(), test_files.len());
         for t in &test_files {
             assert!(filenames.iter().any(|f| t.0 == f));
-            assert_eq!(reader.get(t.0).unwrap().unwrap(), t.1);
+            assert_eq!(&reader.get(t.0).unwrap().unwrap(), &t.1);
         }
 
-        let more_test_files = [("test-file2", [0x13u8, 0x37, 0xfe, 0xe7])];
+        let more_test_files = [("test-file2", vec![0x13u8, 0x37, 0xfe, 0xe7])];
 
         // Update
-        let mut editor = reader.to_writer().unwrap();
-        editor.push(more_test_files[0].0, more_test_files[0].1);
+        let out = Vec::new();
+        let mut editor = reader.to_writer(Cursor::new(out)).unwrap();
+        editor
+            .insert(more_test_files[0].0, Cursor::new(&more_test_files[0].1))
+            .unwrap();
         assert_eq!(editor.filenames().len(), test_files.len() + 1);
         for t in &test_files {
             assert!(editor.filenames().iter().any(|f| t.0 == f));
@@ -106,14 +105,15 @@ mod tests {
     #[test]
     fn info() {
         let test_files = [
-            ("test-file0", [0xde, 0xad, 0xbe, 0xef]),
-            ("test-file1", [0xca, 0xfe, 0xba, 0xbe]),
+            ("test-file0", vec![0xde, 0xad, 0xbe, 0xef]),
+            ("test-file1", vec![0xca, 0xfe, 0xba, 0xbe]),
         ];
-        let mut writer = EqArchiveWriter::new();
+        let bytes = Vec::new();
+        let mut writer = EqArchiveWriter::create(Cursor::new(bytes)).unwrap();
         for f in &test_files {
-            writer.push(f.0, f.1);
+            writer.insert(f.0, Cursor::new(&f.1)).unwrap();
         }
-        let bytes = writer.to_bytes().unwrap();
+        let bytes = writer.finish().unwrap().into_inner();
 
         let mut reader = EqArchiveReader::open(Cursor::new(bytes)).unwrap();
         assert_eq!(
