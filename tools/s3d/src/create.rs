@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fs;
+use std::fs::{self, File};
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -72,7 +72,22 @@ pub fn run(archive: &str, inputs: &[String], verbose: bool, force: bool) -> bool
         }
     }
 
-    let mut writer = EqArchiveWriter::new();
+    let file = match fs::File::create(archive) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("{}: {}", archive, e);
+            return false;
+        }
+    };
+
+    let mut writer = match EqArchiveWriter::create(file) {
+        Ok(w) => w,
+        Err(e) => {
+            eprintln!("{}: failed to create archive: {}", archive, e);
+            return false;
+        }
+    };
+
     let mut all_ok = true;
 
     for path in &files {
@@ -81,8 +96,8 @@ pub fn run(archive: &str, inputs: &[String], verbose: bool, force: bool) -> bool
             None => continue,
         };
 
-        let data = match fs::read(path) {
-            Ok(data) => data,
+        let file = match File::open(path) {
+            Ok(f) => f,
             Err(e) => {
                 eprintln!("{}: {}", path.display(), e);
                 all_ok = false;
@@ -90,23 +105,19 @@ pub fn run(archive: &str, inputs: &[String], verbose: bool, force: bool) -> bool
             }
         };
 
-        writer.push(&basename, data);
+        if let Err(e) = writer.insert(&basename, file) {
+            eprintln!("{}: failed to add to archive: {}", basename, e);
+            all_ok = false;
+            continue;
+        }
 
         if verbose {
             println!("{}", basename);
         }
     }
 
-    let bytes = match writer.to_bytes() {
-        Ok(bytes) => bytes,
-        Err(e) => {
-            eprintln!("{}: failed to serialize archive: {}", archive, e);
-            return false;
-        }
-    };
-
-    if let Err(e) = fs::write(archive, &bytes) {
-        eprintln!("{}: {}", archive, e);
+    if let Err(e) = writer.finish() {
+        eprintln!("{}: failed to finish archive: {}", archive, e);
         return false;
     }
 

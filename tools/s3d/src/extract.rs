@@ -1,4 +1,5 @@
-use std::fs;
+use std::fs::{self, File};
+use std::io;
 use std::path::Path;
 
 use crate::open_archive;
@@ -47,8 +48,8 @@ pub fn run(archive: &str, files: &[String], output: Option<&str>, verbose: bool)
     let mut all_ok = true;
 
     for name in &to_extract {
-        let data = match reader.get(name) {
-            Ok(Some(data)) => data,
+        let mut file_reader = match reader.get_reader(name) {
+            Ok(Some(r)) => r,
             Ok(None) => {
                 eprintln!("{}: {}: not found in archive", archive, name);
                 all_ok = false;
@@ -66,7 +67,16 @@ pub fn run(archive: &str, files: &[String], output: Option<&str>, verbose: bool)
             None => Path::new(name).to_path_buf(),
         };
 
-        if let Err(e) = fs::write(&out_path, &data) {
+        let mut out_file = match File::create(&out_path) {
+            Ok(f) => f,
+            Err(e) => {
+                eprintln!("{}: {}", out_path.display(), e);
+                all_ok = false;
+                continue;
+            }
+        };
+
+        if let Err(e) = io::copy(&mut file_reader, &mut out_file) {
             eprintln!("{}: {}", out_path.display(), e);
             all_ok = false;
             continue;

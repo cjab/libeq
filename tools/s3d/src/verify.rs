@@ -125,7 +125,7 @@ fn verify_archive(path: &str, verbose: bool) -> bool {
         }
     };
 
-    let mut rt_reader = match EqArchiveReader::read(Cursor::new(&original)) {
+    let mut rt_reader = match EqArchiveReader::open(Cursor::new(&original)) {
         Ok(r) => r,
         Err(e) => {
             eprintln!("{}: round-trip: failed to parse: {}", path, e);
@@ -133,7 +133,7 @@ fn verify_archive(path: &str, verbose: bool) -> bool {
         }
     };
 
-    let writer = match rt_reader.to_writer() {
+    let writer = match rt_reader.to_writer(Cursor::new(Vec::new())) {
         Ok(w) => w,
         Err(e) => {
             eprintln!("{}: round-trip: failed to convert to writer: {}", path, e);
@@ -141,8 +141,8 @@ fn verify_archive(path: &str, verbose: bool) -> bool {
         }
     };
 
-    let roundtripped = match writer.to_bytes() {
-        Ok(bytes) => bytes,
+    let roundtripped = match writer.finish() {
+        Ok(cursor) => cursor.into_inner(),
         Err(e) => {
             eprintln!("{}: round-trip: failed to serialize: {}", path, e);
             return false;

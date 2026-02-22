@@ -1,4 +1,4 @@
-use std::io::{self, Write};
+use std::io;
 
 use crate::open_archive;
 
@@ -23,8 +23,8 @@ pub fn run(archive: &str, filename: &str) -> bool {
         return false;
     };
 
-    let data = match reader.get(filename) {
-        Ok(Some(data)) => data,
+    let mut file_reader = match reader.get_reader(filename) {
+        Ok(Some(r)) => r,
         Ok(None) => {
             eprintln!("{}: {}: not found in archive", archive, filename);
             return false;
@@ -35,7 +35,7 @@ pub fn run(archive: &str, filename: &str) -> bool {
         }
     };
 
-    if let Err(e) = io::stdout().write_all(&data) {
+    if let Err(e) = io::copy(&mut file_reader, &mut io::stdout()) {
         eprintln!("{}", e);
         return false;
     }
