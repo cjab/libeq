@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::io;
 
 use crate::open_archive;
@@ -18,27 +19,15 @@ pub fn eprint_help() {
     eprintln!("{}", HELP);
 }
 
-pub fn run(archive: &str, filename: &str) -> bool {
-    let Some((mut reader, _filenames)) = open_archive(archive) else {
-        return false;
-    };
+pub fn run(archive: &str, filename: &str) -> Result<(), Box<dyn Error>> {
+    let (mut reader, _) = open_archive(archive)?;
 
-    let mut file_reader = match reader.get_reader(filename) {
-        Ok(Some(r)) => r,
-        Ok(None) => {
-            eprintln!("{}: {}: not found in archive", archive, filename);
-            return false;
-        }
-        Err(e) => {
-            eprintln!("{}: {}: {}", archive, filename, e);
-            return false;
-        }
-    };
+    let mut file_reader = reader
+        .get_reader(filename)
+        .map_err(|e| format!("{}: {}: {}", archive, filename, e))?
+        .ok_or_else(|| format!("{}: {}: not found in archive", archive, filename))?;
 
-    if let Err(e) = io::copy(&mut file_reader, &mut io::stdout()) {
-        eprintln!("{}", e);
-        return false;
-    }
+    io::copy(&mut file_reader, &mut io::stdout())?;
 
-    true
+    Ok(())
 }

@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::fs::File;
 use std::process;
 
@@ -67,18 +68,13 @@ fn eprint_help() {
     eprintln!("{}", HELP);
 }
 
-pub(crate) fn open_archive(path: &str) -> Option<(EqArchiveReader<File>, Vec<String>)> {
-    let file = File::open(path)
-        .map_err(|e| eprintln!("{}: {}", path, e))
-        .ok()?;
-    let mut reader = EqArchiveReader::open(file)
-        .map_err(|e| eprintln!("{}: {}", path, e))
-        .ok()?;
-    let filenames = reader
-        .filenames()
-        .map_err(|e| eprintln!("{}: {}", path, e))
-        .ok()?;
-    Some((reader, filenames))
+pub(crate) fn open_archive(
+    path: &str,
+) -> Result<(EqArchiveReader<File>, Vec<String>), Box<dyn Error>> {
+    let file = File::open(path).map_err(|e| format!("{}: {}", path, e))?;
+    let mut reader = EqArchiveReader::open(file).map_err(|e| format!("{}: {}", path, e))?;
+    let filenames = reader.filenames().map_err(|e| format!("{}: {}", path, e))?;
+    Ok((reader, filenames))
 }
 
 fn parse_args() -> Result<Command, lexopt::Error> {
@@ -330,9 +326,15 @@ fn main() {
             ref files,
             verbosity,
             raw,
-        } => list::run(files, verbosity, !raw),
+        } => {
+            if let Err(e) = list::run(files, verbosity, !raw) {
+                eprintln!("{}", e);
+                process::exit(1);
+            }
+        }
         Command::Verify { ref files, verbose } => {
-            if !verify::run(files, verbose) {
+            if let Err(e) = verify::run(files, verbose) {
+                eprintln!("{}", e);
                 process::exit(1);
             }
         }
@@ -342,7 +344,8 @@ fn main() {
             ref output,
             verbose,
         } => {
-            if !extract::run(archive, files, output.as_deref(), verbose) {
+            if let Err(e) = extract::run(archive, files, output.as_deref(), verbose) {
+                eprintln!("{}", e);
                 process::exit(1);
             }
         }
@@ -352,7 +355,8 @@ fn main() {
             verbose,
             force,
         } => {
-            if !create::run(archive, inputs, verbose, force) {
+            if let Err(e) = create::run(archive, inputs, verbose, force) {
+                eprintln!("{}", e);
                 process::exit(1);
             }
         }
@@ -360,10 +364,16 @@ fn main() {
             ref archive,
             ref filename,
         } => {
-            if !get::run(archive, filename) {
+            if let Err(e) = get::run(archive, filename) {
+                eprintln!("{}", e);
                 process::exit(1);
             }
         }
-        Command::Info { ref files, raw } => info::run(files, !raw),
+        Command::Info { ref files, raw } => {
+            if let Err(e) = info::run(files, !raw) {
+                eprintln!("{}", e);
+                process::exit(1);
+            }
+        }
     }
 }

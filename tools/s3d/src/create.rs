@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs::{self, File};
 use std::io;
 use std::path::{Path, PathBuf};
@@ -29,28 +30,25 @@ pub fn eprint_help() {
     eprintln!("{}", HELP);
 }
 
-/// Create a new archive from input files and directories. Returns true if all succeeded.
-pub fn run(archive: &str, inputs: &[String], verbose: bool, force: bool) -> bool {
+/// Create a new archive from input files and directories.
+pub fn run(
+    archive: &str,
+    inputs: &[String],
+    verbose: bool,
+    force: bool,
+) -> Result<(), Box<dyn Error>> {
     if !force && Path::new(archive).exists() {
-        eprintln!("{}: already exists (use -f to overwrite)", archive);
-        return false;
+        return Err(format!("{}: already exists (use -f to overwrite)", archive).into());
     }
 
     let mut files = Vec::new();
     for input in inputs {
         let path = Path::new(input);
-        match collect_files(path) {
-            Ok(collected) => {
-                if collected.is_empty() {
-                    eprintln!("{}: no files found", input);
-                }
-                files.extend(collected);
-            }
-            Err(e) => {
-                eprintln!("{}: {}", input, e);
-                return false;
-            }
+        let collected = collect_files(path).map_err(|e| format!("{}: {}", input, e))?;
+        if collected.is_empty() {
+            eprintln!("{}: no files found", input);
         }
+        files.extend(collected);
     }
 
     files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
@@ -72,23 +70,8 @@ pub fn run(archive: &str, inputs: &[String], verbose: bool, force: bool) -> bool
         }
     }
 
-    let file = match fs::File::create(archive) {
-        Ok(f) => f,
-        Err(e) => {
-            eprintln!("{}: {}", archive, e);
-            return false;
-        }
-    };
-
-    let mut writer = match EqArchiveWriter::create(file) {
-        Ok(w) => w,
-        Err(e) => {
-            eprintln!("{}: failed to create archive: {}", archive, e);
-            return false;
-        }
-    };
-
-    let mut all_ok = true;
+    let file = fs::File::create(archive).map_err(|e| format!("{}: {}", archive, e))?;
+    let mut writer = EqArchiveWriter::create(file).map_err(|e| format!("{}: {}", archive, e))?;
 
     for path in &files {
         let basename = match path.file_name() {
@@ -96,32 +79,19 @@ pub fn run(archive: &str, inputs: &[String], verbose: bool, force: bool) -> bool
             None => continue,
         };
 
-        let file = match File::open(path) {
-            Ok(f) => f,
-            Err(e) => {
-                eprintln!("{}: {}", path.display(), e);
-                all_ok = false;
-                continue;
-            }
-        };
-
-        if let Err(e) = writer.insert(&basename, file) {
-            eprintln!("{}: failed to add to archive: {}", basename, e);
-            all_ok = false;
-            continue;
-        }
+        let file = File::open(path).map_err(|e| format!("{}: {}", path.display(), e))?;
+        writer
+            .insert(&basename, file)
+            .map_err(|e| format!("{}: {}", basename, e))?;
 
         if verbose {
             println!("{}", basename);
         }
     }
 
-    if let Err(e) = writer.finish() {
-        eprintln!("{}: failed to finish archive: {}", archive, e);
-        return false;
-    }
+    writer.finish().map_err(|e| format!("{}: {}", archive, e))?;
 
-    all_ok
+    Ok(())
 }
 
 fn collect_files(path: &Path) -> io::Result<Vec<PathBuf>> {

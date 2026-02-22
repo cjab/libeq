@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::io::{self, Cursor};
 
 use libeq_archive::EqArchiveReader;
@@ -25,28 +26,31 @@ pub fn eprint_help() {
     eprintln!("{}", HELP);
 }
 
-/// Verify all files in the given archives. Returns true if all passed.
-pub fn run(files: &[String], verbose: bool) -> bool {
-    let mut all_ok = true;
+/// Verify all files in the given archives.
+pub fn run(files: &[String], verbose: bool) -> Result<(), Box<dyn Error>> {
+    let mut failed_archives = Vec::new();
 
     for (i, path) in files.iter().enumerate() {
         if i > 0 && verbose {
             println!();
         }
 
-        if !verify_archive(path, verbose) {
-            all_ok = false;
+        if let Err(e) = verify_archive(path, verbose) {
+            eprintln!("{}", e);
+            failed_archives.push(path.as_str());
         }
     }
 
-    all_ok
+    if !failed_archives.is_empty() {
+        return Err(format!("{} archive(s) failed verification", failed_archives.len()).into());
+    }
+
+    Ok(())
 }
 
-fn verify_archive(path: &str, verbose: bool) -> bool {
+fn verify_archive(path: &str, verbose: bool) -> Result<(), Box<dyn Error>> {
     // Phase 1: Read check — decompress every file, verify sizes
-    let Some((mut reader, filenames)) = open_archive(path) else {
-        return false;
-    };
+    let (mut reader, filenames) = open_archive(path)?;
 
     let mut passed: usize = 0;
     let mut failed: usize = 0;
@@ -112,42 +116,23 @@ fn verify_archive(path: &str, verbose: bool) -> bool {
 
     if failed > 0 {
         let total = passed + failed;
-        eprintln!("{}: {}/{} files OK, {} failed", path, passed, total, failed);
-        return false;
+        return Err(format!("{}: {}/{} files OK, {} failed", path, passed, total, failed).into());
     }
 
     // Phase 2: Round-trip check — read entire archive, serialize back, compare bytes
-    let original = match std::fs::read(path) {
-        Ok(bytes) => bytes,
-        Err(e) => {
-            eprintln!("{}: {}", path, e);
-            return false;
-        }
-    };
+    let original = std::fs::read(path).map_err(|e| format!("{}: {}", path, e))?;
 
-    let mut rt_reader = match EqArchiveReader::open(Cursor::new(&original)) {
-        Ok(r) => r,
-        Err(e) => {
-            eprintln!("{}: round-trip: failed to parse: {}", path, e);
-            return false;
-        }
-    };
+    let mut rt_reader = EqArchiveReader::open(Cursor::new(&original))
+        .map_err(|e| format!("{}: round-trip: failed to parse: {}", path, e))?;
 
-    let writer = match rt_reader.to_writer(Cursor::new(Vec::new())) {
-        Ok(w) => w,
-        Err(e) => {
-            eprintln!("{}: round-trip: failed to convert to writer: {}", path, e);
-            return false;
-        }
-    };
+    let writer = rt_reader
+        .to_writer(Cursor::new(Vec::new()))
+        .map_err(|e| format!("{}: round-trip: failed to convert to writer: {}", path, e))?;
 
-    let roundtripped = match writer.finish() {
-        Ok(cursor) => cursor.into_inner(),
-        Err(e) => {
-            eprintln!("{}: round-trip: failed to serialize: {}", path, e);
-            return false;
-        }
-    };
+    let roundtripped = writer
+        .finish()
+        .map_err(|e| format!("{}: round-trip: failed to serialize: {}", path, e))?
+        .into_inner();
 
     if original != roundtripped {
         let first_diff = original
@@ -156,14 +141,13 @@ fn verify_archive(path: &str, verbose: bool) -> bool {
             .position(|(a, b)| a != b)
             .unwrap_or(std::cmp::min(original.len(), roundtripped.len()));
 
-        eprintln!(
+        return Err(format!(
             "{}: round-trip FAILED (original {} bytes, roundtripped {} bytes, first difference at byte {})",
             path,
             original.len(),
             roundtripped.len(),
             first_diff
-        );
-        return false;
+        ).into());
     }
 
     println!(
@@ -172,5 +156,6 @@ fn verify_archive(path: &str, verbose: bool) -> bool {
         passed,
         original.len()
     );
-    true
+
+    Ok(())
 }
