@@ -22,7 +22,6 @@ impl Default for Header {
 impl Header {
     pub const MAGIC_NUMBER: u32 = u32::from_le_bytes(*b"PFS ");
     pub const VERSION: u32 = 0x00020000;
-    pub const SIZE: u32 = 12;
 
     pub fn read(reader: &mut impl Read) -> Result<Self, Error> {
         let mut buf = [0u8; 4];

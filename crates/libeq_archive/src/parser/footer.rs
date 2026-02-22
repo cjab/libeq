@@ -2,7 +2,7 @@ use std::io::Read;
 
 use crate::error::Error;
 
-#[derive(Debug, Default, PartialEq, Clone)]
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub struct Footer {
     pub footer_string: [u8; 5],
     pub timestamp: u32,

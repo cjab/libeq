@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::io::{Cursor, Read, Seek, SeekFrom};
+use std::io::{Cursor, Read, Seek, SeekFrom, Write};
 
 use flate2::read::ZlibDecoder;
 
@@ -79,7 +79,7 @@ impl<R: Read + Seek> EqArchiveReader<R> {
     }
 
     pub fn info(&mut self, filename: &str) -> Result<Option<FileInfo>, Error> {
-        let Some(entry) = self.get_index_entry(filename)?.map(|x| x.clone()) else {
+        let Some(entry) = self.get_index_entry(filename)? else {
             return Ok(None);
         };
         let headers: Vec<_> = self
@@ -119,40 +119,35 @@ impl<R: Read + Seek> EqArchiveReader<R> {
         Ok(directory.filenames)
     }
 
-    pub fn to_writer(&mut self) -> Result<EqArchiveWriter, Error> {
+    pub fn to_writer<W: Read + Write + Seek>(
+        &mut self,
+        dest: W,
+    ) -> Result<EqArchiveWriter<W>, Error> {
         let mut entries = self
             .filenames()?
-            .iter()
+            .into_iter()
             .map(|name| {
-                let Some(entry) = self.get_index_entry(name)? else {
-                    return Err(Error::CorruptArchive(format!(
-                        "missing index entry for {}",
-                        name
-                    )));
-                };
-                let blocks = self.read_blocks(entry)?;
-                Ok((name.clone(), blocks))
+                let entry = self.get_index_entry(&name)?.ok_or_else(|| {
+                    Error::CorruptArchive(format!("missing index entry for {}", name))
+                })?;
+                Ok((name, entry))
             })
             .collect::<Result<Vec<_>, Error>>()?;
         // Sort entries by data offset. This recovers the original
         // order of the files in the block section. Doing this allows us to
         // modify the archive with minimal changes to the final output.
-        entries.sort_by_key(|f| {
-            self.index
-                .get(&FilenameCrc::from(f.0.as_str()))
-                .map(|e| e.data_offset)
-        });
+        entries.sort_by_key(|(_, e)| e.data_offset);
 
-        // The directory isn't totally necessary but having it allows us to write
-        // an archive that hasn't been modified and reproduce the original file at
-        // the bit level. This is a nice property for testing.
-        let directory = self.read_blocks(self.directory)?;
-
-        Ok(EqArchiveWriter::from_existing(
-            entries,
-            directory,
-            self.footer.clone(),
-        ))
+        let mut writer = EqArchiveWriter::create(dest)?;
+        writer.entries = entries;
+        writer.directory = Some(self.directory);
+        writer.footer = self.footer;
+        for (_, e) in &writer.entries {
+            for b in self.iter_blocks(e)? {
+                writer.writer.write_all(&b?.to_bytes())?;
+            }
+        }
+        Ok(writer)
     }
 }
 
@@ -283,10 +278,6 @@ impl<R: Read + Seek> EqArchiveReader<R> {
         self.reader
             .seek(SeekFrom::Start(entry.data_offset as u64))?;
         Ok(BlockIter(BlockIterState::new(entry, &mut self.reader)))
-    }
-
-    fn read_blocks(&mut self, entry: IndexEntry) -> Result<Vec<Block>, Error> {
-        self.iter_blocks(&entry)?.collect()
     }
 }
 

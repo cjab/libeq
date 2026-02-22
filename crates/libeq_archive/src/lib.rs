@@ -36,7 +36,6 @@
 //!
 mod crc;
 mod error;
-mod new_write;
 mod parser;
 mod read;
 mod write;
