@@ -7,20 +7,17 @@
 //! # Examples
 //!
 //! ```rust
-//! use libeq::archive::EqArchive;
+//! use libeq::archive::EqArchiveReader;
 //! use libeq::wld;
 //!
 //! fn main() {
 //!     // Extract .wld data from an .s3d file
 //!     let file = std::fs::File::open("fixtures/gfaydark.s3d").unwrap();
-//!     let archive = EqArchive::read(&file).unwrap();
-//!     let (_, data) = archive
-//!         .iter()
-//!         .find(|(name, _)| name == "gfaydark.wld")
-//!         .unwrap();
+//!     let mut archive = EqArchiveReader::open(&file).unwrap();
+//!     let data = archive.get("gfaydark.wld").unwrap().unwrap();
 //!
 //!     // Load .wld file
-//!     let wld = wld::load(data).unwrap();
+//!     let wld = wld::load(&data).unwrap();
 //!     let materials = wld.materials().collect::<Vec<_>>();
 //!     let meshes = wld.meshes().collect::<Vec<_>>();
 //!     let models = wld.models().collect::<Vec<_>>();
