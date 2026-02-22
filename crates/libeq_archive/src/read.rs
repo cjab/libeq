@@ -140,13 +140,17 @@ impl<R: Read + Seek> EqArchiveReader<R> {
 
         let mut writer = EqArchiveWriter::create(dest)?;
         writer.entries = entries;
-        writer.directory = Some(self.directory);
         writer.footer = self.footer;
         for (_, e) in &writer.entries {
             for b in self.iter_blocks(e)? {
                 writer.writer.write_all(&b?.to_bytes())?;
             }
         }
+        let directory = self.directory;
+        for b in self.iter_blocks(&directory)? {
+            writer.writer.write_all(&b?.to_bytes())?;
+        }
+        writer.directory = Some(directory);
         Ok(writer)
     }
 }
