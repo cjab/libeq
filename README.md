@@ -8,24 +8,22 @@ Libraries and tools for working with EverQuest game data
 
 ## Crates
 * [libeq_wld](crates/libeq_wld) - Load `.wld` files.
-* [libeq_archive](crates/libeq_archive) - Create and extract `.s3d` archives.
+* [libeq_pfs](crates/libeq_pfs) - Create and extract `.s3d` archives.
 
 ## Examples
 
 ```rust
-use libeq::archive::EqArchive;
+use libeq::pfs::PfsReader;
 use libeq::wld;
 
 fn main() {
     // Extract .wld data from an .s3d file
-    let archive = EqArchive::read("gfaydark.s3d").unwrap();
-    let (_, data) = archive
-        .iter()
-        .find(|(name, _)| name == "gfaydark.wld")
-        .unwrap();
+    let file = std::fs::File::open("gfaydark.s3d").unwrap();
+    let mut archive = PfsReader::open(file).unwrap();
+    let data = archive.get("gfaydark.wld").unwrap().unwrap();
 
     // Load .wld file
-    let wld = wld::load(data).unwrap();
+    let wld = wld::load(&data).unwrap();
     let materials = wld.materials().collect::<Vec<_>>();
     let meshes = wld.meshes().collect::<Vec<_>>();
     let models = wld.models().collect::<Vec<_>>();
@@ -35,16 +33,19 @@ fn main() {
 
 ## Tools
 
-### eq-archive
-[eq-archive](tools/eq-archive) is a cli tool used to extract and
-create EverQuest .s3d archives.
+### s3d
+[s3d](tools/s3d) is a CLI tool for listing, extracting, creating, and
+verifying EverQuest PFS archives.
 
 ```bash
-# To extract files from an archive
-cargo run -p eq-archive -- -x fixtures/gfaydark.s3d gfaydark
+# List files in an archive
+s3d list gfaydark.s3d
 
-# To create an archive from a directory
-cargo run -p eq-archive -- -c gfaydark gfaydark.s3d
+# Extract all files
+s3d extract gfaydark.s3d -o gfaydark/
+
+# Create an archive from a directory
+s3d create gfaydark-new.s3d gfaydark/
 ```
 
 ### wld-cli

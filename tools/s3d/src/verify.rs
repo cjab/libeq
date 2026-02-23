@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::io::{self, Cursor};
 
-use libeq_archive::EqArchiveReader;
+use libeq_pfs::PfsReader;
 
 use crate::open_archive;
 
@@ -122,7 +122,7 @@ fn verify_archive(path: &str, verbose: bool) -> Result<(), Box<dyn Error>> {
     // Phase 2: Round-trip check — read entire archive, serialize back, compare bytes
     let original = std::fs::read(path).map_err(|e| format!("{}: {}", path, e))?;
 
-    let mut rt_reader = EqArchiveReader::open(Cursor::new(&original))
+    let mut rt_reader = PfsReader::open(Cursor::new(&original))
         .map_err(|e| format!("{}: round-trip: failed to parse: {}", path, e))?;
 
     let writer = rt_reader

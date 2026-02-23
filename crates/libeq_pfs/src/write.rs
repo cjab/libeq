@@ -4,12 +4,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use flate2::Compression;
 use flate2::write::ZlibEncoder;
 
-use crate::EqArchiveReader;
+use crate::PfsReader;
 use crate::crc::FilenameCrc;
 use crate::error::Error;
 use crate::parser::{BlockHeader, Directory, Footer, Header, IndexEntry};
 
-pub struct EqArchiveWriter<W> {
+pub struct PfsWriter<W> {
     pub(crate) writer: W,
     pub(crate) entries: Vec<(String, IndexEntry)>,
     pub(crate) directory: Option<IndexEntry>,
@@ -19,7 +19,7 @@ pub struct EqArchiveWriter<W> {
 //----------------------
 // Public API
 //----------------------
-impl<W: Read + Write + Seek> EqArchiveWriter<W> {
+impl<W: Read + Write + Seek> PfsWriter<W> {
     pub fn create(writer: W) -> Result<Self, Error> {
         let mut new = Self {
             writer,
@@ -33,7 +33,7 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
     }
 
     pub fn from_reader<R: Read + Seek>(
-        reader: &mut EqArchiveReader<R>,
+        reader: &mut PfsReader<R>,
         writer: W,
     ) -> Result<Self, Error> {
         reader.to_writer(writer)
@@ -98,7 +98,7 @@ impl<W: Read + Write + Seek> EqArchiveWriter<W> {
 //----------------------
 // Write operations
 //----------------------
-impl<W: Read + Write + Seek> EqArchiveWriter<W> {
+impl<W: Read + Write + Seek> PfsWriter<W> {
     fn write_header(&mut self) -> Result<(), Error> {
         self.writer.write_all(&Header::default().to_bytes())?;
         Ok(())

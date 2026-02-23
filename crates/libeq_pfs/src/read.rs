@@ -6,7 +6,7 @@ use flate2::read::ZlibDecoder;
 use crate::crc::FilenameCrc;
 use crate::error::Error;
 use crate::parser::{Block, BlockHeader, Directory, Footer, Header, IndexEntry};
-use crate::write::EqArchiveWriter;
+use crate::write::PfsWriter;
 
 const MAX_ENTRY_COUNT: u32 = 100_000; // 100k files
 
@@ -19,7 +19,7 @@ pub struct FileInfo {
 }
 
 #[derive(Debug)]
-pub struct ArchiveInfo {
+pub struct PfsInfo {
     pub version: u32,
     pub index_offset: u32,
     pub file_count: u32,
@@ -27,7 +27,7 @@ pub struct ArchiveInfo {
     pub timestamp: Option<u32>,
 }
 
-pub struct EqArchiveReader<R> {
+pub struct PfsReader<R> {
     reader: R,
     index: HashMap<FilenameCrc, IndexEntry>,
     directory: IndexEntry,
@@ -37,7 +37,7 @@ pub struct EqArchiveReader<R> {
 //----------------------
 // Public API
 //----------------------
-impl EqArchiveReader<Cursor<Vec<u8>>> {
+impl PfsReader<Cursor<Vec<u8>>> {
     pub fn read<R: Read>(mut reader: R) -> Result<Self, Error> {
         let mut buf = Vec::new();
         reader.read_to_end(&mut buf)?;
@@ -45,15 +45,15 @@ impl EqArchiveReader<Cursor<Vec<u8>>> {
     }
 }
 
-impl<R: Read + Seek> EqArchiveReader<R> {
+impl<R: Read + Seek> PfsReader<R> {
     pub fn open(reader: R) -> Result<Self, Error> {
         from_reader(reader)
     }
 
-    pub fn archive_info(&mut self) -> Result<ArchiveInfo, Error> {
+    pub fn archive_info(&mut self) -> Result<PfsInfo, Error> {
         self.reader.seek(SeekFrom::Start(0))?;
         let header = Header::read(&mut self.reader)?;
-        Ok(ArchiveInfo {
+        Ok(PfsInfo {
             version: header.version,
             index_offset: header.index_offset,
             file_count: self.index.len() as u32,
@@ -75,7 +75,7 @@ impl<R: Read + Seek> EqArchiveReader<R> {
         let Some(entry) = self.get_index_entry(filename)? else {
             return Ok(None);
         };
-        Ok(Some(EqFileReader::new(self.iter_blocks(&entry)?)?))
+        Ok(Some(PfsFileReader::new(self.iter_blocks(&entry)?)?))
     }
 
     pub fn info(&mut self, filename: &str) -> Result<Option<FileInfo>, Error> {
@@ -112,17 +112,14 @@ impl<R: Read + Seek> EqArchiveReader<R> {
         let dir_size = dir.uncompressed_size;
         let blocks = self.iter_blocks(&dir)?;
         let mut data = Vec::with_capacity(dir_size as usize);
-        let mut reader = EqFileReader::new(blocks)?;
+        let mut reader = PfsFileReader::new(blocks)?;
         reader.read_to_end(&mut data)?;
         let mut cursor = Cursor::new(data);
         let directory = Directory::read(&mut cursor)?;
         Ok(directory.filenames)
     }
 
-    pub fn to_writer<W: Read + Write + Seek>(
-        &mut self,
-        dest: W,
-    ) -> Result<EqArchiveWriter<W>, Error> {
+    pub fn to_writer<W: Read + Write + Seek>(&mut self, dest: W) -> Result<PfsWriter<W>, Error> {
         let mut entries = self
             .filenames()?
             .into_iter()
@@ -138,7 +135,7 @@ impl<R: Read + Seek> EqArchiveReader<R> {
         // modify the archive with minimal changes to the final output.
         entries.sort_by_key(|(_, e)| e.data_offset);
 
-        let mut writer = EqArchiveWriter::create(dest)?;
+        let mut writer = PfsWriter::create(dest)?;
         writer.entries = entries;
         writer.footer = self.footer;
         for (_, e) in &writer.entries {
@@ -251,7 +248,7 @@ impl<'a, R: Read + Seek> Iterator for BlockIter<'a, R> {
 //----------------------
 // Block operations
 //----------------------
-impl<R: Read + Seek> EqArchiveReader<R> {
+impl<R: Read + Seek> PfsReader<R> {
     fn get_index_entry(&self, filename: &str) -> Result<Option<IndexEntry>, Error> {
         let crc = FilenameCrc::new(filename);
         let Some(entry) = self.index.get(&crc) else {
@@ -285,7 +282,7 @@ impl<R: Read + Seek> EqArchiveReader<R> {
     }
 }
 
-fn from_reader<S: Read + Seek>(mut reader: S) -> Result<EqArchiveReader<S>, Error> {
+fn from_reader<S: Read + Seek>(mut reader: S) -> Result<PfsReader<S>, Error> {
     let header = Header::read(&mut reader)?;
     if header.magic_number != Header::MAGIC_NUMBER {
         return Err(Error::CorruptArchive(
@@ -338,7 +335,7 @@ fn from_reader<S: Read + Seek>(mut reader: S) -> Result<EqArchiveReader<S>, Erro
     // acceptable given how simple the footer is.
     let footer = Footer::read(&mut reader).ok();
 
-    Ok(EqArchiveReader {
+    Ok(PfsReader {
         reader,
         index,
         directory,
@@ -346,12 +343,12 @@ fn from_reader<S: Read + Seek>(mut reader: S) -> Result<EqArchiveReader<S>, Erro
     })
 }
 
-pub struct EqFileReader<I: Iterator<Item = Result<Block, Error>>> {
+pub struct PfsFileReader<I: Iterator<Item = Result<Block, Error>>> {
     blocks: I,
     curr: Cursor<Vec<u8>>,
 }
 
-impl<I: Iterator<Item = Result<Block, Error>>> EqFileReader<I> {
+impl<I: Iterator<Item = Result<Block, Error>>> PfsFileReader<I> {
     fn new(mut blocks: I) -> Result<Self, Error> {
         let initial_data = match blocks.next() {
             Some(block) => decompress_block(&block?)?,
@@ -364,7 +361,7 @@ impl<I: Iterator<Item = Result<Block, Error>>> EqFileReader<I> {
     }
 }
 
-impl<I: Iterator<Item = Result<Block, Error>>> Read for EqFileReader<I> {
+impl<I: Iterator<Item = Result<Block, Error>>> Read for PfsFileReader<I> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         let n = self.curr.read(buf)?;
         if n > 0 {

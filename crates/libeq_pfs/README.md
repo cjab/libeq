@@ -1,6 +1,6 @@
-# libeq_archive
+# libeq_pfs
 
-PFS (also known as .s3d) is an archive file format used by the EverQuest
+PFS (also known as .s3d, .eqg) is an archive file format used by the EverQuest
 client to store compressed game assets.
 
 This is an implementation of the format as a Rust library crate. There is
@@ -15,13 +15,14 @@ so that it can be used via FFI in other languages.
 ## Examples
 
 ```rust
-use libeq_archive::EqArchiveReader;
-use libeq_archive::EqArchiveWriter;
+use std::io::Cursor;
+use libeq_pfs::PfsReader;
+use libeq_pfs::PfsWriter;
 
 let file = std::fs::File::open("gfaydark.s3d").unwrap();
 
 // Open the archive
-let mut reader = EqArchiveReader::open(file).unwrap();
+let mut reader = PfsReader::open(file).unwrap();
 
 // List all files in the archive
 let filenames = reader.filenames().unwrap();
@@ -31,15 +32,16 @@ let files: Vec<_> = filenames.iter().map(|name| {
     (name, reader.get(name).unwrap(), reader.info(name).unwrap())
 }).collect();
 
-// Modify the archive (gfaydark.s3d)
-let mut writer = reader.to_writer().unwrap();
+// Modify the archive
+let new_file = std::fs::File::create("gfaydark-new.s3d").unwrap();
+let mut writer = reader.to_writer(new_file).unwrap();
 
 // Add a new file
-writer.push("new-file", [0xde, 0xad, 0xbe, 0xef]);
+writer.insert("new-file", Cursor::new(vec![0xde, 0xad, 0xbe, 0xef])).unwrap();
 // Remove a file
 writer.remove("palette.bmp");
 // Finish writing
-writer.finish();
+writer.finish().unwrap();
 
 ```
 

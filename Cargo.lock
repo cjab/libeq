@@ -450,7 +450,7 @@ name = "eq-archive"
 version = "0.4.0"
 dependencies = [
  "clap",
- "libeq_archive",
+ "libeq_pfs",
 ]
 
 [[package]]
@@ -739,12 +739,12 @@ checksum = "459427e2af2b9c839b132acb702a1c654d95e10f8c326bfc2ad11310e458b1c5"
 name = "libeq"
 version = "0.4.0"
 dependencies = [
- "libeq_archive",
+ "libeq_pfs",
  "libeq_wld",
 ]
 
 [[package]]
-name = "libeq_archive"
+name = "libeq_pfs"
 version = "0.4.0"
 dependencies = [
  "flate2",
@@ -1316,7 +1316,7 @@ version = "0.1.0"
 dependencies = [
  "jiff",
  "lexopt",
- "libeq_archive",
+ "libeq_pfs",
 ]
 
 [[package]]
@@ -1981,7 +1981,7 @@ dependencies = [
  "clap",
  "crossterm",
  "hexyl",
- "libeq_archive",
+ "libeq_pfs",
  "libeq_wld",
  "ratatui",
  "ron",

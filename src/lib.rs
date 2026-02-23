@@ -2,18 +2,18 @@
 //!
 //! # Crates
 //! * [libeq_wld](crates/libeq_wld) - Load `.wld` files.
-//! * [libeq_archive](crates/libeq_archive) - Create and extract `.s3d` archives.
+//! * [libeq_pfs](crates/libeq_pfs) - Create and extract `.s3d` archives.
 //!
 //! # Examples
 //!
 //! ```rust
-//! use libeq::archive::EqArchiveReader;
+//! use libeq::pfs::PfsReader;
 //! use libeq::wld;
 //!
 //! fn main() {
 //!     // Extract .wld data from an .s3d file
 //!     let file = std::fs::File::open("fixtures/gfaydark.s3d").unwrap();
-//!     let mut archive = EqArchiveReader::open(&file).unwrap();
+//!     let mut archive = PfsReader::open(file).unwrap();
 //!     let data = archive.get("gfaydark.wld").unwrap().unwrap();
 //!
 //!     // Load .wld file
@@ -39,7 +39,7 @@
 //! cargo run -p wld-cli -- extract gfaydark.wld destination/
 //! ```
 
-#[cfg(feature = "archive")]
-pub use libeq_archive as archive;
+#[cfg(feature = "pfs")]
+pub use libeq_pfs as pfs;
 #[cfg(feature = "wld")]
 pub use libeq_wld as wld;

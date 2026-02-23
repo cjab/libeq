@@ -4,7 +4,7 @@ use std::fs::{self, File};
 use std::io;
 use std::path::{Path, PathBuf};
 
-use libeq_archive::EqArchiveWriter;
+use libeq_pfs::PfsWriter;
 
 const HELP: &str = "\
 s3d create — Create archive from files
@@ -71,7 +71,7 @@ pub fn run(
     }
 
     let file = fs::File::create(archive).map_err(|e| format!("{}: {}", archive, e))?;
-    let mut writer = EqArchiveWriter::create(file).map_err(|e| format!("{}: {}", archive, e))?;
+    let mut writer = PfsWriter::create(file).map_err(|e| format!("{}: {}", archive, e))?;
 
     for path in &files {
         let basename = match path.file_name() {

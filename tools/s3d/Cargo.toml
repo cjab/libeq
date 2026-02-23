@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-libeq_archive.workspace = true
+libeq_pfs.workspace = true
 lexopt = "0.3"
 jiff = "0.2"

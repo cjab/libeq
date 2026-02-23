@@ -1,6 +1,6 @@
 use jiff::Timestamp;
 use jiff::tz::TimeZone;
-use libeq_archive::FileInfo;
+use libeq_pfs::FileInfo;
 
 pub(crate) fn format_ratio(info: &FileInfo) -> String {
     if info.uncompressed_size > 0 {

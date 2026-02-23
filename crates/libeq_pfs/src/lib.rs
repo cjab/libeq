@@ -1,15 +1,15 @@
-//! # An Everquest archive file extractor
+//! # An EverQuest PFS archive library
 //!
 //! # Examples
 //! ```rust,no_run
 //! use std::io::{Cursor, Write};
-//! use libeq_archive::EqArchiveReader;
-//! use libeq_archive::EqArchiveWriter;
+//! use libeq_pfs::PfsReader;
+//! use libeq_pfs::PfsWriter;
 //!
 //! let file = std::fs::File::open("fixtures/gfaydark.s3d").unwrap();
 //!
 //! // Open the archive
-//! let mut reader = EqArchiveReader::open(file).unwrap();
+//! let mut reader = PfsReader::open(file).unwrap();
 //!
 //! // List all files in the archive
 //! let filenames = reader.filenames().unwrap();
@@ -37,11 +37,11 @@ mod read;
 mod write;
 
 pub use error::Error;
-pub use read::ArchiveInfo;
-pub use read::EqArchiveReader;
-pub use read::EqFileReader;
 pub use read::FileInfo;
-pub use write::EqArchiveWriter;
+pub use read::PfsFileReader;
+pub use read::PfsInfo;
+pub use read::PfsReader;
+pub use write::PfsWriter;
 
 #[cfg(test)]
 mod tests {
@@ -57,7 +57,7 @@ mod tests {
 
         // Create
         let bytes = Vec::new();
-        let mut writer = EqArchiveWriter::create(Cursor::new(bytes)).unwrap();
+        let mut writer = PfsWriter::create(Cursor::new(bytes)).unwrap();
         for f in &test_files {
             writer.insert(f.0, Cursor::new(&f.1)).unwrap();
         }
@@ -70,7 +70,7 @@ mod tests {
         let bytes = writer.finish().unwrap().into_inner();
 
         // Read
-        let mut reader = EqArchiveReader::open(Cursor::new(bytes)).unwrap();
+        let mut reader = PfsReader::open(Cursor::new(bytes)).unwrap();
 
         assert_eq!(filenames.len(), test_files.len());
         for t in &test_files {
@@ -109,13 +109,13 @@ mod tests {
             ("test-file1", vec![0xca, 0xfe, 0xba, 0xbe]),
         ];
         let bytes = Vec::new();
-        let mut writer = EqArchiveWriter::create(Cursor::new(bytes)).unwrap();
+        let mut writer = PfsWriter::create(Cursor::new(bytes)).unwrap();
         for f in &test_files {
             writer.insert(f.0, Cursor::new(&f.1)).unwrap();
         }
         let bytes = writer.finish().unwrap().into_inner();
 
-        let mut reader = EqArchiveReader::open(Cursor::new(bytes)).unwrap();
+        let mut reader = PfsReader::open(Cursor::new(bytes)).unwrap();
         assert_eq!(
             reader.info("test-file0").unwrap().unwrap(),
             FileInfo {

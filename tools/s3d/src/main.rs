@@ -3,8 +3,7 @@ use std::fs::File;
 use std::process;
 
 use lexopt::prelude::*;
-use libeq_archive::EqArchiveReader;
-
+use libeq_pfs::PfsReader;
 mod create;
 mod extract;
 mod fmt;
@@ -68,11 +67,9 @@ fn eprint_help() {
     eprintln!("{}", HELP);
 }
 
-pub(crate) fn open_archive(
-    path: &str,
-) -> Result<(EqArchiveReader<File>, Vec<String>), Box<dyn Error>> {
+pub(crate) fn open_archive(path: &str) -> Result<(PfsReader<File>, Vec<String>), Box<dyn Error>> {
     let file = File::open(path).map_err(|e| format!("{}: {}", path, e))?;
-    let mut reader = EqArchiveReader::open(file).map_err(|e| format!("{}: {}", path, e))?;
+    let mut reader = PfsReader::open(file).map_err(|e| format!("{}: {}", path, e))?;
     let filenames = reader.filenames().map_err(|e| format!("{}: {}", path, e))?;
     Ok((reader, filenames))
 }
