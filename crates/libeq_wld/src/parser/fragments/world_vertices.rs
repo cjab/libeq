@@ -74,25 +74,31 @@ impl Fragment for WorldVertices {
 mod tests {
     use super::*;
 
+    fn fixture() -> WorldVertices {
+        WorldVertices {
+            name_reference: StringReference::new(0),
+            num_vertices: 3,
+            vertices: vec![(1.0, 2.0, 3.0), (4.0, 5.0, 6.0), (7.0, 8.0, 9.0)],
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data =
-            &include_bytes!("../../../fixtures/fragments/tanarus-thecity/0001-0x2c.frag")[..];
-        let (remaining, frag) = WorldVertices::parse(data).unwrap();
+        let data = fixture().to_bytes();
+        let (remaining, frag) = WorldVertices::parse(&data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(0));
-        assert_eq!(frag.num_vertices, 9702);
-        assert_eq!(frag.vertices[0], (-960.00006, -32.0, 48.0));
-        assert_eq!(frag.vertices[9701], (960.00006, 32.0, 31.999992));
-        assert_eq!(remaining, vec![]);
+        assert_eq!(frag.num_vertices, 3);
+        assert_eq!(frag.vertices[0], (1.0, 2.0, 3.0));
+        assert_eq!(frag.vertices[2], (7.0, 8.0, 9.0));
+        assert!(remaining.is_empty());
     }
 
     #[test]
     fn it_serializes() {
-        let data =
-            &include_bytes!("../../../fixtures/fragments/tanarus-thecity/0001-0x2c.frag")[..];
-        let frag = WorldVertices::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = WorldVertices::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

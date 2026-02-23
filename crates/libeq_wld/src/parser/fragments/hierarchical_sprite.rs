@@ -72,21 +72,29 @@ impl Fragment for HierarchicalSprite {
 mod tests {
     use super::*;
 
+    fn fixture() -> HierarchicalSprite {
+        HierarchicalSprite {
+            name_reference: StringReference::new(0),
+            reference: FragmentRef::new(14),
+            params1: 0,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/2228-0x11.frag")[..];
-        let frag = HierarchicalSprite::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = HierarchicalSprite::parse(&data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
-        assert_eq!(frag.reference, FragmentRef::new(0x0e));
-        assert_eq!(frag.params1, 0x0);
+        assert_eq!(frag.reference, FragmentRef::new(14));
+        assert_eq!(frag.params1, 0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/2228-0x11.frag")[..];
-        let frag = HierarchicalSprite::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = HierarchicalSprite::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

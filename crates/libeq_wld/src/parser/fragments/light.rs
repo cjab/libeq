@@ -70,21 +70,29 @@ impl Fragment for Light {
 mod tests {
     use super::*;
 
+    fn fixture() -> Light {
+        Light {
+            name_reference: StringReference::new(0),
+            reference: FragmentRef::new(42),
+            flags: 0,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4636-0x1c.frag")[..];
-        let frag = Light::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = Light::parse(&data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
-        assert_eq!(frag.reference, FragmentRef::new(1729));
+        assert_eq!(frag.reference, FragmentRef::new(42));
         assert_eq!(frag.flags, 0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4636-0x1c.frag")[..];
-        let frag = Light::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = Light::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

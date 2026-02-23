@@ -70,22 +70,29 @@ impl Fragment for SphereList {
 mod tests {
     use super::*;
 
-    #[test]
-    fn it_has_a_known_name_reference() {
-        #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/tanarus-equip/2903-0x1a.frag")[..];
-        let frag = SphereList::parse(data).unwrap().1;
+    fn fixture() -> SphereList {
+        SphereList {
+            name_reference: StringReference::new(0),
+            reference: FragmentRef::new(0xb47),
+            params1: 0,
+        }
+    }
 
-        assert_eq!(frag.name_reference, StringReference::new(0x0));
+    #[test]
+    fn it_parses() {
+        let data = fixture().to_bytes();
+        let frag = SphereList::parse(&data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(0xb47));
-        assert_eq!(frag.params1, 0x0);
+        assert_eq!(frag.params1, 0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/tanarus-equip/2903-0x1a.frag")[..];
-        let frag = SphereList::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = SphereList::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

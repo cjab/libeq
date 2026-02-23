@@ -70,21 +70,29 @@ impl Fragment for DmRGBTrack {
 mod tests {
     use super::*;
 
+    fn fixture() -> DmRGBTrack {
+        DmRGBTrack {
+            name_reference: StringReference::new(0),
+            reference: FragmentRef::new(1),
+            flags: 0,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/objects/0001-0x33.frag")[..];
-        let frag = DmRGBTrack::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = DmRGBTrack::parse(&data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(1));
-        assert_eq!(frag.flags, 0x0);
+        assert_eq!(frag.flags, 0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/objects/0001-0x33.frag")[..];
-        let frag = DmRGBTrack::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = DmRGBTrack::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

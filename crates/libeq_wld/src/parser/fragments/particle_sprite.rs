@@ -70,26 +70,29 @@ impl Fragment for ParticleSprite {
 mod tests {
     use super::*;
 
-    #[test]
-    fn it_has_a_known_name_reference() {
-        #![allow(overflowing_literals)]
-        let data = &include_bytes!(
-            "../../../fixtures/fragments/wldcom/particle-sprite-0001-0x0d.frag"
-        )[..];
-        let frag = ParticleSprite::parse(data).unwrap().1;
+    fn fixture() -> ParticleSprite {
+        ParticleSprite {
+            name_reference: StringReference::new(0),
+            reference: FragmentRef::new(1),
+            params1: 0,
+        }
+    }
 
-        assert_eq!(frag.name_reference, StringReference::new(0x0));
-        assert_eq!(frag.reference, FragmentRef::new(0x1));
-        assert_eq!(frag.params1, 0x0);
+    #[test]
+    fn it_parses() {
+        let data = fixture().to_bytes();
+        let frag = ParticleSprite::parse(&data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.reference, FragmentRef::new(1));
+        assert_eq!(frag.params1, 0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!(
-            "../../../fixtures/fragments/wldcom/particle-sprite-0001-0x0d.frag"
-        )[..];
-        let frag = ParticleSprite::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = ParticleSprite::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

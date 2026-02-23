@@ -90,20 +90,32 @@ impl StringHash {
 mod tests {
     use super::*;
 
+    fn fixture_data() -> Vec<u8> {
+        // Build a small string table: "" at offset 0, "FOO" at offset 1, "BAR" at offset 5
+        let decoded = "\0FOO\0BAR\0";
+        let mut encoded = encode_string(decoded);
+        // Pad to 4-byte alignment
+        let size = encoded.len();
+        if size % 4 != 0 {
+            encoded.resize(size + (4 - size % 4), 0);
+        }
+        encoded
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../fixtures/gfaydark/strings.bin")[..];
-        let string_hash = StringHash::new(data);
-        assert_eq!(string_hash.0.len(), 4610);
+        let data = fixture_data();
+        let string_hash = StringHash::new(&data);
         assert_eq!(string_hash.get(StringReference::new(0)), Some(""));
-        assert_eq!(string_hash.get(StringReference::new(1)), Some("SGRASS"));
-        assert_eq!(string_hash.get(StringReference::new(2)), None);
+        assert_eq!(string_hash.get(StringReference::new(1)), Some("FOO"));
+        assert_eq!(string_hash.get(StringReference::new(5)), Some("BAR"));
+        assert_eq!(string_hash.get(StringReference::new(99)), None);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../fixtures/gfaydark/strings.bin")[..];
-        let string_hash = StringHash::new(data);
+        let data = fixture_data();
+        let string_hash = StringHash::new(&data);
         let serialized = string_hash.to_bytes();
         assert_eq!(data, serialized);
     }

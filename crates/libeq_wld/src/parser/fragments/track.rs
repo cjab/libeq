@@ -111,24 +111,33 @@ impl TrackInstanceFlags {
 mod tests {
     use super::*;
 
+    fn fixture() -> Track {
+        Track {
+            name_reference: StringReference::new(-75),
+            reference: FragmentRef::new(7),
+            flags: TrackInstanceFlags(0),
+            sleep: None,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
-        let frag = Track::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = Track::parse(&data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-75));
         assert_eq!(frag.reference, FragmentRef::new(7));
-        assert_eq!(frag.flags.has_sleep(), false);
-        assert_eq!(frag.flags.reverse(), false);
-        assert_eq!(frag.flags.interpolate(), false);
+        assert!(!frag.flags.has_sleep());
+        assert!(!frag.flags.reverse());
+        assert!(!frag.flags.interpolate());
         assert_eq!(frag.sleep, None);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0007-0x13.frag")[..];
-        let frag = Track::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = Track::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

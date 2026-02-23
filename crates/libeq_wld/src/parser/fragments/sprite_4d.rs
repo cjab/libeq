@@ -70,24 +70,29 @@ impl Fragment for Sprite4D {
 mod tests {
     use super::*;
 
-    #[test]
-    fn it_has_a_known_name_reference() {
-        #![allow(overflowing_literals)]
-        let data =
-            &include_bytes!("../../../fixtures/fragments/wldcom/4dspritedef-0001-0x0b.frag")[..];
-        let frag = Sprite4D::parse(data).unwrap().1;
+    fn fixture() -> Sprite4D {
+        Sprite4D {
+            name_reference: StringReference::new(0),
+            reference: FragmentRef::new(-10),
+            params1: 0,
+        }
+    }
 
-        assert_eq!(frag.name_reference, StringReference::new(0x0));
+    #[test]
+    fn it_parses() {
+        let data = fixture().to_bytes();
+        let frag = Sprite4D::parse(&data).unwrap().1;
+
+        assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(-10));
-        assert_eq!(frag.params1, 0x0);
+        assert_eq!(frag.params1, 0);
     }
 
     #[test]
     fn it_serializes() {
-        let data =
-            &include_bytes!("../../../fixtures/fragments/wldcom/4dspritedef-0001-0x0b.frag")[..];
-        let frag = Sprite4D::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = Sprite4D::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

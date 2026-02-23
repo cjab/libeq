@@ -47,20 +47,27 @@ impl Fragment for GlobalAmbientLightDef {
 mod tests {
     use super::*;
 
+    #[allow(overflowing_literals)]
+    fn fixture() -> GlobalAmbientLightDef {
+        GlobalAmbientLightDef {
+            name_reference: StringReference::new(0xff000000),
+        }
+    }
+
     #[test]
-    fn it_has_a_known_name_reference() {
+    fn it_parses() {
         #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0000-0x35.frag")[..];
-        let frag = GlobalAmbientLightDef::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = GlobalAmbientLightDef::parse(&data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0xff000000));
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0000-0x35.frag")[..];
-        let frag = GlobalAmbientLightDef::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = GlobalAmbientLightDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

@@ -70,21 +70,29 @@ impl Fragment for SimpleSprite {
 mod tests {
     use super::*;
 
+    fn fixture() -> SimpleSprite {
+        SimpleSprite {
+            name_reference: StringReference::new(0),
+            reference: FragmentRef::new(3),
+            flags: 0x50,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0003-0x05.frag")[..];
-        let frag = SimpleSprite::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = SimpleSprite::parse(&data).unwrap().1;
 
-        assert_eq!(frag.name_reference, StringReference::new(0x0));
-        assert_eq!(frag.reference, FragmentRef::new(0x3));
+        assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.reference, FragmentRef::new(3));
         assert_eq!(frag.flags, 0x50);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0003-0x05.frag")[..];
-        let frag = SimpleSprite::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = SimpleSprite::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

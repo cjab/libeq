@@ -113,26 +113,38 @@ impl Fragment for DmRGBTrackDef {
 mod tests {
     use super::*;
 
+    fn fixture() -> DmRGBTrackDef {
+        DmRGBTrackDef {
+            name_reference: StringReference::new(-1),
+            data1: 1,
+            vertex_color_count: 3,
+            data2: 1,
+            data3: 200,
+            data4: 0,
+            vertex_colors: vec![0xC1FFFFFF, 0xD9AABBCC, 0xFF000000],
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/objects/0000-0x32.frag")[..];
-        let frag = DmRGBTrackDef::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = DmRGBTrackDef::parse(&data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-1));
         assert_eq!(frag.data1, 1);
-        assert_eq!(frag.vertex_color_count, 176);
+        assert_eq!(frag.vertex_color_count, 3);
         assert_eq!(frag.data2, 1);
         assert_eq!(frag.data3, 200);
         assert_eq!(frag.data4, 0);
-        assert_eq!(frag.vertex_colors.len(), 176);
-        assert_eq!(frag.vertex_colors[0], 3254779903);
+        assert_eq!(frag.vertex_colors.len(), 3);
+        assert_eq!(frag.vertex_colors[0], 0xC1FFFFFF);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/objects/0000-0x32.frag")[..];
-        let frag = DmRGBTrackDef::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = DmRGBTrackDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

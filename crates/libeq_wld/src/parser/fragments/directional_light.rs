@@ -119,49 +119,61 @@ impl DirectionalLightFlags {
 mod tests {
     use super::*;
 
+    fn fixture() -> DirectionalLight {
+        DirectionalLight {
+            name_reference: StringReference::new(-8),
+            light_reference: FragmentRef::new(1),
+            flags: DirectionalLightFlags(0),
+            normal: (0.5, 0.5, 0.5),
+            num_regions: 1,
+            regions: vec![10],
+        }
+    }
+
+    fn fixture_static() -> DirectionalLight {
+        DirectionalLight {
+            name_reference: StringReference::new(-22),
+            light_reference: FragmentRef::new(3),
+            flags: DirectionalLightFlags(0x20),
+            normal: (0.25, 0.5, 0.75),
+            num_regions: 2,
+            regions: vec![4, 9],
+        }
+    }
+
     #[test]
     fn it_parses() {
-        #![allow(overflowing_literals)]
-        let data =
-            &include_bytes!("../../../fixtures/fragments/wldcom/directional-light-0001-0x2b.frag")
-                [..];
-        let (remaining, frag) = DirectionalLight::parse(data).unwrap();
+        let data = fixture().to_bytes();
+        let (remaining, frag) = DirectionalLight::parse(&data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(-8));
         assert_eq!(frag.light_reference, FragmentRef::new(1));
         assert_eq!(frag.flags, DirectionalLightFlags(0));
-        assert_eq!(frag.normal, (0.26726124, 0.5345225, 0.80178374));
+        assert_eq!(frag.normal, (0.5, 0.5, 0.5));
         assert_eq!(frag.num_regions, 1);
         assert_eq!(frag.regions, vec![10]);
-
-        assert_eq!(remaining, vec![]);
+        assert!(remaining.is_empty());
     }
 
     #[test]
     fn it_parses_static() {
-        #![allow(overflowing_literals)]
-        let data =
-            &include_bytes!("../../../fixtures/fragments/wldcom/directional-light-0003-0x2b.frag")
-                [..];
-        let (remaining, frag) = DirectionalLight::parse(data).unwrap();
+        let data = fixture_static().to_bytes();
+        let (remaining, frag) = DirectionalLight::parse(&data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(-22));
         assert_eq!(frag.light_reference, FragmentRef::new(3));
         assert_eq!(frag.flags, DirectionalLightFlags(0x20));
-        assert_eq!(frag.normal, (0.4558423, 0.5698029, 0.68376344));
+        assert_eq!(frag.normal, (0.25, 0.5, 0.75));
         assert_eq!(frag.num_regions, 2);
         assert_eq!(frag.regions, vec![4, 9]);
-
-        assert_eq!(remaining, vec![]);
+        assert!(remaining.is_empty());
     }
 
     #[test]
     fn it_serializes() {
-        let data =
-            &include_bytes!("../../../fixtures/fragments/wldcom/directional-light-0003-0x2b.frag")
-                [..];
-        let frag = DirectionalLight::parse(data).unwrap().1;
+        let data = fixture_static().to_bytes();
+        let frag = DirectionalLight::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

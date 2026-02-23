@@ -80,24 +80,38 @@ impl Fragment for MaterialPalette {
 mod tests {
     use super::*;
 
+    fn fixture() -> MaterialPalette {
+        MaterialPalette {
+            name_reference: StringReference::new(-100),
+            flags: 0,
+            size1: 3,
+            fragments: vec![
+                FragmentRef::new(5),
+                FragmentRef::new(10),
+                FragmentRef::new(15),
+            ],
+        }
+    }
+
     #[test]
     fn it_parses() {
-        #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0130-0x31.frag")[..];
-        let frag = MaterialPalette::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = MaterialPalette::parse(&data).unwrap().1;
 
-        assert_eq!(frag.name_reference, StringReference::new(-1122));
-        assert_eq!(frag.flags, 0x0);
-        assert_eq!(frag.size1, 33);
-        assert_eq!(frag.fragments.len(), 33);
+        assert_eq!(frag.name_reference, StringReference::new(-100));
+        assert_eq!(frag.flags, 0);
+        assert_eq!(frag.size1, 3);
+        assert_eq!(frag.fragments.len(), 3);
         assert_eq!(frag.fragments[0], FragmentRef::new(5));
+        assert_eq!(frag.fragments[1], FragmentRef::new(10));
+        assert_eq!(frag.fragments[2], FragmentRef::new(15));
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0130-0x31.frag")[..];
-        let frag = MaterialPalette::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = MaterialPalette::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

@@ -62,12 +62,20 @@ impl Fragment for DefaultPaletteFile {
 mod tests {
     use super::*;
 
+    fn fixture() -> DefaultPaletteFile {
+        DefaultPaletteFile {
+            name_reference: StringReference::new(0),
+            entry: EncodedFilename {
+                name_length: 12,
+                file_name: String::from("palette.bmp"),
+            },
+        }
+    }
+
     #[test]
     fn it_parses() {
-        #![allow(overflowing_literals)]
-        let data =
-            &include_bytes!("../../../fixtures/fragments/tanarus-thecity/0000-0x01.frag")[..];
-        let frag = DefaultPaletteFile::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = DefaultPaletteFile::parse(&data).unwrap().1;
 
         assert_eq!(
             frag.entry,
@@ -80,10 +88,9 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data =
-            &include_bytes!("../../../fixtures/fragments/tanarus-thecity/0000-0x01.frag")[..];
-        let frag = DefaultPaletteFile::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = DefaultPaletteFile::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

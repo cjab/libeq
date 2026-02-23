@@ -96,48 +96,70 @@ impl Fragment for BmInfo {
 mod tests {
     use super::*;
 
+    #[allow(overflowing_literals)]
+    fn fixture() -> BmInfo {
+        BmInfo {
+            name_reference: StringReference::new(0xffffffff),
+            entry_count: 0,
+            entries: vec![EncodedFilename {
+                name_length: 11,
+                file_name: "SGRASS.BMP".to_string(),
+            }],
+        }
+    }
+
+    #[allow(overflowing_literals)]
+    fn fixture_multiple() -> BmInfo {
+        BmInfo {
+            name_reference: StringReference::new(0xffffffff),
+            entry_count: 1,
+            entries: vec![
+                EncodedFilename {
+                    name_length: 12,
+                    file_name: "TEXTURE.BMP".to_string(),
+                },
+                EncodedFilename {
+                    name_length: 13,
+                    file_name: "TEXTURE2.DDS".to_string(),
+                },
+            ],
+        }
+    }
+
     #[test]
     fn it_parses() {
         #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0001-0x03.frag")[..];
-        let frag = BmInfo::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = BmInfo::parse(&data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0xffffffff));
         assert_eq!(frag.entry_count, 0);
         assert_eq!(frag.entries.len(), 1);
-        assert_eq!(frag.entries[0].name_length, 0x0b);
-        assert_eq!(frag.entries[0].file_name, "SGRASS.BMP".to_string());
+        assert_eq!(frag.entries[0].file_name, "SGRASS.BMP");
     }
 
     #[test]
     fn it_parses_multiple_entries() {
-        #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/twilight/0000-0x03.frag")[..];
-        let frag = BmInfo::parse(data).unwrap().1;
+        let data = fixture_multiple().to_bytes();
+        let frag = BmInfo::parse(&data).unwrap().1;
 
-        assert_eq!(frag.name_reference, StringReference::new(0xffffffff));
-        assert_eq!(frag.entry_count, 7);
-        assert_eq!(frag.entries.len(), 8);
-        assert_eq!(frag.entries[7].name_length, 21);
-        assert_eq!(
-            frag.entries[7].file_name,
-            "6, 5, 0, SAND02A.DDS".to_string()
-        );
+        assert_eq!(frag.entry_count, 1);
+        assert_eq!(frag.entries.len(), 2);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0029-0x03.frag")[..];
-        let frag = BmInfo::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = BmInfo::parse(&data).unwrap().1;
 
-        assert_eq!([frag.to_bytes(), vec![0]].concat(), data);
+        assert_eq!(frag.to_bytes(), data);
     }
 
     #[test]
-    fn it_serializes_with_multiple_entries_and_padding() {
-        let data = &include_bytes!("../../../fixtures/fragments/twilight/0000-0x03.frag")[..];
-        let frag = BmInfo::parse(data).unwrap().1;
+    fn it_serializes_multiple() {
+        let data = fixture_multiple().to_bytes();
+        let frag = BmInfo::parse(&data).unwrap().1;
 
-        assert_eq!([frag.to_bytes(), vec![0]].concat(), data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

@@ -64,19 +64,27 @@ impl Fragment for Sphere {
 mod tests {
     use super::*;
 
+    fn fixture() -> Sphere {
+        Sphere {
+            name_reference: StringReference::new(0),
+            radius: 50.0,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4640-0x16.frag")[..];
-        let frag = Sphere::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = Sphere::parse(&data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
+        assert_eq!(frag.radius, 50.0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4640-0x16.frag")[..];
-        let frag = Sphere::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = Sphere::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

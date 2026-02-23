@@ -70,21 +70,29 @@ impl Fragment for Sprite3D {
 mod tests {
     use super::*;
 
+    fn fixture() -> Sprite3D {
+        Sprite3D {
+            name_reference: StringReference::new(0),
+            reference: FragmentRef::new(100),
+            flags: 0,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4638-0x09.frag")[..];
-        let frag = Sprite3D::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = Sprite3D::parse(&data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
-        assert_eq!(frag.reference, FragmentRef::new(1730));
+        assert_eq!(frag.reference, FragmentRef::new(100));
         assert_eq!(frag.flags, 0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4638-0x09.frag")[..];
-        let frag = Sprite3D::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = Sprite3D::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

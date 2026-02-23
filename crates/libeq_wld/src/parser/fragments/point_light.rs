@@ -126,25 +126,37 @@ impl PointLightFlags {
 mod tests {
     use super::*;
 
+    fn fixture() -> PointLight {
+        PointLight {
+            name_reference: StringReference::new(0),
+            reference: FragmentRef::new(2),
+            flags: PointLightFlags(0x100),
+            x: 100.0,
+            y: 200.0,
+            z: 50.0,
+            radius: 300.0,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/lights/0002-0x28.frag")[..];
-        let frag = PointLight::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = PointLight::parse(&data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
         assert_eq!(frag.reference, FragmentRef::new(2));
         assert_eq!(frag.flags, PointLightFlags(0x100));
-        assert_eq!(frag.x, -1980.6992);
-        assert_eq!(frag.y, -2354.9412);
-        assert_eq!(frag.z, 31.490416);
+        assert_eq!(frag.x, 100.0);
+        assert_eq!(frag.y, 200.0);
+        assert_eq!(frag.z, 50.0);
         assert_eq!(frag.radius, 300.0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/lights/0002-0x28.frag")[..];
-        let frag = PointLight::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = PointLight::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

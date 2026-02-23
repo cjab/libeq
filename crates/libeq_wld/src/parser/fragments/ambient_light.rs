@@ -91,23 +91,33 @@ impl Fragment for AmbientLight {
 mod tests {
     use super::*;
 
+    fn fixture() -> AmbientLight {
+        AmbientLight {
+            name_reference: StringReference::new(-500),
+            reference: FragmentRef::new(10),
+            flags: 0,
+            region_count: 5,
+            regions: vec![0, 1, 2, 3, 4],
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4637-0x2a.frag")[..];
-        let frag = AmbientLight::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = AmbientLight::parse(&data).unwrap().1;
 
-        assert_eq!(frag.name_reference, StringReference::new(-52558));
+        assert_eq!(frag.name_reference, StringReference::new(-500));
         assert_eq!(frag.flags, 0);
-        assert_eq!(frag.region_count, 2905);
-        assert_eq!(frag.regions.len(), 2905);
-        assert_eq!(frag.regions[0..5], vec![0, 1, 2, 3, 4]);
+        assert_eq!(frag.region_count, 5);
+        assert_eq!(frag.regions.len(), 5);
+        assert_eq!(frag.regions, vec![0, 1, 2, 3, 4]);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4637-0x2a.frag")[..];
-        let frag = AmbientLight::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = AmbientLight::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

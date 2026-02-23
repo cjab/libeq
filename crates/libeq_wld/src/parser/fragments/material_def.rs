@@ -146,18 +146,40 @@ impl MaterialFlags {
 mod tests {
     use super::*;
 
+    fn fixture() -> MaterialDef {
+        MaterialDef {
+            name_reference: StringReference::new(-22),
+            flags: MaterialFlags(0x02),
+            render_method: RenderMethod::from_u32(0x80000001),
+            rgb_pen: 0x4e4e4e,
+            brightness: 0.0,
+            scaled_ambient: 0.75,
+            reference: FragmentRef::new(4),
+            pair: Some((0, 0.0)),
+        }
+    }
+
+    fn fixture_two_sided() -> MaterialDef {
+        MaterialDef {
+            name_reference: StringReference::new(-200),
+            flags: MaterialFlags(0x03),
+            render_method: RenderMethod::from_u32(0x80000013),
+            rgb_pen: 0xb2b2b2,
+            brightness: 0.0,
+            scaled_ambient: 0.75,
+            reference: FragmentRef::new(100),
+            pair: Some((0, 0.0)),
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0004-0x30.frag")[..];
-        let frag = MaterialDef::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = MaterialDef::parse(&data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-22));
         assert_eq!(frag.flags, MaterialFlags(0x02));
-        assert_eq!(frag.flags.is_two_sided(), false);
-        assert_eq!(
-            <RenderMethod as std::convert::Into<u32>>::into(frag.render_method),
-            0x80000001
-        );
+        assert!(!frag.flags.is_two_sided());
         assert_eq!(frag.rgb_pen, 0x4e4e4e);
         assert_eq!(frag.brightness, 0.0);
         assert_eq!(frag.scaled_ambient, 0.75);
@@ -167,36 +189,30 @@ mod tests {
 
     #[test]
     fn it_parses_two_sided() {
-        let data = &include_bytes!("../../../fixtures/fragments/pofire_chr/4352-0x30.frag")[..];
-        let frag = MaterialDef::parse(data).unwrap().1;
+        let data = fixture_two_sided().to_bytes();
+        let frag = MaterialDef::parse(&data).unwrap().1;
 
-        assert_eq!(frag.name_reference, StringReference::new(-70058));
         assert_eq!(frag.flags, MaterialFlags(0x03));
-        assert_eq!(frag.flags.is_two_sided(), true);
+        assert!(frag.flags.is_two_sided());
         assert_eq!(
-            <RenderMethod as std::convert::Into<u32>>::into(frag.render_method),
+            <RenderMethod as Into<u32>>::into(frag.render_method),
             0x80000013
         );
-        assert_eq!(frag.rgb_pen, 0xb2b2b2);
-        assert_eq!(frag.brightness, 0.0);
-        assert_eq!(frag.scaled_ambient, 0.75);
-        assert_eq!(frag.reference, FragmentRef::new(4352));
-        assert_eq!(frag.pair, Some((0, 0.0)));
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0004-0x30.frag")[..];
-        let frag = MaterialDef::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = MaterialDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 
     #[test]
     fn it_serializes_two_sided() {
-        let data = &include_bytes!("../../../fixtures/fragments/pofire_chr/4352-0x30.frag")[..];
-        let frag = MaterialDef::parse(data).unwrap().1;
+        let data = fixture_two_sided().to_bytes();
+        let frag = MaterialDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }

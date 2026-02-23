@@ -507,13 +507,13 @@ impl<'a> Model<'a> {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature = "game-fixtures")]
+    #[cfg(feature = "gamedata")]
     use super::*;
 
-    #[cfg(feature = "game-fixtures")]
+    #[cfg(feature = "gamedata")]
     #[test]
     fn it_builds_meshes() {
-        let wld_data = &include_bytes!("../fixtures/gfaydark.wld")[..];
+        let wld_data = &include_bytes!("../fixtures/gamedata/gfaydark.wld")[..];
         let wld = Wld::load(wld_data);
         let meshes = wld.meshes().collect::<Vec<_>>();
 
@@ -530,10 +530,10 @@ mod tests {
         assert_eq!(meshes[0].center(), (-2502.0, 190.0, -2432.0));
     }
 
-    #[cfg(feature = "game-fixtures")]
+    #[cfg(feature = "gamedata")]
     #[test]
     fn it_builds_materials() {
-        let wld_data = &include_bytes!("../fixtures/gfaydark.wld")[..];
+        let wld_data = &include_bytes!("../fixtures/gamedata/gfaydark.wld")[..];
         let wld = Wld::load(wld_data);
         let materials = wld.materials().collect::<Vec<_>>();
 

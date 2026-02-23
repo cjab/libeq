@@ -533,10 +533,10 @@ impl<'a> FragmentHeader<'a> {
 mod tests {
     use super::*;
 
-    #[cfg(feature = "game-fixtures")]
+    #[cfg(feature = "gamedata")]
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../fixtures/gfaydark.wld")[..];
+        let data = &include_bytes!("../../fixtures/gamedata/gfaydark.wld")[..];
         let wld_doc = WldDoc::parse(data).unwrap();
         assert_eq!(wld_doc.header.magic, 1414544642);
         assert_eq!(wld_doc.header.version, 0x00015500);
@@ -551,10 +551,10 @@ mod tests {
         assert_eq!(wld_doc.strings.get(StringReference::new(2)), None);
     }
 
-    #[cfg(feature = "game-fixtures")]
+    #[cfg(feature = "gamedata")]
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../fixtures/gfaydark.wld")[..];
+        let data = &include_bytes!("../../fixtures/gamedata/gfaydark.wld")[..];
         let wld_doc = WldDoc::parse(data).unwrap();
 
         let serialized_data = wld_doc.to_bytes();

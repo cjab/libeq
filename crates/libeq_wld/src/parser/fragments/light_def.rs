@@ -208,12 +208,24 @@ impl From<LightDefFlags> for u32 {
 mod tests {
     use super::*;
 
+    fn fixture() -> LightDef {
+        LightDef {
+            name_reference: StringReference::new(-100),
+            flags: LightDefFlags(0x04),
+            frame_count: 1,
+            current_frame: None,
+            sleep: None,
+            light_levels: Some(vec![1.0]),
+            colors: None,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1728-0x1b.frag")[..];
-        let frag = LightDef::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = LightDef::parse(&data).unwrap().1;
 
-        assert_eq!(frag.name_reference, StringReference::new(-29288));
+        assert_eq!(frag.name_reference, StringReference::new(-100));
         assert_eq!(frag.flags.0, 0x04);
         assert_eq!(frag.frame_count, 1);
         assert_eq!(frag.current_frame, None);
@@ -224,9 +236,9 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1728-0x1b.frag")[..];
-        let frag = LightDef::parse(data).unwrap().1;
+        let data = fixture().to_bytes();
+        let frag = LightDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(frag.to_bytes(), data);
     }
 }
