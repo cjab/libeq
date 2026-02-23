@@ -4,13 +4,8 @@ use std::process;
 
 use lexopt::prelude::*;
 use libeq_pfs::PfsReader;
-mod create;
-mod extract;
+mod cmd;
 mod fmt;
-mod get;
-mod info;
-mod list;
-mod verify;
 
 enum Command {
     List {
@@ -104,7 +99,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                         raw = true;
                     }
                     Short('h') | Long("help") => {
-                        list::print_help();
+                        cmd::list::print_help();
                         process::exit(0);
                     }
                     Value(val) => files.push(val.string()?),
@@ -112,7 +107,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 }
             }
             if files.is_empty() {
-                list::eprint_help();
+                cmd::list::eprint_help();
                 process::exit(1);
             }
             Ok(Command::List {
@@ -130,7 +125,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                         verbose = true;
                     }
                     Short('h') | Long("help") => {
-                        verify::print_help();
+                        cmd::verify::print_help();
                         process::exit(0);
                     }
                     Value(val) => files.push(val.string()?),
@@ -138,7 +133,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 }
             }
             if files.is_empty() {
-                verify::eprint_help();
+                cmd::verify::eprint_help();
                 process::exit(1);
             }
             Ok(Command::Verify { files, verbose })
@@ -157,7 +152,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                         output = Some(parser.value()?.string()?);
                     }
                     Short('h') | Long("help") => {
-                        extract::print_help();
+                        cmd::extract::print_help();
                         process::exit(0);
                     }
                     Value(val) => {
@@ -172,7 +167,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 }
             }
             let Some(archive) = archive else {
-                extract::eprint_help();
+                cmd::extract::eprint_help();
                 process::exit(1);
             };
             Ok(Command::Extract {
@@ -196,7 +191,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                         force = true;
                     }
                     Short('h') | Long("help") => {
-                        create::print_help();
+                        cmd::create::print_help();
                         process::exit(0);
                     }
                     Value(val) => {
@@ -211,7 +206,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 }
             }
             if archive.is_none() || inputs.is_empty() {
-                create::eprint_help();
+                cmd::create::eprint_help();
                 process::exit(1);
             }
             let archive = archive.unwrap();
@@ -228,7 +223,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
             while let Some(arg) = parser.next()? {
                 match arg {
                     Short('h') | Long("help") => {
-                        get::print_help();
+                        cmd::get::print_help();
                         process::exit(0);
                     }
                     Value(val) => {
@@ -245,7 +240,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 }
             }
             if archive.is_none() || filename.is_none() {
-                get::eprint_help();
+                cmd::get::eprint_help();
                 process::exit(1);
             }
             let archive = archive.unwrap();
@@ -261,7 +256,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                         raw = true;
                     }
                     Short('h') | Long("help") => {
-                        info::print_help();
+                        cmd::info::print_help();
                         process::exit(0);
                     }
                     Value(val) => files.push(val.string()?),
@@ -269,7 +264,7 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 }
             }
             if files.is_empty() {
-                info::eprint_help();
+                cmd::info::eprint_help();
                 process::exit(1);
             }
             Ok(Command::Info { files, raw })
@@ -280,12 +275,12 @@ fn parse_args() -> Result<Command, lexopt::Error> {
                 Some(Value(val)) => {
                     let sub = val.string()?;
                     match sub.as_str() {
-                        "list" | "ls" => list::print_help(),
-                        "verify" | "v" => verify::print_help(),
-                        "extract" | "x" => extract::print_help(),
-                        "create" | "c" => create::print_help(),
-                        "get" => get::print_help(),
-                        "info" | "i" => info::print_help(),
+                        "list" | "ls" => cmd::list::print_help(),
+                        "verify" | "v" => cmd::verify::print_help(),
+                        "extract" | "x" => cmd::extract::print_help(),
+                        "create" | "c" => cmd::create::print_help(),
+                        "get" => cmd::get::print_help(),
+                        "info" | "i" => cmd::info::print_help(),
                         _ => {
                             eprintln!("unknown subcommand: {}", sub);
                             print_help();
@@ -324,13 +319,13 @@ fn main() {
             verbosity,
             raw,
         } => {
-            if let Err(e) = list::run(files, verbosity, !raw) {
+            if let Err(e) = cmd::list::run(files, verbosity, !raw) {
                 eprintln!("{}", e);
                 process::exit(1);
             }
         }
         Command::Verify { ref files, verbose } => {
-            if let Err(e) = verify::run(files, verbose) {
+            if let Err(e) = cmd::verify::run(files, verbose) {
                 eprintln!("{}", e);
                 process::exit(1);
             }
@@ -341,7 +336,7 @@ fn main() {
             ref output,
             verbose,
         } => {
-            if let Err(e) = extract::run(archive, files, output.as_deref(), verbose) {
+            if let Err(e) = cmd::extract::run(archive, files, output.as_deref(), verbose) {
                 eprintln!("{}", e);
                 process::exit(1);
             }
@@ -352,7 +347,7 @@ fn main() {
             verbose,
             force,
         } => {
-            if let Err(e) = create::run(archive, inputs, verbose, force) {
+            if let Err(e) = cmd::create::run(archive, inputs, verbose, force) {
                 eprintln!("{}", e);
                 process::exit(1);
             }
@@ -361,13 +356,13 @@ fn main() {
             ref archive,
             ref filename,
         } => {
-            if let Err(e) = get::run(archive, filename) {
+            if let Err(e) = cmd::get::run(archive, filename) {
                 eprintln!("{}", e);
                 process::exit(1);
             }
         }
         Command::Info { ref files, raw } => {
-            if let Err(e) = info::run(files, !raw) {
+            if let Err(e) = cmd::info::run(files, !raw) {
                 eprintln!("{}", e);
                 process::exit(1);
             }
