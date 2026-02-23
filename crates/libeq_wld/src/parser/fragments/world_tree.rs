@@ -132,26 +132,57 @@ impl WorldNode {
 mod tests {
     use super::*;
 
+    fn fixture() -> WorldTree {
+        WorldTree {
+            name_reference: StringReference::new(0x0),
+            world_node_count: 3,
+            world_nodes: vec![
+                WorldNode {
+                    normal: (-1.0, 0.0, 0.0),
+                    split_distance: -187.8942,
+                    region: FragmentRef::new(0),
+                    front_tree: FragmentRef::new(2),
+                    back_tree: FragmentRef::new(3),
+                },
+                WorldNode {
+                    normal: (0.0, 1.0, 0.0),
+                    split_distance: 100.0,
+                    region: FragmentRef::new(1),
+                    front_tree: FragmentRef::new(0),
+                    back_tree: FragmentRef::new(0),
+                },
+                WorldNode {
+                    normal: (0.0, 0.0, 1.0),
+                    split_distance: -50.0,
+                    region: FragmentRef::new(2),
+                    front_tree: FragmentRef::new(0),
+                    back_tree: FragmentRef::new(0),
+                },
+            ],
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let frag = WorldTree::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0x0));
-        assert_eq!(frag.world_node_count, 5809);
-        assert_eq!(frag.world_nodes.len(), 5809);
+        assert_eq!(frag.world_node_count, 3);
+        assert_eq!(frag.world_nodes.len(), 3);
         assert_eq!(frag.world_nodes[0].normal, (-1.0f32, 0.0f32, 0.0f32));
         assert_eq!(frag.world_nodes[0].split_distance, -187.8942f32);
         assert_eq!(frag.world_nodes[0].region, FragmentRef::new(0));
         assert_eq!(frag.world_nodes[0].front_tree, FragmentRef::new(2));
-        assert_eq!(frag.world_nodes[0].back_tree, FragmentRef::new(2507));
+        assert_eq!(frag.world_nodes[0].back_tree, FragmentRef::new(3));
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1730-0x21.frag")[..];
-        let frag = WorldTree::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = WorldTree::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

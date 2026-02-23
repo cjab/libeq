@@ -136,9 +136,38 @@ impl Fragment for PolyhedronDef {
 mod tests {
     use super::*;
 
+    fn fixture() -> PolyhedronDef {
+        PolyhedronDef {
+            name_reference: StringReference::new(-14003),
+            flags: 0x1,
+            size1: 8,
+            size2: 6,
+            params1: 8.902873,
+            params2: 1.0,
+            entries1: vec![
+                (-0.06475502, -1.2741688, -6.6802998),
+                (-0.06475502, 1.2741688, -6.6802998),
+                (-0.06475502, 1.2741688, 2.2222998),
+                (-0.06475502, -1.2741688, 2.2222998),
+                (0.06475502, -1.2741688, -6.6802998),
+                (0.06475502, 1.2741688, -6.6802998),
+                (0.06475502, 1.2741688, 2.2222998),
+                (0.06475502, -1.2741688, 2.2222998),
+            ],
+            entries2: vec![
+                (4, vec![3, 2, 0, 1]),
+                (4, vec![4, 5, 7, 6]),
+                (4, vec![0, 4, 3, 7]),
+                (4, vec![5, 1, 6, 2]),
+                (4, vec![0, 1, 4, 5]),
+                (4, vec![2, 3, 6, 7]),
+            ],
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/1417-0x17.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let frag = PolyhedronDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-14003));
@@ -155,9 +184,10 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/1417-0x17.frag")[..];
-        let frag = PolyhedronDef::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = PolyhedronDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

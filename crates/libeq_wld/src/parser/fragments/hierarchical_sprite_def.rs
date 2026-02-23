@@ -299,9 +299,50 @@ impl HierarchicalSpriteDefFlags {
 mod tests {
     use super::*;
 
+    fn fixture() -> HierarchicalSpriteDef {
+        // flags: HAS_BOUNDING_RADIUS (0x02) | UNKNOWN_FLAG (0x200) = 0x202
+        HierarchicalSpriteDef {
+            name_reference: StringReference::new(-211),
+            flags: HierarchicalSpriteDefFlags(0x202),
+            num_dags: 3,
+            collision_volume_reference: 0,
+            center_offset: None,
+            bounding_radius: Some(0.81542796),
+            dags: vec![
+                Dag {
+                    name_reference: -168,
+                    flags: 0,
+                    track_reference: 8,
+                    mesh_or_sprite_reference: 0,
+                    num_sub_dags: 1,
+                    sub_dags: vec![1],
+                },
+                Dag {
+                    name_reference: -175,
+                    flags: 0,
+                    track_reference: 10,
+                    mesh_or_sprite_reference: 0,
+                    num_sub_dags: 1,
+                    sub_dags: vec![2],
+                },
+                Dag {
+                    name_reference: -182,
+                    flags: 0,
+                    track_reference: 12,
+                    mesh_or_sprite_reference: 0,
+                    num_sub_dags: 0,
+                    sub_dags: vec![],
+                },
+            ],
+            num_attached_skins: Some(1),
+            dm_sprites: Some(vec![13]),
+            link_skin_updates_to_dag_index: Some(vec![2]),
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0013-0x10.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let frag = HierarchicalSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-211));
@@ -318,15 +359,19 @@ mod tests {
         assert_eq!(frag.dags[0].sub_dags.len(), 1);
         assert_eq!(frag.dags[0].sub_dags[0], 1);
         assert_eq!(frag.num_attached_skins, Some(1));
-        assert_eq!(frag.dm_sprites.unwrap(), vec![13]);
-        assert_eq!(frag.link_skin_updates_to_dag_index.unwrap(), vec![2]);
+        assert_eq!(frag.dm_sprites.clone().unwrap(), vec![13]);
+        assert_eq!(
+            frag.link_skin_updates_to_dag_index.clone().unwrap(),
+            vec![2]
+        );
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0013-0x10.frag")[..];
-        let frag = HierarchicalSpriteDef::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = HierarchicalSpriteDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

@@ -165,11 +165,35 @@ mod tests {
 
     use super::*;
 
+    fn fixture() -> ParticleSpriteDef {
+        // flags: 0x3 = HAS_CENTER_OFFSET | HAS_BOUNDING_RADIUS
+        ParticleSpriteDef {
+            name_reference: StringReference::new(-1),
+            flags: ParticleSpriteDefFlags(0x3),
+            num_vertices: 1,
+            unknown: 0,
+            center_offset: Some((3.0, 4.0, 5.0)),
+            bounding_radius: Some(0.5),
+            vertices: vec![(0.0, 0.0, 1.0)],
+            render_method: RenderMethod::UserDefined {
+                material_type: MaterialType::Diffuse,
+            },
+            render_info: RenderInfo {
+                flags: RenderInfoFlags::new(2), // HAS_BRIGHTNESS
+                pen: None,
+                brightness: Some(1.0),
+                scaled_ambient: None,
+                simple_sprite_reference: None,
+                uv_info: None,
+                uv_map: None,
+            },
+            pen: vec![79],
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!(
-            "../../../fixtures/fragments/wldcom/particle-sprite-0000-0x0c.frag"
-        )[..];
+        let data = &fixture().to_bytes()[..];
         let frag = ParticleSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-1));
@@ -207,11 +231,10 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!(
-            "../../../fixtures/fragments/wldcom/particle-sprite-0000-0x0c.frag"
-        )[..];
-        let frag = ParticleSpriteDef::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = ParticleSpriteDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

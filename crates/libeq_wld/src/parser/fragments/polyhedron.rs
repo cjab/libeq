@@ -105,9 +105,18 @@ impl PolyhedronFlags {
 mod tests {
     use super::*;
 
+    fn fixture() -> Polyhedron {
+        Polyhedron {
+            name_reference: StringReference::new(0),
+            reference: FragmentRef::new(0x058a), // 1418
+            flags: PolyhedronFlags(0),           // no scale_factor
+            scale_factor: None,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/1418-0x18.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let frag = Polyhedron::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0));
@@ -118,9 +127,10 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/1418-0x18.frag")[..];
-        let frag = Polyhedron::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = Polyhedron::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

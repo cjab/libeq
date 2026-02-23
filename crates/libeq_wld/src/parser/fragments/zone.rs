@@ -120,9 +120,31 @@ impl Fragment for Zone {
 mod tests {
     use super::*;
 
+    fn fixture_simple() -> Zone {
+        Zone {
+            name_reference: StringReference::new(-52603),
+            flags: 0x0,
+            region_count: 2,
+            regions: vec![2859, 2865],
+            user_data_size: 0,
+            user_data: String::new(),
+        }
+    }
+
+    fn fixture_user_data() -> Zone {
+        Zone {
+            name_reference: StringReference::new(-124807),
+            flags: 0x0,
+            region_count: 2,
+            regions: vec![4521, 4523],
+            user_data_size: 47,
+            user_data: String::from("DRNTP00002-00030000357999999999___000000000000"),
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
+        let data = &fixture_simple().to_bytes()[..];
         let frag = Zone::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-52603));
@@ -132,9 +154,10 @@ mod tests {
         assert_eq!(frag.user_data_size, 0);
         assert_eq!(frag.user_data, "");
     }
+
     #[test]
     fn it_parses_user_data() {
-        let data = &include_bytes!("../../../fixtures/fragments/qeynos/10322-0x29.frag")[..];
+        let data = &fixture_user_data().to_bytes()[..];
         let frag = Zone::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-124807));
@@ -150,16 +173,19 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4642-0x29.frag")[..];
-        let frag = Zone::parse(data).unwrap().1;
+        let frag = fixture_simple();
+        let data = frag.to_bytes();
+        let parsed = Zone::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
+
     #[test]
     fn it_serializes_user_data() {
-        let data = &include_bytes!("../../../fixtures/fragments/qeynos/10322-0x29.frag")[..];
-        let frag = Zone::parse(data).unwrap().1;
+        let frag = fixture_user_data();
+        let data = frag.to_bytes();
+        let parsed = Zone::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

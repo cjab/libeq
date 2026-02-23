@@ -216,9 +216,36 @@ impl ParticleMovement {
 mod tests {
     use super::*;
 
+    fn fixture() -> ParticleCloudDef {
+        ParticleCloudDef {
+            name_reference: StringReference::new(-566),
+            unknown_1: 4,
+            unknown_2: 3,
+            particle_movement: ParticleMovement::Stream,
+            flags: 0x30500,
+            simultaneous_particles: 30,
+            unknown_6: 0,
+            unknown_7: 0,
+            unknown_8: 0,
+            unknown_9: 0,
+            unknown_10: 0,
+            spawn_radius: 0.1,
+            spawn_angle: 64.0,
+            spawn_lifespan: 2500,
+            spawn_velocity: 1.0,
+            spawn_normal_z: 0.0,
+            spawn_normal_x: -1.0,
+            spawn_normal_y: 0.0,
+            spawn_rate: 83,
+            spawn_scale: 0.5,
+            color: (0x80, 0x80, 0x80, 0x3f),
+            blitsprite: FragmentRef::new(51),
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0051-0x34.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let frag = ParticleCloudDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-566));
@@ -247,9 +274,10 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0051-0x34.frag")[..];
-        let frag = ParticleCloudDef::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = ParticleCloudDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

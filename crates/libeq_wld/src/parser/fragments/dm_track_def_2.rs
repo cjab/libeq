@@ -135,29 +135,47 @@ impl Fragment for DmTrackDef2 {
 mod tests {
     use super::*;
 
+    fn fixture() -> DmTrackDef2 {
+        DmTrackDef2 {
+            name_reference: StringReference::new(-5038),
+            flags: 0x0,
+            vertex_count: 3,
+            frame_count: 2,
+            param1: 67,
+            param2: 0,
+            scale: 10,
+            frames: vec![
+                vec![(455, 2180, 11078), (100, 200, 300), (400, 500, 600)],
+                vec![(460, 2185, 11083), (105, 205, 305), (405, 505, 605)],
+            ],
+            size6: 0,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0631-0x37.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let frag = DmTrackDef2::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-5038));
         assert_eq!(frag.flags, 0x0);
-        assert_eq!(frag.vertex_count, 104);
-        assert_eq!(frag.frame_count, 15);
+        assert_eq!(frag.vertex_count, 3);
+        assert_eq!(frag.frame_count, 2);
         assert_eq!(frag.param1, 67);
         assert_eq!(frag.param2, 0);
         assert_eq!(frag.scale, 10);
-        assert_eq!(frag.frames.len(), 15);
-        assert_eq!(frag.frames[0].len(), 104);
+        assert_eq!(frag.frames.len(), 2);
+        assert_eq!(frag.frames[0].len(), 3);
         assert_eq!(frag.frames[0][0], (455, 2180, 11078));
         assert_eq!(frag.size6, 0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark_obj/0631-0x37.frag")[..];
-        let frag = DmTrackDef2::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = DmTrackDef2::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

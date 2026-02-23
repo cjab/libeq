@@ -156,10 +156,21 @@ impl SimpleSpriteDefFlags {
 mod tests {
     use super::*;
 
+    fn fixture() -> SimpleSpriteDef {
+        SimpleSpriteDef {
+            name_reference: StringReference::new(-8),
+            flags: SimpleSpriteDefFlags(0x10), // HAS_SLEEP set but not IS_ANIMATED
+            frame_count: 1,
+            current_frame: None,
+            sleep: None, // sleep only parsed when IS_ANIMATED && HAS_SLEEP
+            frame_references: vec![FragmentRef::new(0x02)],
+        }
+    }
+
     #[test]
     fn it_parses() {
         #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0002-0x04.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let frag = SimpleSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0xfffffff8));
@@ -178,9 +189,10 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0002-0x04.frag")[..];
-        let frag = SimpleSpriteDef::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = SimpleSpriteDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

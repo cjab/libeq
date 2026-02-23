@@ -366,9 +366,44 @@ mod tests {
     use super::super::common::{DrawStyle, Lighting, RenderInfoFlags, Shading, TextureStyle};
     use super::*;
 
+    fn fixture() -> Sprite2DDef {
+        // flags: HAS_BOUNDING_RADIUS (0x02) | HAS_SLEEP (0x08) = 0x0a
+        Sprite2DDef {
+            name_reference: StringReference::new(-18282),
+            flags: SpriteFlags(0x0a),
+            num_frames: 1,
+            num_pitches: 1,
+            sprite_size: (0.2, 0.2),
+            sphere_fragment: 0,
+            depth_scale: None,
+            center_offset: None,
+            bounding_radius: Some(1.0198039),
+            current_frame: None,
+            sleep: Some(100),
+            pitches: vec![SpritePitch {
+                pitch_cap: 512,
+                num_headings: 1,
+                headings: vec![SpriteHeading {
+                    heading_cap: 64,
+                    frames: vec![1999], // reference to a texture
+                }],
+            }],
+            render_method: RenderMethod::from_u32(1171),
+            render_info: RenderInfo {
+                flags: RenderInfoFlags::new(7), // HAS_PEN | HAS_BRIGHTNESS | HAS_SCALED_AMBIENT
+                pen: Some(51),
+                brightness: Some(1.0),
+                scaled_ambient: Some(1.0),
+                simple_sprite_reference: None,
+                uv_info: None,
+                uv_map: None,
+            },
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let frag = Sprite2DDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-18282));
@@ -415,9 +450,10 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/2000-0x06.frag")[..];
-        let frag = Sprite2DDef::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = Sprite2DDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

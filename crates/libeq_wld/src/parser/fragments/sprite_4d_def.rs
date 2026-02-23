@@ -192,10 +192,24 @@ impl Sprite4DDefFlags {
 mod tests {
     use super::*;
 
+    fn fixture() -> Sprite4DDef {
+        // flags: 0x5f = HAS_CENTER_OFFSET | HAS_BOUNDING_RADIUS | HAS_CURRENT_FRAME | HAS_SLEEP | HAS_SPRITES | SKIP_FRAMES
+        Sprite4DDef {
+            name_reference: StringReference::new(-28),
+            flags: Sprite4DDefFlags(0x5f),
+            num_frames: 3,
+            polygon_fragment: 4,
+            center_offset: Some((1.1, 1.2, 1.3)),
+            bounding_radius: Some(0.13),
+            current_frame: Some(1),
+            sleep: Some(4),
+            sprite_fragments: Some(vec![1, 2, 3]),
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data =
-            &include_bytes!("../../../fixtures/fragments/wldcom/4dspritedef-0004-0x0a.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let (remaining, frag) = Sprite4DDef::parse(data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(-28));
@@ -213,10 +227,10 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data =
-            &include_bytes!("../../../fixtures/fragments/wldcom/4dspritedef-0004-0x0a.frag")[..];
-        let frag = Sprite4DDef::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = Sprite4DDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

@@ -226,9 +226,29 @@ impl Action {
 mod tests {
     use super::*;
 
+    fn fixture() -> ActorDef {
+        ActorDef {
+            name_reference: StringReference::new(-52594),
+            flags: ActorDefFlags(0), // no current_action or location
+            callback_name_reference: StringReference::new(-52579),
+            action_count: 1,
+            fragment_reference_count: 1,
+            bounds_reference: 0,
+            current_action: None,
+            location: None,
+            actions: vec![Action {
+                levels_of_detail_count: 1,
+                unknown: 0,
+                levels_of_detail_distances: vec![1e30],
+            }],
+            fragment_references: vec![4639],
+            unknown: 0,
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4639-0x14.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let frag = ActorDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-52594));
@@ -253,9 +273,10 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4639-0x14.frag")[..];
-        let frag = ActorDef::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = ActorDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

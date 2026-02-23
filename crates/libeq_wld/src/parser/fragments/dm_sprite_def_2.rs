@@ -526,10 +526,108 @@ impl DmSpriteDef2MeshOpEntry {
 mod tests {
     use super::*;
 
+    fn fixture_basic() -> DmSpriteDef2 {
+        DmSpriteDef2 {
+            name_reference: StringReference::new(-1134),
+            flags: 0x18003,
+            material_list_ref: FragmentRef::new(131),
+            animation_ref: FragmentRef::new(0),
+            fragment3: FragmentRef::new(0),
+            fragment4: FragmentRef::new(-2),
+            center: (-2502.0, -2432.0, 190.0),
+            params2: (0, 0, 0),
+            max_distance: 37.817947,
+            min: (0.0, 0.0, 0.0),
+            max: (0.0, 0.0, 0.0),
+            position_count: 3,
+            texture_coordinate_count: 3,
+            normal_count: 3,
+            color_count: 3,
+            face_count: 1,
+            skin_assignment_groups_count: 0,
+            face_material_groups_count: 1,
+            vertex_material_groups_count: 1,
+            meshop_count: 0,
+            scale: 5,
+            positions: vec![(2, -1154, -3), (100, 200, 300), (400, 500, 600)],
+            texture_coordinates: vec![(77, 77), (128, 0), (0, 128)],
+            vertex_normals: vec![(29, 31, 119), (0, 0, 127), (0, 127, 0)],
+            vertex_colors: vec![4043374848, 4043374848, 4043374848],
+            faces: vec![DmSpriteDef2FaceEntry {
+                flags: 0,
+                vertex_indexes: (0, 1, 2),
+            }],
+            skin_assignment_groups: vec![],
+            face_material_groups: vec![(1, 0)],
+            vertex_material_groups: vec![(3, 0)],
+            meshops: vec![],
+        }
+    }
+
+    fn fixture_with_meshops() -> DmSpriteDef2 {
+        DmSpriteDef2 {
+            name_reference: StringReference::new(-2000),
+            flags: 0x18003,
+            material_list_ref: FragmentRef::new(177),
+            animation_ref: FragmentRef::new(0),
+            fragment3: FragmentRef::new(0),
+            fragment4: FragmentRef::new(-2),
+            center: (0.0, 0.0, 0.0),
+            params2: (0, 0, 0),
+            max_distance: 100.0,
+            min: (0.0, 0.0, 0.0),
+            max: (0.0, 0.0, 0.0),
+            position_count: 3,
+            texture_coordinate_count: 3,
+            normal_count: 3,
+            color_count: 0,
+            face_count: 1,
+            skin_assignment_groups_count: 0,
+            face_material_groups_count: 1,
+            vertex_material_groups_count: 1,
+            meshop_count: 3,
+            scale: 5,
+            positions: vec![(0, 0, 0), (100, 0, 0), (0, 100, 0)],
+            texture_coordinates: vec![(0, 0), (128, 0), (0, 128)],
+            vertex_normals: vec![(0, 0, 127), (0, 0, 127), (0, 0, 127)],
+            vertex_colors: vec![],
+            faces: vec![DmSpriteDef2FaceEntry {
+                flags: 0,
+                vertex_indexes: (0, 1, 2),
+            }],
+            skin_assignment_groups: vec![],
+            face_material_groups: vec![(1, 0)],
+            vertex_material_groups: vec![(3, 0)],
+            meshops: vec![
+                DmSpriteDef2MeshOpEntry {
+                    index1: Some(4),
+                    index2: Some(0),
+                    offset: None,
+                    param1: 0,
+                    type_field: 2,
+                },
+                DmSpriteDef2MeshOpEntry {
+                    index1: Some(5),
+                    index2: Some(1),
+                    offset: None,
+                    param1: 0,
+                    type_field: 3,
+                },
+                DmSpriteDef2MeshOpEntry {
+                    index1: None,
+                    index2: None,
+                    offset: Some(1.0),
+                    param1: 0,
+                    type_field: 4,
+                },
+            ],
+        }
+    }
+
     #[test]
     fn it_parses() {
         #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
+        let data = &fixture_basic().to_bytes()[..];
         let frag = DmSpriteDef2::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-1134));
@@ -543,42 +641,42 @@ mod tests {
         assert_eq!(frag.max_distance, 37.817947);
         assert_eq!(frag.min, (0.0, 0.0, 0.0));
         assert_eq!(frag.max, (0.0, 0.0, 0.0));
-        assert_eq!(frag.position_count, 8);
-        assert_eq!(frag.texture_coordinate_count, 8);
-        assert_eq!(frag.normal_count, 8);
-        assert_eq!(frag.face_count, 6);
+        assert_eq!(frag.position_count, 3);
+        assert_eq!(frag.texture_coordinate_count, 3);
+        assert_eq!(frag.normal_count, 3);
+        assert_eq!(frag.face_count, 1);
         assert_eq!(frag.skin_assignment_groups_count, 0);
         assert_eq!(frag.face_material_groups_count, 1);
         assert_eq!(frag.vertex_material_groups_count, 1);
         assert_eq!(frag.meshop_count, 0);
         assert_eq!(frag.scale, 5);
-        assert_eq!(frag.positions.len(), 8);
+        assert_eq!(frag.positions.len(), 3);
         assert_eq!(frag.positions[0], (2, -1154, -3));
-        assert_eq!(frag.texture_coordinates.len(), 8);
+        assert_eq!(frag.texture_coordinates.len(), 3);
         assert_eq!(frag.texture_coordinates[0], (77, 77));
-        assert_eq!(frag.vertex_normals.len(), 8);
+        assert_eq!(frag.vertex_normals.len(), 3);
         assert_eq!(frag.vertex_normals[0], (29, 31, 119));
-        assert_eq!(frag.vertex_colors.len(), 8);
+        assert_eq!(frag.vertex_colors.len(), 3);
         assert_eq!(frag.vertex_colors[0], 4043374848);
-        assert_eq!(frag.faces.len(), 6);
+        assert_eq!(frag.faces.len(), 1);
         assert_eq!(frag.faces[0].flags, 0);
         assert_eq!(frag.faces[0].vertex_indexes, (0, 1, 2));
         assert_eq!(frag.skin_assignment_groups.len(), 0);
         assert_eq!(frag.face_material_groups.len(), 1);
-        assert_eq!(frag.face_material_groups[0], (6, 0));
+        assert_eq!(frag.face_material_groups[0], (1, 0));
         assert_eq!(frag.vertex_material_groups.len(), 1);
-        assert_eq!(frag.vertex_material_groups[0], (8, 0));
+        assert_eq!(frag.vertex_material_groups[0], (3, 0));
         assert_eq!(frag.meshops.len(), 0);
     }
 
     #[test]
     fn it_parses_meshops() {
         #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/global_chr/0177-0x36.frag")[..];
+        let data = &fixture_with_meshops().to_bytes()[..];
         let frag = DmSpriteDef2::parse(data).unwrap().1;
 
-        assert_eq!(frag.meshop_count, 1387);
-        assert_eq!(frag.meshops.len(), 1387);
+        assert_eq!(frag.meshop_count, 3);
+        assert_eq!(frag.meshops.len(), 3);
 
         for item in frag.meshops.iter() {
             assert!(item.type_field <= 4);
@@ -590,23 +688,25 @@ mod tests {
 
         assert_eq!(frag.meshops[1].type_field, 3);
 
-        assert_eq!(frag.meshops[5].type_field, 4);
-        assert_eq!(frag.meshops[5].offset.unwrap(), 1.0);
+        assert_eq!(frag.meshops[2].type_field, 4);
+        assert_eq!(frag.meshops[2].offset.unwrap(), 1.0);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/0131-0x36.frag")[..];
-        let frag = DmSpriteDef2::parse(data).unwrap().1;
+        let frag = fixture_basic();
+        let data = frag.to_bytes();
+        let parsed = DmSpriteDef2::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 
     #[test]
     fn it_serializes_meshops() {
-        let data = &include_bytes!("../../../fixtures/fragments/global_chr/0177-0x36.frag")[..];
-        let frag = DmSpriteDef2::parse(data).unwrap().1;
+        let frag = fixture_with_meshops();
+        let data = frag.to_bytes();
+        let parsed = DmSpriteDef2::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

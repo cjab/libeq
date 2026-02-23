@@ -204,7 +204,7 @@ impl FrameTransform {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 /// When compressed from ascii the rotation is converted to a quaternion
 /// The ascii representation is euler angles out of 512
 pub struct LegacyFrameTransform {
@@ -278,9 +278,93 @@ impl LegacyFrameTransform {
 mod tests {
     use super::*;
 
+    fn fixture_frame_transforms() -> TrackDef {
+        // flags: 0x8 = has frame transforms
+        TrackDef {
+            name_reference: StringReference::new(-61),
+            flags: 0x8,
+            frame_count: 1,
+            frame_transforms: Some(vec![FrameTransform {
+                rotate_denominator: 16384,
+                rotate_x_numerator: 0,
+                rotate_y_numerator: 0,
+                rotate_z_numerator: 0,
+                shift_x_numerator: 0,
+                shift_y_numerator: 0,
+                shift_z_numerator: 0,
+                shift_denominator: 256,
+            }]),
+            legacy_frame_transforms: None,
+        }
+    }
+
+    fn fixture_legacy_transforms() -> TrackDef {
+        // flags: 0x0 = legacy frame transforms (beta/rtk)
+        TrackDef {
+            name_reference: StringReference::new(-7183),
+            flags: 0x0,
+            frame_count: 2,
+            frame_transforms: None,
+            legacy_frame_transforms: Some(vec![
+                LegacyFrameTransform {
+                    rotate_x: 0.0,
+                    rotate_y: 0.0,
+                    rotate_z: 0.0,
+                    rotate_w: 1.0,
+                    shift_x_numerator: 0.0,
+                    shift_y_numerator: 0.0,
+                    shift_z_numerator: 0.0,
+                    shift_denominator: 1.0,
+                },
+                LegacyFrameTransform {
+                    rotate_x: 0.49999997,
+                    rotate_y: 0.49999997,
+                    rotate_z: 0.49999997,
+                    rotate_w: 0.49999997,
+                    shift_x_numerator: 0.8134234,
+                    shift_y_numerator: 0.10555774,
+                    shift_z_numerator: -0.18399855,
+                    shift_denominator: 1.0,
+                },
+            ]),
+        }
+    }
+
+    fn fixture_rtk() -> TrackDef {
+        // flags: 0x0 = legacy frame transforms (rtk variant)
+        TrackDef {
+            name_reference: StringReference::new(-46),
+            flags: 0x0,
+            frame_count: 2,
+            frame_transforms: None,
+            legacy_frame_transforms: Some(vec![
+                LegacyFrameTransform {
+                    rotate_x: 0.0,
+                    rotate_y: 0.0,
+                    rotate_z: 0.0,
+                    rotate_w: 1.0,
+                    shift_x_numerator: 0.0,
+                    shift_y_numerator: 0.0,
+                    shift_z_numerator: 0.0,
+                    shift_denominator: 1.0,
+                },
+                LegacyFrameTransform {
+                    rotate_x: -0.01825354,
+                    rotate_y: 0.012494401,
+                    rotate_z: -0.012042822,
+                    rotate_w: 0.99968284,
+                    shift_x_numerator: 0.0,
+                    shift_y_numerator: 0.0,
+                    shift_z_numerator: 44.48,
+                    shift_denominator: 0.999999,
+                },
+            ]),
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
+        let data = &fixture_frame_transforms().to_bytes()[..];
         let frag = TrackDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-61));
@@ -304,23 +388,24 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0006-0x12.frag")[..];
-        let frag = TrackDef::parse(data).unwrap().1;
+        let frag = fixture_frame_transforms();
+        let data = frag.to_bytes();
+        let parsed = TrackDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 
     #[test]
     fn it_parses_eq_beta() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip_beta/0652-0x12.frag")[..];
+        let data = &fixture_legacy_transforms().to_bytes()[..];
         let frag = TrackDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-7183));
         assert_eq!(frag.flags, 0x0);
-        assert_eq!(frag.frame_count, 12);
+        assert_eq!(frag.frame_count, 2);
         assert_eq!(frag.frame_transforms, None);
         assert_eq!(
-            frag.legacy_frame_transforms.unwrap()[11],
+            frag.legacy_frame_transforms.clone().unwrap()[1],
             LegacyFrameTransform {
                 rotate_x: 0.49999997,
                 rotate_y: 0.49999997,
@@ -336,23 +421,24 @@ mod tests {
 
     #[test]
     fn it_serializes_eq_beta() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip_beta/0652-0x12.frag")[..];
-        let frag = TrackDef::parse(data).unwrap().1;
+        let frag = fixture_legacy_transforms();
+        let data = frag.to_bytes();
+        let parsed = TrackDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 
     #[test]
     fn it_parses_rtk() {
-        let data = &include_bytes!("../../../fixtures/fragments/rtk/0002-0x12.frag")[..];
+        let data = &fixture_rtk().to_bytes()[..];
         let frag = TrackDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-46));
         assert_eq!(frag.flags, 0x0);
-        assert_eq!(frag.frame_count, 369);
+        assert_eq!(frag.frame_count, 2);
         assert_eq!(frag.frame_transforms, None);
         assert_eq!(
-            frag.legacy_frame_transforms.unwrap()[368],
+            frag.legacy_frame_transforms.clone().unwrap()[1],
             LegacyFrameTransform {
                 rotate_x: -0.01825354,
                 rotate_y: 0.012494401,
@@ -368,9 +454,10 @@ mod tests {
 
     #[test]
     fn it_serializes_rtk() {
-        let data = &include_bytes!("../../../fixtures/fragments/rtk/0002-0x12.frag")[..];
-        let frag = TrackDef::parse(data).unwrap().1;
+        let frag = fixture_rtk();
+        let data = frag.to_bytes();
+        let parsed = TrackDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

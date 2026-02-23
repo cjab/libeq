@@ -216,11 +216,46 @@ impl ThreeDSpriteFlags {
 
 #[cfg(test)]
 mod tests {
+    use super::super::common::RenderInfoFlags;
     use super::*;
+
+    fn fixture() -> Sprite3DDef {
+        Sprite3DDef {
+            name_reference: StringReference::new(-29305),
+            flags: ThreeDSpriteFlags(0), // no center_offset or bounding_radius
+            vertex_count: 4,
+            bsp_node_count: 1,
+            sphere_list_reference: 0,
+            center_offset: None,
+            bounding_radius: None,
+            vertices: vec![
+                (0.0, -1.0, 1.0),
+                (0.0, 1.0, 1.0),
+                (0.0, 1.0, -1.0),
+                (0.0, -1.0, -1.0),
+            ],
+            bsp_nodes: vec![BspNodeEntry {
+                vertex_count: 4,
+                front_tree: 0,
+                back_tree: 0,
+                vertex_indices: vec![0, 1, 2, 3],
+                render_method: RenderMethod::from_u32(0),
+                render_info: RenderInfo {
+                    flags: RenderInfoFlags::new(1), // HAS_PEN
+                    pen: Some(11),
+                    brightness: None,
+                    scaled_ambient: None,
+                    simple_sprite_reference: None,
+                    uv_info: None,
+                    uv_map: None,
+                },
+            }],
+        }
+    }
 
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1729-0x08.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let (remaining, frag) = Sprite3DDef::parse(data).unwrap();
 
         assert_eq!(remaining.len(), 0);
@@ -264,9 +299,10 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/1729-0x08.frag")[..];
-        let frag = Sprite3DDef::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = Sprite3DDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

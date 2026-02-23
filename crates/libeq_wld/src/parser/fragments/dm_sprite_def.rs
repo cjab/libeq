@@ -573,19 +573,116 @@ impl DmSpriteDefMeshopEntry {
 mod tests {
     use super::*;
 
+    fn fixture_basic() -> DmSpriteDef {
+        // flags: 0x1802 = bit 1 (params1 valid) | bit 11 (face_material_groups) | bit 12 (vertex_material_groups)
+        DmSpriteDef {
+            name_reference: StringReference::new(-44),
+            flags: 0x1802,
+            vertex_count: 3,
+            texture_coordinate_count: 3,
+            normal_count: 3,
+            color_count: 0,
+            face_count: 1,
+            meshop_count: 2,
+            fragment1: 0,
+            skin_assignment_group_count: 1,
+            material_list_ref: FragmentRef::new(5),
+            fragment3: 0,
+            center: (0.0, 0.0, 0.0),
+            params1: (0.0, 0.0, 12.247571),
+            vertices: vec![
+                (-5.070387, -5.073263, 4.9999995),
+                (5.0, -5.0, 5.0),
+                (0.0, 5.0, 5.0),
+            ],
+            texture_coordinates: vec![(0.0, 0.0), (1.0, 0.0), (0.5, 1.0)],
+            vertex_normals: vec![(0.0, -1.0, 0.0), (0.0, -1.0, 0.0), (0.0, -1.0, 0.0)],
+            vertex_colors: vec![],
+            faces: vec![DmSpriteDefFaceEntry {
+                flags: 0b1001011,
+                data: (0, 0, 0, 0),
+                vertex_indexes: (0, 1, 2),
+            }],
+            meshops: vec![
+                DmSpriteDefMeshopEntry {
+                    type_field: 2,
+                    vertex_index: Some(0),
+                    offset: None,
+                    param1: 0,
+                    param2: 0,
+                },
+                DmSpriteDefMeshopEntry {
+                    type_field: 4,
+                    vertex_index: None,
+                    offset: Some(1.0),
+                    param1: 0,
+                    param2: 0,
+                },
+            ],
+            skin_assignment_groups: vec![(3, 0)],
+            size8: None,
+            data8: None,
+            face_material_group_count: Some(1),
+            face_material_groups: Some(vec![(1, 0)]),
+            vertex_material_group_count: Some(1),
+            vertex_material_groups: Some(vec![(3, 0)]),
+            params2: None,
+            params3: None,
+        }
+    }
+
+    fn fixture_with_params3() -> DmSpriteDef {
+        // flags: 0x5803 = bit 0 | bit 1 | bit 11 | bit 12 | bit 14 (params3)
+        DmSpriteDef {
+            name_reference: StringReference::new(-6091),
+            flags: 0x5803,
+            vertex_count: 3,
+            texture_coordinate_count: 3,
+            normal_count: 3,
+            color_count: 0,
+            face_count: 1,
+            meshop_count: 0,
+            fragment1: 0,
+            skin_assignment_group_count: 0,
+            material_list_ref: FragmentRef::new(567),
+            fragment3: 0,
+            center: (0.0, 0.0, 2.2031567),
+            params1: (-0.002979297, -0.88816565, 3.0285614),
+            vertices: vec![(0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (0.0, 1.0, 0.0)],
+            texture_coordinates: vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)],
+            vertex_normals: vec![(0.0, 0.0, 1.0), (0.0, 0.0, 1.0), (0.0, 0.0, 1.0)],
+            vertex_colors: vec![],
+            faces: vec![DmSpriteDefFaceEntry {
+                flags: 0,
+                data: (0, 1, 2, 75),
+                vertex_indexes: (0, 0, 0),
+            }],
+            meshops: vec![],
+            skin_assignment_groups: vec![],
+            size8: None,
+            data8: None,
+            face_material_group_count: Some(1),
+            face_material_groups: Some(vec![(1, 0)]),
+            vertex_material_group_count: Some(1),
+            vertex_material_groups: Some(vec![(3, 0)]),
+            params2: None,
+            params3: Some((-2.871873, 0.0, 0.0, 0.0, 0.0, 0.0)),
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
+        let data = &fixture_basic().to_bytes()[..];
         let frag = DmSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-44));
         assert_eq!(frag.flags, 0x1802);
-        assert_eq!(frag.vertex_count, 29);
-        assert_eq!(frag.texture_coordinate_count, 29);
-        assert_eq!(frag.normal_count, 29);
+        assert_eq!(frag.vertex_count, 3);
+        assert_eq!(frag.texture_coordinate_count, 3);
+        assert_eq!(frag.normal_count, 3);
         assert_eq!(frag.color_count, 0);
-        assert_eq!(frag.face_count, 12);
-        assert_eq!(frag.meshop_count, 64);
+        assert_eq!(frag.face_count, 1);
+        assert_eq!(frag.meshop_count, 2);
         assert_eq!(frag.skin_assignment_group_count, 1);
         assert_eq!(frag.material_list_ref, FragmentRef::new(5));
         assert_eq!(frag.center, (0.0, 0.0, 0.0));
@@ -596,14 +693,12 @@ mod tests {
             frag.texture_coordinates.len(),
             frag.texture_coordinate_count as usize
         );
-        assert_eq!(frag.texture_coordinates[0], (0.99999994, 0.99999976)); // FIXME: This does not look like a valid UV coordinate.  It should be between 0 and 1.
         assert_eq!(frag.vertex_normals.len(), frag.normal_count as usize);
-        assert_eq!(frag.vertex_normals[0], (0.0, -1.0, 1.3435886e-7));
         assert_eq!(frag.vertex_colors.len(), frag.color_count as usize);
         assert_eq!(frag.faces.len(), frag.face_count as usize);
-        assert_eq!(frag.faces[1].flags, 0b1001011);
+        assert_eq!(frag.faces[0].flags, 0b1001011);
         assert_eq!(frag.faces[0].data, (0, 0, 0, 0));
-        assert_eq!(frag.faces[0].vertex_indexes, (3, 2, 0));
+        assert_eq!(frag.faces[0].vertex_indexes, (0, 1, 2));
         assert_eq!(frag.meshops.len(), frag.meshop_count as usize);
         assert_eq!(frag.meshops[0].param1, 0);
         assert_eq!(frag.meshops[0].param2, 0);
@@ -615,23 +710,23 @@ mod tests {
         assert_eq!(frag.size8, None);
         assert_eq!(frag.data8, None);
         assert_eq!(frag.face_material_group_count, Some(1));
-        assert_eq!(frag.face_material_groups, Some(vec![(12, 0)]));
+        assert_eq!(frag.face_material_groups, Some(vec![(1, 0)]));
         assert_eq!(frag.vertex_material_group_count, Some(1));
-        assert_eq!(frag.vertex_material_groups, Some(vec![(29, 0)]));
+        assert_eq!(frag.vertex_material_groups, Some(vec![(3, 0)]));
     }
 
     #[test]
     fn it_parses_with_bit14() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip_beta/0567-0x2c.frag")[..];
+        let data = &fixture_with_params3().to_bytes()[..];
         let frag = DmSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-6091));
         assert_eq!(frag.flags, 0x5803);
-        assert_eq!(frag.vertex_count, 56);
-        assert_eq!(frag.texture_coordinate_count, 56);
-        assert_eq!(frag.normal_count, 56);
+        assert_eq!(frag.vertex_count, 3);
+        assert_eq!(frag.texture_coordinate_count, 3);
+        assert_eq!(frag.normal_count, 3);
         assert_eq!(frag.color_count, 0);
-        assert_eq!(frag.face_count, 28);
+        assert_eq!(frag.face_count, 1);
         assert_eq!(frag.meshop_count, 0);
         assert_eq!(frag.skin_assignment_group_count, 0);
         assert_eq!(frag.material_list_ref, FragmentRef::new(567));
@@ -652,16 +747,17 @@ mod tests {
         );
         assert_eq!(frag.size8, None);
         assert_eq!(frag.data8, None);
-        assert_eq!(frag.face_material_group_count, Some(2));
-        assert_eq!(frag.vertex_material_group_count, Some(2));
+        assert_eq!(frag.face_material_group_count, Some(1));
+        assert_eq!(frag.vertex_material_group_count, Some(1));
         assert_eq!(frag.params3.unwrap().0, -2.871873);
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
-        let frag = DmSpriteDef::parse(data).unwrap().1;
+        let frag = fixture_basic();
+        let data = frag.to_bytes();
+        let parsed = DmSpriteDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

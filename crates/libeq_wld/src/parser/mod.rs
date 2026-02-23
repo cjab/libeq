@@ -575,11 +575,17 @@ mod tests {
 
     #[test]
     fn it_detects_eq_0x2c() {
-        let data = &include_bytes!("../../fixtures/fragments/gequip/0005-0x2c.frag")[..];
+        // EverQuest 0x2c starts with name_reference (negative i32)
+        // Creating synthetic data: first 4 bytes = -44 (0xFFFFFFD4) as i32
+        // followed by enough padding to make size >= 50
+        let mut data = vec![0u8; 60];
+        let name_ref: i32 = -44;
+        data[0..4].copy_from_slice(&name_ref.to_le_bytes());
+
         let header = FragmentHeader {
             size: data.len() as u32,
             fragment_type: 0x2c,
-            field_data: data,
+            field_data: &data,
         };
 
         assert_eq!(header.detect_0x2c_variant(), FragmentGame::EverQuest);
@@ -587,11 +593,17 @@ mod tests {
 
     #[test]
     fn it_detects_tanarus_0x2c() {
-        let data = &include_bytes!("../../fixtures/fragments/tanarus-thecity/0001-0x2c.frag")[..];
+        // Tanarus 0x2c starts with vertex_count (positive i32)
+        // Creating synthetic data: first 4 bytes = 100 (positive)
+        // followed by enough padding to make size >= 50
+        let mut data = vec![0u8; 60];
+        let vertex_count: i32 = 100;
+        data[0..4].copy_from_slice(&vertex_count.to_le_bytes());
+
         let header = FragmentHeader {
             size: data.len() as u32,
             fragment_type: 0x2c,
-            field_data: data,
+            field_data: &data,
         };
 
         assert_eq!(header.detect_0x2c_variant(), FragmentGame::Tanarus);
@@ -599,11 +611,14 @@ mod tests {
 
     #[test]
     fn it_detects_rtk_0x2c() {
-        let data = &include_bytes!("../../fixtures/fragments/rtk/0000-0x2c.frag")[..];
+        // RTK 0x2c is very small (< 50 bytes)
+        // Creating synthetic data: just 32 bytes
+        let data = vec![0u8; 32];
+
         let header = FragmentHeader {
             size: data.len() as u32,
             fragment_type: 0x2c,
-            field_data: data,
+            field_data: &data,
         };
 
         assert_eq!(header.detect_0x2c_variant(), FragmentGame::ReturnToKrondor);

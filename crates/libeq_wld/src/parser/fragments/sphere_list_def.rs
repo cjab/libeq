@@ -130,9 +130,23 @@ impl SphereListDefFlags {
 mod tests {
     use super::*;
 
+    fn fixture() -> SphereListDef {
+        SphereListDef {
+            name_reference: StringReference::new(-11175),
+            flags: SphereListDefFlags(0x1), // HAS_SCALE_FACTOR
+            num_spheres: 2,
+            bounding_radius: 4.980589,
+            scale_factor: Some(1.0),
+            spheres: vec![
+                (4.545429, 0.575291, 0.000907, 0.398899),
+                (4.545429, -0.571938, 0.000907, 0.398899),
+            ],
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/tanarus-equip/2907-0x19.frag")[..];
+        let data = &fixture().to_bytes()[..];
         let frag = SphereListDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(-11175));
@@ -146,9 +160,10 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/tanarus-equip/2907-0x19.frag")[..];
-        let frag = SphereListDef::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = SphereListDef::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }

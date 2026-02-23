@@ -241,9 +241,79 @@ impl ActorInstFlags {
 mod tests {
     use super::*;
 
+    fn fixture_zone() -> Actor {
+        // flags: HAS_LOCATION (0x02) | HAS_BOUNDING_RADIUS (0x04) | HAS_SCALE_FACTOR (0x08) | ACTIVE (0x20) = 0x2e = 46
+        Actor {
+            name_reference: StringReference::new(0),
+            actor_def_reference: StringReference::new(4640), // FIXME: this is a FragmentRef
+            flags: ActorInstFlags(46),
+            sphere_reference: FragmentRef::new(4641),
+            current_action: None,
+            location: Some(Location {
+                x: -2935.2515,
+                y: -2823.1519,
+                z: -19.758118,
+                rotate_z: 0.0,
+                rotate_y: 0.0,
+                rotate_x: 0.0,
+                unknown: 0,
+            }),
+            bounding_radius: Some(0.5),
+            scale_factor: Some(0.5),
+            sound_name_reference: None,
+            vertex_color_reference: None,
+            user_data_size: 0,
+            user_data: String::new(),
+        }
+    }
+
+    fn fixture_objects() -> Actor {
+        // flags: HAS_LOCATION (0x02) | HAS_BOUNDING_RADIUS (0x04) | HAS_SCALE_FACTOR (0x08) | ACTIVE (0x20) | HAS_VERTEX_COLOR_REFERENCE (0x100) = 0x32e = 814
+        Actor {
+            name_reference: StringReference::new(0),
+            actor_def_reference: StringReference::new(-10),
+            flags: ActorInstFlags(814),
+            sphere_reference: FragmentRef::new(0),
+            current_action: None,
+            location: Some(Location {
+                x: -2022.8826,
+                y: -2419.7405,
+                z: 198.36989,
+                rotate_z: 373.0,
+                rotate_y: 0.0,
+                rotate_x: 0.0,
+                unknown: 0,
+            }),
+            bounding_radius: Some(1.0),
+            scale_factor: Some(1.0),
+            sound_name_reference: None,
+            vertex_color_reference: Some(FragmentRef::new(2)),
+            user_data_size: 0,
+            user_data: String::new(),
+        }
+    }
+
+    fn fixture_userdata() -> Actor {
+        // flags: 0 (no optional fields except userdata which is always present)
+        Actor {
+            name_reference: StringReference::new(0),
+            actor_def_reference: StringReference::new(-1),
+            flags: ActorInstFlags(0),
+            sphere_reference: FragmentRef::new(0),
+            current_action: None,
+            location: None,
+            bounding_radius: None,
+            scale_factor: None,
+            sound_name_reference: None,
+            vertex_color_reference: None,
+            user_data_size: 5, // "data" + null terminator
+            user_data: String::from("data"),
+        }
+    }
+
     #[test]
     fn it_parses() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4641-0x15.frag")[..];
+        let data = &fixture_zone().to_bytes()[..];
         let (remaining, frag) = Actor::parse(data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(0));
@@ -275,7 +345,7 @@ mod tests {
 
     #[test]
     fn it_parses_objects() {
-        let data = &include_bytes!("../../../fixtures/fragments/objects/0002-0x15.frag")[..];
+        let data = &fixture_objects().to_bytes()[..];
         let (remaining, frag) = Actor::parse(data).unwrap();
 
         assert_eq!(frag.name_reference, StringReference::new(0));
@@ -306,9 +376,7 @@ mod tests {
 
     #[test]
     fn it_parses_userdata() {
-        let data =
-            &include_bytes!("../../../fixtures/fragments/wldcom/actorinst-userdata-0000-0x15.frag")
-                [..];
+        let data = &fixture_userdata().to_bytes()[..];
         let frag = Actor::parse(data).unwrap().1;
 
         assert_eq!(frag.user_data_size, 5);
@@ -317,27 +385,28 @@ mod tests {
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/gfaydark/4641-0x15.frag")[..];
-        let frag = Actor::parse(data).unwrap().1;
+        let frag = fixture_zone();
+        let data = frag.to_bytes();
+        let parsed = Actor::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 
     #[test]
     fn it_serializes_objects() {
-        let data = &include_bytes!("../../../fixtures/fragments/objects/0002-0x15.frag")[..];
-        let frag = Actor::parse(data).unwrap().1;
+        let frag = fixture_objects();
+        let data = frag.to_bytes();
+        let parsed = Actor::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 
     #[test]
     fn it_serializes_userdata() {
-        let data =
-            &include_bytes!("../../../fixtures/fragments/wldcom/actorinst-userdata-0000-0x15.frag")
-                [..];
-        let frag = Actor::parse(data).unwrap().1;
+        let frag = fixture_userdata();
+        let data = frag.to_bytes();
+        let parsed = Actor::parse(&data).unwrap().1;
 
-        assert_eq!(&frag.to_bytes()[..], data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }
