@@ -83,25 +83,38 @@ impl Fragment for BmInfoRtk {
 mod tests {
     use super::*;
 
+    fn fixture() -> BmInfoRtk {
+        BmInfoRtk {
+            name_reference: StringReference::new(-1),
+            rtk: 1,
+            size1: 0,
+            entries: vec![EncodedFilename {
+                name_length: 13, // "TEXTURE1.BMP" + null = 13 bytes
+                file_name: "TEXTURE1.BMP".to_string(),
+            }],
+        }
+    }
+
     #[test]
     fn it_parses() {
-        #![allow(overflowing_literals)]
-        let data = &include_bytes!("../../../fixtures/fragments/rtk/0000-0x2c.frag")[..];
-        let frag = BmInfoRtk::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = BmInfoRtk::parse(&data).unwrap().1;
 
-        assert_eq!(frag.name_reference, StringReference::new(0xffffffff));
-        //FIXME: Why is this 0? If this is size it should be 1.
-        //assert_eq!(frag.size1, 1);
-        assert_eq!(frag.entries.len(), 1);
-        assert_eq!(frag.entries[0].name_length, 0x0d);
-        assert_eq!(frag.entries[0].file_name, "S5AMLG__.BMP".to_string());
+        assert_eq!(parsed.name_reference, StringReference::new(-1));
+        assert_eq!(parsed.rtk, 1);
+        assert_eq!(parsed.size1, 0);
+        assert_eq!(parsed.entries.len(), 1);
+        assert_eq!(parsed.entries[0].name_length, 13);
+        assert_eq!(parsed.entries[0].file_name, "TEXTURE1.BMP".to_string());
     }
 
     #[test]
     fn it_serializes() {
-        let data = &include_bytes!("../../../fixtures/fragments/rtk/0000-0x2c.frag")[..];
-        let frag = BmInfoRtk::parse(data).unwrap().1;
+        let frag = fixture();
+        let data = frag.to_bytes();
+        let parsed = BmInfoRtk::parse(&data).unwrap().1;
 
-        assert_eq!([frag.to_bytes(), vec![0]].concat(), data);
+        assert_eq!(parsed.to_bytes(), data);
     }
 }
