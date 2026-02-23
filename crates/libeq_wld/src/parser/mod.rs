@@ -533,6 +533,7 @@ impl<'a> FragmentHeader<'a> {
 mod tests {
     use super::*;
 
+    #[cfg(feature = "game-fixtures")]
     #[test]
     fn it_parses() {
         let data = &include_bytes!("../../fixtures/gfaydark.wld")[..];
@@ -550,6 +551,7 @@ mod tests {
         assert_eq!(wld_doc.strings.get(StringReference::new(2)), None);
     }
 
+    #[cfg(feature = "game-fixtures")]
     #[test]
     fn it_serializes() {
         let data = &include_bytes!("../../fixtures/gfaydark.wld")[..];

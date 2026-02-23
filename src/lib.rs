@@ -6,7 +6,7 @@
 //!
 //! # Examples
 //!
-//! ```rust
+//! ```rust,no_run
 //! use libeq::pfs::PfsReader;
 //! use libeq::wld;
 //!

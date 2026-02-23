@@ -507,8 +507,10 @@ impl<'a> Model<'a> {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "game-fixtures")]
     use super::*;
 
+    #[cfg(feature = "game-fixtures")]
     #[test]
     fn it_builds_meshes() {
         let wld_data = &include_bytes!("../fixtures/gfaydark.wld")[..];
@@ -528,6 +530,7 @@ mod tests {
         assert_eq!(meshes[0].center(), (-2502.0, 190.0, -2432.0));
     }
 
+    #[cfg(feature = "game-fixtures")]
     #[test]
     fn it_builds_materials() {
         let wld_data = &include_bytes!("../fixtures/gfaydark.wld")[..];

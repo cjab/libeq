@@ -1,3 +1,8 @@
 /target
 /tmp
 .direnv
+
+# Game fixture files (copyrighted; provide your own for local testing)
+# Place these files here and run: cargo test --features game-fixtures
+fixtures/gfaydark.wld
+fixtures/gfaydark.s3d
