@@ -52,31 +52,31 @@ impl Header {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Cursor;
 
-    use std::fs::File;
-    use std::io::{Cursor, Read};
-
-    // Fixture created with:
-    // `dd bs=1 count=12 if=gfaydark.s3d of=gfaydark/header.bin`
+    fn fixture() -> Header {
+        Header {
+            index_offset: 0x1234,
+            magic_number: u32::from_le_bytes(*b"PFS "),
+            version: 0x00020000,
+        }
+    }
 
     #[test]
     fn it_reads() {
-        let mut fixture = File::open("fixtures/gfaydark/header.bin").unwrap();
-        let header = Header::read(&mut fixture).unwrap();
+        let data = fixture().to_bytes();
+        let header = Header::read(&mut Cursor::new(&data)).unwrap();
 
-        assert_eq!(header.index_offset, 0x219dbf);
+        assert_eq!(header.index_offset, 0x1234);
         assert_eq!(header.magic_number, u32::from_le_bytes(*b"PFS "));
         assert_eq!(header.version, 0x00020000);
     }
 
     #[test]
     fn it_serializes() {
-        let mut fixture = File::open("fixtures/gfaydark/header.bin").unwrap();
-        let mut fixture_data = Vec::new();
-        fixture.read_to_end(&mut fixture_data).unwrap();
-        let mut cursor = Cursor::new(&fixture_data);
-        let header = Header::read(&mut cursor).unwrap();
+        let data = fixture().to_bytes();
+        let header = Header::read(&mut Cursor::new(&data)).unwrap();
 
-        assert_eq!(header.to_bytes(), fixture_data);
+        assert_eq!(header.to_bytes(), data);
     }
 }

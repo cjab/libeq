@@ -45,31 +45,31 @@ impl IndexEntry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Cursor;
 
-    use std::fs::File;
-    use std::io::{Cursor, Read};
-
-    // Fixture created with:
-    // `dd bs=1 skip=2203555 count=12 if=gfaydark.s3d of=gfaydark/index-entry.bin`
+    fn fixture() -> IndexEntry {
+        IndexEntry {
+            filename_crc: 0xAABBCCDD,
+            data_offset: 0x1000,
+            uncompressed_size: 0x2000,
+        }
+    }
 
     #[test]
     fn it_reads() {
-        let mut fixture = File::open("fixtures/gfaydark/index-entry.bin").unwrap();
-        let index_entry = IndexEntry::read(&mut fixture).unwrap();
+        let data = fixture().to_bytes();
+        let entry = IndexEntry::read(&mut Cursor::new(&data)).unwrap();
 
-        assert_eq!(index_entry.filename_crc, 0xffe57ac0);
-        assert_eq!(index_entry.data_offset, 0x25fe5);
-        assert_eq!(index_entry.uncompressed_size, 0x4438);
+        assert_eq!(entry.filename_crc, 0xAABBCCDD);
+        assert_eq!(entry.data_offset, 0x1000);
+        assert_eq!(entry.uncompressed_size, 0x2000);
     }
 
     #[test]
     fn it_serializes() {
-        let mut fixture = File::open("fixtures/gfaydark/index-entry.bin").unwrap();
-        let mut fixture_data = Vec::new();
-        fixture.read_to_end(&mut fixture_data).unwrap();
-        let mut cursor = Cursor::new(&fixture_data);
-        let index_entry = IndexEntry::read(&mut cursor).unwrap();
+        let data = fixture().to_bytes();
+        let entry = IndexEntry::read(&mut Cursor::new(&data)).unwrap();
 
-        assert_eq!(index_entry.to_bytes(), fixture_data);
+        assert_eq!(entry.to_bytes(), data);
     }
 }

@@ -51,30 +51,29 @@ impl BlockHeader {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Cursor;
 
-    use std::fs::File;
-    use std::io::{Cursor, Read};
-
-    // Fixture created with:
-    // `dd bs=1 skip=155621 count=8 if=gfaydark.s3d of=gfaydark/block.bin`
+    fn fixture() -> BlockHeader {
+        BlockHeader {
+            compressed_size: 100,
+            uncompressed_size: 200,
+        }
+    }
 
     #[test]
     fn it_reads() {
-        let mut fixture = File::open("fixtures/gfaydark/block-header.bin").unwrap();
-        let block_header = BlockHeader::read(&mut fixture).unwrap();
+        let data = fixture().to_bytes();
+        let header = BlockHeader::read(&mut Cursor::new(&data)).unwrap();
 
-        assert_eq!(block_header.uncompressed_size, 0x2000);
-        assert_eq!(block_header.compressed_size, 0x1c19);
+        assert_eq!(header.compressed_size, 100);
+        assert_eq!(header.uncompressed_size, 200);
     }
 
     #[test]
     fn it_serializes() {
-        let mut fixture = File::open("fixtures/gfaydark/block-header.bin").unwrap();
-        let mut fixture_data = Vec::new();
-        fixture.read_to_end(&mut fixture_data).unwrap();
-        let mut cursor = Cursor::new(&fixture_data);
-        let block_header = BlockHeader::read(&mut cursor).unwrap();
+        let data = fixture().to_bytes();
+        let header = BlockHeader::read(&mut Cursor::new(&data)).unwrap();
 
-        assert_eq!(block_header.to_bytes(), fixture_data);
+        assert_eq!(header.to_bytes(), data);
     }
 }

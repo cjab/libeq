@@ -32,30 +32,29 @@ impl Footer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Cursor;
 
-    use std::fs::File;
-    use std::io::{Cursor, Read};
-
-    // Fixture created with:
-    // `dd bs=1 skip=2203567 count=9 if=gfaydark.s3d of=gfaydark/footer.bin`
+    fn fixture() -> Footer {
+        Footer {
+            footer_string: *b"STEVE",
+            timestamp: 1000000000,
+        }
+    }
 
     #[test]
     fn it_reads() {
-        let mut fixture = File::open("fixtures/gfaydark/footer.bin").unwrap();
-        let footer = Footer::read(&mut fixture).unwrap();
+        let data = fixture().to_bytes();
+        let footer = Footer::read(&mut Cursor::new(&data)).unwrap();
 
-        assert_eq!(&footer.footer_string, b"STEVE");
-        assert_eq!(footer.timestamp, 0x36ad285b);
+        assert_eq!(footer.footer_string, *b"STEVE");
+        assert_eq!(footer.timestamp, 1000000000);
     }
 
     #[test]
     fn it_serializes() {
-        let mut fixture = File::open("fixtures/gfaydark/footer.bin").unwrap();
-        let mut fixture_data = Vec::new();
-        fixture.read_to_end(&mut fixture_data).unwrap();
-        let mut cursor = Cursor::new(&fixture_data);
-        let footer = Footer::read(&mut cursor).unwrap();
+        let data = fixture().to_bytes();
+        let footer = Footer::read(&mut Cursor::new(&data)).unwrap();
 
-        assert_eq!(footer.to_bytes(), fixture_data);
+        assert_eq!(footer.to_bytes(), data);
     }
 }

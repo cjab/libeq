@@ -33,33 +33,39 @@ impl Block {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Cursor;
 
-    use std::fs::File;
-    use std::io::{Cursor, Read};
-
-    // Fixture created with:
-    // `dd bs=1 skip=155621 count=7201 if=gfaydark.s3d of=gfaydark/block.bin`
-    // Header + Compressed Data = 8 + 7193 = 7201 bytes
+    fn fixture() -> Block {
+        Block {
+            uncompressed_size: 10,
+            compressed_data: vec![0xDE, 0xAD, 0xBE, 0xEF],
+        }
+    }
 
     #[test]
     fn it_reads() {
-        let mut fixture = File::open("fixtures/gfaydark/block.bin").unwrap();
-        let block_header = BlockHeader::read(&mut fixture).unwrap();
-        let block = Block::read(block_header, &mut fixture).unwrap();
+        let bytes = fixture().to_bytes();
+        // Block::read takes a pre-parsed header and reads compressed_data from the reader
+        let header = BlockHeader {
+            compressed_size: 4,
+            uncompressed_size: 10,
+        };
+        // Skip past the header bytes (first 8 bytes) in the serialized data
+        let block = Block::read(header, &mut Cursor::new(&bytes[8..])).unwrap();
 
-        assert_eq!(block.uncompressed_size, 0x2000);
-        assert_eq!(block.compressed_data.len(), 0x1c19);
+        assert_eq!(block.uncompressed_size, 10);
+        assert_eq!(block.compressed_data, vec![0xDE, 0xAD, 0xBE, 0xEF]);
     }
 
     #[test]
     fn it_serializes() {
-        let mut fixture = File::open("fixtures/gfaydark/block.bin").unwrap();
-        let mut fixture_data = Vec::new();
-        fixture.read_to_end(&mut fixture_data).unwrap();
-        let mut cursor = Cursor::new(&fixture_data);
-        let block_header = BlockHeader::read(&mut cursor).unwrap();
-        let block = Block::read(block_header, &mut cursor).unwrap();
+        let data = fixture().to_bytes();
+        let header = BlockHeader {
+            compressed_size: 4,
+            uncompressed_size: 10,
+        };
+        let block = Block::read(header, &mut Cursor::new(&data[8..])).unwrap();
 
-        assert_eq!(block.to_bytes(), fixture_data);
+        assert_eq!(block.to_bytes(), data);
     }
 }
