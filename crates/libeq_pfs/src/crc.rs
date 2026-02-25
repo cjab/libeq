@@ -9,7 +9,7 @@ impl FilenameCrc {
     pub fn new(filename: &str) -> Self {
         filename
             .bytes()
-            .chain(vec![0u8]) // Add null string terminator back in
+            .chain(std::iter::once(0u8)) // Add null string terminator back in
             .fold(0, |crc, byte| {
                 let idx = ((crc >> 24) ^ (byte as u32)) & 0xff;
                 (crc << 8) ^ CRC_TABLE[idx as usize]
