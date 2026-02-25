@@ -4,7 +4,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use flate2::Compression;
 use flate2::write::ZlibEncoder;
 
-use crate::PfsReader;
 use crate::crc::FilenameCrc;
 use crate::error::Error;
 use crate::parser::{BlockHeader, Directory, Footer, Header, IndexEntry};
@@ -30,13 +29,6 @@ impl<W: Read + Write + Seek> PfsWriter<W> {
         // Write the default header on creation
         new.write_header()?;
         Ok(new)
-    }
-
-    pub fn from_reader<R: Read + Seek>(
-        reader: &mut PfsReader<R>,
-        writer: W,
-    ) -> Result<Self, Error> {
-        reader.to_writer(writer)
     }
 
     pub fn insert(
