@@ -168,7 +168,7 @@ pub(crate) fn format_timestamp(ts: u32, human: bool) -> String {
         // Line 3: San Diego time with historical note (indented)
         let local = format_human_datetime(&timestamp, &local_tz);
         let utc = format_human_datetime(&timestamp, &TimeZone::UTC);
-        let san_diego_tz = TimeZone::get("America/Los_Angeles").unwrap_or_else(|_| TimeZone::UTC);
+        let san_diego_tz = TimeZone::get("America/Los_Angeles").unwrap_or(TimeZone::UTC);
         let san_diego = format_human_datetime(&timestamp, &san_diego_tz);
 
         format!(

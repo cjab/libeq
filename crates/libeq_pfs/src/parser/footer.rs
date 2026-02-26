@@ -24,7 +24,7 @@ impl Footer {
         })
     }
 
-    pub fn to_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(self) -> Vec<u8> {
         [&self.footer_string[..], &self.timestamp.to_be_bytes()].concat()
     }
 }

@@ -32,7 +32,7 @@ impl IndexEntry {
         })
     }
 
-    pub fn to_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(self) -> Vec<u8> {
         [
             &self.filename_crc.to_le_bytes()[..],
             &self.data_offset.to_le_bytes(),
