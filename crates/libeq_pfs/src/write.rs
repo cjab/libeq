@@ -8,6 +8,10 @@ use crate::crc::FilenameCrc;
 use crate::error::Error;
 use crate::parser::{BlockHeader, Directory, Footer, Header, IndexEntry};
 
+/// Writer of a PFS file archive.
+///
+/// Files are inserted with [`PfsWriter::insert`] and the archive is
+/// finalized by calling [`PfsWriter::finish`].
 pub struct PfsWriter<W> {
     pub(crate) writer: W,
     pub(crate) entries: Vec<(String, IndexEntry)>,
@@ -15,10 +19,9 @@ pub struct PfsWriter<W> {
     pub(crate) footer: Option<Footer>,
 }
 
-//----------------------
-// Public API
-//----------------------
+/// Public API for writing PFS files
 impl<W: Read + Write + Seek> PfsWriter<W> {
+    /// Create a new, empty PFS file.
     pub fn create(writer: W) -> Result<Self, Error> {
         let mut new = Self {
             writer,
@@ -31,6 +34,17 @@ impl<W: Read + Write + Seek> PfsWriter<W> {
         Ok(new)
     }
 
+    /// Insert a file into the archive.
+    ///
+    /// The file will be inserted into the directory as `filename`.
+    /// File data will be streamed from the given reader into the
+    /// archive backed by the writer. This makes creation of large
+    /// archives possible.
+    ///
+    /// If a file with the same name already exists in the archive it
+    /// will be replaced and `true` will be returned. As with
+    /// [`PfsWriter::remove`] this will orphan data. See that method
+    /// for details.
     pub fn insert(
         &mut self,
         filename: impl Into<String>,
@@ -60,6 +74,18 @@ impl<W: Read + Write + Seek> PfsWriter<W> {
         Ok(replaced)
     }
 
+    /// Remove a filename from the archive directory.
+    ///
+    /// The PFS file format was designed to be append only. This makes
+    /// removal of files after they've been written to the archive difficult.
+    ///
+    /// Instead of removing the file this method will just remove it from the
+    /// directory. That means that the file data ends up orphaned in the block
+    /// section of the archive. The archive will still be valid but this wastes
+    /// space on-disk.
+    ///
+    /// The easiest way to _actually_ remove a file and its data is to create
+    /// a new archive.
     pub fn remove(&mut self, filename: &str) -> bool {
         let removed = self.entries.iter().any(|(f, _)| f == filename);
         if removed {
@@ -71,10 +97,15 @@ impl<W: Read + Write + Seek> PfsWriter<W> {
         removed
     }
 
+    /// Return a list of all filenames in the archive directory.
     pub fn filenames(&self) -> Vec<String> {
         self.entries.iter().map(|(name, _)| name.clone()).collect()
     }
 
+    /// Complete writing of the PFS archive.
+    ///
+    /// This _must_ be called to finish writing a valid PFS archive. The
+    /// PfsWriter is consumed and the backing writer is returned.
     pub fn finish(mut self) -> Result<W, Error> {
         let was_modified = self.directory.is_none();
         // At this point we assume that the header and all file blocks
@@ -87,9 +118,7 @@ impl<W: Read + Write + Seek> PfsWriter<W> {
     }
 }
 
-//----------------------
-// Write operations
-//----------------------
+/// Internal writer operations
 impl<W: Read + Write + Seek> PfsWriter<W> {
     fn write_header(&mut self) -> Result<(), Error> {
         self.writer.write_all(&Header::default().to_bytes())?;

@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+/// Errors returned by PFS operations
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("IO error: {0}")]

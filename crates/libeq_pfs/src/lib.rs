@@ -1,35 +1,5 @@
-//! # An EverQuest PFS archive library
-//!
-//! # Examples
-//! ```rust,no_run
-//! use std::io::{Cursor, Write};
-//! use libeq_pfs::PfsReader;
-//! use libeq_pfs::PfsWriter;
-//!
-//! let file = std::fs::File::open("fixtures/gfaydark.s3d").unwrap();
-//!
-//! // Open the archive
-//! let mut reader = PfsReader::open(file).unwrap();
-//!
-//! // List all files in the archive
-//! let filenames = reader.filenames().unwrap();
-//!
-//! // Iterate over files in the archive
-//! let files: Vec<_> = filenames.iter().map(|name| {
-//!     (name, reader.get(name).unwrap(), reader.info(name).unwrap())
-//! }).collect();
-//!
-//! let new_file = std::fs::File::create("gfaydark-new.s3d").unwrap();
-//! let mut writer = reader.to_writer(new_file).unwrap();
-//!
-//! // Add a new file
-//! writer.insert("new-file", Cursor::new(vec![0xde, 0xad, 0xbe, 0xef]));
-//!
-//! // Finish the new archive
-//! writer.finish();
-//!
-//! ```
-//!
+#![doc = include_str!("../README.md")]
+
 mod crc;
 mod error;
 mod parser;

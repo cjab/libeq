@@ -372,7 +372,7 @@ fn from_reader<S: Read + Seek>(mut reader: S) -> Result<PfsReader<S>, Error> {
     })
 }
 
-/// Lazily read a file stored in a PFS archive.
+/// A reader that lazily decompresses file data stored in a PFS archive.
 pub struct PfsFileReader<I: Iterator<Item = Result<Block, Error>>> {
     blocks: I,
     curr: Cursor<Vec<u8>>,

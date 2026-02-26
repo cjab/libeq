@@ -1,7 +1,7 @@
 # libeq_pfs
 
-PFS (also known as .s3d, .eqg) is an archive file format used by the EverQuest
-client to store compressed game assets.
+PFS (also known as .s3d, .eqg, .pfs) is an archive file format used by the
+EverQuest client to store compressed game assets.
 
 This is an implementation of the format as a Rust library crate. There is
 a separate [s3d tool](https://github.com/cjab/libeq/tools/s3d) built on top
@@ -14,7 +14,7 @@ so that it can be used via FFI in other languages.
 
 ## Examples
 
-```rust
+```rust,no_run
 use std::io::Cursor;
 use libeq_pfs::PfsReader;
 use libeq_pfs::PfsWriter;
@@ -32,14 +32,12 @@ let files: Vec<_> = filenames.iter().map(|name| {
     (name, reader.get(name).unwrap(), reader.info(name).unwrap())
 }).collect();
 
-// Modify the archive
+// Create a new archive based on an existing one
 let new_file = std::fs::File::create("gfaydark-new.s3d").unwrap();
 let mut writer = reader.to_writer(new_file).unwrap();
 
 // Add a new file
 writer.insert("new-file", Cursor::new(vec![0xde, 0xad, 0xbe, 0xef])).unwrap();
-// Remove a file
-writer.remove("palette.bmp");
 // Finish writing
 writer.finish().unwrap();
 
@@ -48,10 +46,9 @@ writer.finish().unwrap();
 ## Why?
 
 Many PFS/S3D extractors and creators have been written over the years.
-And most of these work just fine! The goal of this project however is to
-build on the knowledge from these implementations and build a reference
-implementation that closely matches the features likely implemented by the
-original internal tool.
+And these work just fine! The goal of this project however is to build
+on that knowledge and create a reference implementation that closely
+matches the features likely implemented by the original internal tool.
 
 ## Features
 
@@ -60,7 +57,7 @@ original internal tool.
 
 ### Lazy, Streamed I/O
 
-All implementations I've seen required loading the entire contents of the
+All implementations I've seen require loading the entire contents of the
 archive into memory when either reading or writing. On modern machines this
 is no problem. But the file format was designed in the days of 64MB of system
 memory and memory efficiency was definitely a goal.
@@ -77,4 +74,8 @@ If you open an archive, run it through the parser and write it out again you
 will get the exact same thing that you put in, at the bit level. This is _very_
 helpful for testing correctness. Modifying the archive (adding/removing files)
 of course will change the archive but this property also makes it much easier to
-view a diff between the original archive and the new archive.
+view a diff between the original and the new.
+
+## Format
+
+I've also made an effort to document the PFS format in [FORMAT.md](./FORMAT.md)
