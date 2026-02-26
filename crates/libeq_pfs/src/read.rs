@@ -10,23 +10,35 @@ use crate::write::PfsWriter;
 
 const MAX_ENTRY_COUNT: u32 = 100_000; // 100k files
 
+/// Information about a file stored in the archive.
 #[derive(Debug, Eq, PartialEq)]
 pub struct FileInfo {
+    /// The offset to the file's data in the data block section.
     pub data_offset: u32,
+    /// The total size of the file as compressed in the archive.
     pub compressed_size: u32,
+    /// The total size of the file after decompression.
     pub uncompressed_size: u32,
+    /// The total number of compressed blocks the file is stored in.
     pub block_count: u32,
 }
 
+/// Information about the overall PFS archive itself.
 #[derive(Debug)]
 pub struct PfsInfo {
+    /// The PFS version word stored in the header.
     pub version: u32,
+    /// The offset to the beginning of the index section of the archive.
     pub index_offset: u32,
+    /// The number of files in this archive.
     pub file_count: u32,
+    /// The string stored in the (optional) footer (nearly always STEVE).
     pub footer_string: Option<[u8; 5]>,
+    /// The timestamp stored in the (optional) footer.
     pub timestamp: Option<u32>,
 }
 
+/// Reader of a PFS file archive.
 pub struct PfsReader<R> {
     reader: R,
     index: HashMap<FilenameCrc, IndexEntry>,
@@ -34,10 +46,12 @@ pub struct PfsReader<R> {
     footer: Option<Footer>,
 }
 
-//----------------------
-// Public API
-//----------------------
+/// Buffered reading of PFS files
 impl PfsReader<Cursor<Vec<u8>>> {
+    /// Read the entire PFS file into memory and return a PfsReader.
+    ///
+    /// This is useful for small PFS files but you will want to use
+    /// [`PfsReader::open`] if memory efficiency is important.
     pub fn read<R: Read>(mut reader: R) -> Result<Self, Error> {
         let mut buf = Vec::new();
         reader.read_to_end(&mut buf)?;
@@ -45,11 +59,18 @@ impl PfsReader<Cursor<Vec<u8>>> {
     }
 }
 
+/// Public API for reading PFS files
 impl<R: Read + Seek> PfsReader<R> {
+    /// Open the PFS file and return a PfsReader.
+    ///
+    /// This will read the minimal amount of PFS file data into memory
+    /// and lazily read files from disk as needed. (e.g. when [`PfsReader::get`]
+    /// is called).
     pub fn open(reader: R) -> Result<Self, Error> {
         from_reader(reader)
     }
 
+    /// Read information about the overall PFS file.
     pub fn archive_info(&mut self) -> Result<PfsInfo, Error> {
         self.reader.seek(SeekFrom::Start(0))?;
         let header = Header::read(&mut self.reader)?;
@@ -62,6 +83,7 @@ impl<R: Read + Seek> PfsReader<R> {
         })
     }
 
+    /// Get file data from the archive by filename.
     pub fn get(&mut self, filename: &str) -> Result<Option<Vec<u8>>, Error> {
         let Some(mut reader) = self.get_reader(filename)? else {
             return Ok(None);
@@ -71,6 +93,10 @@ impl<R: Read + Seek> PfsReader<R> {
         Ok(Some(buf))
     }
 
+    /// Get a reader for a file in the archive by filename.
+    ///
+    /// This avoids reading the entire file into memory at once,
+    /// unlike [`PfsReader::get`].
     pub fn get_reader(&mut self, filename: &str) -> Result<Option<impl Read>, Error> {
         let Some(entry) = self.get_index_entry(filename)? else {
             return Ok(None);
@@ -78,6 +104,7 @@ impl<R: Read + Seek> PfsReader<R> {
         Ok(Some(PfsFileReader::new(self.iter_blocks(&entry)?)?))
     }
 
+    /// Get information about a file in the archive by filename.
     pub fn info(&mut self, filename: &str) -> Result<Option<FileInfo>, Error> {
         let Some(entry) = self.get_index_entry(filename)? else {
             return Ok(None);
@@ -94,6 +121,7 @@ impl<R: Read + Seek> PfsReader<R> {
         }))
     }
 
+    /// Get information about the archive file directory.
     pub fn directory_info(&mut self) -> Result<FileInfo, Error> {
         let dir = self.directory;
         let headers: Vec<_> = self
@@ -107,6 +135,7 @@ impl<R: Read + Seek> PfsReader<R> {
         })
     }
 
+    /// List all files in the archive.
     pub fn filenames(&mut self) -> Result<Vec<String>, Error> {
         let dir = self.directory;
         let dir_size = dir.uncompressed_size;
@@ -119,6 +148,11 @@ impl<R: Read + Seek> PfsReader<R> {
         Ok(directory.filenames)
     }
 
+    /// Create a new PfsWriter from this PfsReader.
+    ///
+    /// This copies all files from the reader into the provided `dest`
+    /// writer. The writer then becomes the backing writer for the newly
+    /// created [`PfsWriter`].
     pub fn to_writer<W: Read + Write + Seek>(&mut self, dest: W) -> Result<PfsWriter<W>, Error> {
         let mut entries = self
             .filenames()?
@@ -152,9 +186,6 @@ impl<R: Read + Seek> PfsReader<R> {
     }
 }
 
-//----------------------
-// Block iters
-//----------------------
 struct BlockIterState<'a, R> {
     reader: &'a mut R,
     blocks_read: usize,
@@ -205,7 +236,7 @@ impl<'a, R: Read + Seek> BlockIterState<'a, R> {
     }
 }
 
-pub struct BlockHeaderIter<'a, R>(BlockIterState<'a, R>);
+struct BlockHeaderIter<'a, R>(BlockIterState<'a, R>);
 
 impl<'a, R: Read + Seek> Iterator for BlockHeaderIter<'a, R> {
     type Item = Result<BlockHeader, Error>;
@@ -227,7 +258,7 @@ impl<'a, R: Read + Seek> Iterator for BlockHeaderIter<'a, R> {
     }
 }
 
-pub struct BlockIter<'a, R>(BlockIterState<'a, R>);
+struct BlockIter<'a, R>(BlockIterState<'a, R>);
 
 impl<'a, R: Read + Seek> Iterator for BlockIter<'a, R> {
     type Item = Result<Block, Error>;
@@ -245,9 +276,7 @@ impl<'a, R: Read + Seek> Iterator for BlockIter<'a, R> {
     }
 }
 
-//----------------------
-// Block operations
-//----------------------
+/// Internal block-level reader operations
 impl<R: Read + Seek> PfsReader<R> {
     fn get_index_entry(&self, filename: &str) -> Result<Option<IndexEntry>, Error> {
         let crc = FilenameCrc::new(filename);
@@ -343,6 +372,7 @@ fn from_reader<S: Read + Seek>(mut reader: S) -> Result<PfsReader<S>, Error> {
     })
 }
 
+/// Lazily read a file stored in a PFS archive.
 pub struct PfsFileReader<I: Iterator<Item = Result<Block, Error>>> {
     blocks: I,
     curr: Cursor<Vec<u8>>,
