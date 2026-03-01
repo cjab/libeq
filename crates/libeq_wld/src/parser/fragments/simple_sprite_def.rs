@@ -117,8 +117,14 @@ impl Fragment for SimpleSpriteDef {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
-pub struct SimpleSpriteDefFlags(pub u32);
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct SimpleSpriteDefFlags(u32);
+
+impl From<SimpleSpriteDefFlags> for u32 {
+    fn from(flags: SimpleSpriteDefFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl SimpleSpriteDefFlags {
     const SKIP_FRAMES: u32 = 0x02;
@@ -174,7 +180,7 @@ mod tests {
         let frag = SimpleSpriteDef::parse(data).unwrap().1;
 
         assert_eq!(frag.name_reference, StringReference::new(0xfffffff8));
-        assert_eq!(frag.flags.0, 0x10);
+        assert_eq!(u32::from(frag.flags), 0x10);
         //FIXME: This seems wrong
         //assert_eq!(frag.flags.has_sleep(), true);
         assert_eq!(frag.flags.has_current_frame(), false);

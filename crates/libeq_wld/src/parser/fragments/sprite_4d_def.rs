@@ -143,8 +143,14 @@ impl Fragment for Sprite4DDef {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Sprite4DDefFlags(u32);
+
+impl From<Sprite4DDefFlags> for u32 {
+    fn from(flags: Sprite4DDefFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl Sprite4DDefFlags {
     const HAS_CENTER_OFFSET: u32 = 0x01;

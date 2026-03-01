@@ -148,7 +148,7 @@ impl Fragment for LightDef {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct LightDefFlags(u32);
 
 impl LightDefFlags {
@@ -185,16 +185,6 @@ impl LightDefFlags {
 
     pub fn has_color(&self) -> bool {
         self.0 & Self::HAS_COLOR == Self::HAS_COLOR
-    }
-
-    pub fn to_u32(&self) -> u32 {
-        self.0
-    }
-}
-
-impl fmt::Debug for LightDefFlags {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "LightDefFlags [{:b}]", self.0)
     }
 }
 

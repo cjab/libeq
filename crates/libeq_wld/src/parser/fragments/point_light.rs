@@ -92,8 +92,14 @@ impl Fragment for PointLight {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct PointLightFlags(u32);
+
+impl From<PointLightFlags> for u32 {
+    fn from(flags: PointLightFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl PointLightFlags {
     const IS_STATIC: u32 = 0x20;

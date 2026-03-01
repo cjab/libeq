@@ -115,9 +115,8 @@ impl Fragment for MaterialDef {
         Self::TYPE_ID
     }
 }
-
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct MaterialFlags(u32);
 
 impl MaterialFlags {
@@ -139,6 +138,12 @@ impl MaterialFlags {
 
     pub fn has_pair(&self) -> bool {
         self.0 & Self::HAS_PAIR == Self::HAS_PAIR
+    }
+}
+
+impl From<MaterialFlags> for u32 {
+    fn from(flags: MaterialFlags) -> u32 {
+        flags.0
     }
 }
 

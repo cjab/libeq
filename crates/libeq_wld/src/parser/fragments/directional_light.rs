@@ -95,8 +95,14 @@ impl Fragment for DirectionalLight {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct DirectionalLightFlags(u32);
+
+impl From<DirectionalLightFlags> for u32 {
+    fn from(flags: DirectionalLightFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl DirectionalLightFlags {
     const IS_STATIC: u32 = 0x20;

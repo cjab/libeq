@@ -81,8 +81,14 @@ impl Fragment for Polyhedron {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct PolyhedronFlags(u32);
+
+impl From<PolyhedronFlags> for u32 {
+    fn from(flags: PolyhedronFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl PolyhedronFlags {
     const HAS_SCALE_FACTOR: u32 = 0x01;

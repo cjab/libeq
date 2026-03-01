@@ -106,8 +106,14 @@ impl Fragment for SphereListDef {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct SphereListDefFlags(u32);
+
+impl From<SphereListDefFlags> for u32 {
+    fn from(flags: SphereListDefFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl SphereListDefFlags {
     const HAS_SCALE_FACTOR: u32 = 0x01;

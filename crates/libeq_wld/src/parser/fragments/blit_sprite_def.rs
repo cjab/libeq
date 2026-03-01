@@ -68,8 +68,14 @@ impl Fragment for BlitSpriteDef {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct BlitSpriteDefFlags(u32);
+
+impl From<BlitSpriteDefFlags> for u32 {
+    fn from(flags: BlitSpriteDefFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl BlitSpriteDefFlags {
     const TRANSPARENT: u32 = 0x100;

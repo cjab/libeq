@@ -118,8 +118,14 @@ impl RenderInfo {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct RenderInfoFlags(u32);
+
+impl From<RenderInfoFlags> for u32 {
+    fn from(flags: RenderInfoFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl RenderInfoFlags {
     const HAS_PEN: u32 = 0x01;

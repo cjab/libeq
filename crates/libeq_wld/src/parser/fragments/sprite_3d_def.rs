@@ -189,8 +189,14 @@ impl BspNodeEntry {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct ThreeDSpriteFlags(u32);
+
+impl From<ThreeDSpriteFlags> for u32 {
+    fn from(flags: ThreeDSpriteFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl ThreeDSpriteFlags {
     const HAS_CENTER_OFFSET: u32 = 0x01;

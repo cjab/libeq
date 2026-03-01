@@ -77,8 +77,14 @@ impl Fragment for Track {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct TrackInstanceFlags(u32);
+
+impl From<TrackInstanceFlags> for u32 {
+    fn from(flags: TrackInstanceFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl TrackInstanceFlags {
     const HAS_SLEEP: u32 = 0x01;

@@ -307,8 +307,14 @@ impl Fragment for Region {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct RegionFlags(u32);
+
+impl From<RegionFlags> for u32 {
+    fn from(flags: RegionFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl RegionFlags {
     const HAS_SPHERE: u32 = 0x01;
@@ -457,8 +463,14 @@ impl Wall {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct WallFlags(u32);
+
+impl From<WallFlags> for u32 {
+    fn from(flags: WallFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl WallFlags {
     const HAS_FLOOR: u32 = 0x01;
@@ -623,8 +635,14 @@ impl Obstacle {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct ObstacleFlags(u32);
+
+impl From<ObstacleFlags> for u32 {
+    fn from(flags: ObstacleFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl ObstacleFlags {
     const IS_FLOOR: u32 = 0x01;

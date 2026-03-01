@@ -265,8 +265,14 @@ impl Fragment for HierarchicalSpriteDef {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct HierarchicalSpriteDefFlags(u32);
+
+impl From<HierarchicalSpriteDefFlags> for u32 {
+    fn from(flags: HierarchicalSpriteDefFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl HierarchicalSpriteDefFlags {
     const HAS_CENTER_OFFSET: u32 = 0x01;

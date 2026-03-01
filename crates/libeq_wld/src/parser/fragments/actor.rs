@@ -181,8 +181,14 @@ impl Fragment for Actor {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct ActorInstFlags(u32);
+
+impl From<ActorInstFlags> for u32 {
+    fn from(flags: ActorInstFlags) -> u32 {
+        flags.0
+    }
+}
 
 impl ActorInstFlags {
     const HAS_CURRENT_ACTION: u32 = 0x01;
