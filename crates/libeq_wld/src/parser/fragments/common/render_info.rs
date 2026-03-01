@@ -253,7 +253,7 @@ impl UvMap {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum RenderMethod {
     Standard {
         draw_style: DrawStyle,
@@ -274,7 +274,7 @@ impl RenderMethod {
         Ok((remaining, Self::from_u32(raw_flags)))
     }
 
-    pub fn as_u32(&self) -> u32 {
+    fn as_u32(&self) -> u32 {
         match self {
             Self::Standard {
                 draw_style,
@@ -369,6 +369,12 @@ pub enum DrawStyle {
     Solid = 0x3,
 }
 
+impl From<DrawStyle> for u32 {
+    fn from(value: DrawStyle) -> u32 {
+        value as u32
+    }
+}
+
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, PartialEq)]
 pub enum Lighting {
@@ -382,6 +388,12 @@ pub enum Lighting {
     Invalid = 0x7,
 }
 
+impl From<Lighting> for u32 {
+    fn from(value: Lighting) -> u32 {
+        value as u32
+    }
+}
+
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, PartialEq)]
 pub enum Shading {
@@ -389,6 +401,12 @@ pub enum Shading {
     None2 = 0x1,
     Gouraud1 = 0x2,
     Gouraud2 = 0x3,
+}
+
+impl From<Shading> for u32 {
+    fn from(value: Shading) -> u32 {
+        value as u32
+    }
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -410,6 +428,12 @@ pub enum TextureStyle {
     UnknownTanarus = 0xd,
     Unknown2 = 0xe,
     XXXXX = 0xf,
+}
+
+impl From<TextureStyle> for u32 {
+    fn from(value: TextureStyle) -> u32 {
+        value as u32
+    }
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -448,4 +472,10 @@ pub enum MaterialType {
     TransparentAdditiveUnlitSkydome = 0x10,
     InvisibleUnknown3 = 0x03,
     CompleteUnknown2 = 0x06, // Found on a "floor" wall in tanarus 'thecity'
+}
+
+impl From<MaterialType> for u32 {
+    fn from(value: MaterialType) -> u32 {
+        value as u32
+    }
 }
