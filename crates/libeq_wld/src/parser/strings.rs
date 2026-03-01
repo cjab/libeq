@@ -96,7 +96,7 @@ mod tests {
         let mut encoded = encode_string(decoded);
         // Pad to 4-byte alignment
         let size = encoded.len();
-        if size % 4 != 0 {
+        if !size.is_multiple_of(4) {
             encoded.resize(size + (4 - size % 4), 0);
         }
         encoded

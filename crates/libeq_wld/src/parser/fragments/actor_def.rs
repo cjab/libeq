@@ -164,7 +164,7 @@ impl ActorDefFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes(self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 

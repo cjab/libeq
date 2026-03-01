@@ -237,7 +237,7 @@ impl SpriteFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes(self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -440,12 +440,12 @@ mod tests {
         );
 
         assert_eq!(frag.render_info.flags, RenderInfoFlags::new(7));
-        assert_eq!(frag.render_info.flags.has_pen(), true);
-        assert_eq!(frag.render_info.flags.has_brightness(), true);
-        assert_eq!(frag.render_info.flags.has_scaled_ambient(), true);
-        assert_eq!(frag.render_info.flags.has_simple_sprite(), false);
-        assert_eq!(frag.render_info.flags.has_uv_info(), false);
-        assert_eq!(frag.render_info.flags.is_two_sided(), false);
+        assert!(frag.render_info.flags.has_pen());
+        assert!(frag.render_info.flags.has_brightness());
+        assert!(frag.render_info.flags.has_scaled_ambient());
+        assert!(!frag.render_info.flags.has_simple_sprite());
+        assert!(!frag.render_info.flags.has_uv_info());
+        assert!(!frag.render_info.flags.is_two_sided());
         assert_eq!(frag.render_info.pen, Some(51));
         assert_eq!(frag.render_info.brightness, Some(1.0));
         assert_eq!(frag.render_info.scaled_ambient, Some(1.0));

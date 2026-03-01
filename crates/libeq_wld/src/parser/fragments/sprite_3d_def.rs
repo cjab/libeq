@@ -207,7 +207,7 @@ impl ThreeDSpriteFlags {
         Ok((remaining, Self(raw_flags)))
     }
 
-    fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes(self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -285,19 +285,13 @@ mod tests {
         assert_eq!(frag.bsp_nodes.len(), 1);
         assert_eq!(frag.bsp_nodes[0].vertex_count, 4);
         assert_eq!(frag.bsp_nodes[0].render_method, RenderMethod::from_u32(0));
-        assert_eq!(frag.bsp_nodes[0].render_info.flags.has_pen(), true);
-        assert_eq!(frag.bsp_nodes[0].render_info.flags.has_brightness(), false);
-        assert_eq!(
-            frag.bsp_nodes[0].render_info.flags.has_scaled_ambient(),
-            false
-        );
-        assert_eq!(
-            frag.bsp_nodes[0].render_info.flags.has_simple_sprite(),
-            false
-        );
-        assert_eq!(frag.bsp_nodes[0].render_info.flags.is_two_sided(), false);
+        assert!(frag.bsp_nodes[0].render_info.flags.has_pen());
+        assert!(!frag.bsp_nodes[0].render_info.flags.has_brightness());
+        assert!(!frag.bsp_nodes[0].render_info.flags.has_scaled_ambient());
+        assert!(!frag.bsp_nodes[0].render_info.flags.has_simple_sprite());
+        assert!(!frag.bsp_nodes[0].render_info.flags.is_two_sided());
         assert_eq!(frag.bsp_nodes[0].render_info.pen, Some(11));
-        assert_eq!(frag.bsp_nodes[0].render_info.flags.has_uv_info(), false);
+        assert!(!frag.bsp_nodes[0].render_info.flags.has_uv_info());
         assert_eq!(frag.bsp_nodes[0].front_tree, 0);
         assert_eq!(frag.bsp_nodes[0].back_tree, 0);
         assert_eq!(frag.bsp_nodes[0].vertex_indices, vec![0, 1, 2, 3]);

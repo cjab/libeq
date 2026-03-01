@@ -332,7 +332,7 @@ impl RegionFlags {
         Ok((i, Self(raw_flags)))
     }
 
-    fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes(self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -481,7 +481,7 @@ impl WallFlags {
         Ok((i, Self(raw_flags)))
     }
 
-    fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes(self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -654,7 +654,7 @@ impl ObstacleFlags {
         Ok((i, Self(raw_flags)))
     }
 
-    fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes(self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -1006,7 +1006,7 @@ mod tests {
                     scaled_ambient: Some(1.0),
                     simple_sprite_reference: Some(7994),
                     uv_info: Some(UvInfo {
-                        uv_origin: (944.000061, 32.000000, -0.000015),
+                        uv_origin: (944.000_06, 32.000000, -0.000015),
                         u_axis: (-16.000000, -0.000001, 0.000000),
                         v_axis: (0.000000, -0.000001, 16.000015),
                     }),
@@ -1024,7 +1024,7 @@ mod tests {
                 obstacle_type: ObstacleType::EdgePolygonNormalAbcd,
                 num_vertices: Some(4),
                 vertex_list: Some(vec![0, 1, 2, 3]),
-                normal_abcd: Some((1.0, 0.0, 0.0, -944.000061)),
+                normal_abcd: Some((1.0, 0.0, 0.0, -944.000_06)),
                 edge_wall: None,
                 user_data_size: None,
                 user_data: None,
@@ -1112,7 +1112,7 @@ mod tests {
         // Walls
         assert_eq!(frag.walls.len(), 1);
         assert_eq!(frag.walls[0].flags, WallFlags(0x2));
-        assert_eq!(frag.walls[0].flags.has_floor(), false);
+        assert!(!frag.walls[0].flags.has_floor());
         assert_eq!(frag.walls[0].num_vertices, 4);
         assert_eq!(frag.walls[0].normal_abcd, Some((0.0, 1.0, 0.0, -31.999935)));
         assert_eq!(frag.walls[0].vertex_list, vec![0, 1, 2, 3]);
@@ -1126,14 +1126,14 @@ mod tests {
 
         // Obstacles
         assert_eq!(frag.obstacles.len(), 1);
-        assert_eq!(frag.obstacles[0].flags.is_floor(), false);
+        assert!(!frag.obstacles[0].flags.is_floor());
         assert_eq!(
             frag.obstacles[0].obstacle_type,
             ObstacleType::EdgePolygonNormalAbcd
         );
         assert_eq!(
             frag.obstacles[0].normal_abcd,
-            Some((1.0, 0.0, 0.0, -944.000061))
+            Some((1.0, 0.0, 0.0, -944.000_06))
         );
         assert_eq!(frag.obstacles[0].num_vertices, Some(4));
         assert_eq!(frag.obstacles[0].vertex_list, Some(vec![0, 1, 2, 3]));

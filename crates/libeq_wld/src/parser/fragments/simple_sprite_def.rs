@@ -137,7 +137,7 @@ impl SimpleSpriteDefFlags {
         Ok((remaining, SimpleSpriteDefFlags(raw_flags)))
     }
 
-    fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes(self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -183,9 +183,9 @@ mod tests {
         assert_eq!(u32::from(frag.flags), 0x10);
         //FIXME: This seems wrong
         //assert_eq!(frag.flags.has_sleep(), true);
-        assert_eq!(frag.flags.has_current_frame(), false);
-        assert_eq!(frag.flags.skip_frames(), false);
-        assert_eq!(frag.flags.is_animated(), false);
+        assert!(!frag.flags.has_current_frame());
+        assert!(!frag.flags.skip_frames());
+        assert!(!frag.flags.is_animated());
         assert_eq!(frag.frame_count, 0x1);
         assert_eq!(frag.current_frame, None);
         assert_eq!(frag.sleep, None);

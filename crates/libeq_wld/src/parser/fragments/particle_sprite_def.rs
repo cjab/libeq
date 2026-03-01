@@ -152,7 +152,7 @@ impl ParticleSpriteDefFlags {
         Ok((i, Self(raw_flags)))
     }
 
-    fn to_bytes(&self) -> Vec<u8> {
+    fn to_bytes(self) -> Vec<u8> {
         self.0.to_le_bytes().to_vec()
     }
 
@@ -204,8 +204,8 @@ mod tests {
 
         assert_eq!(frag.name_reference, StringReference::new(-1));
         assert_eq!(frag.flags, ParticleSpriteDefFlags(0x3));
-        assert_eq!(frag.flags.has_center_offset(), true);
-        assert_eq!(frag.flags.has_bounding_radius(), true);
+        assert!(frag.flags.has_center_offset());
+        assert!(frag.flags.has_bounding_radius());
         assert_eq!(frag.num_vertices, 1);
         assert_eq!(frag.unknown, 0);
         assert_eq!(frag.center_offset, Some((3.0, 4.0, 5.0)));
@@ -219,12 +219,12 @@ mod tests {
             }
         );
         assert_eq!(frag.render_info.flags, RenderInfoFlags::new(2));
-        assert_eq!(frag.render_info.flags.has_pen(), false);
-        assert_eq!(frag.render_info.flags.has_brightness(), true);
-        assert_eq!(frag.render_info.flags.has_scaled_ambient(), false);
-        assert_eq!(frag.render_info.flags.has_simple_sprite(), false);
-        assert_eq!(frag.render_info.flags.has_uv_info(), false);
-        assert_eq!(frag.render_info.flags.is_two_sided(), false);
+        assert!(!frag.render_info.flags.has_pen());
+        assert!(frag.render_info.flags.has_brightness());
+        assert!(!frag.render_info.flags.has_scaled_ambient());
+        assert!(!frag.render_info.flags.has_simple_sprite());
+        assert!(!frag.render_info.flags.has_uv_info());
+        assert!(!frag.render_info.flags.is_two_sided());
         assert_eq!(frag.render_info.pen, None);
         assert_eq!(frag.render_info.brightness, Some(1.0));
         assert_eq!(frag.render_info.scaled_ambient, None);
