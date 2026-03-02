@@ -35,7 +35,7 @@ fn main() {
 
 ### s3d
 [s3d](tools/s3d) is a CLI tool for listing, extracting, creating, and
-verifying EverQuest PFS archives.
+verifying EverQuest PFS archives. Built on [libeq_pfs](crates/libeq_pfs).
 
 | Platform | Arch | Download |
 |----------|------|----------|
@@ -57,7 +57,7 @@ s3d create gfaydark-new.s3d gfaydark/
 
 ### wld-cli
 This workspace also includes the [wld-cli](tools/wld-cli) tool for viewing
-and extracting fragments from .wld files.
+and extracting fragments from .wld files. Built on [libeq_wld](crates/libeq_wld).
 
 | Platform | Arch | Download |
 |----------|------|----------|
