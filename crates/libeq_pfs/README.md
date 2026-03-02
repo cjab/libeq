@@ -4,7 +4,7 @@ PFS (also known as .s3d, .eqg, .pfs) is an archive file format used by the
 EverQuest client to store compressed game assets.
 
 This is an implementation of the format as a Rust library crate. There is
-a separate [s3d tool](https://github.com/cjab/libeq/tools/s3d) built on top
+a separate [s3d tool](https://github.com/cjab/libeq/tree/main/tools/s3d) built on top
 of it but the PFS format implementation itself can be re-used in other
 applications. The API is very similar to other archive crates for Rust
 (`tar` and `zip`).
