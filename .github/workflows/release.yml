@@ -63,9 +63,8 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          tag="${GITHUB_REF#refs/tags/}"
           for tool in s3d wld-cli; do
-            archive="${tool}-${tag}-${{ matrix.target }}.tar.gz"
+            archive="${tool}-${{ matrix.target }}.tar.gz"
             tar czf "${archive}" -C "target/${{ matrix.target }}/release" "${tool}"
             echo "Built ${archive}"
           done
@@ -74,9 +73,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          tag="${GITHUB_REF#refs/tags/}"
           for tool in s3d wld-cli; do
-            archive="${tool}-${tag}-${{ matrix.target }}.zip"
+            archive="${tool}-${{ matrix.target }}.zip"
             7z a "${archive}" "./target/${{ matrix.target }}/release/${tool}.exe"
             echo "Built ${archive}"
           done

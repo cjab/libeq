@@ -37,6 +37,13 @@ fn main() {
 [s3d](tools/s3d) is a CLI tool for listing, extracting, creating, and
 verifying EverQuest PFS archives.
 
+| Platform | Arch | Download |
+|----------|------|----------|
+| 🐧 Linux   | x86_64  | [s3d](https://github.com/cjab/libeq/releases/latest/download/s3d-x86_64-unknown-linux-gnu.tar.gz) |
+| 🍎 macOS   | aarch64 | [s3d](https://github.com/cjab/libeq/releases/latest/download/s3d-aarch64-apple-darwin.tar.gz) |
+| 🪟 Windows | x86_64  | [s3d](https://github.com/cjab/libeq/releases/latest/download/s3d-x86_64-pc-windows-msvc.zip) |
+| Other    |         | [All releases](https://github.com/cjab/libeq/releases/latest) |
+
 ```bash
 # List files in an archive
 s3d list gfaydark.s3d
@@ -51,6 +58,13 @@ s3d create gfaydark-new.s3d gfaydark/
 ### wld-cli
 This workspace also includes the [wld-cli](tools/wld-cli) tool for viewing
 and extracting fragments from .wld files.
+
+| Platform | Arch | Download |
+|----------|------|----------|
+| 🐧 Linux   | x86_64  | [wld-cli](https://github.com/cjab/libeq/releases/latest/download/wld-cli-x86_64-unknown-linux-gnu.tar.gz) |
+| 🍎 macOS   | aarch64 | [wld-cli](https://github.com/cjab/libeq/releases/latest/download/wld-cli-aarch64-apple-darwin.tar.gz) |
+| 🪟 Windows | x86_64  | [wld-cli](https://github.com/cjab/libeq/releases/latest/download/wld-cli-x86_64-pc-windows-msvc.zip) |
+| Other    |         | [All releases](https://github.com/cjab/libeq/releases/latest) |
 
 ```bash
 # To view fragments
