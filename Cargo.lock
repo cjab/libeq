@@ -731,8 +731,17 @@ checksum = "459427e2af2b9c839b132acb702a1c654d95e10f8c326bfc2ad11310e458b1c5"
 name = "libeq"
 version = "0.5.0"
 dependencies = [
+ "libeq_eqg",
  "libeq_pfs",
  "libeq_wld",
+]
+
+[[package]]
+name = "libeq_eqg"
+version = "0.5.0"
+dependencies = [
+ "libeq_pfs",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

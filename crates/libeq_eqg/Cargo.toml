@@ -1,0 +1,12 @@
+[package]
+name = "libeq_eqg"
+version = "0.5.0"
+edition = "2024"
+description = "Read EverQuest EQG resource formats"
+license = "MIT"
+
+[dependencies]
+thiserror.workspace = true
+
+[dev-dependencies]
+libeq_pfs.workspace = true

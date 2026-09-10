@@ -14,6 +14,7 @@ license = "MIT"
 members = ["crates/*", "tools/*"]
 
 [workspace.dependencies]
+libeq_eqg = { path = "crates/libeq_eqg", version = "0.5.0" }
 libeq_wld = { path = "crates/libeq_wld", version = "0.5.0" }
 libeq_pfs = { path = "crates/libeq_pfs", version = "0.5.0" }
 nom = "8.0.0"
@@ -22,6 +23,7 @@ serde = { version = "1", features = ["derive"] }
 thiserror = "2"
 
 [dependencies]
+libeq_eqg = { workspace = true, optional = true }
 libeq_wld = { workspace = true, optional = true }
 libeq_pfs = { workspace = true, optional = true }
 
@@ -29,3 +31,4 @@ libeq_pfs = { workspace = true, optional = true }
 default = ["wld", "pfs"]
 wld = ["libeq_wld"]
 pfs = ["libeq_pfs"]
+eqg = ["libeq_eqg"]
