@@ -59,10 +59,8 @@ impl Events {
                                     return;
                                 }
                             }
-                            event::Event::Mouse(_) => {
-                                if tx.send(Event::Input(evt)).is_err() {
-                                    return;
-                                }
+                            event::Event::Mouse(_) if tx.send(Event::Input(evt)).is_err() => {
+                                return;
                             }
                             _ => {}
                         }
