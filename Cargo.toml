@@ -6,7 +6,7 @@ edition = "2024"
 description = "Libraries and tools for working with EverQuest game data"
 repository = "https://github.com/cjab/libeq"
 readme = "README.md"
-keywords = ["everquest", "eq", "wld", "pfs", "s3d", "loader"]
+keywords = ["everquest", "eq", "wld", "pfs", "s3d"]
 categories = ["game-development", "graphics", "parsing", "rendering::data-formats"]
 license = "MIT"
 
