@@ -5,7 +5,6 @@
 # libeq
 
 Libraries and tools for working with EverQuest game data
-
 ## Crates
 * [libeq_wld](crates/libeq_wld) - Load `.wld` files.
 * [libeq_pfs](crates/libeq_pfs) - Create and extract `.s3d` archives.
@@ -81,3 +80,25 @@ cargo run -p wld-cli -- create --format ron gfaydark.ron gfaydark.wld
 cargo run -p wld-cli -- extract --format json gfaydark.wld gfaydark.json
 cargo run -p wld-cli -- create --format json gfaydark.json gfaydark.wld
 ```
+
+## Contributing
+
+If you would like to contribute just a few things to know:
+
+* PR text should be written by a human
+* Commit messages should be written by a human
+* Commits should be small and focused
+* Open an issue to discuss anything large first
+* Do not add attribution for any tools used
+
+Basically you own your code and should be able to explain it fully
+by communicating as a human, with a human. If you're not a human
+at least deceive me well enough to momentarily stave off the deep
+loneliness and existential dread we're all feeling, right? Right...?
+
+Oh, and that PR text. You're in luck, I'm pretty lazy. I'm much happier
+to read something short and to the point. Just tell me why you want to
+make these changes. It doesn't have to be a big thing. No need to explain
+every line of code to me. If there's something tricky/uncertain/weird you
+can talk about that but man oh man, no need to write a book. And no need
+to tell me that you asked someone else and they promised everything works.
