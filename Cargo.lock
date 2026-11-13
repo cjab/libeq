@@ -1973,7 +1973,6 @@ dependencies = [
  "clap",
  "crossterm",
  "hexyl",
- "libeq_pfs",
  "libeq_wld",
  "ratatui",
  "ron",

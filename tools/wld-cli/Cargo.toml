@@ -17,7 +17,6 @@ test = false
 
 [dependencies]
 libeq_wld = { workspace = true, features = ["serde"] }
-libeq_pfs.workspace = true
 clap.workspace = true
 ratatui = "0.30.0"
 crossterm = "0.29.0"
