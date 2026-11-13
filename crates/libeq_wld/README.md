@@ -1,7 +1,7 @@
-[![Crates.io](https://img.shields.io/crates/v/eq_wld.svg)](https://crates.io/crates/eq_wld)
-[![Docs.rs](https://docs.rs/eq_wld/badge.svg)](https://docs.rs/eq_wld)
+[![Crates.io](https://img.shields.io/crates/v/eq_wld.svg)](https://crates.io/crates/libeq_wld)
+[![Docs.rs](https://docs.rs/eq_wld/badge.svg)](https://docs.rs/libeq_wld)
 
-# eq_wld
+# libeq_wld
 
 ## An Everquest .wld file loader
 This is a work in progress but already loads enough data from wld files to be able to do some
@@ -14,7 +14,7 @@ understood and future understanding may influence the api of this crate.
 let archive = eq_archive::read("gfaydark.s3d").unwrap();
 let wld_data = archive.get("gfaydark.wld").unwrap();
 
-let wld = eq_wld::load(&wld_data).unwrap();
+let wld = libeq_wld::load(&wld_data).unwrap();
 
 // Iterate over meshes
 for mesh in wld.meshes() {
