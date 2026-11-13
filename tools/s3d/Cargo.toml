@@ -1,7 +1,17 @@
 [package]
-name = "s3d"
+name = "libeq_s3d"
 version = "0.5.1"
 edition = "2024"
+authors = ["Chad Jablonski <chad@jablonski.xyz>"]
+description = "An Everquest pfs/s3d/eqg cli tool"
+repository = "https://github.com/cjab/libeq"
+keywords = ["everquest", "eq", "wld", "pfs", "s3d"]
+categories = ["game-development", "compression", "parsing", "filesystem"]
+license = "MIT"
+
+[[bin]]
+name = "s3d"
+path = "src/main.rs"
 
 [dependencies]
 libeq_pfs.workspace = true

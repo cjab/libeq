@@ -54,9 +54,9 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.use_cross }}" = "true" ]; then
-            cross build --release --target ${{ matrix.target }} -p s3d -p wld-cli
+            cross build --release --target ${{ matrix.target }} -p libeq_s3d -p wld-cli
           else
-            cargo build --release --target ${{ matrix.target }} -p s3d -p wld-cli
+            cargo build --release --target ${{ matrix.target }} -p libeq_s3d -p wld-cli
           fi
 
       - name: Package (unix)

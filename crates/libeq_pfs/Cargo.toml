@@ -7,7 +7,7 @@ edition = "2024"
 description = "An Everquest pfs/s3d/eqg file loader"
 repository = "https://github.com/cjab/libeq"
 readme = "README.md"
-keywords = ["everquest", "eq", "pfs", "s3d", "eqg", "loader"]
+keywords = ["everquest", "eq", "pfs", "s3d", "eqg"]
 categories = ["game-development", "compression", "parsing", "filesystem"]
 license = "MIT"
 

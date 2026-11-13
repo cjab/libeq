@@ -1,8 +1,14 @@
 [package]
 name = "wld-cli"
 version = "0.5.1"
-authors = ["Chad Jablonski <chad@jablonski.xyz>"]
+publish = false
 edition = "2024"
+authors = ["Chad Jablonski <chad@jablonski.xyz>"]
+description = "An Everquest wld cli tool"
+repository = "https://github.com/cjab/libeq"
+keywords = ["everquest", "eq", "wld", "pfs", "s3d"]
+categories = ["game-development", "compression", "parsing", "filesystem"]
+license = "MIT"
 
 [[bin]]
 name = "wld-cli"
