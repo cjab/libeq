@@ -1,8 +1,15 @@
 [package]
 name = "libeq_pfs"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Chad Jablonski <chad@jablonski.xyz>"]
 edition = "2024"
+
+description = "An Everquest pfs/s3d/eqg file loader"
+repository = "https://github.com/cjab/libeq"
+readme = "README.md"
+keywords = ["everquest", "eq", "pfs", "s3d", "eqg", "loader"]
+categories = ["game-development", "compression", "parsing", "filesystem"]
+license = "MIT"
 
 [dependencies]
 flate2 = "1.1"
