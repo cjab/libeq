@@ -138,7 +138,7 @@ impl Fragment for Actor {
     fn to_bytes(&self) -> Vec<u8> {
         let user_data_size = self.user_data_size as usize;
         let padding = (4 - user_data_size % 4) % 4;
-        let mut user_data = encode_string(&format!("{}{}", &self.user_data, "\0"));
+        let mut user_data = encode_string(&format!("{}{}", self.user_data, "\0"));
         user_data.resize(user_data_size + padding, 0);
 
         [
