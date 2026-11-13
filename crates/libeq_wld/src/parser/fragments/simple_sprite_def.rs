@@ -33,7 +33,7 @@ pub struct SimpleSpriteDef {
     /// Only present if bit `has_current_frame` in `flags` is set.
     pub current_frame: Option<u32>,
 
-    /// Only present if `sleep` in `flags` is set.
+    /// Only present when both `is_animated` and `has_sleep` in `flags` are set.
     pub sleep: Option<u32>,
 
     /// One or more references to [BmInfo] fragments. For most textures this will
@@ -51,15 +51,12 @@ impl FragmentParser for SimpleSpriteDef {
         let (i, (name_reference, flags, frame_count)) =
             (StringReference::parse, SimpleSpriteDefFlags::parse, le_u32).parse(input)?;
 
-        //TODO: Is this a thing? Find an example.
-        let (i, _current_frame) = if flags.has_current_frame() {
+        let (i, current_frame) = if flags.has_current_frame() {
             let (i, current_frame) = le_u32(i)?;
             (i, Some(current_frame))
         } else {
             (i, None)
         };
-        let current_frame = None;
-
         let (i, sleep) = if flags.is_animated() && flags.has_sleep() {
             let (i, sleep) = le_u32(i)?;
             (i, Some(sleep))
