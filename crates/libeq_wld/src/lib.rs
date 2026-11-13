@@ -406,7 +406,15 @@ pub struct ObjectLocation<'a> {
 }
 
 impl<'a> ObjectLocation<'a> {
+    /// Look up a directly named model using the Actor's nonpositive string reference.
+    ///
+    /// Positive references are fragment indexes, which this accessor does not resolve,
+    /// and return `None`. Zero retains string-table lookup behavior, as do negative
+    /// references; a missing string also returns `None`.
     pub fn model_name(&self) -> Option<&str> {
+        if self.fragment.actor_def_reference.0 > 0 {
+            return None;
+        }
         self.doc.get_string(self.fragment.actor_def_reference)
     }
 
