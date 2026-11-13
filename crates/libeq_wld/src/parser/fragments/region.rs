@@ -4,6 +4,7 @@ use super::{
     DmSpriteDef2, Fragment, FragmentParser, FragmentRef, RenderInfo, RenderMethod, StringReference,
     WResult,
 };
+use crate::parser::WldDocError;
 
 use nom::Parser;
 use nom::multi::count;
@@ -539,9 +540,16 @@ pub struct Obstacle {
 impl Obstacle {
     fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (i, flags) = ObstacleFlags::parse(input)?;
-        let (i, next_region) = le_i32(i)?;
-        let (i, obstacle_type) = le_i32(i)?;
-        let obstacle_type = FromPrimitive::from_i32(obstacle_type).unwrap();
+        let (type_input, next_region) = le_i32(i)?;
+        let (i, raw_type) = le_i32(type_input)?;
+        // The type decides which fields follow, so an unknown one leaves the
+        // rest of the record unreadable.
+        let Some(obstacle_type) = FromPrimitive::from_i32(raw_type) else {
+            return Err(nom::Err::Failure(WldDocError::Parse {
+                input: type_input,
+                message: format!("unknown obstacle type {raw_type}"),
+            }));
+        };
 
         let (i, num_vertices) = if obstacle_type == ObstacleType::EdgePolygon
             || obstacle_type == ObstacleType::EdgePolygonNormalAbcd
@@ -1102,6 +1110,52 @@ mod tests {
         let (remaining, _frag) = Region::parse(data).unwrap();
         // After 1 byte entry in visible_lists, there's 1 byte of padding to reach alignment
         assert_eq!(remaining, vec![0]);
+    }
+
+    #[test]
+    fn it_rejects_unknown_obstacle_types_by_value() {
+        let mut data = Vec::new();
+        data.extend(0u32.to_le_bytes()); // flags
+        data.extend(1068i32.to_le_bytes()); // next region
+        data.extend(99i32.to_le_bytes()); // obstacle type
+        let Err(nom::Err::Failure(WldDocError::Parse { input, message })) = Obstacle::parse(&data)
+        else {
+            panic!("an unknown obstacle type should fail the parse");
+        };
+        assert_eq!(message, "unknown obstacle type 99");
+        assert_eq!(input, &data[8..]);
+    }
+
+    #[test]
+    fn it_reports_unknown_obstacle_types_with_the_fragment_and_offset() {
+        use crate::parser::test_wld::WldBuilder;
+        use crate::parser::{WldDoc, WldFormat};
+
+        let mut body = fixture_with_walls_and_obstacles().to_bytes();
+        let known = (ObstacleType::EdgePolygonNormalAbcd as i32).to_le_bytes();
+        let at = body
+            .windows(4)
+            .position(|word| word == known)
+            .expect("the fixture's obstacle type");
+        body[at..at + 4].copy_from_slice(&99i32.to_le_bytes());
+        let mut wld = WldBuilder::new(WldFormat::OLD_VERSION);
+        wld.fragment(Region::TYPE_ID, body);
+
+        let data = wld.build();
+        let errors = WldDoc::parse(&data).unwrap_err();
+        let [
+            WldDocError::ParseFragment {
+                index: 0,
+                offset,
+                message,
+                ..
+            },
+        ] = &errors[..]
+        else {
+            panic!("expected one fragment error, got {errors:?}");
+        };
+        assert_eq!(*offset, at);
+        assert_eq!(message, "unknown obstacle type 99");
     }
 
     #[test]

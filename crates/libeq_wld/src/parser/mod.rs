@@ -1,6 +1,8 @@
 mod error;
 pub mod fragments;
 mod strings;
+#[cfg(test)]
+pub(crate) mod test_wld;
 
 use core::fmt::Debug;
 use std::collections::BTreeMap;
@@ -27,13 +29,47 @@ pub type WResult<'a, O> = IResult<&'a [u8], O, WldDocError<'a>>;
 #[derive(Debug)]
 pub struct WldDoc {
     header: WldHeader,
+    format: WldFormat,
     strings: StringHash,
     fragments: Vec<FragmentType>,
 }
 
+/// The two known .wld layouts, told apart by the header's version.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WldFormat {
+    /// Version `0x00015500`.
+    Old,
+    /// Version `0x1000C800`. Mesh ([DmSpriteDef2]) texture coordinates are 32-bit floats.
+    New,
+}
+
+impl WldFormat {
+    pub const OLD_VERSION: u32 = 0x0001_5500;
+    pub const NEW_VERSION: u32 = 0x1000_C800;
+
+    /// The layout a header version names, if it is a known one.
+    pub fn from_version(version: u32) -> Option<Self> {
+        match version {
+            Self::OLD_VERSION => Some(Self::Old),
+            Self::NEW_VERSION => Some(Self::New),
+            _ => None,
+        }
+    }
+}
+
+/// Fragments are padded so their size is a multiple of 4. A parser that
+/// stops more bytes than this short of a fragment's end has misread it.
+const MAX_PADDING: usize = 3;
+
 impl WldDoc {
     pub fn parse(input: &[u8]) -> Result<WldDoc, Vec<WldDocError<'_>>> {
         let (i, header) = WldHeader::parse(input).map_err(|e| vec![e.into()])?;
+        let format = WldFormat::from_version(header.version).ok_or_else(|| {
+            vec![WldDocError::UnsupportedVersion {
+                version: header.version,
+            }]
+        })?;
 
         let (i, string_hash_data) = take(header.string_hash_size)
             .parse(i)
@@ -47,7 +83,7 @@ impl WldDoc {
         let (fragments, errors): (Vec<_>, Vec<_>) = fragment_headers
             .into_iter()
             .enumerate()
-            .map(|(idx, h)| h.parse_body(idx))
+            .map(|(idx, h)| h.parse_body(idx, format))
             .partition_map(|res| match res {
                 Ok(frag) => Either::Left(frag),
                 Err(e) => Either::Right(e),
@@ -59,9 +95,15 @@ impl WldDoc {
 
         Ok(WldDoc {
             header,
+            format,
             strings,
             fragments,
         })
+    }
+
+    /// The layout of this file, from its header's version.
+    pub fn format(&self) -> WldFormat {
+        self.format
     }
 
     pub fn fragment_headers_by_offset(input: &[u8]) -> BTreeMap<usize, FragmentHeader<'_>> {
@@ -315,7 +357,9 @@ impl<'a> FragmentHeader<'a> {
         ))
     }
 
-    fn parse_body(self, index: usize) -> Result<FragmentType, WldDocError<'a>> {
+    /// Parses the fragment body. A body its parser does not read to its end,
+    /// beyond alignment padding, is an error.
+    fn parse_body(self, index: usize, format: WldFormat) -> Result<FragmentType, WldDocError<'a>> {
         let parsed = match self.fragment_type {
             DmSpriteDef::TYPE_ID => match self.detect_0x2c_variant() {
                 FragmentGame::EverQuest => Some(
@@ -419,7 +463,7 @@ impl<'a> FragmentHeader<'a> {
                 Some(Region::parse(self.field_data).map(|f| (f.0, FragmentType::Region(f.1))))
             }
             DmSpriteDef2::TYPE_ID => Some(
-                DmSpriteDef2::parse(self.field_data)
+                DmSpriteDef2::parse_format(self.field_data, format)
                     .map(|f| (f.0, FragmentType::DmSpriteDef2(f.1))),
             ),
             MaterialPalette::TYPE_ID => Some(
@@ -483,7 +527,13 @@ impl<'a> FragmentHeader<'a> {
         };
 
         match parsed {
-            Some(res) => res.map(|r| r.1).map_err(|e| match e.into() {
+            Some(Ok((rest, _))) if rest.len() > MAX_PADDING => Err(WldDocError::UnreadBytes {
+                index,
+                bytes: rest.len(),
+                header: self,
+            }),
+            Some(Ok((_, fragment))) => Ok(fragment),
+            Some(Err(e)) => Err(match e.into() {
                 WldDocError::Parse { input, message } => WldDocError::ParseFragment {
                     index,
                     offset: self.field_data.offset(input),
@@ -531,7 +581,174 @@ impl<'a> FragmentHeader<'a> {
 
 #[cfg(test)]
 mod tests {
+    use super::test_wld::{Coordinates, WldBuilder, one_triangle, palette};
     use super::*;
+
+    fn only_mesh(doc: &WldDoc) -> &DmSpriteDef2 {
+        let meshes: Vec<_> = doc.fragment_iter::<DmSpriteDef2>().collect();
+        assert_eq!(meshes.len(), 1);
+        meshes[0]
+    }
+
+    #[test]
+    fn it_reads_new_format_mesh_coordinates_as_floats() {
+        let data = one_triangle(
+            WldFormat::NEW_VERSION,
+            0x8000_0001,
+            Coordinates::New([(0.0, 0.0), (1.0, 0.0), (0.5, -2.25)]),
+        );
+        let doc = WldDoc::parse(&data).unwrap();
+        let mesh = only_mesh(&doc);
+
+        assert_eq!(doc.format(), WldFormat::New);
+        assert_eq!(
+            mesh.texture_coordinates,
+            TextureCoordinates::New(vec![(0.0, 0.0), (1.0, 0.0), (0.5, -2.25)])
+        );
+        // What follows the coordinates is read where the format puts it.
+        assert_eq!(mesh.vertex_normals, vec![(0, 0, 127); 3]);
+        assert_eq!(mesh.faces[0].vertex_indexes, (0, 1, 2));
+        assert_eq!(mesh.face_material_groups, vec![(1, 0)]);
+        assert_eq!(mesh.vertex_material_groups, vec![(3, 0)]);
+    }
+
+    #[test]
+    fn it_reads_old_format_mesh_coordinates_as_integers() {
+        let data = one_triangle(
+            WldFormat::OLD_VERSION,
+            0x8000_0001,
+            Coordinates::Old([(0, 0), (256, 0), (128, -576)]),
+        );
+        let doc = WldDoc::parse(&data).unwrap();
+        let mesh = only_mesh(&doc);
+
+        assert_eq!(doc.format(), WldFormat::Old);
+        assert_eq!(
+            mesh.texture_coordinates,
+            TextureCoordinates::Old(vec![(0, 0), (256, 0), (128, -576)])
+        );
+        assert_eq!(mesh.faces[0].vertex_indexes, (0, 1, 2));
+        assert_eq!(mesh.face_material_groups, vec![(1, 0)]);
+    }
+
+    #[test]
+    fn it_parses_materials_with_unlisted_user_defined_types() {
+        let data = one_triangle(
+            WldFormat::OLD_VERSION,
+            0x8000_0018,
+            Coordinates::Old([(0, 0), (256, 0), (128, 0)]),
+        );
+        let doc = WldDoc::parse(&data).unwrap();
+        let materials: Vec<_> = doc.fragment_iter::<MaterialDef>().collect();
+
+        assert_eq!(
+            materials[0].render_method,
+            RenderMethod::UserDefined {
+                material_type: MaterialType::Unlisted(0x18)
+            }
+        );
+        let reparsed = WldDoc::parse(&doc.to_bytes()).unwrap();
+        assert_eq!(reparsed.to_bytes(), doc.to_bytes());
+    }
+
+    #[test]
+    fn it_parses_vertex_animation_with_no_padding() {
+        let mut wld = WldBuilder::new(WldFormat::OLD_VERSION);
+        let name = wld.name("T_DMTRACKDEF");
+        // 18 + 6 × 1 vertex × 1 frame = 24 bytes, already a multiple of 4.
+        let mut body = Vec::new();
+        body.extend(name.to_le_bytes());
+        body.extend(0u32.to_le_bytes());
+        for word in [1u16, 1, 100, 0, 9, 5, 6, 7] {
+            body.extend(word.to_le_bytes());
+        }
+        wld.fragment(DmTrackDef2::TYPE_ID, body);
+        let doc = WldDoc::parse(&wld.build()).unwrap();
+        let tracks: Vec<_> = doc.fragment_iter::<DmTrackDef2>().collect();
+
+        assert_eq!(tracks[0].frames, vec![vec![(5, 6, 7)]]);
+        assert_eq!(tracks[0].size6, None);
+    }
+
+    #[test]
+    fn it_round_trips_both_formats() {
+        for data in [
+            one_triangle(
+                WldFormat::NEW_VERSION,
+                0x8000_0001,
+                Coordinates::New([(0.0, 0.0), (1.0, 0.0), (0.5, -2.25)]),
+            ),
+            one_triangle(
+                WldFormat::OLD_VERSION,
+                0x8000_0001,
+                Coordinates::Old([(0, 0), (256, 0), (128, -576)]),
+            ),
+        ] {
+            let doc = WldDoc::parse(&data).unwrap();
+            let reparsed = WldDoc::parse(&doc.to_bytes()).unwrap();
+            assert_eq!(reparsed.format(), doc.format());
+            assert_eq!(only_mesh(&reparsed), only_mesh(&doc));
+            assert_eq!(reparsed.to_bytes(), doc.to_bytes());
+        }
+    }
+
+    #[test]
+    fn it_rejects_unknown_versions_by_name() {
+        let data = one_triangle(
+            0x1234_5678,
+            0x8000_0001,
+            Coordinates::Old([(0, 0), (256, 0), (128, 0)]),
+        );
+        let errors = WldDoc::parse(&data).unwrap_err();
+
+        assert!(matches!(
+            errors[..],
+            [WldDocError::UnsupportedVersion {
+                version: 0x1234_5678
+            }]
+        ));
+    }
+
+    #[test]
+    fn it_rejects_fragments_not_read_to_their_end() {
+        let mut wld = WldBuilder::new(WldFormat::OLD_VERSION);
+        let name = wld.name("P_MP");
+        // The meshes in the tests above end with a byte of padding, which
+        // parses; these eight bytes are data nobody read.
+        let mut overlong = palette(name, &[]);
+        overlong.extend([0xab; 8]);
+        wld.fragment(MaterialPalette::TYPE_ID, palette(name, &[]));
+        wld.fragment(MaterialPalette::TYPE_ID, overlong);
+        let data = wld.build();
+        let errors = WldDoc::parse(&data).unwrap_err();
+
+        let [
+            WldDocError::UnreadBytes {
+                index: 1,
+                bytes: 8,
+                header,
+            },
+        ] = &errors[..]
+        else {
+            panic!("expected one unread-bytes error, got {errors:?}");
+        };
+        assert_eq!(header.fragment_type, MaterialPalette::TYPE_ID);
+    }
+
+    #[test]
+    fn it_accepts_up_to_three_bytes_of_padding() {
+        for padding in 0..=3 {
+            let mut wld = WldBuilder::new(WldFormat::OLD_VERSION);
+            let name = wld.name("P_MP");
+            let mut body = palette(name, &[]);
+            body.extend(vec![0; padding]);
+            wld.unpadded_fragment(MaterialPalette::TYPE_ID, body);
+            assert!(
+                WldDoc::parse(&wld.build()).is_ok(),
+                "{padding} bytes of padding should parse"
+            );
+        }
+    }
 
     #[cfg(feature = "gamedata")]
     #[test]

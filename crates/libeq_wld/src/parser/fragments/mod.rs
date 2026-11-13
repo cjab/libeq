@@ -56,7 +56,7 @@ use nom::number::complete::le_i32;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use super::{StringReference, WResult};
+use super::{StringReference, WResult, WldFormat};
 
 pub use actor::*;
 pub use actor_def::*;

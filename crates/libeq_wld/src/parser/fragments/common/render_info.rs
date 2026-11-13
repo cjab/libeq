@@ -289,14 +289,14 @@ impl RenderMethod {
                     | ((*texture_style as u32) << 7)
                     | (*unknown_bits << 11)
             }
-            Self::UserDefined { material_type } => (*material_type as u32) | 0x80000000,
+            Self::UserDefined { material_type } => u32::from(*material_type) | 0x80000000,
         }
     }
 
     pub fn from_u32(raw_flags: u32) -> Self {
         if raw_flags >> 31 == 1 {
             Self::UserDefined {
-                material_type: FromPrimitive::from_u32(raw_flags & !0x80000000).unwrap(),
+                material_type: MaterialType::from_u32(raw_flags & !0x80000000),
             }
         } else {
             Self::Standard {
@@ -436,11 +436,43 @@ impl From<TextureStyle> for u32 {
     }
 }
 
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, PartialEq)]
-/// Source: LanternExtractor
-/// (https://github.com/LanternEQ/LanternExtractor/blob/afe174b71ac9f9ab75e259bac2282735b093426d/LanternExtractor/EQ/Wld/DataTypes/MaterialType.cs)
-pub enum MaterialType {
+/// Declares [MaterialType] from one list of named values, with the
+/// conversions both ways; a value with no name is kept as
+/// [MaterialType::Unlisted].
+macro_rules! material_types {
+    ($($(#[$attribute:meta])* $name:ident = $value:literal,)*) => {
+        #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+        #[derive(Debug, Clone, Copy, PartialEq)]
+        /// Source: LanternExtractor
+        /// (https://github.com/LanternEQ/LanternExtractor/blob/afe174b71ac9f9ab75e259bac2282735b093426d/LanternExtractor/EQ/Wld/DataTypes/MaterialType.cs)
+        pub enum MaterialType {
+            $($(#[$attribute])* $name,)*
+            /// A user-defined value with no name here, kept as the file stores it.
+            Unlisted(u32),
+        }
+
+        impl MaterialType {
+            /// The material type a user-defined render method's value names.
+            pub fn from_u32(value: u32) -> Self {
+                match value {
+                    $($value => Self::$name,)*
+                    other => Self::Unlisted(other),
+                }
+            }
+        }
+
+        impl From<MaterialType> for u32 {
+            fn from(value: MaterialType) -> u32 {
+                match value {
+                    $(MaterialType::$name => $value,)*
+                    MaterialType::Unlisted(value) => value,
+                }
+            }
+        }
+    };
+}
+
+material_types! {
     /// Used for boundaries that are not rendered. TextInfoReference can be null or have reference.
     Boundary = 0x0,
     /// Standard diffuse shader
@@ -474,8 +506,37 @@ pub enum MaterialType {
     CompleteUnknown2 = 0x06, // Found on a "floor" wall in tanarus 'thecity'
 }
 
-impl From<MaterialType> for u32 {
-    fn from(value: MaterialType) -> u32 {
-        value as u32
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_keeps_user_defined_values_that_have_no_name() {
+        for raw in [0x8000_0004, 0x8000_0018] {
+            let method = RenderMethod::from_u32(raw);
+
+            assert_eq!(
+                method,
+                RenderMethod::UserDefined {
+                    material_type: MaterialType::Unlisted(raw & !0x8000_0000)
+                }
+            );
+            assert_eq!(u32::from(method), raw);
+        }
+    }
+
+    #[test]
+    fn it_names_listed_user_defined_values_both_ways() {
+        let method = RenderMethod::from_u32(0x8000_0013);
+
+        assert_eq!(
+            method,
+            RenderMethod::UserDefined {
+                material_type: MaterialType::TransparentMasked
+            }
+        );
+        assert_eq!(u32::from(method), 0x8000_0013);
+        assert_eq!(u32::from(MaterialType::Diffuse6), 0x553);
+        assert_eq!(MaterialType::from_u32(0x553), MaterialType::Diffuse6);
     }
 }
