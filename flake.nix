@@ -55,7 +55,7 @@
           s3d = s.craneLib.buildPackage (s.commonArgs // {
             inherit (s) cargoArtifacts;
             pname = "s3d";
-            cargoExtraArgs = "--package s3d";
+            cargoExtraArgs = "--package libeq_s3d";
           });
 
           wld-cli = s.craneLib.buildPackage (s.commonArgs // {
