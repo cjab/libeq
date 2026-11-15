@@ -3,6 +3,7 @@ use std::any::Any;
 use super::{Fragment, FragmentParser, StringReference, WResult};
 
 use nom::Parser;
+use nom::combinator::opt;
 use nom::multi::count;
 use nom::number::complete::{le_i16, le_u16, le_u32};
 
@@ -47,8 +48,10 @@ pub struct DmTrackDef2 {
     /// Components of the vertex positions, multiplied by (1 shl Scale).
     pub frames: Vec<Vec<(i16, i16, i16)>>,
 
-    /// _Unknown_ - Usually contains 0.
-    pub size6: u16,
+    /// The two bytes after the frames, when the fragment has them. They pad
+    /// 18 + 6 × `vertex_count` × `frame_count` bytes out to a multiple of 4,
+    /// so a fragment whose frames already end on a 4-byte boundary has none.
+    pub size6: Option<u16>,
 }
 
 impl FragmentParser for DmTrackDef2 {
@@ -73,7 +76,7 @@ impl FragmentParser for DmTrackDef2 {
                 count((le_i16, le_i16, le_i16), vertex_count as usize),
                 frame_count as usize,
             ),
-            le_u16,
+            opt(le_u16),
         )
             .parse(i)?;
 
@@ -113,7 +116,7 @@ impl Fragment for DmTrackDef2 {
                     })
                 })
                 .collect::<Vec<_>>()[..],
-            &self.size6.to_le_bytes()[..],
+            &self.size6.map_or(vec![], |s| s.to_le_bytes().to_vec())[..],
         ]
         .concat()
     }
@@ -148,7 +151,7 @@ mod tests {
                 vec![(455, 2180, 11078), (100, 200, 300), (400, 500, 600)],
                 vec![(460, 2185, 11083), (105, 205, 305), (405, 505, 605)],
             ],
-            size6: 0,
+            size6: Some(0),
         }
     }
 
@@ -167,7 +170,60 @@ mod tests {
         assert_eq!(frag.frames.len(), 2);
         assert_eq!(frag.frames[0].len(), 3);
         assert_eq!(frag.frames[0][0], (455, 2180, 11078));
-        assert_eq!(frag.size6, 0);
+        assert_eq!(frag.size6, Some(0));
+    }
+
+    /// A fragment as the format lays it out: the 18-byte head, then the frames.
+    fn bytes(vertex_count: u16, frame_count: u16) -> Vec<u8> {
+        let mut data = Vec::new();
+        data.extend((-7i32).to_le_bytes()); // name
+        data.extend(0u32.to_le_bytes()); // flags
+        for word in [vertex_count, frame_count, 100, 0, 9] {
+            data.extend(word.to_le_bytes());
+        }
+        for i in 0..i16::try_from(vertex_count * frame_count).unwrap() {
+            for axis in [i, -i, 2 * i] {
+                data.extend(axis.to_le_bytes());
+            }
+        }
+        data
+    }
+
+    #[test]
+    fn it_parses_frames_that_end_on_a_word_boundary() {
+        // 18 + 6 × 1 × 3 = 36 bytes: nothing follows the frames.
+        let data = bytes(1, 3);
+        assert_eq!(data.len(), 36);
+        let (remaining, frag) = DmTrackDef2::parse(&data).unwrap();
+
+        assert!(remaining.is_empty());
+        assert_eq!(
+            frag.frames,
+            vec![vec![(0, 0, 0)], vec![(1, -1, 2)], vec![(2, -2, 4)]]
+        );
+        assert_eq!(frag.size6, None);
+        assert_eq!(frag.to_bytes(), data);
+    }
+
+    #[test]
+    fn it_parses_frames_followed_by_padding() {
+        // 18 + 6 × 1 × 2 = 30 bytes, padded with two more.
+        let mut data = bytes(1, 2);
+        data.extend([0, 0]);
+        let (remaining, frag) = DmTrackDef2::parse(&data).unwrap();
+
+        assert!(remaining.is_empty());
+        assert_eq!(frag.frames, vec![vec![(0, 0, 0)], vec![(1, -1, 2)]]);
+        assert_eq!(frag.size6, Some(0));
+        assert_eq!(frag.to_bytes(), data);
+    }
+
+    #[test]
+    fn it_rejects_frames_cut_short() {
+        let mut data = bytes(1, 3);
+        data.truncate(data.len() - 4);
+
+        assert!(DmTrackDef2::parse(&data).is_err());
     }
 
     #[test]

@@ -18,6 +18,18 @@ pub enum WldDocError<'a> {
         index: usize,
         header: FragmentHeader<'a>,
     },
+    /// The header names a WLD version this parser does not know the layout of.
+    UnsupportedVersion {
+        version: u32,
+    },
+    /// The fragment's parser stopped more bytes short of its end than
+    /// alignment padding accounts for, so part of it was not understood.
+    UnreadBytes {
+        index: usize,
+        /// How many bytes at the end of the fragment were not read.
+        bytes: usize,
+        header: FragmentHeader<'a>,
+    },
 }
 
 impl ContextError<&'_ [u8]> for WldDocError<'_> {

@@ -176,13 +176,9 @@ impl<'a> Mesh<'a> {
             .collect()
     }
 
-    /// The coordinates used to map textures to this mesh.
+    /// The coordinates used to map textures to this mesh, in texture widths.
     pub fn texture_coordinates(&self) -> Vec<[f32; 2]> {
-        self.fragment
-            .texture_coordinates
-            .iter()
-            .map(|v| [(v.0 as f32) / 256.0, (v.1 as f32) / 256.0])
-            .collect()
+        self.fragment.texture_coordinates.normalized()
     }
 
     /// Indices into the positions vector of this mesh. Expects that the mesh will be drawn as
@@ -507,8 +503,40 @@ impl<'a> Model<'a> {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature = "gamedata")]
     use super::*;
+    use parser::WldFormat;
+    use parser::test_wld::{Coordinates, one_triangle};
+
+    #[test]
+    fn meshes_give_coordinates_in_texture_widths_in_both_formats() {
+        for (data, expected) in [
+            (
+                one_triangle(
+                    WldFormat::NEW_VERSION,
+                    0x8000_0001,
+                    Coordinates::New([(0.0, 0.0), (1.0, 0.0), (0.5, -2.25)]),
+                ),
+                [[0.0, 0.0], [1.0, 0.0], [0.5, -2.25]],
+            ),
+            (
+                one_triangle(
+                    WldFormat::OLD_VERSION,
+                    0x8000_0001,
+                    Coordinates::Old([(0, 0), (256, 0), (128, -576)]),
+                ),
+                [[0.0, 0.0], [1.0, 0.0], [0.5, -2.25]],
+            ),
+        ] {
+            let wld = Wld::load(&data);
+            let meshes: Vec<_> = wld.meshes().collect();
+            assert_eq!(meshes.len(), 1);
+            assert_eq!(meshes[0].texture_coordinates(), expected.to_vec());
+            assert_eq!(meshes[0].indices(), vec![0, 1, 2]);
+            let primitives = meshes[0].primitives();
+            assert_eq!(primitives.len(), 1);
+            assert_eq!(primitives[0].material().name(), Some("M_MDF"));
+        }
+    }
 
     #[cfg(feature = "gamedata")]
     #[test]

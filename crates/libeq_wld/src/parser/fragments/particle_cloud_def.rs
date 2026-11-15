@@ -4,8 +4,6 @@ use nom::{
     Parser,
     number::complete::{le_f32, le_u8, le_u32},
 };
-use num_derive::{FromPrimitive, ToPrimitive};
-use num_traits::FromPrimitive;
 
 use super::{BlitSpriteDef, Fragment, FragmentParser, FragmentRef, StringReference, WResult};
 
@@ -192,23 +190,47 @@ impl Fragment for ParticleCloudDef {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ParticleMovement {
-    Sphere = 0x1,
-    Plane = 0x2,
-    Stream = 0x3,
-    None = 0x4,
+    Sphere,
+    Plane,
+    Stream,
+    None,
+    /// A value with no name here, kept as the file stores it.
+    Unlisted(u32),
 }
 
 impl ParticleMovement {
     pub fn parse(input: &[u8]) -> WResult<'_, Self> {
         let (remaining, raw) = le_u32(input)?;
 
-        Ok((remaining, FromPrimitive::from_u32(raw).unwrap()))
+        Ok((remaining, Self::from_u32(raw)))
+    }
+
+    pub fn from_u32(value: u32) -> Self {
+        match value {
+            0x1 => Self::Sphere,
+            0x2 => Self::Plane,
+            0x3 => Self::Stream,
+            0x4 => Self::None,
+            other => Self::Unlisted(other),
+        }
     }
 
     fn to_bytes(self) -> Vec<u8> {
-        (self as u32).to_le_bytes().to_vec()
+        u32::from(self).to_le_bytes().to_vec()
+    }
+}
+
+impl From<ParticleMovement> for u32 {
+    fn from(value: ParticleMovement) -> u32 {
+        match value {
+            ParticleMovement::Sphere => 0x1,
+            ParticleMovement::Plane => 0x2,
+            ParticleMovement::Stream => 0x3,
+            ParticleMovement::None => 0x4,
+            ParticleMovement::Unlisted(value) => value,
+        }
     }
 }
 
@@ -279,5 +301,19 @@ mod tests {
         let parsed = ParticleCloudDef::parse(&data).unwrap().1;
 
         assert_eq!(parsed.to_bytes(), data);
+    }
+
+    #[test]
+    fn it_keeps_movement_values_that_have_no_name() {
+        let data = 7u32.to_le_bytes();
+        let (remaining, movement) = ParticleMovement::parse(&data).unwrap();
+
+        assert!(remaining.is_empty());
+        assert_eq!(movement, ParticleMovement::Unlisted(7));
+        assert_eq!(movement.to_bytes(), data);
+        assert_eq!(
+            ParticleMovement::parse(&3u32.to_le_bytes()).unwrap().1,
+            ParticleMovement::Stream
+        );
     }
 }

@@ -2,6 +2,7 @@ use std::any::Any;
 
 use super::{
     DmTrack, Fragment, FragmentParser, FragmentRef, MaterialPalette, StringReference, WResult,
+    WldFormat,
 };
 
 use nom::Parser;
@@ -131,12 +132,9 @@ pub struct DmSpriteDef2 {
     /// be multiplied by (1 shl `scale`) for the final vertex position.
     pub positions: Vec<(i16, i16, i16)>,
 
-    /// Texture coordinates (x, y) used to map textures to this mesh.
-    ///
-    /// Two formats are possible:
-    /// * Old - Signed 16-bit texture value in pixels (most textures are 256 pixels in size).
-    /// * New - Signed 32-bit value
-    pub texture_coordinates: Vec<(i16, i16)>,
+    /// Texture coordinates (x, y) used to map textures to this mesh, in the form
+    /// the file's [WldFormat] stores them.
+    pub texture_coordinates: TextureCoordinates,
 
     /// Vertex normals (x, y, z). Each element contains a signed byte representing the
     /// component of the vertex normal, scaled such that –127 represents –1 and
@@ -193,7 +191,16 @@ impl FragmentParser for DmSpriteDef2 {
     const TYPE_ID: u32 = 0x36;
     const TYPE_NAME: &'static str = "DmSpriteDef2";
 
+    /// Parses an old-format mesh. [WldDoc](super::WldDoc) uses
+    /// [DmSpriteDef2::parse_format] with the file's format.
     fn parse(input: &[u8]) -> WResult<'_, DmSpriteDef2> {
+        Self::parse_format(input, WldFormat::Old)
+    }
+}
+
+impl DmSpriteDef2 {
+    /// Parses a mesh laid out as `format` lays it out.
+    pub fn parse_format(input: &[u8], format: WldFormat) -> WResult<'_, DmSpriteDef2> {
         let (
             i,
             (
@@ -259,7 +266,7 @@ impl FragmentParser for DmSpriteDef2 {
             ),
         ) = (
             count((le_i16, le_i16, le_i16), position_count as usize),
-            count((le_i16, le_i16), texture_coordinate_count as usize),
+            |i| TextureCoordinates::parse(i, format, texture_coordinate_count as usize),
             count((le_i8, le_i8, le_i8), normal_count as usize),
             count(le_u32, color_count as usize),
             count(DmSpriteDef2FaceEntry::parse, face_count as usize),
@@ -355,11 +362,7 @@ impl Fragment for DmSpriteDef2 {
                 .iter()
                 .flat_map(|p| [p.0.to_le_bytes(), p.1.to_le_bytes(), p.2.to_le_bytes()].concat())
                 .collect::<Vec<_>>()[..],
-            &self
-                .texture_coordinates
-                .iter()
-                .flat_map(|t| [t.0.to_le_bytes(), t.1.to_le_bytes()].concat())
-                .collect::<Vec<_>>()[..],
+            &self.texture_coordinates.to_bytes()[..],
             &self
                 .vertex_normals
                 .iter()
@@ -406,6 +409,60 @@ impl Fragment for DmSpriteDef2 {
 
     fn type_id(&self) -> u32 {
         Self::TYPE_ID
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq)]
+/// A mesh's texture coordinates (u, v), one pair per vertex.
+pub enum TextureCoordinates {
+    /// Old format: signed 16-bit values, where 256 spans one texture width.
+    Old(Vec<(i16, i16)>),
+    /// New format: 32-bit floats, where 1.0 spans one texture width.
+    New(Vec<(f32, f32)>),
+}
+
+impl TextureCoordinates {
+    fn parse(input: &[u8], format: WldFormat, entries: usize) -> WResult<'_, Self> {
+        match format {
+            WldFormat::Old => count((le_i16, le_i16), entries).map(Self::Old).parse(input),
+            WldFormat::New => count((le_f32, le_f32), entries).map(Self::New).parse(input),
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        match self {
+            Self::Old(coordinates) => coordinates.len(),
+            Self::New(coordinates) => coordinates.len(),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// The coordinates in texture widths, whichever form the file stores.
+    pub fn normalized(&self) -> Vec<[f32; 2]> {
+        match self {
+            Self::Old(coordinates) => coordinates
+                .iter()
+                .map(|v| [f32::from(v.0) / 256.0, f32::from(v.1) / 256.0])
+                .collect(),
+            Self::New(coordinates) => coordinates.iter().map(|v| [v.0, v.1]).collect(),
+        }
+    }
+
+    fn to_bytes(&self) -> Vec<u8> {
+        match self {
+            Self::Old(coordinates) => coordinates
+                .iter()
+                .flat_map(|t| [t.0.to_le_bytes(), t.1.to_le_bytes()].concat())
+                .collect(),
+            Self::New(coordinates) => coordinates
+                .iter()
+                .flat_map(|t| [t.0.to_le_bytes(), t.1.to_le_bytes()].concat())
+                .collect(),
+        }
     }
 }
 
@@ -550,7 +607,7 @@ mod tests {
             meshop_count: 0,
             scale: 5,
             positions: vec![(2, -1154, -3), (100, 200, 300), (400, 500, 600)],
-            texture_coordinates: vec![(77, 77), (128, 0), (0, 128)],
+            texture_coordinates: TextureCoordinates::Old(vec![(77, 77), (128, 0), (0, 128)]),
             vertex_normals: vec![(29, 31, 119), (0, 0, 127), (0, 127, 0)],
             vertex_colors: vec![4043374848, 4043374848, 4043374848],
             faces: vec![DmSpriteDef2FaceEntry {
@@ -588,7 +645,7 @@ mod tests {
             meshop_count: 3,
             scale: 5,
             positions: vec![(0, 0, 0), (100, 0, 0), (0, 100, 0)],
-            texture_coordinates: vec![(0, 0), (128, 0), (0, 128)],
+            texture_coordinates: TextureCoordinates::Old(vec![(0, 0), (128, 0), (0, 128)]),
             vertex_normals: vec![(0, 0, 127), (0, 0, 127), (0, 0, 127)],
             vertex_colors: vec![],
             faces: vec![DmSpriteDef2FaceEntry {
@@ -653,7 +710,10 @@ mod tests {
         assert_eq!(frag.positions.len(), 3);
         assert_eq!(frag.positions[0], (2, -1154, -3));
         assert_eq!(frag.texture_coordinates.len(), 3);
-        assert_eq!(frag.texture_coordinates[0], (77, 77));
+        assert_eq!(
+            frag.texture_coordinates,
+            TextureCoordinates::Old(vec![(77, 77), (128, 0), (0, 128)])
+        );
         assert_eq!(frag.vertex_normals.len(), 3);
         assert_eq!(frag.vertex_normals[0], (29, 31, 119));
         assert_eq!(frag.vertex_colors.len(), 3);
