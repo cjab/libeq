@@ -44,10 +44,11 @@ impl WldDoc {
             .parse(i)
             .map_err(|e| vec![e.into()])?;
 
+        let format = header.format();
         let (fragments, errors): (Vec<_>, Vec<_>) = fragment_headers
             .into_iter()
             .enumerate()
-            .map(|(idx, h)| h.parse_body(idx))
+            .map(|(idx, h)| h.parse_body(idx, format))
             .partition_map(|res| match res {
                 Ok(frag) => Either::Left(frag),
                 Err(e) => Either::Right(e),
@@ -229,6 +230,16 @@ pub struct WldHeader {
 }
 
 impl WldHeader {
+    /// Which format this file uses, determined by `version`. This mirrors the
+    /// client, which checks `version & 0xffff0000 == 0x10000000` for the new format.
+    pub fn format(&self) -> WldFormat {
+        if self.version & 0xffff0000 == 0x10000000 {
+            WldFormat::New
+        } else {
+            WldFormat::Old
+        }
+    }
+
     pub fn parse(input: &[u8]) -> WResult<'_, WldHeader> {
         let (i, magic) = le_u32(input)?;
         let (i, version) = le_u32(i)?;
@@ -315,7 +326,7 @@ impl<'a> FragmentHeader<'a> {
         ))
     }
 
-    fn parse_body(self, index: usize) -> Result<FragmentType, WldDocError<'a>> {
+    fn parse_body(self, index: usize, format: WldFormat) -> Result<FragmentType, WldDocError<'a>> {
         let parsed = match self.fragment_type {
             DmSpriteDef::TYPE_ID => match self.detect_0x2c_variant() {
                 FragmentGame::EverQuest => Some(
@@ -419,7 +430,7 @@ impl<'a> FragmentHeader<'a> {
                 Some(Region::parse(self.field_data).map(|f| (f.0, FragmentType::Region(f.1))))
             }
             DmSpriteDef2::TYPE_ID => Some(
-                DmSpriteDef2::parse(self.field_data)
+                DmSpriteDef2::parse_with_format(self.field_data, format)
                     .map(|f| (f.0, FragmentType::DmSpriteDef2(f.1))),
             ),
             MaterialPalette::TYPE_ID => Some(

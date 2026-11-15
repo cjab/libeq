@@ -43,7 +43,7 @@ pub mod parser;
 
 use parser::{
     Actor, ActorDef, DmSprite, DmSpriteDef2, DmSpriteDef2FaceEntry, DmTrackDef2, FragmentRef,
-    MaterialDef, RenderMethod, SimpleSpriteDef, SimpleSpriteDefFlags, WldDoc,
+    MaterialDef, RenderMethod, SimpleSpriteDef, SimpleSpriteDefFlags, TextureCoordinates, WldDoc,
 };
 use std::error::Error;
 
@@ -178,11 +178,13 @@ impl<'a> Mesh<'a> {
 
     /// The coordinates used to map textures to this mesh.
     pub fn texture_coordinates(&self) -> Vec<[f32; 2]> {
-        self.fragment
-            .texture_coordinates
-            .iter()
-            .map(|v| [(v.0 as f32) / 256.0, (v.1 as f32) / 256.0])
-            .collect()
+        match &self.fragment.texture_coordinates {
+            TextureCoordinates::Old(coords) => coords
+                .iter()
+                .map(|v| [(v.0 as f32) / 256.0, (v.1 as f32) / 256.0])
+                .collect(),
+            TextureCoordinates::New(coords) => coords.iter().map(|v| [v.0, v.1]).collect(),
+        }
     }
 
     /// Indices into the positions vector of this mesh. Expects that the mesh will be drawn as

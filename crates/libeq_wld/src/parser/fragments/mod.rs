@@ -265,3 +265,13 @@ pub enum FragmentGame {
     Tanarus,
     ReturnToKrondor,
 }
+
+/// The two .wld file formats, distinguished by the version field in the file
+/// header. Some fragment layouts differ between them (see [DmSpriteDef2]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WldFormat {
+    /// Version `0x00015500`
+    Old,
+    /// Version `0x1000C800`, used for Luclin-and-later zone geometry.
+    New,
+}
