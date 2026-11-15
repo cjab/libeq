@@ -370,6 +370,23 @@ impl<'a> Texture<'a> {
         &self.fragment.flags
     }
 
+    /// The raw optional current-frame value from the file.
+    ///
+    /// Returns `None` when the field is absent; no frame-index interpretation
+    /// or playback policy is applied.
+    pub fn current_frame(&self) -> Option<u32> {
+        self.fragment.current_frame
+    }
+
+    /// The raw optional sleep value from the animated sprite definition.
+    ///
+    /// The field is present only when both the animated and sleep flags are set.
+    /// No timing units or default interval are inferred; an encoded zero is
+    /// returned as `Some(0)` rather than treated as absent.
+    pub fn sleep(&self) -> Option<u32> {
+        self.fragment.sleep
+    }
+
     /// The name of the source image used by this texture. Wld files in theory support multiple
     /// source images per texture but in practice only ever seem to have one.
     pub fn iter_sources(&self) -> impl Iterator<Item = String> + '_ {
